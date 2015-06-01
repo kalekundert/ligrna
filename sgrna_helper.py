@@ -68,13 +68,12 @@ class Construct:
 
         if style is None:
             style = {
-                    'rfp': 'red',
-                    'aavs': 'red',
-                    'vegfa': 'red',
-                    'lower_stem': 'yellow',
-                    'bulge': 'green',
-                    'upper_stem': 'cyan',
-                    'nexus': 'blue',
+                    'rfp': 'yellow',
+                    'aavs': 'yellow',
+                    'vegfa': 'yellow',
+                    'lower_stem': 'green',
+                    'upper_stem': 'blue',
+                    'nexus': 'red',
                     'hairpins': 'magenta',
                     'aptamer': ('white', 'bold'),
             }
@@ -244,8 +243,12 @@ def wt_sgrna(target='aavs'):
     sgrna += Construct('UAGC', 'upper_stem')
     sgrna += Construct('AAGU', 'bulge')
     sgrna += Construct('UAAAAU', 'lower_stem')
-    sgrna += Construct('AAGGCUAGUCCGUU', 'nexus')
-    sgrna += Construct('AUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU', 'hairpins')
+    sgrna += Construct('AAGGCUAGUCCGU', 'nexus')
+    sgrna += Construct('UAUCA')
+    sgrna += Construct('ACUUGAAAAAGU', 'hairpins')
+    sgrna += Construct('G')
+    sgrna += Construct('GCACCGAGUCGGUGC', 'hairpins')
+    sgrna += Construct('UUUUUU')
     return sgrna
 
 def dead_sgrna(target='aavs'):
