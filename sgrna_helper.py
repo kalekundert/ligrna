@@ -74,7 +74,7 @@ class Construct:
     def constraints(self):
         return self._constraints
 
-    def show(self, style=None, start=None, end=None, pad=True, labels=True, dna=False, rev_com=False, color='auto'):
+    def show(self, style=None, start=None, end=None, pad=True, labels=True, dna=False, rna=False, rev_com=False, color='auto'):
 
         # Choose default colors if none are explicitly given.
 
@@ -93,6 +93,7 @@ class Construct:
         # Figure out which part of the construct to display.
 
         if dna: sequence = self.dna
+        elif rna: sequence = self.rna
         else: sequence = self._sequence
             
         if start is None: start = 0
