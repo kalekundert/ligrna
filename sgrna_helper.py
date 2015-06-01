@@ -4,7 +4,7 @@ import nonstdlib
 
 class Construct:
 
-    def __init__(self, sequence='', tag=None, name=''):
+    def __init__(self, sequence='', tag=None, name='', constraints=''):
         self.name = name
         self._sequence = sequence
 
@@ -12,6 +12,14 @@ class Construct:
             self._tags = tag
         else:
             self._tags = {i: tag for i in range(len(self))}
+
+        if constraints:
+            self._constraints = constraints
+        else:
+            self._constraints = '.' * len(sequence)
+
+        if len(self.constraints) != len(self.seq):
+            raise ValueError("constraints don't match sequence")
 
     def __repr__(self):
         if self.name:
@@ -62,6 +70,10 @@ class Construct:
     def indices(self):
         return range(len(self._sequence))
 
+    @property
+    def constraints(self):
+        return self._constraints
+
     def show(self, style=None, start=None, end=None, pad=True, labels=True, dna=False, rev_com=False, color='auto'):
 
         # Choose default colors if none are explicitly given.
@@ -105,6 +117,10 @@ class Construct:
         if labels: nonstdlib.write("-3'" if not rev_com else "-5'")
         nonstdlib.write('\n')
 
+    def copy(self):
+        import copy
+        return copy.deepcopy(self)
+
     def prepend(self, construct):
         self.insert(construct, 0)
         return self
@@ -121,24 +137,29 @@ class Construct:
         head = 0
         new_sequence = ''
         new_tags = {}
+        new_constraints = ''
 
         for i in range(index):
             new_sequence += self._sequence[i]
             new_tags[head] = self._tags[i]
+            new_constraints += self._constraints[i]
             head += 1
 
-        for j in range(len(construct)):
-            new_sequence += construct._sequence[j]
-            new_tags[head] = construct._tags[j]
+        for i in range(len(construct)):
+            new_sequence += construct._sequence[i]
+            new_tags[head] = construct._tags[i]
+            new_constraints += construct._constraints[i]
             head += 1
 
-        for k in range(index, len(self._sequence)):
-            new_sequence += self._sequence[k]
-            new_tags[head] = self._tags[k]
+        for i in range(index, len(self._sequence)):
+            new_sequence += self._sequence[i]
+            new_tags[head] = self._tags[i]
+            new_constraints += self._constraints[i]
             head += 1
 
         self._sequence = new_sequence
         self._tags = new_tags
+        self._constraints = new_constraints
 
         return self
 
@@ -146,6 +167,7 @@ class Construct:
         head = 0
         new_sequence = ''
         new_tags = {}
+        new_constraints = ''
 
         if start is ...: start = 0
         if start < 0: start = len(self) - abs(start)
@@ -155,15 +177,18 @@ class Construct:
         for i in range(start):
             new_sequence += self._sequence[i]
             new_tags[head] = self._tags[i]
+            new_constraints += self._constraints[i]
             head += 1
 
         for i in range(end, len(self._sequence)):
             new_sequence += self._sequence[i]
             new_tags[head] = self._tags[i]
+            new_constraints += self._constraints[i]
             head += 1
 
         self._sequence = new_sequence
         self._tags = new_tags
+        self._constraints = new_constraints
 
         return self
 
@@ -259,16 +284,17 @@ def dead_sgrna(target='aavs'):
     return sgrna
 
 def theophylline_aptamer(piece='whole'):
-    half_5, linker, half_3 = 'AUACCAGCC', 'GAAA', 'GGCCCUUGGCAG'
+    pieces = 'AUACCAGCC', 'GAAA', 'GGCCCUUGGCAG'
+    struct = '(((((.((('  '....'  ')))....)))))'
 
     if piece == 'whole':
-        aptamer = Construct(half_5 + linker + half_3, 'aptamer')
+        aptamer = Construct(''.join(pieces), 'aptamer', constraints=struct)
     elif str(piece) == '5':
-        aptamer = Construct(half_5, 'aptamer')
+        aptamer = Construct(pieces[0], 'aptamer')
     elif str(piece) == '3':
-        aptamer = Construct(half_3, 'aptamer')
+        aptamer = Construct(pieces[2], 'aptamer')
     elif piece == 'linker':
-        aptamer = Construct(linker, 'aptamer')
+        aptamer = Construct(pieces[1], 'aptamer')
     else:
         raise ValueError("must request 'whole', '5', '3', or 'linker' piece of aptamer, not {}.".format(piece))
 
@@ -530,6 +556,17 @@ nx = nexus_insertion
 hp = hairpin_replacement
 id = induced_dimerization
 
+
+def test_construct_constraints():
+    ins = Construct('AA', constraints='()')
+    seq = 'AAAAAAAAAA'
+
+    assert ins.constraints == '()'
+    assert Construct(seq).constraints == '..........'
+    assert Construct(seq).prepend(ins).constraints == '()..........'
+    assert Construct(seq).append(ins).constraints == '..........()'
+    assert Construct(seq).insert(ins, 5).constraints == '.....().....'
+    assert Construct(seq).replace(3, 5, ins).constraints == '...().....'
 
 def test_wt_sgrna():
     assert wt_sgrna().seq == 'GGGGCCACTAGGGACAGGATGUUUUAGAGCUAGAAAUAGCAAGUUAAAAUAAGGCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'

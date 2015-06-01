@@ -47,21 +47,31 @@ Options:
         Append the T7 promoter sequence to the design.  This options 
         automatically enables the '--dna' option.
 
-    -r, --range RANGE
+    -s, --subset RANGE
         Specify a subset of the design to display.  If only one number is 
         given, it is taken as the start position.  If two numbers are given, 
         separated by a colon, they are taken as the start and end positions.  
-        If the range starts with an underscore, the sequence will be padded.
+        If the subset starts with an underscore, the sequence will be padded.
+
+    -p, --pretty
+        Include pretty names and the "5'-" and "-3'" labels for each design.
 
     -b, --batch
         Prepare sequences for batch processing.  Use a more simple character 
         set for the names, automatically append the T7 sequence, and don't 
         display the "5'-" and "-3'" labels.
         
-    -s, --sequence-only
-        Don't show anything but the sequence for each design.
+    -r, --rnafold
+        Run each design through RNAfold and display the resulting secondary 
+        structure prediction.  If the '--constraints' flag is given, any base 
+        pairing constraints associated with each design are passed to RNAfold.  
 
-    -c, --color=WHEN    [default: auto]
+    -c, --constraints
+        If RNA secondary structure is being calculated, calculate it with any 
+        relevant constraints.  Typically restraints are used to force aptamers 
+        to adopt their bound conformation.
+
+    -C, --color=WHEN    [default: auto]
         Specify whether or not the sequences should be colored according to 
         their architectural role in the design.
         
@@ -91,17 +101,17 @@ format_args = {  # (no fold)
         'pad': False,
 }
 
-if args['--range']:
+if args['--subset']:
     int_or_none = lambda x: int(x) if x else None
 
-    if args['--range'].startswith('_'):
+    if args['--subset'].startswith('_'):
         format_args['pad'] = True
-        args['--range'] = args['--range'][1:]
-    if ':' in args['--range']:
-        format_args['start'] = int_or_none(args['--range'].split(':')[0])
-        format_args['end'] = int_or_none(args['--range'].split(':')[1])
+        args['--subset'] = args['--subset'][1:]
+    if ':' in args['--subset']:
+        format_args['start'] = int_or_none(args['--subset'].split(':')[0])
+        format_args['end'] = int_or_none(args['--subset'].split(':')[1])
     else:
-        format_args['start'] = int(args['--range'])
+        format_args['start'] = int(args['--subset'])
 
 longest_name = max([8] + [len(x.name) for x in designs])
 header_template = '{{0:{}s}}'.format(longest_name)
@@ -110,13 +120,25 @@ for design in designs:
     if args['--t7'] or args['--batch']:
         design = design.prepend(sgrna_helper.t7_promoter())
 
-    if args['--batch']:
-        print(header_template.format(design.underscore_name), end='\t')
-        design.show(labels=False, **format_args)
-    elif args['--sequence-only']:
-        design.show(labels=False, **format_args)
-    else:
+    if args['--pretty']:
         print(header_template.format(design.name), end='  ')
         design.show(**format_args)
+    elif args['--batch']:
+        print(header_template.format(design.underscore_name), end='\t')
+        design.show(labels=False, **format_args)
+    elif args['--rnafold']:
+        from subprocess import Popen, PIPE; import shlex
+        if args['--constraints']:
+            cmd = 'RNAfold --noPS -C'
+            stdin = design.rna + '\n' + design.constraints 
+        else:
+            cmd = 'RNAfold --noPS'
+            stdin = design.rna
+        process = Popen(shlex.split(cmd), stdin=PIPE, stdout=PIPE)
+        stdout, stderr = process.communicate(stdin.encode())
+        design.show(labels=False, **format_args)
+        print(stdout.decode().split('\n')[1])
+    else:
+        design.show(labels=False, **format_args)
 
 
