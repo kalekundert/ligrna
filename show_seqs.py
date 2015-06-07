@@ -128,15 +128,16 @@ for design in designs:
         design.show(labels=False, **format_args)
     elif args['--rnafold']:
         from subprocess import Popen, PIPE; import shlex
+        design.show(labels=False, rna=True, color=args['--color'])
         if args['--constraints']:
             cmd = 'RNAfold --noPS -C'
             stdin = design.rna + '\n' + design.constraints 
+            print(design.constraints, '(constraints)')
         else:
             cmd = 'RNAfold --noPS'
             stdin = design.rna
         process = Popen(shlex.split(cmd), stdin=PIPE, stdout=PIPE)
         stdout, stderr = process.communicate(stdin.encode())
-        design.show(labels=False, rna=True, color=args['--color'])
         print(stdout.decode().split('\n')[1])
     else:
         design.show(labels=False, **format_args)
