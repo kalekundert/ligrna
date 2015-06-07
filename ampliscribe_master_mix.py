@@ -8,6 +8,9 @@ Usage:
     ./ampliscribe_master_mix.py <reactions> [options]
 
 Options:
+    -t --template MICROLITERS   [default: 1.0]
+        How much template to use (in μL).
+
     -x --extra PERCENT
         How much extra master mix to create.
 """
@@ -18,9 +21,10 @@ import math
 args = docopt.docopt(__doc__)
 volume = eval(args['<reactions>']) * (1 + float(args['--extra'] or 0) / 100)
 scale = lambda ref, name: (ref * volume, name)
+template = float(args['--template'])
 
 reagents = [
-        scale(5.3, "nuclease-free water"),
+        scale(6.3 - template, "nuclease-free water"),
         scale(2.0, "10x reaction buffer"),
         scale(1.8, "100 mM ATP"),
         scale(1.8, "100 mM CTP"),
@@ -34,7 +38,7 @@ reagents = [
 total_amount = sum(amount for amount, reagent in reagents)
 longest_amount = int(math.ceil(math.log10(total_amount)))
 
-print('Master Mix')
+print('Master Mix for {:.1f} reactions'.format(volume))
 print(30 * '=')
 for amount, reagent in reagents:
     row = '{{:{}.1f}} μL  {{}}'.format(longest_amount + 2)
@@ -46,4 +50,4 @@ print()
 print('Per Reaction')
 print(30 * '=')
 print(row.format(total_amount / volume, 'master mix'))
-print(row.format(1, '10 ng/μL template'))
+print(row.format(template, '10 ng/μL template'))
