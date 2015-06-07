@@ -74,6 +74,23 @@ class Construct:
     def constraints(self):
         return self._constraints
 
+    def mass(self, polymer='rna'):
+        sequence = self.seq.upper()
+
+        a = sequence.count('A')
+        c = sequence.count('C')
+        g = sequence.count('G')
+        t = u = sequence.count('T') + sequence.count('U')
+
+        if polymer == 'rna':
+            return (a * 329.2) + (u * 306.2) + (c * 305.2) + (g * 345.2) + 159
+        elif polymer == 'dna':
+            return ((a + t) * 617.4) + ((g + c) * 618.4) + 158
+        elif polymer == 'ssdna':
+            return (a * 313.2) + (t * 304.2) + (c * 289.2) + (g * 329.2) + 79
+        else:
+            raise ValueError("unknown polymer type: '{}'".format(polymer))
+
     def show(self, style=None, start=None, end=None, pad=True, labels=True, dna=False, rna=False, rev_com=False, color='auto'):
 
         # Choose default colors if none are explicitly given.
