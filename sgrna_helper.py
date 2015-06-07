@@ -8,10 +8,7 @@ class Construct:
         self.name = name
         self._sequence = sequence
 
-        if isinstance(tag, dict):
-            self._tags = tag
-        else:
-            self._tags = {i: tag for i in range(len(self))}
+        self._tags = {i: tag for i in range(len(self))}
 
         if constraints:
             self._constraints = constraints
@@ -22,10 +19,13 @@ class Construct:
             raise ValueError("constraints don't match sequence")
 
     def __repr__(self):
+        return 'Construct({})'.format(self._sequence)
+
+    def __str__(self):
         if self.name:
             return self.name
         else:
-            return 'Construct({})'.format(self._sequence)
+            return repr(self)
 
     def __len__(self):
         return len(self._sequence)
@@ -130,8 +130,8 @@ class Construct:
         self.insert(construct, len(self))
         return self
 
-    def append_with_spacer(self, construct):
-        self.insert_with_spacer(construct, len(self))
+    def append_with_linker(self, construct):
+        self.insert_with_linker(construct, len(self))
         return self
 
     def insert(self, construct, index):
@@ -205,9 +205,9 @@ class Construct:
                 self._sequence[index+1:]
         )
 
-    def pad(self, length, pattern='UUUCCC'):
-        self.insert(spacer(length, pattern), 0)
-        self.insert(spacer(length, pattern), len(self))
+    def pad(self, length, repeat_factory):
+        self.insert(repeat_factory(length), 0)
+        self.insert(repeat_factory(length), len(self))
         return self
 
 
@@ -249,12 +249,11 @@ def parse_name(name):
 
     return sub_names
 
-
 def wt_sgrna(target='aavs'):
     sgrna = Construct(name='wt sgrna')
 
     if target == 'rfp':
-        sgrna += Construct('GGAACUUUCAGUUUAGCGGUCU', target)
+        sgrna += Construct('AACUUUCAGUUUAGCGGUCU', target)
     elif target == 'aavs':
         sgrna += Construct('GGGGCCACTAGGGACAGGAT', target)
     elif target == 'vegfa':
@@ -284,23 +283,60 @@ def dead_sgrna(target='aavs'):
     sgrna.mutate(53, 'C')
     return sgrna
 
-def theophylline_aptamer(piece='whole'):
-    pieces = 'AUACCAGCC', 'GAAA', 'GGCCCUUGGCAG'
-    struct = '(((((.((('  '....'  ')))....)))))'
+def aptamer(ligand, piece='whole'):
+    """
+    Construct aptamer sequences.
+
+    Parameters
+    ----------
+    ligand: 'theo'
+        Specify the aptamer to generate.  Right now only the theophylline 
+        aptamer is known.
+
+    piece: 'whole', '5', '3', or 'linker'
+        Specify which part of the aptamer to generate.  The whole aptamer 
+        is returned by default, but each aptamer can be broken into a 
+        5' half, a 3' half, and a linker between those halves.  
+
+    Returns
+    -------
+    aptamer: Construct
+        The returned construct is given constraints, which can be used to force 
+        RNAfold to approximate a ligand bound state.
+    """
+
+    # Get the right sequence for the requested aptamer.
+
+    if ligand in ('th', 'theo', 'theophylline'):
+        ligand = 'theophylline'
+        sequence_pieces   = 'AUACCAGCC', 'GAAA', 'GGCCCUUGGCAG'
+        constraint_pieces = '(((((.(((', '....', ')))....)))))'
+    else:
+        raise ValueError("no aptamer for '{}'".format(ligand))
+
+    # Construct and return the requested piece of the requested aptamer.
 
     if piece == 'whole':
-        aptamer = Construct(''.join(pieces), 'aptamer', constraints=struct)
+        sequence = ''.join(sequence_pieces)
+        constraints = ''.join(constraint_pieces)
     elif str(piece) == '5':
-        aptamer = Construct(pieces[0], 'aptamer')
-    elif str(piece) == '3':
-        aptamer = Construct(pieces[2], 'aptamer')
+        sequence = sequence_pieces[0]
+        constraints = constraint_pieces[0]
     elif piece == 'linker':
-        aptamer = Construct(pieces[1], 'aptamer')
+        sequence = sequence_pieces[1]
+        constraints = constraint_pieces[1]
+    elif str(piece) == '3':
+        sequence = sequence_pieces[2]
+        constraints = constraint_pieces[2]
     else:
         raise ValueError("must request 'whole', '5', '3', or 'linker' piece of aptamer, not {}.".format(piece))
 
-    aptamer.name = "theophylline"
+    aptamer = Construct(sequence, 'aptamer', constraints=constraints)
+    aptamer.name = ligand
     return aptamer
+
+def theophylline_aptamer(piece='whole'):
+    return aptamer('theo', piece)
 
 def t7_promoter(source='briner'):
     if source == 'igem':
@@ -331,11 +367,47 @@ def aavs_target():
             'AGATTCCTTATCTGGTGACACACCCCCATTTCCTGGAGCCATCTCTCTCC'
             'TTGCCAGAACCTCTAAGGTTTGCTTACGATGGAGCCAGAGAGGAT', name='aavs')
 
-def spacer(length, pattern='UUUCCC'):
+def repeat(length, pattern='UUUCCC'):
     sequence = pattern * (1 + length // len(pattern))
     return Construct(sequence[:length])
 
-def upper_stem_insertion(location, spacer_len=0):
+def smart_repeat(length, ligand=None):
+    from itertools import product
+    from more_itertools import pairwise
+    from collections import Counter
+
+    # Find the least common pair of RNA nucleotides in a collections.Counter 
+    # object.
+
+    def least_common(counter, first_nuc=None):
+        least_common = None
+        rna_nucs = 'UCAG'  # In the order that ties will be resolved.
+        for pair in product(first_nuc or rna_nucs, rna_nucs):
+            if not least_common or counter[pair] < counter[least_common]:
+                least_common = pair
+        return least_common if first_nuc is None else least_common[1]
+
+    
+    # Count how often each pair of nucleotides appears in the given reference 
+    # sequences.
+
+    constructs = [wt_sgrna()]
+    if aptamer: constructs.append(aptamer(ligand))
+
+    counter = Counter()
+    for construct in constructs:
+        for pair in pairwise(construct.rna):
+            counter[pair] += 1
+
+    # Compose a repeat that exclusively contains the least commonly seen pairs 
+    # of nucleotides.
+
+    repeat = ''.join(least_common(counter))
+    while len(repeat) < length:
+        repeat += least_common(counter, repeat[-1])
+    return Construct(repeat[:length])
+
+def upper_stem_insertion(N, linker_len=0, spacer_len=0):
     """
     Insert the aptamer into the upper stem region of the sgRNA.
 
@@ -345,14 +417,14 @@ def upper_stem_insertion(location, spacer_len=0):
 
     Parameters
     ----------
-    location: int
+    N: int
         Indicate how many of the 4 upper stem base pairs should be preserved.  
         This parameters must be between 0 and 4.  The aptamer will be inserted 
         between the two ends of the stem.
 
-    spacer_len: int
+    linker_len: int
         Indicate how many base pairs should separate the aptamer from the upper 
-        stem.  The spacer sequence will have a UUUCCCUUUCCC... pattern so that 
+        stem.  The linker sequence will have a UUUCCCUUUCCC... pattern so that 
         the design doesn't have really long repeats or an out-of-whack GC%.
 
     Returns
@@ -360,30 +432,37 @@ def upper_stem_insertion(location, spacer_len=0):
     sgRNA: Construct
     """
 
-    if not 0 <= location <= 4:
-        raise ValueError("Location for upper stem insertion must be between 0 and 4, not {}.".format(location))
+    if not 0 <= N <= 4:
+        raise ValueError("Location for upper stem insertion must be between 0 and 4, not {}.".format(N))
 
-    name = 'us({},{})'.format(location, spacer_len)
-    insert_begin = 28 + location
-    insert_end = 40 - location
+    if spacer_len != 0:
+        args = N, linker_len, spacer_len
+    else:
+        args = N, linker_len
 
-    return make_insertion(name, insert_begin, insert_end, spacer_len)
+    return make_insertion(
+            'us(' + ','.join(str(x) for x in args) + ')',
+            28 + N,
+            40 - N,
+            linker_len=linker_len,
+            spacer_len=spacer_len,
+    )
 
-def lower_stem_insertion(location, spacer_len=0):
+def lower_stem_insertion(N, linker_len=0):
     """
     Insert the aptamer into the lower stem region of the sgRNA.
 
     Parameters
     ----------
-    location: int
+    N: int
         Indicate how many of the 6 upper stem base pairs should be preserved.  
         This parameters must be between 0 and 6, although in practice I only 
         expect to use values greater than 4 or 5.  Shorter than that and you'll 
         almost certainly interfere with normal Cas9 binding.
 
-    spacer_len: int
+    linker_len: int
         Indicate how many base pairs should separate the aptamer from the upper 
-        stem.  The spacer sequence will have a UUUCCCUUUCCC... pattern so that 
+        stem.  The linker sequence will have a UUUCCCUUUCCC... pattern so that 
         the design doesn't have really long repeats or an out-of-whack GC%.
 
     Returns
@@ -391,16 +470,17 @@ def lower_stem_insertion(location, spacer_len=0):
     sgRNA: Construct
     """
 
-    if not 0 <= location <= 6:
-        raise ValueError("Location for lower stem insertion must be between 0 and 6, not {}.".format(location))
+    if not 0 <= N <= 6:
+        raise ValueError("Location for lower stem insertion must be between 0 and 6, not {}.".format(N))
 
-    name = 'ls({},{})'.format(location, spacer_len)
-    insert_begin = 20 + location
-    insert_end = 50 - location
+    return make_insertion(
+            'ls({},{})'.format(N, linker_len),
+            20 + N,
+            50 - N,
+            linker_len=linker_len,
+    )
 
-    return make_insertion(name, insert_begin, insert_end, spacer_len)
-
-def nexus_insertion(spacer_len=0):
+def nexus_insertion(linker_len=0):
     """
     Insert the aptamer into the nexus region of the sgRNA.
 
@@ -421,9 +501,9 @@ def nexus_insertion(spacer_len=0):
 
     Parameters
     ----------
-    spacer_len: int
+    linker_len: int
         Indicate how many base pairs should separate the aptamer from the nexus 
-        region stem.  The spacer sequence will have a UUUCCC... pattern so that 
+        region stem.  The linker sequence will have a UUUCCC... pattern so that 
         the design doesn't have really long repeats or an out-of-whack GC%.
 
     Returns
@@ -431,24 +511,100 @@ def nexus_insertion(spacer_len=0):
     sgRNA: Construct
     """
 
-    name = 'nx({})'.format(spacer_len)
-    return make_insertion(name, 54, 59, spacer_len, 'U')
+    return make_insertion(
+            'nx({})'.format(linker_len),
+            54,
+            59,
+            linker_len=linker_len,
+            repeat_factory=lambda n: repeat(n, 'U'),
+    )
     
-def hairpin_replacement(location):
+def nexus_insertion_2(N, M, spacer_len=0, num_aptamers=1):
+    """
+    Insert the aptamer into the nexus region of the sgRNA.
+
+    This design strategy expands upon the original nexus_insertion() function, 
+    which produced promising initial hits.  This strategy allows more control 
+    over where the aptamer is inserted, by having the user specify the number 
+    of nucleotides to keep (N and M) on both sides of the nexus.  This strategy 
+    also places the repeat sequence inside the aptamer rather than around it, 
+    and allows for more than one aptamer to be chained together.
+
+    Parameters
+    ----------
+    N: int
+        The number of base pairs to keep on the 5' side of the nexus, starting 
+        from the base of the hairpin at position 53.
+
+    M: int
+        The number of base pairs to keep on the 3' side of the nexus, starting 
+        from the base of the hairpin at position 61.
+
+    spacer_len: int
+        The number of base pairs to insert into the middle of the aptamer.  The 
+        linker will have the sequence 'UCGUCG...', which was chosen because it 
+        has very low complementarity with the rest of the design.
+
+    num_aptamers: int
+        The number of aptamers to insert into the sgRNA.  The aptamers are 
+        inserted within each other, in a manner than should give rise to 
+        positive cooperativity.
+
+    Returns
+    -------
+    sgRNA: Construct
+    """
+
+    # Make sure the arguments have reasonable values.
+
+    min_spacer_len = len(aptamer('theo', 'linker'))
+
+    if not 0 <= N <= 4:
+        raise ValueError("nxx: N must be between 0 and 4, not {}".format(N))
+    if not 0 <= M <= 5:
+        raise ValueError("nxx: M must be between 0 and 5, not {}".format(N))
+    if 0 < spacer_len <= min_spacer_len:
+        raise ValueError("nxx: spacer_len must be longer than {} (the natural linker length).".format(min_spacer_len))
+    if num_aptamers < 1:
+        raise ValueError("nxx: Must have at least 1 aptamer")
+
+    # Figure out what to name the construct.  Make an effort to exclude 
+    # arguments that the user didn't actually specify from the name.
+
+    if num_aptamers != 1:
+        args = N, M, spacer_len, num_aptamers
+    elif spacer_len != 0:
+        args = N, M, spacer_len
+    else:
+        args = N, M
+
+    name = 'nxx({})'.format(','.join(str(x) for x in args))
+
+    # Create and return the construct using a helper function.
+
+    return make_insertion(
+            name,
+            52 + N,
+            61 - M,
+            spacer_len=spacer_len,
+            num_aptamers=num_aptamers,
+    )
+
+def hairpin_replacement(N):
     """
     Remove a portion of the 3' terminal hairpins and replace it with the 
     aptamer.
     
     Parameters
     ----------
-    location: int
+    N: int
         Indicate how much of the 3' terminal hairpins should be kept, with the 
-        counting starting at position 63.  A location of 33 therefore specifies 
-        that the whole sgRNA should be kept (excluding the poly-U tail) and 
-        that the aptamer should simply be added onto the end.  Values larger 
-        than 33 specify that a spacer should be inserted between the sgRNA and 
-        the aptamer.  Values smaller than 33 specify that some residues should 
-        be truncated from the 3' end of the sgRNA.  The expected range for this 
+        counting starting at position 63.  An N of 33 therefore specifies that 
+        the whole sgRNA should be kept (excluding the poly-U tail) and that the 
+        aptamer should simply be added onto the end.  Values larger than 33 
+        specify that a linker should be inserted between the sgRNA and the 
+        aptamer.  Values smaller than 33 specify that some residues should be 
+        truncated from the 3' end of the sgRNA.  The expected range for this 
         parameter is roughly 17-33.
 
     Returns
@@ -459,26 +615,26 @@ def hairpin_replacement(location):
     """
 
     # Remove the UUUUUU tail from the wildtype sgRNA.  This tail will be added 
-    # back, in a UUUCCC pattern to avoid too many consecutive uracils, if the 
-    # location is past the end of the sgRNA proper.
+    # back, in a UUUCCC pattern to avoid too many consecutive uracils, if N is 
+    # past the end of the sgRNA proper.
 
-    design = Construct(name='hp({})'.format(location))
+    design = Construct(name='hp({})'.format(N))
     design += wt_sgrna().delete(-6, ...)
 
-    insertion_site = 63 + location
+    insertion_site = 63 + N
 
     if insertion_site < len(design):
         design.delete(insertion_site, ...)
 
     if insertion_site > len(design):
-        design += spacer(insertion_site - len(design))
+        design += repeat(insertion_site - len(design))
 
     design += theophylline_aptamer()
     design += Construct('UUUUUU')
 
     return design
 
-def induced_dimerization(half, location):
+def induced_dimerization(half, N):
     """
     Split the guide RNA into its two naturally occurring halves, and use the 
     aptamer to bring those halves together in the presence of the ligand.  The 
@@ -493,7 +649,7 @@ def induced_dimerization(half, location):
         Indicate which half of the split construct to return.  '5' and '3' 
         refer to the 5' and 3' halves, respectively.
 
-    location: int
+    N: int
         Indicate how many of the 4 upper stem base pairs should be preserved.  
         This parameters must be between 0 and 4.
 
@@ -505,34 +661,58 @@ def induced_dimerization(half, location):
     # Make sure the arguments make sense.
 
     half = str(half)
-    location = int(location)
+    N = int(N)
 
-    if not 0 <= location <= 4:
-        raise ValueError("Location for upper stem insertion must be between 0 and 4, not {}.".format(location))
+    if not 0 <= N <= 4:
+        raise ValueError("Location for upper stem insertion must be between 0 and 4, not {}.".format(N))
 
     # Construct and return the requested sequence.
 
-    design = Construct(name='id({},{})'.format(half, location))
+    design = Construct(name='id({},{})'.format(half, N))
 
     if half == '5':
-        design += wt_sgrna().delete(start=28+location)
+        design += wt_sgrna().delete(start=28+N)
         design += theophylline_aptamer('5')
 
     elif half == '3':
         design += theophylline_aptamer('3')
-        design += wt_sgrna().delete(end=40-location)
+        design += wt_sgrna().delete(end=40-N)
 
     else:
         raise ValueError("Half for induced dimerization must be either 5 (for the 5' half) or 3 (for the 3' half), not '{}'.".format(half))
 
     return design
 
-def make_insertion(name, insert_begin, insert_end, spacer_len, spacer_pattern='UUUCCC'):
+def make_insertion(name, insert_begin, insert_end,
+        linker_len=0,
+        spacer_len=0,
+        repeat_factory=repeat,
+        num_aptamers=1,
+        ligand='theo'):
+
     design = Construct(name=name)
     design += wt_sgrna()
 
-    insert = theophylline_aptamer()
-    insert.pad(spacer_len, spacer_pattern)
+    # If a spacer was requested, insert it into the middle of the aptamer.
+
+    if spacer_len == 0:
+        insert = aptamer(ligand)
+    else:
+        insert = aptamer(ligand, '5')
+        insert += repeat_factory(spacer_len) 
+        insert += aptamer(ligand, '3')
+
+    # If multiple aptamers were requested, build them around the central one.
+
+    for i in range(1, num_aptamers):
+        insert.prepend(aptamer(ligand, '5'))
+        insert.append(aptamer(ligand, '3'))
+
+    # If a linker between the aptamer and the sgRNA was requested, add it.
+
+    insert.pad(linker_len, repeat_factory)
+
+    # Insert the aptamer into the sgRNA and return the resulting construct.
 
     design.replace(insert_begin, insert_end, insert)
     return design
@@ -554,11 +734,17 @@ aavs = aavs_target
 us = upper_stem_insertion
 ls = lower_stem_insertion
 nx = nexus_insertion
+nxx = nexus_insertion_2
 hp = hairpin_replacement
 id = induced_dimerization
 
 
 def test_construct_constraints():
+    import pytest
+
+    with pytest.raises(ValueError): Construct('AA', constraints='.')
+    with pytest.raises(ValueError): Construct('AA', constraints='...')
+
     ins = Construct('AA', constraints='()')
     seq = 'AAAAAAAAAA'
 
@@ -570,21 +756,29 @@ def test_construct_constraints():
     assert Construct(seq).replace(3, 5, ins).constraints == '...().....'
 
 def test_wt_sgrna():
-    assert wt_sgrna().seq == 'GGGGCCACTAGGGACAGGATGUUUUAGAGCUAGAAAUAGCAAGUUAAAAUAAGGCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
-    assert wt_sgrna('rfp').seq == 'GGAACUUUCAGUUUAGCGGUCUGUUUUAGAGCUAGAAAUAGCAAGUUAAAAUAAGGCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
-    assert wt_sgrna('vegfa').seq == 'GGGTGGGGGGAGTTTGCTCCGUUUUAGAGCUAGAAAUAGCAAGUUAAAAUAAGGCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
+    assert from_name('wt').seq == 'GGGGCCACTAGGGACAGGATGUUUUAGAGCUAGAAAUAGCAAGUUAAAAUAAGGCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
+    assert from_name('wt_rfp').seq == 'AACUUUCAGUUUAGCGGUCUGUUUUAGAGCUAGAAAUAGCAAGUUAAAAUAAGGCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
+    assert from_name('wt_vegfa').seq == 'GGGTGGGGGGAGTTTGCTCCGUUUUAGAGCUAGAAAUAGCAAGUUAAAAUAAGGCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
+
+def test_dead_sgrna():
+    assert from_name('dead').seq == 'GGGGCCACTAGGGACAGGATGUUUUAGAGCUAGAAAUAGCAAGUUAAAAUAACCCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
+    assert from_name('dead_rfp').seq == 'AACUUUCAGUUUAGCGGUCUGUUUUAGAGCUAGAAAUAGCAAGUUAAAAUAACCCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
+    assert from_name('dead_vegfa').seq == 'GGGTGGGGGGAGTTTGCTCCGUUUUAGAGCUAGAAAUAGCAAGUUAAAAUAACCCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
 
 def test_theophylline_aptamer():
     assert theophylline_aptamer().seq == 'AUACCAGCCGAAAGGCCCUUGGCAG'
 
-def test_spacer():
-    assert spacer(1).seq == 'U'
-    assert spacer(2).seq == 'UU'
-    assert spacer(3).seq == 'UUU'
-    assert spacer(4).seq == 'UUUC'
-    assert spacer(5).seq == 'UUUCC'
-    assert spacer(6).seq == 'UUUCCC'
-    assert spacer(7).seq == 'UUUCCCU'
+def test_repeat():
+    assert repeat(1).seq == 'U'
+    assert repeat(2).seq == 'UU'
+    assert repeat(3).seq == 'UUU'
+    assert repeat(4).seq == 'UUUC'
+    assert repeat(5).seq == 'UUUCC'
+    assert repeat(6).seq == 'UUUCCC'
+    assert repeat(7).seq == 'UUUCCCU'
+
+def test_smart_repeat():
+    assert smart_repeat(10, 'theo') == 'UCGUCGUCGU'
 
 def test_from_name():
     equivalent_constructs = [
@@ -608,8 +802,6 @@ def test_upper_stem_insertion():
     import pytest
 
     with pytest.raises(ValueError): from_name('us(5)')
-    with pytest.raises(TypeError): from_name('us')
-    with pytest.raises(TypeError): from_name('us(0,0,0)')
 
     assert from_name('us(4)').seq == from_name('us(4,0)').seq == 'GGGGCCACTAGGGACAGGATGUUUUAGAGCUAAUACCAGCCGAAAGGCCCUUGGCAGUAGCAAGUUAAAAUAAGGCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
     assert from_name('us(2)').seq == from_name('us(2,0)').seq == 'GGGGCCACTAGGGACAGGATGUUUUAGAGCAUACCAGCCGAAAGGCCCUUGGCAGGCAAGUUAAAAUAAGGCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
@@ -618,13 +810,13 @@ def test_upper_stem_insertion():
     assert from_name('us(4,7)').seq == 'GGGGCCACTAGGGACAGGATGUUUUAGAGCUAUUUCCCUAUACCAGCCGAAAGGCCCUUGGCAGUUUCCCUUAGCAAGUUAAAAUAAGGCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
     assert from_name('us(0,1)').seq == 'GGGGCCACTAGGGACAGGATGUUUUAGAUAUACCAGCCGAAAGGCCCUUGGCAGUAAGUUAAAAUAAGGCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
     assert from_name('us(0,7)').seq == 'GGGGCCACTAGGGACAGGATGUUUUAGAUUUCCCUAUACCAGCCGAAAGGCCCUUGGCAGUUUCCCUAAGUUAAAAUAAGGCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
+    assert from_name('us(0,0,1)').seq == 'GGGGCCACTAGGGACAGGATGUUUUAGAAUACCAGCCUGGCCCUUGGCAGAAGUUAAAAUAAGGCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
+    assert from_name('us(0,0,7)').seq == 'GGGGCCACTAGGGACAGGATGUUUUAGAAUACCAGCCUUUCCCUGGCCCUUGGCAGAAGUUAAAAUAAGGCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
 
 def test_lower_stem_insertion():
     import pytest
 
     with pytest.raises(ValueError): from_name('us(7)')
-    with pytest.raises(TypeError): from_name('us')
-    with pytest.raises(TypeError): from_name('us(0,0,0)')
 
     assert from_name('ls(6,0)') == from_name('ls(6)') == 'GGGGCCACTAGGGACAGGATGUUUUAAUACCAGCCGAAAGGCCCUUGGCAGUAAAAUAAGGCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
     assert from_name('ls(5,0)') == from_name('ls(5)') == 'GGGGCCACTAGGGACAGGATGUUUUAUACCAGCCGAAAGGCCCUUGGCAGAAAAUAAGGCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
@@ -639,6 +831,26 @@ def test_nexus_insertion():
     assert from_name('nx(1)') == 'GGGGCCACTAGGGACAGGATGUUUUAGAGCUAGAAAUAGCAAGUUAAAAUAAGGUAUACCAGCCGAAAGGCCCUUGGCAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
     assert from_name('nx(6)') == 'GGGGCCACTAGGGACAGGATGUUUUAGAGCUAGAAAUAGCAAGUUAAAAUAAGGUUUUUUAUACCAGCCGAAAGGCCCUUGGCAGUUUUUUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
 
+def test_nexus_insertion_2():
+    import pytest
+
+    with pytest.raises(ValueError): from_name('nxx(5,0)')
+    with pytest.raises(ValueError): from_name('nxx(0,6)')
+    with pytest.raises(ValueError): from_name('nxx(0,0,4)')
+    with pytest.raises(ValueError): from_name('nxx(0,0,5,0)')
+
+    assert from_name('nxx(0,0)').seq == 'GGGGCCACTAGGGACAGGATGUUUUAGAGCUAGAAAUAGCAAGUUAAAAUAAAUACCAGCCGAAAGGCCCUUGGCAGGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
+    assert from_name('nxx(1,1)').seq == 'GGGGCCACTAGGGACAGGATGUUUUAGAGCUAGAAAUAGCAAGUUAAAAUAAGAUACCAGCCGAAAGGCCCUUGGCAGCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
+    assert from_name('nxx(2,2)').seq == 'GGGGCCACTAGGGACAGGATGUUUUAGAGCUAGAAAUAGCAAGUUAAAAUAAGGAUACCAGCCGAAAGGCCCUUGGCAGCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
+    assert from_name('nxx(2,3)').seq == 'GGGGCCACTAGGGACAGGATGUUUUAGAGCUAGAAAUAGCAAGUUAAAAUAAGGAUACCAGCCGAAAGGCCCUUGGCAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
+    assert from_name('nxx(4,5,5)').seq == 'GGGGCCACTAGGGACAGGATGUUUUAGAGCUAGAAAUAGCAAGUUAAAAUAAGGCUAUACCAGCCUUUCCGGCCCUUGGCAGAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
+    assert from_name('nxx(4,5,6)').seq == 'GGGGCCACTAGGGACAGGATGUUUUAGAGCUAGAAAUAGCAAGUUAAAAUAAGGCUAUACCAGCCUUUCCCGGCCCUUGGCAGAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
+    assert from_name('nxx(4,5,7)').seq == 'GGGGCCACTAGGGACAGGATGUUUUAGAGCUAGAAAUAGCAAGUUAAAAUAAGGCUAUACCAGCCUUUCCCUGGCCCUUGGCAGAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
+    assert from_name('nxx(4,5,8)').seq == 'GGGGCCACTAGGGACAGGATGUUUUAGAGCUAGAAAUAGCAAGUUAAAAUAAGGCUAUACCAGCCUUUCCCUUGGCCCUUGGCAGAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
+    assert from_name('nxx(4,5,0,2)').seq == 'GGGGCCACTAGGGACAGGATGUUUUAGAGCUAGAAAUAGCAAGUUAAAAUAAGGCUAUACCAGCCAUACCAGCCGAAAGGCCCUUGGCAGGGCCCUUGGCAGAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
+    assert from_name('nxx(4,5,0,3)').seq == 'GGGGCCACTAGGGACAGGATGUUUUAGAGCUAGAAAUAGCAAGUUAAAAUAAGGCUAUACCAGCCAUACCAGCCAUACCAGCCGAAAGGCCCUUGGCAGGGCCCUUGGCAGGGCCCUUGGCAGAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
+    assert from_name('nxx(4,5,10,2)').seq == 'GGGGCCACTAGGGACAGGATGUUUUAGAGCUAGAAAUAGCAAGUUAAAAUAAGGCUAUACCAGCCAUACCAGCCUUUCCCUUUCGGCCCUUGGCAGGGCCCUUGGCAGAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
+
 def test_hairpin_replacement():
     assert from_name('hp(0)').seq == 'GGGGCCACTAGGGACAGGATGUUUUAGAGCUAGAAAUAGCAAGUUAAAAUAAGGCUAGUCCGUAUACCAGCCGAAAGGCCCUUGGCAGUUUUUU'
     assert from_name('hp(18)').seq == 'GGGGCCACTAGGGACAGGATGUUUUAGAGCUAGAAAUAGCAAGUUAAAAUAAGGCUAGUCCGUUAUCAACUUGAAAAAGUGAUACCAGCCGAAAGGCCCUUGGCAGUUUUUU'
@@ -649,8 +861,6 @@ def test_hairpin_replacement():
 def test_induced_dimerization():
     import pytest
 
-    with pytest.raises(TypeError): from_name('id')
-    with pytest.raises(TypeError): from_name('id(0,0,0)')
     with pytest.raises(ValueError): from_name('id(0,0)')
     with pytest.raises(ValueError): from_name('id(hello,0)')
     with pytest.raises(ValueError): from_name('id(3,5)')
