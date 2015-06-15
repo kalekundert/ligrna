@@ -54,6 +54,24 @@ elif [ "$round" = 3 ]; then
         id/3/3              \
         id/5/4              \
         id/3/4              \
+        us/0/0/4            \
+        us/0/0/12           \
+        us/0/0/20           \
+        us/0/0/28           \
+        nxx/0/0             \
+        nxx/1/1             \
+        nxx/2/2             \
+        nxx/2/2/10          \
+        nxx/2/2/16          \
+        nxx/2/2/0/2         \
+        nxx/2/3             \
+        nxx/2/3/10          \
+        nxx/2/3/16          \
+        nxx/2/3/0/2         \
+        nxx/3/4             \
+        nxx/3/4/10          \
+        nxx/3/4/16          \
+        nxx/2/4/0/2         \
 
 else
     echo "Error: round '$round' not yet defined."
