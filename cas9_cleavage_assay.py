@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# encoding: utf-8
 
 """\
 Display a protocol for running the given number of Cas9 cleavage reactions. 
