@@ -734,6 +734,9 @@ def make_insertion(name, insert_begin, insert_end,
     design.replace(insert_begin, insert_end, insert)
     return design
 
+def molecular_weight(name, polymer='rna'):
+    return from_name(name).mass(polymer)
+
 def complement(sequence):
     complements = str.maketrans('ACTG', 'TGAC')
     return sequence.translate(complements)
