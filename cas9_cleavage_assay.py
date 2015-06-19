@@ -28,8 +28,9 @@ import docopt
 import math
 
 args = docopt.docopt(__doc__)
-volume = eval(args['<reactions>']) * (1 + float(args['--extra'] or 0) / 100)
-scale = lambda ref, name: (ref * volume, name)
+num_reactions = eval(args['<reactions>'])
+master_mix = num_reactions * (1 + float(args['--extra'] or 0) / 100)
+scale = lambda ref, name: (ref * master_mix, name)
 
 sgrna = float(args['--sgrna'])
 cas9 = float(args['--cas9'])
@@ -49,9 +50,10 @@ digestion_reagents = [
 ]
 
 
-total_amount = sum(amount for amount, x in cas9_reagents + digestion_reagents)
-longest_amount = int(math.ceil(math.log10(total_amount)))
-row = '{{:{}.1f}} μL  {{}}'.format(longest_amount + 2)
+cas9_volume = sum(amount for amount, x in cas9_reagents)
+max_volume = sum(x for x, y in cas9_reagents + digestion_reagents) 
+max_digits = int(math.ceil(math.log10(max_volume)))
+row = '{{:{}.1f}} μL  {{}}'.format(max_digits + 2)
 
 print("""\
 1. Prepare fresh 30 mM theophylline. 
@@ -68,18 +70,18 @@ print("""\
    reaction (as appropriate).
 """.format(args['<reactions>']))
 
-print('   Cas9 Master Mix for {:.1f} reactions'.format(volume))
+print('   Cas9 Master Mix for {:.1f} reactions'.format(master_mix))
 print('   ' + 30 * '=')
 for amount, reagent in cas9_reagents:
     print('   ' + row.format(amount, reagent))
 print('   ' + 30 * '-')
-print('   ' + row.format(total_amount, 'total master mix'))
+print('   ' + row.format(cas9_volume, 'total master mix'))
 print()
 print('   Each Cas9 Reaction')
 print('   ' + 30 * '=')
 print('   ' + row.format(theo, "30 mM theophylline (or water)"))
 print('   ' + row.format(sgrna, "300 nM sgRNA (or water)"))
-print('   ' + row.format(total_amount / volume, 'master mix'))
+print('   ' + row.format(30 - theo - sgrna - dna, 'master mix'))
 print('   ' + row.format(dna, "30 nM target DNA"))
 print("""\
 
