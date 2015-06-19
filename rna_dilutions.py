@@ -1,34 +1,38 @@
 #!/usr/bin/env python3
 
+import sys; sys.path.append('../scripts')
+import sgrna_helper
 
 def show(table, suffix=''):
-    for k in ('wt', 'dead', 'nx0', 'nx1', 'nx2', 'nx3'):
+    for k in ('wt', 'dead', 'nx_0', 'nx_1', 'nx_2', 'nx_3'):
         if k in table:
             print('{:<4} {:.2f} {}'.format(k, table[k], suffix))
 
 
 ng_uL = {
-        'wt': 6712,
-        'dead': 5381,
-        'nx0': 8699,
-        'nx1': 6744,
-        'nx2': 5012,
-        'nx3': 6669,
+        'nx_0': 1684,
+        'nx_1': 2121,
+        'nx_2': 2771,
+        'nx_3': 5531,
 }
-mw = {
-        'wt': 41647.2,
-        'dead': 41567.1,
-        'nx0': 49360.8,
-        'nx1': 49360.8,
-        'nx2': 49360.8,
-        'nx3': 49360.8,
+#ng_uL = {
+#        'nx_2': 330.7,
+#}
+mw = { 
+        x: sgrna_helper.molecular_weight(x)
+        for x in ng_uL
 }
 nM = {
         x: 1e6 * ng_uL[x] / mw[x]
         for x in mw
 }
 
-show(nM)
+
+print("Initial sgRNA concentrations (ng/μL):")
+show(ng_uL, 'ng/μL')
+print()
+print("Initial sgRNA concentrations (nM):")
+show(nM, 'nM')
 print()
 
 # Dilute each reaction to the same concentration
@@ -36,7 +40,7 @@ print()
 # 1. Find the reaction with the lowest yield.
 
 min_yield = min(ng_uL, key=lambda k: ng_uL[k])
-vol_rna = 26
+vol_rna = 15
 
 dilution = {
         x: nM[x] * vol_rna / nM[min_yield] - vol_rna
@@ -46,17 +50,23 @@ dilution = {
 del dilution[min_yield]
 nM = nM[min_yield]
 
-print('Add the following amount of water to {} μL of sgRNA to dilute each construct to {:.0f} nM:'.format(vol_rna, nM))
-show(dilution, 'μL water')
-print()
+if len(mw) > 1:
+    print('Add the following amount of water to {} μL of sgRNA to\n'
+          'dilute each construct to {:.0f} nM:'.format(vol_rna, nM))
+    show(dilution, 'μL water')
+    print()
 
 # Calculate how to dilute the RNA to 120 nM in 6 steps
 # ====================================================
 
 steps = 6
-f = (120 / nM) ** (1 / (steps - 1))
+#target_conc = 120
+#target_conc = 45
+target_conc = 300
+f = (target_conc / nM) ** (1 / (steps - 1))
 
-leave = 7.5
+#leave = 7.5
+leave = 10
 take = leave * f / (1 - f)
 
 print('Perform a serial dilution using the following parameters:')
@@ -68,7 +78,7 @@ print()
 # Make sure the calculation pass the smell test
 # =============================================
 
-print('Final sgRNA concentrations in 30 μL Cas9 reaction:')
+print("Final sgRNA concentrations after diluting 10-fold:")
 for n in range(steps):
-    print('{:.2f} nM'.format(leave * nM * f ** n / 30))
+    print('{:>7.2f} nM'.format(nM * f ** n / 10))
 
