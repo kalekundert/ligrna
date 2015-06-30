@@ -5,7 +5,7 @@ Display a protocol for running the given number of in vitro transcription
 reactions using the Epicentre T7-Flash Ampliscribe kit. 
 
 Usage:
-    ./in_vitro_transcription.py <reactions> [options]
+    ./in_vitro_transcription.py <reactions> [--zymo | --ammonium] [options]
 
 Options:
     -d --dna MICROLITERS   [default: 1.0]
@@ -13,12 +13,24 @@ Options:
 
     -x --extra PERCENT     [default: 10]
         How much extra master mix to create.
+
+    --zymo
+        Use the Zymo spin cleanup kits to purify RNA.
+
+    --ammonium
+        Use ammonium acetete precipitation to purify RNA.
 """
 
 import docopt
 import math
 
 args = docopt.docopt(__doc__)
+
+# Set Zymo kit extraction to be the default
+# Note to Kale: is there a better way to set this default in docopt directly?
+if not args['--zymo'] and not args['--ammonium']:
+    args['--zymo'] = True
+
 volume = eval(args['<reactions>']) * (1 + float(args['--extra'] or 0) / 100)
 scale = lambda ref, name: (ref * volume, name)
 dna = float(args['--dna'])
@@ -54,13 +66,22 @@ print('   Each T7 Reaction')
 print('   ' + 30 * '=')
 print('   ' + row.format(total_amount / volume, 'master mix'))
 print('   ' + row.format(dna, '10 ng/μL DNA template'))
-print("""\
+print("\n2. Incubate at 42°C (water bath) for 1 hour.\n")
 
-2. Incubate at 42°C (water bath) for 1 hour.
+if args['--zymo']:
+    print("""\
+3. Remove unincorporated ribonucleotides using
+   Zymo RNA Clean & Concentrator 25 Spin kits.
 
-3. Remove unincorporated ribonucleotides using either 
-   ammonium acetate precipitation or Zymo RNA Clean & 
-   Concentrator 25 Spin kits.
+   Zymo Clean & Concentrator 25 Kit
+   ================================
+   Follow the manufacturer's instructions.
+""")
+
+elif args['--ammonium']:
+    print("""\
+3. Remove unincorporated ribonucleotides using
+   ammonium acetate precipitation.
 
    Ammonium acetate precipitation is much cheaper, 
    but takes a little longer and only works for 
@@ -78,11 +99,9 @@ print("""\
    d. Wash pellet with 70% ethanol.
 
    e. Dissolve pellet in 20μL nuclease-free water.
+""")
 
-   Zymo Clean & Concentrator 25 Kit
-   ================================
-   Follow the manufacturer's instructions.
-
+print("""\
 4. Nanodrop to determine the RNA concentration.
 
 5. Dilute each reaction to 300 nM.  Calculate recipes
