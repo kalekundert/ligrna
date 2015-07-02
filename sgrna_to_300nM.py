@@ -35,6 +35,10 @@ args = docopt.docopt(__doc__)
 def process_sample(sgrna, initial_ng_uL, args):
     initial_nM = initial_ng_uL * 1e6 / sgrna.mass('rna')
     target_nM = float(args['--target-concentration'])
+    if initial_nM < target_nM:
+        print('Sample is below target concentration, rounding up to target')
+        initial_nM = target_nM
+        
     if args['--target-volume']:
         target_uL = float(args['--target-volume'])
         sgrna_to_add = target_nM * target_uL / initial_nM
