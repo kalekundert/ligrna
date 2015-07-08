@@ -5,32 +5,28 @@ Display a protocol for running the given number of in vitro transcription
 reactions using the Epicentre T7-Flash Ampliscribe kit. 
 
 Usage:
-    ./in_vitro_transcription.py <reactions> [--zymo | --ammonium] [options]
+    ./in_vitro_transcription.py <reactions> [options]
 
 Options:
-    -d --dna MICROLITERS   [default: 1.0]
+    -d --dna MICROLITERS    [default: 1.0]
         How much template DNA to use (in μL).
 
-    -x --extra PERCENT     [default: 10]
+    -x --extra PERCENT      [default: 10]
         How much extra master mix to create.
 
-    --zymo
-        Use the Zymo spin cleanup kits to purify RNA.
+    -R --no-rntp-mix
+        Indicate that each rNTP needs to be added individually to the reaction.
 
-    --ammonium
-        Use ammonium acetate precipitation to purify RNA.
+    -c --cleanup METHOD     [default: zymo]
+        Choose the method for removing free nucleotides from the RNA:
+        'zymo': Zymo spin kits.
+        'ammonium': Ammonium acetate precipitation.
 """
 
 import docopt
 import math
 
 args = docopt.docopt(__doc__)
-
-# Set Zymo kit extraction to be the default
-# Note to Kale: is there a better way to set this default in docopt directly?
-if not args['--zymo'] and not args['--ammonium']:
-    args['--zymo'] = True
-
 volume = eval(args['<reactions>']) * (1 + float(args['--extra'] or 0) / 100)
 scale = lambda ref, name: (ref * volume, name)
 dna = float(args['--dna'])
@@ -38,10 +34,19 @@ dna = float(args['--dna'])
 reagents = [
         scale(6.3 - dna, "nuclease-free water"),
         scale(2.0, "10x reaction buffer"),
+]
+if args['--no-rntp-mix']:
+    reagents += [
         scale(1.8, "100 mM ATP"),
         scale(1.8, "100 mM CTP"),
         scale(1.8, "100 mM GTP"),
         scale(1.8, "100 mM UTP"),
+    ]
+else:
+    reagents += [
+        scale(7.2, "100 mM rNTP mix"),
+    ]
+reagents += [
         scale(2.0, "100 mM DTT"),
         scale(0.5, "RiboGuard RNase inhibitor"),
         scale(2.0, "AmpliScribe T7"),
@@ -68,24 +73,20 @@ print('   ' + row.format(total_amount / volume, 'master mix'))
 print('   ' + row.format(dna, '10 ng/μL DNA template'))
 print("\n2. Incubate at 42°C (water bath) for 1 hour.\n")
 
-if args['--zymo']:
+if args['--cleanup'] == 'zymo':
     print("""\
 3. Remove unincorporated ribonucleotides using
    Zymo RNA Clean & Concentrator 25 Spin kits.
-
-   Zymo Clean & Concentrator 25 Kit
-   ================================
    Follow the manufacturer's instructions.
 """)
 
-elif args['--ammonium']:
+elif args['--cleanup'] == 'ammonium':
     print("""\
 3. Remove unincorporated ribonucleotides using
    ammonium acetate precipitation.
 
-   Ammonium acetate precipitation is much cheaper, 
-   but takes a little longer and only works for 
-   constructs that are longer than 100 bp.
+   Note that ammonium acetate precipitation only 
+   works for constructs that are longer than 100 bp.
 
    Ammonium Acetate Precipitation
    ==============================
@@ -100,6 +101,8 @@ elif args['--ammonium']:
 
    e. Dissolve pellet in 20μL nuclease-free water.
 """)
+else:
+    raise ValueError("unknown RNA clean-up method: '{}'".format(args['--cleanup']))
 
 print("""\
 4. Nanodrop to determine the RNA concentration.
