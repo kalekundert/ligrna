@@ -4,7 +4,8 @@
 Calculate how to dilute sgRNA to particular concentration (300 nM by default).
 
 Usage:
-    sgrna_to_300nM.py <name/filename> [options]
+    sgrna_to_300nM.py <name> <ng_uL> [options]
+    sgrna_to_300nM.py <csv> [options]
 
 Options:
     -c --target-concentration <nM>  [default: 300]
@@ -18,9 +19,6 @@ Options:
 
     -w --target-water <uL>
         The desired volume of water to dilute with.
-
-    -n --ng_uL <ng/uL>
-        Concentration of a single sample in ng/uL.
 """
 
 import sys; sys.path.append('../scripts')
@@ -36,8 +34,9 @@ def process_sample(sgrna, initial_ng_uL, args):
     initial_nM = initial_ng_uL * 1e6 / sgrna.mass('rna')
     target_nM = float(args['--target-concentration'])
     if initial_nM < target_nM:
-        print('Sample is below target concentration, rounding up to target')
-        initial_nM = target_nM
+        print("Warning: Cannot reach {:.1f} nM!".format(target_nM))
+        print()
+        target_nM = initial_nM
         
     if args['--target-volume']:
         target_uL = float(args['--target-volume'])
@@ -65,18 +64,20 @@ def process_sample(sgrna, initial_ng_uL, args):
     print(30 * '-')
     print('{:>6.2f} μL {:.1f} nM sgRNA'.format(sgrna_to_add + water_to_add, target_nM))
 
+
 # Figure out if name is filename or sgRNA name
-if os.path.isfile(args['<name/filename>']):
-    df = pd.read_csv(args['<name/filename>'], sep='\t')
+if args['<csv>']:
+    df = pd.read_csv(args['<csv>'], sep='\t')
     for row in df.iterrows():
         sgrna = sgrna_helper.from_name( row[1]['Sample ID'].lower() )
         print(sgrna)
         print(30 * '-')
         initial_ng_uL = float(row[1]['Nucleic Acid Conc.'])
-        process_sample( sgrna, initial_ng_uL, args )
+        process_sample(sgrna, initial_ng_uL, args)
         print()
-else:
-    sgrna = sgrna_helper.from_name(args['<name/filename>'])
-    initial_ng_uL = float(args['--ng_uL'])
-    process_sample( sgrna, initial_ng_uL, args )
+
+elif args['<name>']:
+    sgrna = sgrna_helper.from_name(args['<name>'])
+    initial_ng_uL = float(args['<ng_uL>'])
+    process_sample(sgrna, initial_ng_uL, args)
 
