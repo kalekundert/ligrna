@@ -15,7 +15,8 @@ Options:
         How much extra master mix to create.
 
     -R --no-rntp-mix
-        Indicate that each rNTP needs to be added individually to the reaction.
+        Indicate that each you're not using a rNTP mix and that you need to add 
+        each rNTP individually to the reaction.
 
     -c --cleanup METHOD     [default: zymo]
         Choose the method for removing free nucleotides from the RNA:
@@ -56,7 +57,9 @@ total_amount = sum(amount for amount, reagent in reagents)
 longest_amount = int(math.ceil(math.log10(total_amount)))
 
 print("""\
-1. Setup {} in vitro transcription reactions.
+1. Setup {} in vitro transcription reactions by 
+   mixing the following reagents at room temperature 
+   in the order given.
 """.format(args['<reactions>']))
 
 print('   T7 Master Mix for {:.1f} reactions'.format(volume))
