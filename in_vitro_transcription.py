@@ -18,7 +18,7 @@ Options:
         Use the Zymo spin cleanup kits to purify RNA.
 
     --ammonium
-        Use ammonium acetete precipitation to purify RNA.
+        Use ammonium acetate precipitation to purify RNA.
 """
 
 import docopt
