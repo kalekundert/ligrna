@@ -11,6 +11,9 @@ Options:
     -d --dna MICROLITERS    [default: 1.0]
         How much template DNA to use (in μL).
 
+    -i --incubate HOURS     [default: 1]
+        How long to incubate the transcription reaction.
+
     -x --extra PERCENT      [default: 10]
         How much extra master mix to create.
 
@@ -53,6 +56,7 @@ reagents += [
         scale(2.0, "AmpliScribe T7"),
 ]
 
+
 total_amount = sum(amount for amount, reagent in reagents)
 longest_amount = int(math.ceil(math.log10(total_amount)))
 
@@ -74,8 +78,10 @@ print('   Each T7 Reaction')
 print('   ' + 30 * '=')
 print('   ' + row.format(total_amount / volume, 'master mix'))
 print('   ' + row.format(dna, '10 ng/μL DNA template'))
-print("\n2. Incubate at 42°C (water bath) for 1 hour.\n")
+print("""\
 
+2. Incubate at 42°C (water bath) for {} hour{}.
+""".format(args['--incubate'], '' if int(args['--incubate']) == 1 else 's'))
 if args['--cleanup'] == 'zymo':
     print("""\
 3. Remove unincorporated ribonucleotides using
