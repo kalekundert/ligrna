@@ -33,9 +33,9 @@ args = docopt.docopt(__doc__)
 def process_sample(sgrna, initial_ng_uL, args):
     initial_nM = initial_ng_uL * 1e6 / sgrna.mass('rna')
     target_nM = float(args['--target-concentration'])
+
     if initial_nM < target_nM:
-        print("Warning: Cannot reach {:.1f} nM!".format(target_nM))
-        print()
+        print("Warning: Cannot reach {:.1f} nM!\n".format(target_nM))
         target_nM = initial_nM
         
     if args['--target-volume']:
@@ -49,7 +49,7 @@ def process_sample(sgrna, initial_ng_uL, args):
 
     elif args['--target-sgrna']:
         sgrna_to_add = float(args['--target-sgrna'])
-        water_to_add = initial_nM * initial_uL / target_nM - sgrna_to_add
+        water_to_add = initial_nM * sgrna_to_add / target_nM - sgrna_to_add
 
     else:
         raise docopt.DocoptExit("""\
