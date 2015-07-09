@@ -65,7 +65,10 @@ print("""\
 
    Vortex and incubate at 37°C to dissolve.
 
-2. Setup {} Cas9 reactions.  Add theophylline, 
+2. Thaw the sgRNA, then refold it by incubating at 
+   95°C for 2 min.
+
+3. Setup {} Cas9 reactions.  Add theophylline, 
    sgRNA, and Cas9 master mix in that order to each 
    reaction (as appropriate).
 """.format(args['<reactions>']))
@@ -81,17 +84,18 @@ print('   Each Cas9 Reaction')
 print('   ' + 30 * '=')
 print('   ' + row.format(theo, "30 mM theophylline (or water)"))
 print('   ' + row.format(sgrna, "300 nM sgRNA (or water)"))
-print('   ' + row.format(30 - theo - sgrna - dna, 'master mix'))
-print('   ' + row.format(dna, "30 nM target DNA"))
+print('   ' + row.format(30 - theo - sgrna - dna, 'Cas9 mix (or 8 μL water + 3 μL buffer)'))
+print('   ' + 30 * '-')
+print('   ' + row.format(dna, "30 nM target DNA (or water)"))
 print("""\
 
-3. Incubate at room temperature for 10 min.
+4. Incubate at room temperature for 10 min.
 
-4. Add target DNA (as appropriate) to each reaction.
+5. Add target DNA (as appropriate) to each reaction.
 
-5. Incubate at 37°C for 1 hour.
+6. Incubate at 37°C for 1 hour.
 
-6. Add 7.5 μL of 5x digestion mixture to each 
+7. Add 7.5 μL of 5x digestion mixture to each 
    reaction.  Prepare immediately before adding.
 """)
 print('   5x Digestion Mixture')
@@ -100,10 +104,10 @@ for amount, reagent in digestion_reagents:
     print('   ' + row.format(amount, reagent))
 print("""\
 
-7. Incubate at 37°C for 20 min, then at 55°C for 20
+8. Incubate at 37°C for 20 min, then at 55°C for 20
    min, then hold at 12°C.
 
-8. Cast a 2% agarose gel.
+9. Cast a 2% agarose gel.
 
    2% Agarose Gel (<59 reactions)
    ==============================
@@ -113,10 +117,11 @@ print("""\
 
    Microwave for 90 sec to dissolve.
 
-8. Add 7.5 μL 6x Orange G loading dye to each
-   reaction and load the gel.
+9. Add 7.5 μL 6x Orange G loading dye to each
+   reaction.  Unlike most other dyes, Orange G 
+   doesn't overlap the bands we're interested in.
 
-9. Run the gel at 100V for 1 hour.
+10. Load the gel and run at 100V for 1 hour.
 """)
 
 # vim: tw=53
