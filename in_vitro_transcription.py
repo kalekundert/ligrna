@@ -61,7 +61,7 @@ total_amount = sum(amount for amount, reagent in reagents)
 longest_amount = int(math.ceil(math.log10(total_amount)))
 
 print("""\
-1. Setup {} in vitro transcription reactions by 
+1. Setup {} in vitro transcription reaction(s) by 
    mixing the following reagents at room temperature 
    in the order given.
 """.format(args['<reactions>']))
