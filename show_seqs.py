@@ -29,15 +29,6 @@ Arguments:
         nx_3        The nexus insertion design with parameters l=3.
         hp_18       The hairpin replacement design with parameters N=18.
 
-        You can also use a plus sign to concatenate two or more sequences.  
-        This is most often useful for prepending a T7 promoter onto another 
-        sequence.  For example:
-
-        Name        Meaning
-        =========   ===========================================================
-        t7+wt       The wildtype sgRNA sequence with the T7 promoter added.
-        t7+us_0_0   The specified upper stem design with the T7 promoter added.
-
 Options:
     -d, --dna
         Show the DNA sequence for the specified design instead of the RNA 
@@ -47,7 +38,11 @@ Options:
         Append the T7 promoter sequence to the design.  This options 
         automatically enables the '--dna' option.
 
-    -s, --subset RANGE
+    -s, --spacer TARGET     [default: aavs]
+        Specify the sequence that the sgRNA should target.  If an empty string 
+        is given, no spacer sequence will be included.
+
+    -S, --subset RANGE
         Specify a subset of the design to display.  If only one number is 
         given, it is taken as the start position.  If two numbers are given, 
         separated by a colon, they are taken as the start and end positions.  
@@ -117,12 +112,14 @@ longest_name = max([8] + [len(x.name) for x in designs])
 header_template = '{{0:{}s}}'.format(longest_name)
 
 for design in designs:
+    if args['--spacer']:
+        design.prepend(sgrna_helper.spacer(args['--spacer']))
     if args['--t7'] or args['--batch']:
-        design = design.prepend(sgrna_helper.t7_promoter())
+        design.prepend(sgrna_helper.t7_promoter())
 
     if args['--pretty']:
         print(header_template.format(design.name), end='  ')
-        design.show(**format_args)
+        design.show(labels=True, **format_args)
     elif args['--batch']:
         print(header_template.format(design.underscore_name), end='\t')
         design.show(labels=False, **format_args)

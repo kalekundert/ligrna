@@ -1,47 +1,110 @@
 #!/usr/bin/env python3
 
 import nonstdlib
+import collections
+import random
 
-class Construct:
+class Sequence:
 
-    def __init__(self, sequence='', tag=None, name='', constraints=''):
+    def __init__(self, name):
         self.name = name
-        self._sequence = sequence
-
-        self._tags = {i: tag for i in range(len(self))}
-
-        if constraints:
-            self._constraints = constraints
-        else:
-            self._constraints = '.' * len(sequence)
-
-        if len(self.constraints) != len(self.seq):
-            raise ValueError("constraints don't match sequence")
-
-    def __repr__(self):
-        return 'Construct({})'.format(self._sequence)
-
-    def __str__(self):
-        if self.name:
-            return self.name
-        else:
-            return repr(self)
-
-    def __len__(self):
-        return len(self._sequence)
 
     def __eq__(self, sequence):
-        return self._sequence == sequence
+        try:
+            return self.seq == sequence.seq
+        except AttributeError:
+            return self.seq == sequence
 
-    def __add__(self, construct):
-        result = Construct()
-        result.append(self)
-        result.append(construct)
-        result.name = '{}+{}'.format(self.name, construct.name)
-        return result
+    def __hash__(self):
+        from builtins import id
+        return id(self)
 
-    def __iadd__(self, construct):
-        self.append(construct)
+    def __len__(self):
+        return len(self.seq)
+
+    def __iter__(self):
+        yield from self.seq
+
+    def __getitem__(self, index):
+        return self.seq[index]
+
+    @property
+    def seq(self):
+        raise NotImplementedError
+
+    @property
+    def dna(self):
+        return self.seq.replace('U', 'T')
+
+    @property
+    def rna(self):
+        return self.seq.replace('T', 'U')
+
+    @property
+    def indices(self):
+        return range(len(self))
+
+    def mass(self, polymer='rna'):
+        sequence = self.seq.upper()
+
+        a = sequence.count('A')
+        c = sequence.count('C')
+        g = sequence.count('G')
+        t = u = sequence.count('T') + sequence.count('U')
+
+        if polymer == 'rna':
+            return (a * 329.2) + (u * 306.2) + (c * 305.2) + (g * 345.2) + 159
+        elif polymer == 'dna':
+            return ((a + t) * 617.4) + ((g + c) * 618.4) - 124
+        elif polymer == 'ssdna':
+            return (a * 313.2) + (t * 304.2) + (c * 289.2) + (g * 329.2) - 62
+        else:
+            raise ValueError("unknown polymer type: '{}'".format(polymer))
+
+
+class Construct (Sequence):
+
+    Attachment = collections.namedtuple(
+            'Attachment', 'start end construct')
+    BasePair = collections.namedtuple(
+            'BasePair', 'domain_i i domain_j j')
+    FoldEvaluation = collections.namedtuple(
+            'FoldEvaluation', 'base_pairs_kept base_pairs_lost unpaired_bases_kept unpaired_bases_lost')
+
+    def __init__(self, *args):
+        if len(args) == 0:
+            args = '',
+
+        super().__init__(args[0])
+        self._domains = list(args[1:])
+        self._attachments = dict()
+        self._expected_base_pairs = set()
+        self._expected_unpaired_bases = set()
+
+    def __repr__(self):
+        return 'Construct("{}")'.format(self.name)
+
+    def __str__(self):
+        return self.format()
+
+    def __getitem__(self, key):
+        if isinstance(key, str):
+            domains = self.domains_from_name(key)
+            if len(domains) == 1:
+                return domains[0]
+            else:
+                raise KeyError("{} domains named '{}'.".format(len(domains), key))
+        else:
+            super().__getitem__(key)
+
+    def __add__(self, other):
+        construct = Construct()
+        construct += self
+        construct += other
+        return construct
+
+    def __iadd__(self, other):
+        self.append(other)
         return self
 
     @property
@@ -55,177 +118,321 @@ class Construct:
         return re.sub('[^a-zA-Z0-9]+', '_', self.name).strip('_')
 
     @property
+    def slash_name(self):
+        import re
+        return re.sub('[^a-zA-Z0-9]+', '/', self.name).strip('/')
+
+    @property
     def seq(self):
-        return self._sequence
-
-    @property
-    def dna(self):
-        return self._sequence.replace('U', 'T')
-
-    @property
-    def rna(self):
-        return self._sequence.replace('T', 'U')
-
-    @property
-    def indices(self):
-        return range(len(self._sequence))
+        return ''.join(
+                iter.domain.seq[iter.rel_start:iter.rel_end]
+                for iter in self._iterate_domains())
 
     @property
     def constraints(self):
-        return self._constraints
+        return ''.join(
+                iter.domain.constraints[iter.rel_start:iter.rel_end]
+                for iter in self._iterate_domains())
 
-    def mass(self, polymer='rna'):
-        sequence = self.seq.upper()
+    def domain_from_index(self, index):
+        """
+        Return the domain that includes the given index.
+        """
 
-        a = sequence.count('A')
-        c = sequence.count('C')
-        g = sequence.count('G')
-        t = u = sequence.count('T') + sequence.count('U')
+        if index < 0:
+            index += len(self)
 
-        if polymer == 'rna':
-            return (a * 329.2) + (u * 306.2) + (c * 305.2) + (g * 345.2) + 159
-        elif polymer == 'dna':
-            return ((a + t) * 617.4) + ((g + c) * 618.4) + 158
-        elif polymer == 'ssdna':
-            return (a * 313.2) + (t * 304.2) + (c * 289.2) + (g * 329.2) + 79
-        else:
-            raise ValueError("unknown polymer type: '{}'".format(polymer))
+        for iter in self._iterate_domains():
+            if iter.start <= index < iter.end:
+                return iter.domain, iter.rel_index(index)
 
-    def show(self, style=None, start=None, end=None, pad=True, labels=True, dna=False, rna=False, rev_com=False, color='auto'):
+        raise IndexError('index out of range')
 
-        # Choose default colors if none are explicitly given.
+    def domains_from_name(self, *names):
+        domains = [x for x in self._domains if x.name in names]
+        for attachment in self._attachments.values():
+            domains += attachment.construct.domains_from_name(*names)
+        return domains
 
-        if style is None:
-            style = {
-                    'rfp': 'yellow',
-                    'aavs': 'yellow',
-                    'vegfa': 'yellow',
-                    'lower_stem': 'green',
-                    'upper_stem': 'blue',
-                    'nexus': 'red',
-                    'hairpins': 'magenta',
-                    'aptamer': ('white', 'bold'),
-            }
+    def format(self, dna=False, rna=False, start=None, end=None, pad=False, labels=False, color='auto'):
+        sequence = ''
 
-        # Figure out which part of the construct to display.
-
-        if dna: sequence = self.dna
-        elif rna: sequence = self.rna
-        else: sequence = self._sequence
-            
         if start is None: start = 0
         if end is None: end = len(self)
 
+        for iter in self._iterate_domains():
+            rel_start = nonstdlib.clamp(
+                    iter.rel_index(start),
+                    iter.rel_start,
+                    iter.rel_end,
+            )
+            rel_end = nonstdlib.clamp(
+                    iter.rel_index(end),
+                    iter.rel_start,
+                    iter.rel_end,
+            )
+            sequence += iter.domain.format(
+                    dna=dna,
+                    rna=rna,
+                    start=rel_start,
+                    end=rel_end,
+                    color=color,
+            )
+
+        if labels: sequence = "5'-{}-3'".format(sequence)
+        if pad: sequence = (start or 0) * ' ' + sequence
+
+        return sequence
+
+    def show(self, *args, **kwargs):
+        print(self.format(*args, **kwargs))
+
+    def append(self, sequence):
+        self._add_sequence(-1, sequence)
+
+    def prepend(self, sequence):
+        self._add_sequence(0, sequence)
+
+    def delete(self, *domains):
+        for domain in domains:
+            self._remove_sequence(domain)
+
+    def replace(self, domain, sequence):
+        index = self._remove_sequence(domain)
+        self._add_sequence(index, sequence)
+
+    def attach(self, domain, start, end, attachment):
+        if isinstance(domain, str):
+            domain = self[domain]
+        if domain not in self._domains:
+            raise ValueError("no '{}' domain in '{}'.".format(domain.name, self.name))
+
+        if start is ...:
+            start = 0
+        if start not in domain.attachment_sites:
+            raise ValueError("Position {} of domain {} is not an attachment site.".format(start, domain.name))
+
+        if end is ...:
+            end = len(domain)
+        if end not in domain.attachment_sites:
+            raise ValueError("Position {} of domain {} is not an attachment site.".format(end, domain.name))
+
+        self._attachments[domain] = self.Attachment(start, end, attachment)
+
+    def unattach(self, domain):
+        if isinstance(domain, str):
+            domain = self[domain]
+
+        return self._attachments.pop(domain).construct
+
+    def reattach(self, domain, start, end):
+        self.attach(domain, start, end, self.unattach(domain))
+
+    def define_expected_fold(self, fold):
+        self._expected_base_pairs, self._expected_unpaired_bases = \
+                self._find_base_pairs(fold)
+
+    def evaluate_fold(self, fold):
+        base_pairs, unpaired_bases = self._find_base_pairs(fold)
+        base_pairs_kept = len(base_pairs & self._expected_base_pairs)
+        base_pairs_lost = len(self._expected_base_pairs) - base_pairs_kept
+        unpaired_bases_kept = len(unpaired_bases & self._expected_unpaired_bases)
+        unpaired_bases_lost = len(self._expected_unpaired_bases) - unpaired_bases_kept
+
+        return self.FoldEvaluation(
+                base_pairs_kept,
+                base_pairs_lost,
+                unpaired_bases_kept,
+                unpaired_bases_lost)
+
+    def _iterate_domains(self):
+
+        class DomainIter:
+
+            def __init__(self, domain, cursor, rel_start, rel_end):
+                self.domain = domain
+                self.start = cursor
+                self.rel_start = rel_start
+                self.rel_end = rel_end
+
+            def __repr__(self):
+                return ('DomainIter('
+                            'domain={0.domain!r}, '
+                            'start={0.start}, '
+                            'rel_start={0.rel_start}, '
+                            'rel_end={0.rel_end})'.format(self))
+            @property
+            def len(self):
+                return self.rel_end - self.rel_start
+
+            @property
+            def end(self):
+                return self.start + self.len
+
+            def rel_index(self, index):
+                return index - self.start + self.rel_start
+
+        cursor = 0
+
+        for domain in self._domains:
+
+            if domain not in self._attachments:
+                yield DomainIter(domain, cursor, 0, len(domain))
+                cursor += len(domain)
+
+            else:
+                attachment = self._attachments[domain]
+
+                yield DomainIter(domain, cursor, 0, attachment.start)
+                cursor += attachment.start
+
+                for domain_iter in attachment.construct._iterate_domains():
+                    domain_iter.start += cursor
+                    yield domain_iter
+                cursor += len(attachment.construct)
+
+                yield DomainIter(domain, cursor, attachment.end, len(domain))
+                cursor += len(domain) - attachment.end
+
+    def _add_sequence(self, position, sequence):
+        if position < 0:
+            position += len(self)
+        if position > len(self):
+            raise IndexError('index out of range')
+
+        if isinstance(sequence, Construct):
+            self._domains[position:position] = sequence._domains
+            self._attachments.update(sequence._attachments)
+        elif isinstance(sequence, Domain):
+            self._domains.insert(position, sequence)
+        else:
+            raise ValueError("can't combine 'Construct' and '{}'".format(sequence.__class__.__name__))
+
+    def _remove_sequence(self, domain):
+        if isinstance(domain, str):
+            domain = self[domain]
+
+        index = self._domains.index(domain)
+        self._domains.remove(domain)
+        self._attachments.pop(domain, None)
+        return index
+
+    def _find_base_pairs(self, fold):
+        if len(fold) != len(self):
+            raise ValueError("2° structure prediction has {} positions, not {}.".format(len(fold), len(self)))
+        if fold.count('(') != fold.count(')'):
+            raise ValueError("mismatched base pairs: {} '(' and {} ')'.".format(fold.count('('), fold.count(')')))
+
+        base_pairs = set()
+        unpaired_bases = set()
+        pending_base_pairs = list()
+
+        for j, symbol in enumerate(fold):
+
+            # When we find the start of a base pair, keep track of where it 
+            # occurred in a LIFO queue.
+
+            if symbol == '(':
+                pending_base_pairs.append(j)
+
+            # When we find the end of a base pair, pop the start off the LIFO 
+            # queue and record the base pair.
+
+            if symbol == ')':
+                i = pending_base_pairs.pop()
+                domain_i, rel_i = self.domain_from_index(i)
+                domain_j, rel_j = self.domain_from_index(j)
+                base_pair = self.BasePair(domain_i, rel_i, domain_j, rel_j)
+                base_pairs.add(base_pair)
+
+            # When we find an unpaired base, record it.
+
+            if symbol == '.':
+                unpaired_base = self.domain_from_index(j)
+                unpaired_bases.add(unpaired_base)
+
+        assert not pending_base_pairs
+        return base_pairs, unpaired_bases
+
+
+class Domain (Sequence):
+
+    def __init__(self, name, sequence):
+        super().__init__(name)
+        self._sequence = sequence
+        self._attachment_sites = []
+        self._constraints = None
+        self.construct = None
+        self.mutable = False
+        self.style = None
+
+    def __repr__(self):
+        return 'Domain("{}", "{}")'.format(self.name, self.seq)
+
+    def __str__(self):
+        return self.format()
+
+    def __len__(self):
+        return len(self.seq)
+
+    @property
+    def seq(self):
+        return self._sequence
+
+    @seq.setter
+    def seq(self, sequence):
+        if not self.mutable:
+            raise AssertionError("domain '{}' is not mutable.".format(self.name))
+        if self._constraints and len(self._constraints) != len(sequence):
+            raise ValueError("sequence doesn't match constraints")
+        self._sequence = sequence
+
+    @property
+    def constraints(self):
+        return self._constraints or '.' * len(self)
+
+    @constraints.setter
+    def constraints(self, constraints):
+        if len(constraints) != len(self):
+            raise ValueError("constraints don't match sequence")
+        self._constraints = constraints
+
+    @property
+    def attachment_sites(self):
+        return self._attachment_sites 
+
+    @attachment_sites.setter
+    def attachment_sites(self, sites):
+        if sites == 'anywhere':
+            sites = range(len(self) + 1)
+        sites = list(sites)
+        if any(x < 0 or x > len(self) for x in sites):
+            raise ValueError('index out of range')
+        self._attachment_sites = sites
+
+    def format(self, dna=False, rna=False, start=None, end=None, color='auto'):
+        if dna: sequence = self.dna
+        elif rna: sequence = self.rna
+        else: sequence = self.seq
+
+        if start is None: start = 0
+        if end is None: end = len(self)
         sequence = sequence[start:end]
+            
+        # The style can either be ("color", "weight") or just "color".  If no 
+        # weight is given, it is assumed to be normal.
 
-        if rev_com: sequence = complement(sequence)
+        style = self.style or 'normal'
+        if isinstance(style, str):
+            style = style, 'normal'
 
-        # Print out ever base in the appropriate color.
+        return nonstdlib.color(sequence, *style, when=color)
 
-        if pad: nonstdlib.write(' ' * start)
-        if labels: nonstdlib.write("5'-" if not rev_com else "3'-")
-        
-        for i, base in enumerate(sequence, start):
-            tag = self._tags[i]
-            color_weight = style.get(tag, 'normal')
-            if isinstance(color_weight, str):
-                color_weight = color_weight, 'normal'
-            nonstdlib.write_color(base, *color_weight, when=color)
-
-        if labels: nonstdlib.write("-3'" if not rev_com else "-5'")
-        nonstdlib.write('\n')
-
-    def copy(self):
-        import copy
-        return copy.deepcopy(self)
-
-    def prepend(self, construct):
-        self.insert(construct, 0)
-        return self
-
-    def append(self, construct):
-        self.insert(construct, len(self))
-        return self
-
-    def append_with_linker(self, construct):
-        self.insert_with_linker(construct, len(self))
-        return self
-
-    def insert(self, construct, index):
-        head = 0
-        new_sequence = ''
-        new_tags = {}
-        new_constraints = ''
-
-        for i in range(index):
-            new_sequence += self._sequence[i]
-            new_tags[head] = self._tags[i]
-            new_constraints += self._constraints[i]
-            head += 1
-
-        for i in range(len(construct)):
-            new_sequence += construct._sequence[i]
-            new_tags[head] = construct._tags[i]
-            new_constraints += construct._constraints[i]
-            head += 1
-
-        for i in range(index, len(self._sequence)):
-            new_sequence += self._sequence[i]
-            new_tags[head] = self._tags[i]
-            new_constraints += self._constraints[i]
-            head += 1
-
-        self._sequence = new_sequence
-        self._tags = new_tags
-        self._constraints = new_constraints
-
-        return self
-
-    def delete(self, start=..., end=...):
-        head = 0
-        new_sequence = ''
-        new_tags = {}
-        new_constraints = ''
-
-        if start is ...: start = 0
-        if start < 0: start = len(self) - abs(start)
-        if end is ...: end = len(self)
-        if end < 0: start = len(self) - abs(end)
-
-        for i in range(start):
-            new_sequence += self._sequence[i]
-            new_tags[head] = self._tags[i]
-            new_constraints += self._constraints[i]
-            head += 1
-
-        for i in range(end, len(self._sequence)):
-            new_sequence += self._sequence[i]
-            new_tags[head] = self._tags[i]
-            new_constraints += self._constraints[i]
-            head += 1
-
-        self._sequence = new_sequence
-        self._tags = new_tags
-        self._constraints = new_constraints
-
-        return self
-
-    def replace(self, start, end, construct):
-        self.delete(start, end)
-        self.insert(construct, start)
-        return self
+    def show(self, *args, **kwargs):
+        print(self.format(*args, **kwargs))
 
     def mutate(self, index, base):
-        self._sequence = (
-                self._sequence[:index] +
-                base +
-                self._sequence[index+1:]
-        )
-
-    def pad(self, length, repeat_factory):
-        self.insert(repeat_factory(length), 0)
-        self.insert(repeat_factory(length), len(self))
-        return self
+        self.seq = self.seq[:index] + base + self.seq[index+1:]
 
 
 
@@ -266,38 +473,77 @@ def parse_name(name):
 
     return sub_names
 
-def wt_sgrna(target='aavs'):
-    sgrna = Construct(name='wt sgrna')
+def make_name(factory, *args):
+    return factory + '(' + ','.join(str(x) for x in args) + ')'
 
-    if target == 'rfp':
-        sgrna += Construct('AACUUUCAGUUUAGCGGUCU', target)
-    elif target == 'aavs':
-        sgrna += Construct('GGGGCCACTAGGGACAGGAT', target)
-    elif target == 'vegfa':
-        sgrna += Construct('GGGTGGGGGGAGTTTGCTCC', target)
-    else:
-        raise ValueError("Unknown target: '{}'".format(target))
+def repeat(name, length, pattern='UUUCCC'):
+    """
+    Construct a repeating sequence using the given pattern.
 
-    sgrna += Construct('GUUUUA', 'lower_stem')
-    sgrna += Construct('GA', 'bulge')
-    sgrna += Construct('GCUA', 'upper_stem')
-    sgrna += Construct('GAAA')
-    sgrna += Construct('UAGC', 'upper_stem')
-    sgrna += Construct('AAGU', 'bulge')
-    sgrna += Construct('UAAAAU', 'lower_stem')
-    sgrna += Construct('AAGGCUAGUCCGU', 'nexus')
-    sgrna += Construct('UAUCA')
-    sgrna += Construct('ACUUGAAAAAGU', 'hairpins')
-    sgrna += Construct('G')
-    sgrna += Construct('GCACCGAGUCGGUGC', 'hairpins')
-    sgrna += Construct('UUUUUU')
+    Parameters
+    ----------
+    length: int
+        Indicate how long the final sequence should be.
+
+    pattern: str
+        Provide the basic unit that should be repeated to make the sequence.
+    """
+    sequence = pattern * (1 + length // len(pattern))
+    return Domain(name, sequence[:length])
+
+def molecular_weight(name, polymer='rna'):
+    return from_name(name).mass(polymer)
+
+def complement(sequence):
+    complements = str.maketrans('ACTG', 'TGAC')
+    return sequence.translate(complements)
+
+def reverse_complement(sequence):
+    return complement(sequence[::-1])
+
+
+def wt_sgrna():
+    """
+    Return the wildtype sgRNA sequence, without a spacer.
+
+    The construct is composed of 3 domains: stem, nexus, and hairpins.  The 
+    stem domain encompasses the lower stem, the bulge, and the upper stem.  
+    Attachments are allowed pretty much anywhere, although it would be prudent 
+    to restrict this based on the structural biology of Cas9 if you're planning 
+    to make random attachments.
+    """
+    sgrna = Construct('wt sgrna')
+
+    sgrna += Domain('stem', 'GUUUUAGAGCUAGAAAUAGCAAGUUAAAAU')
+    sgrna += Domain('nexus', 'AAGGCUAGUCCGU')
+    sgrna += Domain('hairpins', 'UAUCAACUUGAAAAAGUGGCACCGAGUCGGUGC')
+    sgrna += Domain('tail', 'UUUUUU')
+
+    sgrna['stem'].style = 'green'
+    sgrna['nexus'].style = 'red'
+    sgrna['hairpins'].style = 'blue'
+
+    sgrna['stem'].attachment_sites = 'anywhere'
+    sgrna['nexus'].attachment_sites = range(2, 12)
+    sgrna['hairpins'].attachment_sites = 'anywhere'
+
     return sgrna
 
-def dead_sgrna(target='aavs'):
-    sgrna = wt_sgrna(target)
+def dead_sgrna():
+    """
+    Return the sequence for the negative control sgRNA.
+
+    This sequence has two mutations in the nexus region that prevent the sgRNA 
+    from folding properly.  These mutations were described by Briner et al.
+    """
+    sgrna = wt_sgrna()
     sgrna.name = 'dead sgrna'
-    sgrna.mutate(52, 'C')
-    sgrna.mutate(53, 'C')
+
+    sgrna['nexus'].mutable = True
+    sgrna['nexus'].mutate(2, 'C')
+    sgrna['nexus'].mutate(3, 'C')
+    sgrna['nexus'].mutable = False
+
     return sgrna
 
 def aptamer(ligand, piece='whole'):
@@ -310,10 +556,10 @@ def aptamer(ligand, piece='whole'):
         Specify the aptamer to generate.  Right now only the theophylline 
         aptamer is known.
 
-    piece: 'whole', '5', '3', or 'linker'
+    piece: 'whole', '5', '3', or 'spacer'
         Specify which part of the aptamer to generate.  The whole aptamer 
         is returned by default, but each aptamer can be broken into a 
-        5' half, a 3' half, and a linker between those halves.  
+        5' half, a 3' half, and a spacer between those halves.  
 
     Returns
     -------
@@ -325,54 +571,109 @@ def aptamer(ligand, piece='whole'):
     # Get the right sequence for the requested aptamer.
 
     if ligand in ('th', 'theo', 'theophylline'):
-        ligand = 'theophylline'
+        name = 'theo aptamer'
         sequence_pieces   = 'AUACCAGCC', 'GAAA', 'GGCCCUUGGCAG'
         constraint_pieces = '(((((.(((', '....', ')))....)))))'
     else:
         raise ValueError("no aptamer for '{}'".format(ligand))
 
-    # Construct and return the requested piece of the requested aptamer.
+    # Define the domains that make up the aptamer.
+
+    aptamer_5 = Domain("aptamer/5'", sequence_pieces[0])
+    aptamer_S = Domain("spacer", sequence_pieces[1])
+    aptamer_3 = Domain("aptamer/3'", sequence_pieces[2])
+
+    aptamer_5.constraints = constraint_pieces[0]
+    aptamer_S.constraints = constraint_pieces[1]
+    aptamer_3.constraints = constraint_pieces[2]
+
+    aptamer_5.style = 'white', 'bold'
+    aptamer_S.style = 'white', 'bold'
+    aptamer_3.style = 'white', 'bold'
+
+    aptamer_S.mutable = True
+
+    # Assemble the aptamer domains into a single construct and return it.
+
+    construct = Construct('aptamer')
 
     if piece == 'whole':
-        sequence = ''.join(sequence_pieces)
-        constraints = ''.join(constraint_pieces)
+        construct += aptamer_5
+        construct += aptamer_S
+        construct += aptamer_3
     elif str(piece) == '5':
-        sequence = sequence_pieces[0]
-        constraints = constraint_pieces[0]
+        construct += aptamer_5
     elif piece == 'linker':
-        sequence = sequence_pieces[1]
-        constraints = constraint_pieces[1]
+        construct += aptamer_S
     elif str(piece) == '3':
-        sequence = sequence_pieces[2]
-        constraints = constraint_pieces[2]
+        construct += aptamer_3
     else:
         raise ValueError("must request 'whole', '5', '3', or 'linker' piece of aptamer, not {}.".format(piece))
 
-    aptamer = Construct(sequence, 'aptamer', constraints=constraints)
-    aptamer.name = ligand
-    return aptamer
+    return construct
 
-def theophylline_aptamer(piece='whole'):
-    return aptamer('theo', piece)
+def aptamer_insert(ligand,
+        linker_len=0,
+        spacer_len=0,
+        repeat_factory=repeat,
+        num_aptamers=1):
 
-def t7_promoter(source='briner'):
-    if source == 'igem':
-        # The "T7 consensus -10 and rest" sequence from IGEM:
-        # http://parts.igem.org/Promoters/Catalog/T7
-        promoter = Construct('TAATACGACTCACTATA', 't7')
+    insert = aptamer(ligand)
 
-    elif source == 'briner':
-        # The T7 sequence used by Briner et al. (2014):
-        promoter = Construct('TATAGTAATAATACGACTCACTATAG', 't7')
+    # If multiple aptamers were requested, build them around the central one.
 
+    for i in range(1, num_aptamers):
+        insert.replace('spacer', aptamer(ligand))
+
+    # If a spacer was requested, insert it into the middle of the aptamer.
+
+    if spacer_len != 0:
+        insert.replace('spacer', repeat_factory('spacer', spacer_len))
+
+    # Add a linker between the aptamer and the sgRNA.
+
+    try: linker_len_5, linker_len_3 = linker_len
+    except TypeError: linker_len_5 = linker_len_3 = linker_len
+
+    insert.prepend(repeat_factory("linker/5'", linker_len_5))
+    insert.append(repeat_factory("linker/3'", linker_len_3))
+
+    return insert
+
+def spacer(target='aavs'):
+    """
+    Return the specified spacer sequence.
+
+    Parameters
+    ----------
+    target: 'rfp', 'aavs', 'vegfa'
+        The sequence to target.
+    """
+    if target == 'rfp':
+        sequence = 'GGAACUUUCAGUUUAGCGGUCU'
+    elif target == 'aavs':
+        sequence = 'GGGGCCACTAGGGACAGGAT'
+    elif target == 'vegfa':
+        sequence = 'GGGTGGGGGGAGTTTGCTCC'
     else:
-        raise ValueError("Unknown T7 sequence: '{}'".format(source))
+        raise ValueError("Unknown target: '{}'".format(target))
 
-    promoter.name = 't7'
-    return promoter
+    spacer = Domain('spacer', sequence)
+    spacer.style = 'yellow'
 
-def aavs_target():
-    return Construct(
+    return Construct('spacer', spacer)
+
+def target(target='aavs'):
+    """
+    Return the specified target sequence.
+
+    Parameters
+    ----------
+    target: 'rfp', 'aavs', 'vegfa'
+        The sequence to return.
+    """
+    if target == 'aavs':
+        return Construct('aavs', Domain('target', 
             'CCCCGTTCTCCTGTGGATTCGGGTCACCTCTCACTCCTTTCATTTGGGCA'
             'GCTCCCCTACCCCCCTTACCTCTCTAGTCTGTGCTAGCTCTTCCAGCCCC'
             'CTGTCATGGCATCTTCCAGGGGTCCGAGAGCTCAGCTAGTCTTCTTCCTC'
@@ -382,47 +683,35 @@ def aavs_target():
             'GGGCCACTAGGGACAGGATTGGTGACAGAAAAGCCCCATCCTTAGGCCTC'
             'CTCCTTCCTAGTCTCCTGATATTGGGTCTAACCCCCACCTCCTGTTAGGC'
             'AGATTCCTTATCTGGTGACACACCCCCATTTCCTGGAGCCATCTCTCTCC'
-            'TTGCCAGAACCTCTAAGGTTTGCTTACGATGGAGCCAGAGAGGAT', name='aavs')
+            'TTGCCAGAACCTCTAAGGTTTGCTTACGATGGAGCCAGAGAGGAT'))
+    else:
+        raise ValueError("Unknown target: '{}'".format(target))
 
-def repeat(length, pattern='UUUCCC'):
-    sequence = pattern * (1 + length // len(pattern))
-    return Construct(sequence[:length])
+def t7_promoter(source='briner'):
+    """
+    Return the sequence for the T7 promoter.
 
-def smart_repeat(length, ligand=None):
-    from itertools import product
-    from more_itertools import pairwise
-    from collections import Counter
+    Parameters
+    ----------
+    source: 'briner', 'igem'
+        Specify which T7 sequence to use.  All the sequences are similar, but 
+        different sequences may give better or worse transcription.
+    """
+    if source == 'igem':
+        # The "T7 consensus -10 and rest" sequence from IGEM:
+        # http://parts.igem.org/Promoters/Catalog/T7
+        sequence = 'TAATACGACTCACTATA'
 
-    # Find the least common pair of RNA nucleotides in a collections.Counter 
-    # object.
+    elif source == 'briner':
+        # The T7 sequence used by Briner et al. (2014):
+        sequence = 'TATAGTAATAATACGACTCACTATAG'
 
-    def least_common(counter, first_nuc=None):
-        least_common = None
-        rna_nucs = 'UCAG'  # In the order that ties will be resolved.
-        for pair in product(first_nuc or rna_nucs, rna_nucs):
-            if not least_common or counter[pair] < counter[least_common]:
-                least_common = pair
-        return least_common if first_nuc is None else least_common[1]
+    else:
+        raise ValueError("Unknown T7 sequence: '{}'".format(source))
 
-    
-    # Count how often each pair of nucleotides appears in the given reference 
-    # sequences.
-
-    constructs = [wt_sgrna()]
-    if aptamer: constructs.append(aptamer(ligand))
-
-    counter = Counter()
-    for construct in constructs:
-        for pair in pairwise(construct.rna):
-            counter[pair] += 1
-
-    # Compose a repeat that exclusively contains the least commonly seen pairs 
-    # of nucleotides.
-
-    repeat = ''.join(least_common(counter))
-    while len(repeat) < length:
-        repeat += least_common(counter, repeat[-1])
-    return Construct(repeat[:length])
+    return Construct(
+            '{} t7'.format(source),
+            Domain('t7', sequence))
 
 def upper_stem_insertion(N, linker_len=0, spacer_len=0):
     """
@@ -440,9 +729,14 @@ def upper_stem_insertion(N, linker_len=0, spacer_len=0):
         between the two ends of the stem.
 
     linker_len: int
-        Indicate how many base pairs should separate the aptamer from the upper 
+        Indicate how many bases should separate the aptamer from the upper 
         stem.  The linker sequence will have a UUUCCCUUUCCC... pattern so that 
         the design doesn't have really long repeats or an out-of-whack GC%.
+
+    spacer_len: int
+        Indicate how many bases should separate the 3' half of the aptamer from 
+        the 5' half.  The spacer sequence will have the same pattern as the 
+        linker (see above).
 
     Returns
     -------
@@ -457,15 +751,16 @@ def upper_stem_insertion(N, linker_len=0, spacer_len=0):
     else:
         args = N, linker_len
 
-    return make_insertion(
-            'us(' + ','.join(str(x) for x in args) + ')',
-            28 + N,
-            40 - N,
+    sgrna = wt_sgrna()
+    sgrna.name = make_name('us', *args)
+    sgrna.attach('stem', 8 + N, 20 - N, aptamer_insert(
+            'theo',
             linker_len=linker_len,
             spacer_len=spacer_len,
-    )
+    ))
+    return sgrna
 
-def lower_stem_insertion(N, linker_len=0):
+def lower_stem_insertion(N, linker_len=0, spacer_len=0):
     """
     Insert the aptamer into the lower stem region of the sgRNA.
 
@@ -482,6 +777,11 @@ def lower_stem_insertion(N, linker_len=0):
         stem.  The linker sequence will have a UUUCCCUUUCCC... pattern so that 
         the design doesn't have really long repeats or an out-of-whack GC%.
 
+    spacer_len: int
+        Indicate how many bases should separate the 3' half of the aptamer from 
+        the 5' half.  The spacer sequence will have the same pattern as the 
+        linker (see above).
+
     Returns
     -------
     sgRNA: Construct
@@ -490,12 +790,19 @@ def lower_stem_insertion(N, linker_len=0):
     if not 0 <= N <= 6:
         raise ValueError("Location for lower stem insertion must be between 0 and 6, not {}.".format(N))
 
-    return make_insertion(
-            'ls({},{})'.format(N, linker_len),
-            20 + N,
-            50 - N,
+    if spacer_len != 0:
+        args = N, linker_len, spacer_len
+    else:
+        args = N, linker_len
+
+    sgrna = wt_sgrna()
+    sgrna.name = make_name('ls', *args)
+    sgrna.attach('stem', 0 + N, 30 - N, aptamer_insert(
+            'theo',
             linker_len=linker_len,
-    )
+            spacer_len=spacer_len,
+    ))
+    return sgrna
 
 def nexus_insertion(linker_len=0):
     """
@@ -528,13 +835,14 @@ def nexus_insertion(linker_len=0):
     sgRNA: Construct
     """
 
-    return make_insertion(
-            'nx({})'.format(linker_len),
-            54,
-            59,
+    sgrna = wt_sgrna()
+    sgrna.name = make_name('nx', linker_len)
+    sgrna.attach('nexus', 4, 9, aptamer_insert(
+            'theo',
             linker_len=linker_len,
-            repeat_factory=lambda n: repeat(n, 'U'),
-    )
+            repeat_factory=lambda name, length: repeat(name, length, 'U'),
+    ))
+    return sgrna
     
 def nexus_insertion_2(N, M, spacer_len=0, num_aptamers=1):
     """
@@ -595,17 +903,16 @@ def nexus_insertion_2(N, M, spacer_len=0, num_aptamers=1):
     else:
         args = N, M
 
-    name = 'nxx({})'.format(','.join(str(x) for x in args))
-
     # Create and return the construct using a helper function.
 
-    return make_insertion(
-            name,
-            52 + N,
-            61 - M,
+    sgrna = wt_sgrna()
+    sgrna.name = make_name('nxx', *args)
+    sgrna.attach('nexus', 2 + N, 11 - M, aptamer_insert(
+            'theo',
             spacer_len=spacer_len,
             num_aptamers=num_aptamers,
-    )
+    ))
+    return sgrna
 
 def hairpin_replacement(N):
     """
@@ -630,25 +937,19 @@ def hairpin_replacement(N):
         The specified construct will be returned, with a hexa-uracil tail will 
         added to the end for the benefit of the T7 polymerase.
     """
+    design = wt_sgrna()
+    design.name = make_name('hp', N)
 
-    # Remove the UUUUUU tail from the wildtype sgRNA.  This tail will be added 
-    # back, in a UUUCCC pattern to avoid too many consecutive uracils, if N is 
-    # past the end of the sgRNA proper.
+    domain_len = len(design['hairpins'])
+    insertion_site = min(N, domain_len)
+    linker_len = max(0, N - domain_len), 0
 
-    design = Construct(name='hp({})'.format(N))
-    design += wt_sgrna().delete(-6, ...)
-
-    insertion_site = 63 + N
-
-    if insertion_site < len(design):
-        design.delete(insertion_site, ...)
-
-    if insertion_site > len(design):
-        design += repeat(insertion_site - len(design))
-
-    design += theophylline_aptamer()
-    design += Construct('UUUUUU')
-
+    design.attach(
+            'hairpins',
+            insertion_site,
+            domain_len,
+            aptamer_insert('theo', linker_len=linker_len),
+    )
     return design
 
 def induced_dimerization(half, N):
@@ -685,72 +986,29 @@ def induced_dimerization(half, N):
 
     # Construct and return the requested sequence.
 
-    design = Construct(name='id({},{})'.format(half, N))
+    design = Construct()
+    design.name = make_name('id', half, N)
 
     if half == '5':
-        design += wt_sgrna().delete(start=28+N)
-        design += theophylline_aptamer('5')
+        design += wt_sgrna()['stem']
+        design.attach('stem', 8 + N, ..., aptamer('theo', '5'))
 
     elif half == '3':
-        design += theophylline_aptamer('3')
-        design += wt_sgrna().delete(end=40-N)
+        design += wt_sgrna()
+        design.attach('stem', ..., 20 - N, aptamer('theo', '3'))
 
     else:
         raise ValueError("Half for induced dimerization must be either 5 (for the 5' half) or 3 (for the 3' half), not '{}'.".format(half))
 
     return design
 
-def make_insertion(name, insert_begin, insert_end,
-        linker_len=0,
-        spacer_len=0,
-        repeat_factory=repeat,
-        num_aptamers=1,
-        ligand='theo'):
-
-    design = Construct(name=name)
-    design += wt_sgrna()
-
-    # If a spacer was requested, insert it into the middle of the aptamer.
-
-    if spacer_len == 0:
-        insert = aptamer(ligand)
-    else:
-        insert = aptamer(ligand, '5')
-        insert += repeat_factory(spacer_len) 
-        insert += aptamer(ligand, '3')
-
-    # If multiple aptamers were requested, build them around the central one.
-
-    for i in range(1, num_aptamers):
-        insert.prepend(aptamer(ligand, '5'))
-        insert.append(aptamer(ligand, '3'))
-
-    # If a linker between the aptamer and the sgRNA was requested, add it.
-
-    insert.pad(linker_len, repeat_factory)
-
-    # Insert the aptamer into the sgRNA and return the resulting construct.
-
-    design.replace(insert_begin, insert_end, insert)
-    return design
-
-def molecular_weight(name, polymer='rna'):
-    return from_name(name).mass(polymer)
-
-def complement(sequence):
-    complements = str.maketrans('ACTG', 'TGAC')
-    return sequence.translate(complements)
-
-def reverse_complement(sequence):
-    return complement(sequence[::-1])
-
 
 ## Abbreviations
 wt = wt_sgrna
 dead = dead_sgrna
+th = theo = lambda: aptamer('theo')
+aavs = lambda: target('aavs')
 t7 = t7_promoter
-th = theo = theophylline_aptamer
-aavs = aavs_target
 us = upper_stem_insertion
 ls = lower_stem_insertion
 nx = nexus_insertion
@@ -759,46 +1017,201 @@ hp = hairpin_replacement
 id = induced_dimerization
 
 
-def test_construct_constraints():
+def test_domain_class():
     import pytest
 
-    with pytest.raises(ValueError): Construct('AA', constraints='.')
-    with pytest.raises(ValueError): Construct('AA', constraints='...')
+    domain = Domain('Alice', 'ACTG')
 
-    ins = Construct('AA', constraints='()')
-    seq = 'AAAAAAAAAA'
+    assert domain.name == 'Alice'
+    assert domain.seq == 'ACTG'
+    assert domain.dna == 'ACTG'
+    assert domain.rna == 'ACUG'
+    assert domain.indices == range(4)
+    assert domain.mass('rna') == 1444.8
+    assert domain.mass('dna') == 2347.6
+    assert domain.mass('ssdna') == 1173.8
+    assert len(domain) == 4
+    assert domain[0] == 'A'
+    assert domain[1] == 'C'
+    assert domain[2] == 'T'
+    assert domain[3] == 'G'
+    assert domain.constraints == '....'
+    assert domain.attachment_sites == []
 
-    assert ins.constraints == '()'
-    assert Construct(seq).constraints == '..........'
-    assert Construct(seq).prepend(ins).constraints == '()..........'
-    assert Construct(seq).append(ins).constraints == '..........()'
-    assert Construct(seq).insert(ins, 5).constraints == '.....().....'
-    assert Construct(seq).replace(3, 5, ins).constraints == '...().....'
+    for i, base in enumerate(domain):
+        assert base == domain[i]
 
-def test_wt_sgrna():
-    assert from_name('wt').seq == 'GGGGCCACTAGGGACAGGATGUUUUAGAGCUAGAAAUAGCAAGUUAAAAUAAGGCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
-    assert from_name('wt_rfp').seq == 'AACUUUCAGUUUAGCGGUCUGUUUUAGAGCUAGAAAUAGCAAGUUAAAAUAAGGCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
-    assert from_name('wt_vegfa').seq == 'GGGTGGGGGGAGTTTGCTCCGUUUUAGAGCUAGAAAUAGCAAGUUAAAAUAAGGCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
+    with pytest.raises(ValueError):
+        domain.constraints = '.'
 
-def test_dead_sgrna():
-    assert from_name('dead').seq == 'GGGGCCACTAGGGACAGGATGUUUUAGAGCUAGAAAUAGCAAGUUAAAAUAACCCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
-    assert from_name('dead_rfp').seq == 'AACUUUCAGUUUAGCGGUCUGUUUUAGAGCUAGAAAUAGCAAGUUAAAAUAACCCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
-    assert from_name('dead_vegfa').seq == 'GGGTGGGGGGAGTTTGCTCCGUUUUAGAGCUAGAAAUAGCAAGUUAAAAUAACCCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
+    domain.constraints = '.(.)'
+    assert domain.constraints == '.(.)'
 
-def test_theophylline_aptamer():
-    assert theophylline_aptamer().seq == 'AUACCAGCCGAAAGGCCCUUGGCAG'
+    domain.attachment_sites = range(len(domain))
+    assert domain.attachment_sites == [0, 1, 2, 3]
 
-def test_repeat():
-    assert repeat(1).seq == 'U'
-    assert repeat(2).seq == 'UU'
-    assert repeat(3).seq == 'UUU'
-    assert repeat(4).seq == 'UUUC'
-    assert repeat(5).seq == 'UUUCC'
-    assert repeat(6).seq == 'UUUCCC'
-    assert repeat(7).seq == 'UUUCCCU'
+    with pytest.raises(AssertionError):
+        domain.seq = 'AAAA'
 
-def test_smart_repeat():
-    assert smart_repeat(10, 'theo') == 'UCGUCGUCGU'
+    domain.mutable = True
+    domain.seq = 'GTCA'
+    assert domain.seq == 'GTCA'
+
+def test_construct_class():
+    import pytest
+
+    # Test making a one domain construct.
+
+    bob = Construct('Bob')
+    bob += Domain('HindIII', 'AAGCTT')
+
+    assert bob.seq == 'AAGCTT'
+    assert bob.constraints == 6 * '.'
+    assert len(bob) == 6
+
+    # Test making a two domain construct.
+
+    bob += Domain('EcoRI', 'GAATTC')
+
+    assert bob.seq == 'AAGCTTGAATTC'
+    assert bob.constraints == 12 * '.'
+    assert len(bob) == 12
+
+    # Test appending one construct onto another.
+
+    carol = Construct('Carol')
+    carol += Domain('BamHI', 'GGATCC')
+    carol += bob
+
+    assert carol.seq == 'GGATCCAAGCTTGAATTC'
+    assert carol.constraints == 18 * '.'
+    assert len(carol) == 18
+
+    carol.prepend(Domain('DraI', 'TTTAAA'))
+
+    assert carol.seq == 'TTTAAAGGATCCAAGCTTGAATTC'
+    assert carol.constraints == 24 * '.'
+    assert len(carol) == 24
+
+    carol.replace('DraI', Domain('SalI', 'GTCGAC'))
+
+    assert carol.seq == 'GTCGACGGATCCAAGCTTGAATTC'
+    assert carol.constraints == 24 * '.'
+    assert len(carol) == 24
+
+    carol.delete('SalI')
+
+    assert carol.seq == 'GGATCCAAGCTTGAATTC'
+    assert carol.constraints == 18 * '.'
+    assert len(carol) == 18
+
+    # Test inserting one construct into another.
+
+    dave = Construct('Dave')
+    dave += Domain('SpeI', 'ACTAGT')
+    dave += Domain('XbaI', 'TCTAGA')
+    dave['XbaI'].attachment_sites = 2, 4, 6
+
+    with pytest.raises(ValueError):
+        dave.attach('XbaI', 2, 5, bob)
+    with pytest.raises(ValueError):
+        dave.attach('XbaI', 3, 6, bob)
+    with pytest.raises(ValueError):
+        dave.attach(Domain('ZzzI', 'NNNN'), 2, 6, bob)
+
+    dave.attach('XbaI', 2, 6, bob)
+
+    assert dave.seq == 'ACTAGTTCAAGCTTGAATTC'
+    assert dave.constraints == 20 * '.'
+    assert len(dave) == 20
+
+    dave.reattach('XbaI', 2, 4)
+
+    assert dave.seq == 'ACTAGTTCAAGCTTGAATTCGA'
+    assert dave.constraints == 22 * '.'
+    assert len(dave) == 22
+
+    # Test accessing domains by index.
+
+    expected_domains = [
+            (dave['SpeI'], 0),
+            (dave['SpeI'], 1),
+            (dave['SpeI'], 2),
+            (dave['SpeI'], 3),
+            (dave['SpeI'], 4),
+            (dave['SpeI'], 5),
+            (dave['XbaI'], 0),
+            (dave['XbaI'], 1),
+            (dave['HindIII'], 0),
+            (dave['HindIII'], 1),
+            (dave['HindIII'], 2),
+            (dave['HindIII'], 3),
+            (dave['HindIII'], 4),
+            (dave['HindIII'], 5),
+            (dave['EcoRI'], 0),
+            (dave['EcoRI'], 1),
+            (dave['EcoRI'], 2),
+            (dave['EcoRI'], 3),
+            (dave['EcoRI'], 4),
+            (dave['EcoRI'], 5),
+            (dave['XbaI'], 4),
+            (dave['XbaI'], 5),
+    ]
+    for index, domain in enumerate(expected_domains):
+        assert dave.domain_from_index(index) == domain
+    for index, domain in enumerate(reversed(expected_domains), 1):
+        assert dave.domain_from_index(-index) == domain
+    with pytest.raises(IndexError):
+        dave.domain_from_index(22)
+
+    # Test changing the sequence of a domain.
+
+    bob['HindIII'].mutable = True
+    bob['HindIII'].seq = 'NNNN'
+
+    assert bob.seq == 'NNNNGAATTC'
+    assert carol.seq == 'GGATCCNNNNGAATTC'
+    assert dave.seq == 'ACTAGTTCNNNNGAATTCGA'
+
+    # Test adding constraints to a domain.
+
+    bob['HindIII'].constraints = '(())'
+
+    assert bob.constraints == '(())......'
+    assert carol.constraints == '......(())......'
+    assert dave.constraints == '........(())........'
+
+    # Test labeling expected base pairs.
+
+    erin = Construct('Erin')
+    erin += Domain('AfeI', 'AGCGCT')
+    erin += Domain('NheI', 'GCTAGC')
+
+    erin.define_expected_fold('((....))..()')
+
+    with pytest.raises(ValueError):
+        erin.define_expected_fold('((....))..(')
+    with pytest.raises(ValueError):
+        erin.define_expected_fold('((....))..(.')
+    with pytest.raises(ValueError):
+        erin.define_expected_fold('((....))...)')
+
+    evaluation = erin.evaluate_fold('(((..)))....')
+
+    assert evaluation.base_pairs_kept == 2
+    assert evaluation.base_pairs_lost == 1
+    assert evaluation.unpaired_bases_kept == 4
+    assert evaluation.unpaired_bases_lost == 2
+
+    erin['AfeI'].attachment_sites = 2, 6
+    erin.attach('AfeI', 2, 6, bob)
+
+    evaluation = erin.evaluate_fold('((..()..()..))..()')
+
+    assert evaluation.base_pairs_kept == 3
+    assert evaluation.base_pairs_lost == 0
+    assert evaluation.unpaired_bases_kept == 2
+    assert evaluation.unpaired_bases_lost == 4
 
 def test_from_name():
     equivalent_constructs = [
@@ -818,38 +1231,61 @@ def test_from_name():
     for construct in equivalent_constructs:
         assert construct.seq == equivalent_constructs[0].seq
 
+def test_wt_sgrna():
+    assert from_name('wt').seq == 'GUUUUAGAGCUAGAAAUAGCAAGUUAAAAUAAGGCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
+
+def test_dead_sgrna():
+    assert from_name('dead').seq == 'GUUUUAGAGCUAGAAAUAGCAAGUUAAAAUAACCCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
+
+def test_aptamer():
+    import pytest
+
+    with pytest.raises(ValueError): aptamer('unknown ligand')
+    with pytest.raises(ValueError): aptamer('theo', 'unknown piece')
+
+    assert aptamer('theo').seq == 'AUACCAGCCGAAAGGCCCUUGGCAG'
+
+def test_repeat():
+    assert repeat('dummy', 1).seq == 'U'
+    assert repeat('dummy', 2).seq == 'UU'
+    assert repeat('dummy', 3).seq == 'UUU'
+    assert repeat('dummy', 4).seq == 'UUUC'
+    assert repeat('dummy', 5).seq == 'UUUCC'
+    assert repeat('dummy', 6).seq == 'UUUCCC'
+    assert repeat('dummy', 7).seq == 'UUUCCCU'
+
 def test_upper_stem_insertion():
     import pytest
 
     with pytest.raises(ValueError): from_name('us(5)')
 
-    assert from_name('us(4)').seq == from_name('us(4,0)').seq == 'GGGGCCACTAGGGACAGGATGUUUUAGAGCUAAUACCAGCCGAAAGGCCCUUGGCAGUAGCAAGUUAAAAUAAGGCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
-    assert from_name('us(2)').seq == from_name('us(2,0)').seq == 'GGGGCCACTAGGGACAGGATGUUUUAGAGCAUACCAGCCGAAAGGCCCUUGGCAGGCAAGUUAAAAUAAGGCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
-    assert from_name('us(0)').seq == from_name('us(0,0)').seq == 'GGGGCCACTAGGGACAGGATGUUUUAGAAUACCAGCCGAAAGGCCCUUGGCAGAAGUUAAAAUAAGGCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
-    assert from_name('us(4,1)').seq == 'GGGGCCACTAGGGACAGGATGUUUUAGAGCUAUAUACCAGCCGAAAGGCCCUUGGCAGUUAGCAAGUUAAAAUAAGGCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
-    assert from_name('us(4,7)').seq == 'GGGGCCACTAGGGACAGGATGUUUUAGAGCUAUUUCCCUAUACCAGCCGAAAGGCCCUUGGCAGUUUCCCUUAGCAAGUUAAAAUAAGGCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
-    assert from_name('us(0,1)').seq == 'GGGGCCACTAGGGACAGGATGUUUUAGAUAUACCAGCCGAAAGGCCCUUGGCAGUAAGUUAAAAUAAGGCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
-    assert from_name('us(0,7)').seq == 'GGGGCCACTAGGGACAGGATGUUUUAGAUUUCCCUAUACCAGCCGAAAGGCCCUUGGCAGUUUCCCUAAGUUAAAAUAAGGCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
-    assert from_name('us(0,0,1)').seq == 'GGGGCCACTAGGGACAGGATGUUUUAGAAUACCAGCCUGGCCCUUGGCAGAAGUUAAAAUAAGGCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
-    assert from_name('us(0,0,7)').seq == 'GGGGCCACTAGGGACAGGATGUUUUAGAAUACCAGCCUUUCCCUGGCCCUUGGCAGAAGUUAAAAUAAGGCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
+    assert from_name('us(4)').seq == from_name('us(4,0)').seq == 'GUUUUAGAGCUAAUACCAGCCGAAAGGCCCUUGGCAGUAGCAAGUUAAAAUAAGGCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
+    assert from_name('us(2)').seq == from_name('us(2,0)').seq == 'GUUUUAGAGCAUACCAGCCGAAAGGCCCUUGGCAGGCAAGUUAAAAUAAGGCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
+    assert from_name('us(0)').seq == from_name('us(0,0)').seq == 'GUUUUAGAAUACCAGCCGAAAGGCCCUUGGCAGAAGUUAAAAUAAGGCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
+    assert from_name('us(4,1)').seq == 'GUUUUAGAGCUAUAUACCAGCCGAAAGGCCCUUGGCAGUUAGCAAGUUAAAAUAAGGCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
+    assert from_name('us(4,7)').seq == 'GUUUUAGAGCUAUUUCCCUAUACCAGCCGAAAGGCCCUUGGCAGUUUCCCUUAGCAAGUUAAAAUAAGGCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
+    assert from_name('us(0,1)').seq == 'GUUUUAGAUAUACCAGCCGAAAGGCCCUUGGCAGUAAGUUAAAAUAAGGCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
+    assert from_name('us(0,7)').seq == 'GUUUUAGAUUUCCCUAUACCAGCCGAAAGGCCCUUGGCAGUUUCCCUAAGUUAAAAUAAGGCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
+    assert from_name('us(0,0,1)').seq == 'GUUUUAGAAUACCAGCCUGGCCCUUGGCAGAAGUUAAAAUAAGGCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
+    assert from_name('us(0,0,7)').seq == 'GUUUUAGAAUACCAGCCUUUCCCUGGCCCUUGGCAGAAGUUAAAAUAAGGCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
 
 def test_lower_stem_insertion():
     import pytest
 
-    with pytest.raises(ValueError): from_name('us(7)')
+    with pytest.raises(ValueError): from_name('ls(7)')
 
-    assert from_name('ls(6,0)') == from_name('ls(6)') == 'GGGGCCACTAGGGACAGGATGUUUUAAUACCAGCCGAAAGGCCCUUGGCAGUAAAAUAAGGCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
-    assert from_name('ls(5,0)') == from_name('ls(5)') == 'GGGGCCACTAGGGACAGGATGUUUUAUACCAGCCGAAAGGCCCUUGGCAGAAAAUAAGGCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
-    assert from_name('ls(0,0)') == from_name('ls(0)') == 'GGGGCCACTAGGGACAGGATAUACCAGCCGAAAGGCCCUUGGCAGAAGGCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
-    assert from_name('ls(6,1)') == 'GGGGCCACTAGGGACAGGATGUUUUAUAUACCAGCCGAAAGGCCCUUGGCAGUUAAAAUAAGGCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
-    assert from_name('ls(6,7)') == 'GGGGCCACTAGGGACAGGATGUUUUAUUUCCCUAUACCAGCCGAAAGGCCCUUGGCAGUUUCCCUUAAAAUAAGGCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
-    assert from_name('ls(0,1)') == 'GGGGCCACTAGGGACAGGATUAUACCAGCCGAAAGGCCCUUGGCAGUAAGGCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
-    assert from_name('ls(0,7)') == 'GGGGCCACTAGGGACAGGATUUUCCCUAUACCAGCCGAAAGGCCCUUGGCAGUUUCCCUAAGGCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
+    assert from_name('ls(6,0)') == from_name('ls(6)') == 'GUUUUAAUACCAGCCGAAAGGCCCUUGGCAGUAAAAUAAGGCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
+    assert from_name('ls(5,0)') == from_name('ls(5)') == 'GUUUUAUACCAGCCGAAAGGCCCUUGGCAGAAAAUAAGGCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
+    assert from_name('ls(0,0)') == from_name('ls(0)') == 'AUACCAGCCGAAAGGCCCUUGGCAGAAGGCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
+    assert from_name('ls(6,1)') == 'GUUUUAUAUACCAGCCGAAAGGCCCUUGGCAGUUAAAAUAAGGCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
+    assert from_name('ls(6,7)') == 'GUUUUAUUUCCCUAUACCAGCCGAAAGGCCCUUGGCAGUUUCCCUUAAAAUAAGGCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
+    assert from_name('ls(0,1)') == 'UAUACCAGCCGAAAGGCCCUUGGCAGUAAGGCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
+    assert from_name('ls(0,7)') == 'UUUCCCUAUACCAGCCGAAAGGCCCUUGGCAGUUUCCCUAAGGCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
 
 def test_nexus_insertion():
-    assert from_name('nx(0)') == 'GGGGCCACTAGGGACAGGATGUUUUAGAGCUAGAAAUAGCAAGUUAAAAUAAGGAUACCAGCCGAAAGGCCCUUGGCAGCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
-    assert from_name('nx(1)') == 'GGGGCCACTAGGGACAGGATGUUUUAGAGCUAGAAAUAGCAAGUUAAAAUAAGGUAUACCAGCCGAAAGGCCCUUGGCAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
-    assert from_name('nx(6)') == 'GGGGCCACTAGGGACAGGATGUUUUAGAGCUAGAAAUAGCAAGUUAAAAUAAGGUUUUUUAUACCAGCCGAAAGGCCCUUGGCAGUUUUUUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
+    assert from_name('nx(0)') == 'GUUUUAGAGCUAGAAAUAGCAAGUUAAAAUAAGGAUACCAGCCGAAAGGCCCUUGGCAGCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
+    assert from_name('nx(1)') == 'GUUUUAGAGCUAGAAAUAGCAAGUUAAAAUAAGGUAUACCAGCCGAAAGGCCCUUGGCAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
+    assert from_name('nx(6)') == 'GUUUUAGAGCUAGAAAUAGCAAGUUAAAAUAAGGUUUUUUAUACCAGCCGAAAGGCCCUUGGCAGUUUUUUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
 
 def test_nexus_insertion_2():
     import pytest
@@ -859,24 +1295,24 @@ def test_nexus_insertion_2():
     with pytest.raises(ValueError): from_name('nxx(0,0,4)')
     with pytest.raises(ValueError): from_name('nxx(0,0,5,0)')
 
-    assert from_name('nxx(0,0)').seq == 'GGGGCCACTAGGGACAGGATGUUUUAGAGCUAGAAAUAGCAAGUUAAAAUAAAUACCAGCCGAAAGGCCCUUGGCAGGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
-    assert from_name('nxx(1,1)').seq == 'GGGGCCACTAGGGACAGGATGUUUUAGAGCUAGAAAUAGCAAGUUAAAAUAAGAUACCAGCCGAAAGGCCCUUGGCAGCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
-    assert from_name('nxx(2,2)').seq == 'GGGGCCACTAGGGACAGGATGUUUUAGAGCUAGAAAUAGCAAGUUAAAAUAAGGAUACCAGCCGAAAGGCCCUUGGCAGCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
-    assert from_name('nxx(2,3)').seq == 'GGGGCCACTAGGGACAGGATGUUUUAGAGCUAGAAAUAGCAAGUUAAAAUAAGGAUACCAGCCGAAAGGCCCUUGGCAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
-    assert from_name('nxx(4,5,5)').seq == 'GGGGCCACTAGGGACAGGATGUUUUAGAGCUAGAAAUAGCAAGUUAAAAUAAGGCUAUACCAGCCUUUCCGGCCCUUGGCAGAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
-    assert from_name('nxx(4,5,6)').seq == 'GGGGCCACTAGGGACAGGATGUUUUAGAGCUAGAAAUAGCAAGUUAAAAUAAGGCUAUACCAGCCUUUCCCGGCCCUUGGCAGAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
-    assert from_name('nxx(4,5,7)').seq == 'GGGGCCACTAGGGACAGGATGUUUUAGAGCUAGAAAUAGCAAGUUAAAAUAAGGCUAUACCAGCCUUUCCCUGGCCCUUGGCAGAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
-    assert from_name('nxx(4,5,8)').seq == 'GGGGCCACTAGGGACAGGATGUUUUAGAGCUAGAAAUAGCAAGUUAAAAUAAGGCUAUACCAGCCUUUCCCUUGGCCCUUGGCAGAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
-    assert from_name('nxx(4,5,0,2)').seq == 'GGGGCCACTAGGGACAGGATGUUUUAGAGCUAGAAAUAGCAAGUUAAAAUAAGGCUAUACCAGCCAUACCAGCCGAAAGGCCCUUGGCAGGGCCCUUGGCAGAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
-    assert from_name('nxx(4,5,0,3)').seq == 'GGGGCCACTAGGGACAGGATGUUUUAGAGCUAGAAAUAGCAAGUUAAAAUAAGGCUAUACCAGCCAUACCAGCCAUACCAGCCGAAAGGCCCUUGGCAGGGCCCUUGGCAGGGCCCUUGGCAGAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
-    assert from_name('nxx(4,5,10,2)').seq == 'GGGGCCACTAGGGACAGGATGUUUUAGAGCUAGAAAUAGCAAGUUAAAAUAAGGCUAUACCAGCCAUACCAGCCUUUCCCUUUCGGCCCUUGGCAGGGCCCUUGGCAGAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
+    assert from_name('nxx(0,0)').seq == 'GUUUUAGAGCUAGAAAUAGCAAGUUAAAAUAAAUACCAGCCGAAAGGCCCUUGGCAGGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
+    assert from_name('nxx(1,1)').seq == 'GUUUUAGAGCUAGAAAUAGCAAGUUAAAAUAAGAUACCAGCCGAAAGGCCCUUGGCAGCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
+    assert from_name('nxx(2,2)').seq == 'GUUUUAGAGCUAGAAAUAGCAAGUUAAAAUAAGGAUACCAGCCGAAAGGCCCUUGGCAGCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
+    assert from_name('nxx(2,3)').seq == 'GUUUUAGAGCUAGAAAUAGCAAGUUAAAAUAAGGAUACCAGCCGAAAGGCCCUUGGCAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
+    assert from_name('nxx(4,5,5)').seq == 'GUUUUAGAGCUAGAAAUAGCAAGUUAAAAUAAGGCUAUACCAGCCUUUCCGGCCCUUGGCAGAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
+    assert from_name('nxx(4,5,6)').seq == 'GUUUUAGAGCUAGAAAUAGCAAGUUAAAAUAAGGCUAUACCAGCCUUUCCCGGCCCUUGGCAGAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
+    assert from_name('nxx(4,5,7)').seq == 'GUUUUAGAGCUAGAAAUAGCAAGUUAAAAUAAGGCUAUACCAGCCUUUCCCUGGCCCUUGGCAGAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
+    assert from_name('nxx(4,5,8)').seq == 'GUUUUAGAGCUAGAAAUAGCAAGUUAAAAUAAGGCUAUACCAGCCUUUCCCUUGGCCCUUGGCAGAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
+    assert from_name('nxx(4,5,0,2)').seq == 'GUUUUAGAGCUAGAAAUAGCAAGUUAAAAUAAGGCUAUACCAGCCAUACCAGCCGAAAGGCCCUUGGCAGGGCCCUUGGCAGAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
+    assert from_name('nxx(4,5,0,3)').seq == 'GUUUUAGAGCUAGAAAUAGCAAGUUAAAAUAAGGCUAUACCAGCCAUACCAGCCAUACCAGCCGAAAGGCCCUUGGCAGGGCCCUUGGCAGGGCCCUUGGCAGAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
+    assert from_name('nxx(4,5,10,2)').seq == 'GUUUUAGAGCUAGAAAUAGCAAGUUAAAAUAAGGCUAUACCAGCCAUACCAGCCUUUCCCUUUCGGCCCUUGGCAGGGCCCUUGGCAGAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
 
 def test_hairpin_replacement():
-    assert from_name('hp(0)').seq == 'GGGGCCACTAGGGACAGGATGUUUUAGAGCUAGAAAUAGCAAGUUAAAAUAAGGCUAGUCCGUAUACCAGCCGAAAGGCCCUUGGCAGUUUUUU'
-    assert from_name('hp(18)').seq == 'GGGGCCACTAGGGACAGGATGUUUUAGAGCUAGAAAUAGCAAGUUAAAAUAAGGCUAGUCCGUUAUCAACUUGAAAAAGUGAUACCAGCCGAAAGGCCCUUGGCAGUUUUUU'
-    assert from_name('hp(33)').seq == 'GGGGCCACTAGGGACAGGATGUUUUAGAGCUAGAAAUAGCAAGUUAAAAUAAGGCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCAUACCAGCCGAAAGGCCCUUGGCAGUUUUUU'
-    assert from_name('hp(39)').seq == 'GGGGCCACTAGGGACAGGATGUUUUAGAGCUAGAAAUAGCAAGUUAAAAUAAGGCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUCCCAUACCAGCCGAAAGGCCCUUGGCAGUUUUUU'
-    assert from_name('hp(49)').seq == 'GGGGCCACTAGGGACAGGATGUUUUAGAGCUAGAAAUAGCAAGUUAAAAUAAGGCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUCCCUUUCCCUUUCAUACCAGCCGAAAGGCCCUUGGCAGUUUUUU'
+    assert from_name('hp(0)').seq == 'GUUUUAGAGCUAGAAAUAGCAAGUUAAAAUAAGGCUAGUCCGUAUACCAGCCGAAAGGCCCUUGGCAGUUUUUU'
+    assert from_name('hp(18)').seq == 'GUUUUAGAGCUAGAAAUAGCAAGUUAAAAUAAGGCUAGUCCGUUAUCAACUUGAAAAAGUGAUACCAGCCGAAAGGCCCUUGGCAGUUUUUU'
+    assert from_name('hp(33)').seq == 'GUUUUAGAGCUAGAAAUAGCAAGUUAAAAUAAGGCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCAUACCAGCCGAAAGGCCCUUGGCAGUUUUUU'
+    assert from_name('hp(39)').seq == 'GUUUUAGAGCUAGAAAUAGCAAGUUAAAAUAAGGCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUCCCAUACCAGCCGAAAGGCCCUUGGCAGUUUUUU'
+    assert from_name('hp(49)').seq == 'GUUUUAGAGCUAGAAAUAGCAAGUUAAAAUAAGGCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUCCCUUUCCCUUUCAUACCAGCCGAAAGGCCCUUGGCAGUUUUUU'
 
 def test_induced_dimerization():
     import pytest
@@ -886,11 +1322,11 @@ def test_induced_dimerization():
     with pytest.raises(ValueError): from_name('id(3,5)')
     with pytest.raises(ValueError): from_name('id(3,hello)')
 
-    assert from_name('id(5,0)').seq == 'GGGGCCACTAGGGACAGGATGUUUUAGAAUACCAGCC'
-    assert from_name('id(5,1)').seq == 'GGGGCCACTAGGGACAGGATGUUUUAGAGAUACCAGCC'
-    assert from_name('id(5,2)').seq == 'GGGGCCACTAGGGACAGGATGUUUUAGAGCAUACCAGCC'
-    assert from_name('id(5,3)').seq == 'GGGGCCACTAGGGACAGGATGUUUUAGAGCUAUACCAGCC'
-    assert from_name('id(5,4)').seq == 'GGGGCCACTAGGGACAGGATGUUUUAGAGCUAAUACCAGCC'
+    assert from_name('id(5,0)').seq == 'GUUUUAGAAUACCAGCC'
+    assert from_name('id(5,1)').seq == 'GUUUUAGAGAUACCAGCC'
+    assert from_name('id(5,2)').seq == 'GUUUUAGAGCAUACCAGCC'
+    assert from_name('id(5,3)').seq == 'GUUUUAGAGCUAUACCAGCC'
+    assert from_name('id(5,4)').seq == 'GUUUUAGAGCUAAUACCAGCC'
 
     assert from_name('id(3,0)').seq == 'GGCCCUUGGCAGAAGUUAAAAUAAGGCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
     assert from_name('id(3,1)').seq == 'GGCCCUUGGCAGCAAGUUAAAAUAAGGCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
