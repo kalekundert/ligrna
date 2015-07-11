@@ -5,46 +5,86 @@ import collections
 import random
 
 class Sequence:
+    """
+    Abstract base class that represents a sequence that's associated with a 
+    name and provides some convenience functions to query that sequence.  How 
+    the sequence is stored is actually left up to the subclasses, which have to 
+    reimplement the 'seq' property to return the sequence in question.
+    """
 
     def __init__(self, name):
         self.name = name
 
     def __eq__(self, sequence):
+        """
+        Return whether or not two sequences are equal.  Sequence object can 
+        either be compared to each other or to strings.
+        """
         try:
             return self.seq == sequence.seq
         except AttributeError:
             return self.seq == sequence
 
     def __hash__(self):
+        """
+        Hash the sequence based on its location in memory.
+        """
         from builtins import id
         return id(self)
 
     def __len__(self):
+        """
+        Return the length of the sequence.
+        """
         return len(self.seq)
 
     def __iter__(self):
+        """
+        Iterate through the nucleotides in this sequence.
+        """
         yield from self.seq
 
     def __getitem__(self, index):
+        """
+        Return the nucleotide at the given index.
+        """
         return self.seq[index]
 
     @property
-    def seq(self):
+    def seq(self):      # (pure virtual)
+        """
+        Return the sequence represented by this object.  This is a pure virtual 
+        method and must be reimplemented by subclasses.
+        """
         raise NotImplementedError
 
     @property
     def dna(self):
+        """
+        Return the DNA version of the sequence.  This simply replaces U with T.
+        """
         return self.seq.replace('U', 'T')
 
     @property
     def rna(self):
+        """
+        Return the RNA version of the sequence.  This simply replaces T with U.
+        """
         return self.seq.replace('T', 'U')
 
     @property
     def indices(self):
+        """
+        Iterate through the indices of the nucleotides in this sequence.
+        """
         return range(len(self))
 
     def mass(self, polymer='rna'):
+        """
+        Calculate the mass of this sequence for the given type of polymer.  
+        This calculation assumes that the terminal phosphates have been 
+        replaced with alcohol groups, which is the case for most oligos.
+        """
         sequence = self.seq.upper()
 
         a = sequence.count('A')
@@ -63,6 +103,10 @@ class Sequence:
 
 
 class Construct (Sequence):
+    """
+    A interesting or useful sequence composed of parts that can be individually 
+    modified without unduly affecting the rest of the sequence.
+    """
 
     Attachment = collections.namedtuple(
             'Attachment', 'start end construct')
@@ -356,6 +400,9 @@ class Construct (Sequence):
 
 
 class Domain (Sequence):
+    """
+    A mutable sequence that can be used to compose larger constructs.
+    """
 
     def __init__(self, name, sequence):
         super().__init__(name)
