@@ -232,20 +232,108 @@ class Construct (Sequence):
         print(self.format(*args, **kwargs))
 
     def append(self, sequence):
+        """
+        Add the given sequence onto the end of this construct.
+
+        Parameters
+        ----------
+        sequence: Domain or Construct
+            The sequence to add to this construct.  If a domain is given, it 
+            will simply be added.  If a construct is given, the domains and 
+            attachments from that construct will be read from the given 
+            construct and inserted into this one.  Both construct will end up 
+            with references to the same domain objects, but changes to one 
+            construct won't affect the other.
+        """
         self._add_sequence(-1, sequence)
 
     def prepend(self, sequence):
+        """
+        Add the given sequence onto the beginning of this construct.
+
+        Parameters
+        ----------
+        sequence: Domain or Construct
+            The sequence to add to this construct.  If a domain is given, it 
+            will simply be added.  If a construct is given, the domains and 
+            attachments from that construct will be read from the given 
+            construct and inserted into this one.  Both construct will end up 
+            with references to the same domain objects, but changes to one 
+            construct won't affect the other.
+        """
         self._add_sequence(0, sequence)
 
-    def delete(self, *domains):
+    def remove(self, *domains):
+        """
+        Remove the specified domain(s) from the construct.
+
+        Parameters
+        ----------
+        *domains: str or Domain
+            The domains to remove.
+
+        sequence: Domain or Construct
+            The sequence to add to this construct.  If a domain is given, it 
+            will simply be added.  If a construct is given, the domains and 
+            attachments from that construct will be read from the given 
+            construct and inserted into this one.  Both construct will end up 
+            with references to the same domain objects, but changes to one 
+            construct won't affect the other.
+        """
         for domain in domains:
             self._remove_sequence(domain)
 
     def replace(self, domain, sequence):
+        """
+        Remove the specified domain and replace it with the given sequence.
+
+        Parameters
+        ----------
+        domain: str or Domain
+            The domain to remove.
+        """
         index = self._remove_sequence(domain)
         self._add_sequence(index, sequence)
 
-    def attach(self, domain, start, end, attachment):
+    def attach(self, domain, start, end, construct):
+        """
+        Insert a construct into one of the domains comprising this construct, 
+        possibly replacing some of that domain.
+
+        Parameters
+        ----------
+        domain: str or Domain
+            The domain into which the new sequence will be inserted.  You can 
+            either provide the name or the domain or the domain object itself.  
+            If you provide a name, there must be only one domain with that name 
+            in the construct.
+            
+        start: int
+            The index (relative to the domain) where the attachment will start.  
+            As usual in python, think of this as indexing the spaces between 
+            the nucleotides.
+            
+        end: int
+            See previous.
+            
+        construct: Construct
+            The construct to attach.  Note that a reference to the construct 
+            object is stored, so if that construct is changed elsewhere, the 
+            change will be reflected in this construct.
+
+        Be aware that this method is fundamentally different that append(), 
+        prepend(), and delete().  Those methods manage a flat list of domains 
+        that you can think of as the "base layer" of the construct.  This 
+        method attaches constructs (not domains) that float on top of that 
+        layer and form a more tree-like structure.  Having attachments float on 
+        top of the base construct makes it easy to move them around, which is 
+        an important feature of this class.
+
+        To simplify things, attachments cannot span domains.  That is, each 
+        attachment can only occlude parts of one domain at a time.  This 
+        shouldn't be an issue so long as you take care to compose your 
+        constructs from functionally separate domains.
+        """
         if isinstance(domain, str):
             domain = self[domain]
         if domain not in self._domains:
@@ -261,22 +349,90 @@ class Construct (Sequence):
         if end not in domain.attachment_sites:
             raise ValueError("Position {} of domain {} is not an attachment site.".format(end, domain.name))
 
-        self._attachments[domain] = self.Attachment(start, end, attachment)
+        self._attachments[domain] = self.Attachment(start, end, construct)
 
     def unattach(self, domain):
+        """
+        Remove an attachment from the construct.  The previously attached 
+        construct is returned, to make it easy for you to reattach it 
+        elsewhere, if you so desire.
+
+        Parameters
+        ----------
+        domain: str or Domain
+            The domain to which a construct has been attached.  This construct 
+            will be unattached and returned.
+
+        Returns
+        -------
+        construct: Construct
+            The construct that was previously attached to the specified domain.
+        """
         if isinstance(domain, str):
             domain = self[domain]
 
         return self._attachments.pop(domain).construct
 
     def reattach(self, domain, start, end):
+        """
+        Reposition an attachment within a domain.
+
+        Parameters
+        ----------
+        domain: str or Domain
+            The domain containing the attachment that will be repositioned.
+
+        start: int
+            The new start index for the attachment.
+
+        end: int
+            The new end index for the attachment.
+
+        If you want to move an attachment into a new domain, you can't use this 
+        method.  Instead use unattach() followed by attach().
+        """
         self.attach(domain, start, end, self.unattach(domain))
 
     def define_expected_fold(self, fold):
+        """
+        Record the given fold so that it can be compared against later.
+
+        Parameters
+        ----------
+        fold: str
+            A string representing the secondary structure of the RNA construct.  
+            This string must be the same length as the construct and must be 
+            composed of only '.', '(', and ')'.  The dots indicate positions 
+            that aren't base paired and the parens indicate positions that are.
+        """
         self._expected_base_pairs, self._expected_unpaired_bases = \
                 self._find_base_pairs(fold)
 
     def evaluate_fold(self, fold):
+        """
+        Compare the given fold to the one passed to define_expected_fold().  
+
+        This comparison is relatively robust against changes in sequence.  All 
+        of the secondary structural elements (base pairs and unpaired bases) 
+        are stored relative to the domain they occur in.  So even if other 
+        domains are added or removed or grown or shrunk, the fold should still 
+        be properly evaluated.
+
+        Parameters
+        ----------
+        fold: str
+            A string representing the secondary structure of the RNA construct.  
+            This string must be the same length as the construct and must be 
+            composed of only '.', '(', and ')'.  The dots indicate positions 
+            that aren't base paired and the parens indicate positions that are.
+
+        Returns
+        -------
+        fold_evaluation: collections.namedtuple
+            A simple data structure indicating how many of the expected base 
+            pairs and unpaired bases were kept and lost.  In total, this data 
+            structure contains four pieces of information.
+        """
         base_pairs, unpaired_bases = self._find_base_pairs(fold)
         base_pairs_kept = len(base_pairs & self._expected_base_pairs)
         base_pairs_lost = len(self._expected_base_pairs) - base_pairs_kept
@@ -290,6 +446,18 @@ class Construct (Sequence):
                 unpaired_bases_lost)
 
     def _iterate_domains(self):
+        """
+        Iterate over all the domains that make up this construct (even those 
+        from attachments) and indicate how each one should be indexed to 
+        properly assemble the whole construct.
+
+        This method is very important because it provides an easy-to-use 
+        interface for methods that want to read data from the construct.  The 
+        actual data structures that make up the construct are designed to be 
+        easy to modify, but not to be especially easy to work with.  This 
+        function takes the easy-to-modify data and converts it into an 
+        easy-to-use iterator.  That way we get the best of both worlds!
+        """
 
         class DomainIter:
 
@@ -422,6 +590,16 @@ class Domain (Sequence):
     def __len__(self):
         return len(self.seq)
 
+    def __setitem__(self, index, sequence):
+        if isinstance(index, slice):
+            start, stop = index.start, index.stop
+        else:
+            start, stop = index, index + 1
+        self.seq = self.seq[:start] + sequence + self.seq[stop:]
+
+    def __delitem__(self, index):
+        self[index] = ''
+
     @property
     def seq(self):
         return self._sequence
@@ -440,7 +618,7 @@ class Domain (Sequence):
 
     @constraints.setter
     def constraints(self, constraints):
-        if len(constraints) != len(self):
+        if constraints and len(constraints) != len(self):
             raise ValueError("constraints don't match sequence")
         self._constraints = constraints
 
@@ -478,8 +656,17 @@ class Domain (Sequence):
     def show(self, *args, **kwargs):
         print(self.format(*args, **kwargs))
 
-    def mutate(self, index, base):
-        self.seq = self.seq[:index] + base + self.seq[index+1:]
+    def mutate(self, index, mutation):
+        self[index] = mutation
+
+    def insert(self, index, insert):
+        self[index:index] = insert
+
+    def replace(self, start, end, insert):
+        self[start:end] = insert
+
+    def delete(self, start, end):
+        self[start:end] = ''
 
 
 
@@ -1082,8 +1269,10 @@ def test_domain_class():
     assert domain[1] == 'C'
     assert domain[2] == 'T'
     assert domain[3] == 'G'
+    assert domain[1:3] == 'CT'
     assert domain.constraints == '....'
     assert domain.attachment_sites == []
+    assert domain.format(color='never') == 'ACTG'
 
     for i, base in enumerate(domain):
         assert base == domain[i]
@@ -1101,8 +1290,40 @@ def test_domain_class():
         domain.seq = 'AAAA'
 
     domain.mutable = True
+    domain.constraints = None
+
     domain.seq = 'GTCA'
     assert domain.seq == 'GTCA'
+
+    domain[1] = 'A'
+    assert domain.seq == 'GACA'
+
+    domain[1] = 'TATA'
+    assert domain.seq == 'GTATACA'
+
+    domain[1:3] = 'CT'
+    assert domain.seq == 'GCTTACA'
+
+    domain[1:3] = 'GCGC'
+    assert domain.seq == 'GGCGCTACA'
+
+    del domain[5]
+    assert domain.seq == 'GGCGCACA'
+
+    del domain[1:5]
+    assert domain.seq == 'GACA'
+
+    domain.mutate(1, 'A')
+    assert domain.seq == 'GACA'
+
+    domain.insert(2, 'TTT')
+    assert domain.seq == 'GATTTCA'
+
+    domain.replace(2, 5, 'GG')
+    assert domain.seq == 'GAGGCA'
+
+    domain.delete(2, 4)
+    assert domain.seq == 'GACA'
 
 def test_construct_class():
     import pytest
@@ -1113,6 +1334,7 @@ def test_construct_class():
     bob += Domain('HindIII', 'AAGCTT')
 
     assert bob.seq == 'AAGCTT'
+    assert bob.format(color='never') == bob.seq
     assert bob.constraints == 6 * '.'
     assert len(bob) == 6
 
@@ -1121,6 +1343,7 @@ def test_construct_class():
     bob += Domain('EcoRI', 'GAATTC')
 
     assert bob.seq == 'AAGCTTGAATTC'
+    assert bob.format(color='never') == bob.seq
     assert bob.constraints == 12 * '.'
     assert len(bob) == 12
 
@@ -1169,6 +1392,7 @@ def test_construct_class():
     dave.attach('XbaI', 2, 6, bob)
 
     assert dave.seq == 'ACTAGTTCAAGCTTGAATTC'
+    assert dave.format(color='never') == dave.seq
     assert dave.constraints == 20 * '.'
     assert len(dave) == 20
 
