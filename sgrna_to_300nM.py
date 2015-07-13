@@ -19,6 +19,9 @@ Options:
 
     -w --target-water <uL>
         The desired volume of water to dilute with.
+
+    -p --print-nM
+        Print the initial concentration in units of nM.
 """
 
 import sys; sys.path.append('../scripts')
@@ -50,6 +53,10 @@ def process_sample(sgrna, initial_ng_uL, args):
     elif args['--target-sgrna']:
         sgrna_to_add = float(args['--target-sgrna'])
         water_to_add = initial_nM * sgrna_to_add / target_nM - sgrna_to_add
+
+    elif args['--print-nM']:
+        print('{:>.2f} nM'.format(initial_nM))
+        return
 
     else:
         raise docopt.DocoptExit("""\
