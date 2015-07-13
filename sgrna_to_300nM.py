@@ -64,6 +64,7 @@ def process_sample(sgrna, initial_ng_uL, args):
         -v, --target-volume <uL>
         -r, --target-sgrna <uL>
         -w, --target-water <uL>
+        -p, --print-nM
     """)
 
     print('{:>6.2f} μL {} ng/uL sgRNA'.format(sgrna_to_add, initial_ng_uL))
