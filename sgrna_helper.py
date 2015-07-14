@@ -231,6 +231,10 @@ class Construct (Sequence):
     def show(self, *args, **kwargs):
         print(self.format(*args, **kwargs))
 
+    def copy(self):
+        from copy import deepcopy
+        return deepcopy(self)
+
     def append(self, sequence):
         """
         Add the given sequence onto the end of this construct.
@@ -655,6 +659,10 @@ class Domain (Sequence):
 
     def show(self, *args, **kwargs):
         print(self.format(*args, **kwargs))
+
+    def copy(self):
+        from copy import deepcopy
+        return deepcopy(self)
 
     def mutate(self, index, mutation):
         self[index] = mutation
