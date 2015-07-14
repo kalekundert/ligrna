@@ -139,7 +139,7 @@ class Construct (Sequence):
             else:
                 raise KeyError("{} domains named '{}'.".format(len(domains), key))
         else:
-            super().__getitem__(key)
+            return super().__getitem__(key)
 
     def __add__(self, other):
         construct = Construct()
@@ -326,7 +326,7 @@ class Construct (Sequence):
             change will be reflected in this construct.
 
         Be aware that this method is fundamentally different that append(), 
-        prepend(), and delete().  Those methods manage a flat list of domains 
+        prepend(), and remove().  Those methods manage a flat list of domains 
         that you can think of as the "base layer" of the construct.  This 
         method attaches constructs (not domains) that float on top of that 
         layer and form a more tree-like structure.  Having attachments float on 
@@ -438,10 +438,30 @@ class Construct (Sequence):
             structure contains four pieces of information.
         """
         base_pairs, unpaired_bases = self._find_base_pairs(fold)
-        base_pairs_kept = len(base_pairs & self._expected_base_pairs)
-        base_pairs_lost = len(self._expected_base_pairs) - base_pairs_kept
-        unpaired_bases_kept = len(unpaired_bases & self._expected_unpaired_bases)
-        unpaired_bases_lost = len(self._expected_unpaired_bases) - unpaired_bases_kept
+
+        # Remove positions that are no longer in the construct from the sets of 
+        # expected base pairs and unpaired bases.
+
+        expected_base_pairs = set()
+        expected_unpaired_bases = set()
+
+        for base_pair in self._expected_base_pairs:
+            has_i = self._has_index(base_pair.domain_i, base_pair.i)
+            has_j = self._has_index(base_pair.domain_j, base_pair.j)
+            if has_i and has_j:
+                expected_base_pairs.add(base_pair)
+
+        for unpaired_base in self._expected_unpaired_bases:
+            if self._has_index(*unpaired_base):
+                expected_unpaired_bases.add(unpaired_base)
+
+        # Count the number of expected base pairs and unpaired bases that were 
+        # either kept or lost.
+
+        base_pairs_kept = len(base_pairs & expected_base_pairs)
+        base_pairs_lost = len(expected_base_pairs) - base_pairs_kept
+        unpaired_bases_kept = len(unpaired_bases & expected_unpaired_bases)
+        unpaired_bases_lost = len(expected_unpaired_bases) - unpaired_bases_kept
 
         return self.FoldEvaluation(
                 base_pairs_kept,
@@ -464,6 +484,8 @@ class Construct (Sequence):
         """
 
         class DomainIter:
+            # Indices refer to positions between the nucleotides, as usual for 
+            # slices in python.
 
             def __init__(self, domain, cursor, rel_start, rel_end):
                 self.domain = domain
@@ -569,6 +591,13 @@ class Construct (Sequence):
 
         assert not pending_base_pairs
         return base_pairs, unpaired_bases
+
+    def _has_index(self, domain, rel_index):
+        for iter in self._iterate_domains():
+            if iter.domain is domain and \
+                    iter.rel_start <= rel_index < iter.rel_end:
+                return True
+        return False
 
 
 class Domain (Sequence):
@@ -884,7 +913,9 @@ def aptamer_insert(ligand,
 
 def spacer(target='aavs'):
     """
-    Return the specified spacer sequence.
+    Return the specified spacer sequence.  A 'GG' motif, which is required for 
+    transcription by T7, will be added to the start of the spacer if one is not 
+    already present.
 
     Parameters
     ----------
@@ -892,13 +923,16 @@ def spacer(target='aavs'):
         The sequence to target.
     """
     if target == 'rfp':
-        sequence = 'GGAACUUUCAGUUUAGCGGUCU'
+        sequence = 'AACUUUCAGUUUAGCGGUCU'
     elif target == 'aavs':
         sequence = 'GGGGCCACTAGGGACAGGAT'
     elif target == 'vegfa':
         sequence = 'GGGTGGGGGGAGTTTGCTCC'
     else:
         raise ValueError("Unknown target: '{}'".format(target))
+
+    while not sequence.startswith('GG'):
+        sequence = 'G' + sequence
 
     spacer = Domain('spacer', sequence)
     spacer.style = 'yellow'
@@ -1272,6 +1306,7 @@ def test_domain_class():
     assert domain.mass('rna') == 1444.8
     assert domain.mass('dna') == 2347.6
     assert domain.mass('ssdna') == 1173.8
+    assert domain.copy().seq == domain.seq
     assert len(domain) == 4
     assert domain[0] == 'A'
     assert domain[1] == 'C'
@@ -1342,15 +1377,23 @@ def test_construct_class():
     bob += Domain('HindIII', 'AAGCTT')
 
     assert bob.seq == 'AAGCTT'
+    assert bob.seq == bob.copy().seq
     assert bob.format(color='never') == bob.seq
     assert bob.constraints == 6 * '.'
     assert len(bob) == 6
+
+    with pytest.raises(KeyError):
+        bob['not a domain']
+
+    for i, expected_nucleotide in enumerate('AAGCTT'):
+        assert bob[i] == expected_nucleotide
 
     # Test making a two domain construct.
 
     bob += Domain('EcoRI', 'GAATTC')
 
     assert bob.seq == 'AAGCTTGAATTC'
+    assert bob.seq == bob.copy().seq
     assert bob.format(color='never') == bob.seq
     assert bob.constraints == 12 * '.'
     assert len(bob) == 12
@@ -1359,7 +1402,7 @@ def test_construct_class():
 
     carol = Construct('Carol')
     carol += Domain('BamHI', 'GGATCC')
-    carol += bob
+    carol = carol + bob
 
     assert carol.seq == 'GGATCCAAGCTTGAATTC'
     assert carol.constraints == 18 * '.'
@@ -1377,7 +1420,7 @@ def test_construct_class():
     assert carol.constraints == 24 * '.'
     assert len(carol) == 24
 
-    carol.delete('SalI')
+    carol.remove('SalI')
 
     assert carol.seq == 'GGATCCAAGCTTGAATTC'
     assert carol.constraints == 18 * '.'
@@ -1466,31 +1509,31 @@ def test_construct_class():
     erin += Domain('AfeI', 'AGCGCT')
     erin += Domain('NheI', 'GCTAGC')
 
-    erin.define_expected_fold('((....))..()')
+    erin.define_expected_fold('(((..)))..()')
 
     with pytest.raises(ValueError):
-        erin.define_expected_fold('((....))..(')
+        erin.define_expected_fold('(((..)))..(')
     with pytest.raises(ValueError):
-        erin.define_expected_fold('((....))..(.')
+        erin.define_expected_fold('(((..)))..(.')
     with pytest.raises(ValueError):
-        erin.define_expected_fold('((....))...)')
+        erin.define_expected_fold('(((..)))...)')
 
-    evaluation = erin.evaluate_fold('(((..)))....')
+    evaluation = erin.evaluate_fold('((....)).(.)')
 
     assert evaluation.base_pairs_kept == 2
-    assert evaluation.base_pairs_lost == 1
-    assert evaluation.unpaired_bases_kept == 4
-    assert evaluation.unpaired_bases_lost == 2
+    assert evaluation.base_pairs_lost == 2
+    assert evaluation.unpaired_bases_kept == 3
+    assert evaluation.unpaired_bases_lost == 1
 
     erin['AfeI'].attachment_sites = 2, 6
     erin.attach('AfeI', 2, 6, bob)
 
-    evaluation = erin.evaluate_fold('((..()..()..))..()')
+    evaluation = erin.evaluate_fold('(((((....)))))..()')
 
     assert evaluation.base_pairs_kept == 3
     assert evaluation.base_pairs_lost == 0
     assert evaluation.unpaired_bases_kept == 2
-    assert evaluation.unpaired_bases_lost == 4
+    assert evaluation.unpaired_bases_lost == 0
 
 def test_from_name():
     equivalent_constructs = [
@@ -1510,6 +1553,19 @@ def test_from_name():
     for construct in equivalent_constructs:
         assert construct.seq == equivalent_constructs[0].seq
 
+def test_repeat():
+    assert repeat('dummy', 1) == 'U'
+    assert repeat('dummy', 2) == 'UU'
+    assert repeat('dummy', 3) == 'UUU'
+    assert repeat('dummy', 4) == 'UUUC'
+    assert repeat('dummy', 5) == 'UUUCC'
+    assert repeat('dummy', 6) == 'UUUCCC'
+    assert repeat('dummy', 7) == 'UUUCCCU'
+
+def test_complements():
+    assert complement('ACTG') == 'TGAC'
+    assert reverse_complement('ACTG') == 'CAGT'
+
 def test_wt_sgrna():
     assert from_name('wt').seq == 'GUUUUAGAGCUAGAAAUAGCAAGUUAAAAUAAGGCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
 
@@ -1524,29 +1580,37 @@ def test_aptamer():
 
     assert aptamer('theo').seq == 'AUACCAGCCGAAAGGCCCUUGGCAG'
 
-def test_repeat():
-    assert repeat('dummy', 1).seq == 'U'
-    assert repeat('dummy', 2).seq == 'UU'
-    assert repeat('dummy', 3).seq == 'UUU'
-    assert repeat('dummy', 4).seq == 'UUUC'
-    assert repeat('dummy', 5).seq == 'UUUCC'
-    assert repeat('dummy', 6).seq == 'UUUCCC'
-    assert repeat('dummy', 7).seq == 'UUUCCCU'
+def test_spacer():
+    import pytest
+
+    with pytest.raises(ValueError): spacer('not a spacer')
+
+    assert spacer() == 'GGGGCCACTAGGGACAGGAT'
+    assert spacer('rfp') == 'GGAACUUUCAGUUUAGCGGUCU'
+    assert spacer('vegfa') == 'GGGTGGGGGGAGTTTGCTCC'
+
+def test_t7_promoter():
+    import pytest
+
+    with pytest.raises(ValueError): t7_promoter('not a promoter')
+
+    assert t7_promoter() == 'TATAGTAATAATACGACTCACTATAG'
+    assert t7_promoter('igem') == 'TAATACGACTCACTATA'
 
 def test_upper_stem_insertion():
     import pytest
 
     with pytest.raises(ValueError): from_name('us(5)')
 
-    assert from_name('us(4)').seq == from_name('us(4,0)').seq == 'GUUUUAGAGCUAAUACCAGCCGAAAGGCCCUUGGCAGUAGCAAGUUAAAAUAAGGCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
-    assert from_name('us(2)').seq == from_name('us(2,0)').seq == 'GUUUUAGAGCAUACCAGCCGAAAGGCCCUUGGCAGGCAAGUUAAAAUAAGGCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
-    assert from_name('us(0)').seq == from_name('us(0,0)').seq == 'GUUUUAGAAUACCAGCCGAAAGGCCCUUGGCAGAAGUUAAAAUAAGGCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
-    assert from_name('us(4,1)').seq == 'GUUUUAGAGCUAUAUACCAGCCGAAAGGCCCUUGGCAGUUAGCAAGUUAAAAUAAGGCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
-    assert from_name('us(4,7)').seq == 'GUUUUAGAGCUAUUUCCCUAUACCAGCCGAAAGGCCCUUGGCAGUUUCCCUUAGCAAGUUAAAAUAAGGCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
-    assert from_name('us(0,1)').seq == 'GUUUUAGAUAUACCAGCCGAAAGGCCCUUGGCAGUAAGUUAAAAUAAGGCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
-    assert from_name('us(0,7)').seq == 'GUUUUAGAUUUCCCUAUACCAGCCGAAAGGCCCUUGGCAGUUUCCCUAAGUUAAAAUAAGGCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
-    assert from_name('us(0,0,1)').seq == 'GUUUUAGAAUACCAGCCUGGCCCUUGGCAGAAGUUAAAAUAAGGCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
-    assert from_name('us(0,0,7)').seq == 'GUUUUAGAAUACCAGCCUUUCCCUGGCCCUUGGCAGAAGUUAAAAUAAGGCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
+    assert from_name('us(4)') == from_name('us(4,0)') == 'GUUUUAGAGCUAAUACCAGCCGAAAGGCCCUUGGCAGUAGCAAGUUAAAAUAAGGCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
+    assert from_name('us(2)') == from_name('us(2,0)') == 'GUUUUAGAGCAUACCAGCCGAAAGGCCCUUGGCAGGCAAGUUAAAAUAAGGCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
+    assert from_name('us(0)') == from_name('us(0,0)') == 'GUUUUAGAAUACCAGCCGAAAGGCCCUUGGCAGAAGUUAAAAUAAGGCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
+    assert from_name('us(4,1)') == 'GUUUUAGAGCUAUAUACCAGCCGAAAGGCCCUUGGCAGUUAGCAAGUUAAAAUAAGGCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
+    assert from_name('us(4,7)') == 'GUUUUAGAGCUAUUUCCCUAUACCAGCCGAAAGGCCCUUGGCAGUUUCCCUUAGCAAGUUAAAAUAAGGCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
+    assert from_name('us(0,1)') == 'GUUUUAGAUAUACCAGCCGAAAGGCCCUUGGCAGUAAGUUAAAAUAAGGCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
+    assert from_name('us(0,7)') == 'GUUUUAGAUUUCCCUAUACCAGCCGAAAGGCCCUUGGCAGUUUCCCUAAGUUAAAAUAAGGCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
+    assert from_name('us(0,0,1)') == 'GUUUUAGAAUACCAGCCUGGCCCUUGGCAGAAGUUAAAAUAAGGCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
+    assert from_name('us(0,0,7)') == 'GUUUUAGAAUACCAGCCUUUCCCUGGCCCUUGGCAGAAGUUAAAAUAAGGCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
 
 def test_lower_stem_insertion():
     import pytest
@@ -1574,24 +1638,24 @@ def test_nexus_insertion_2():
     with pytest.raises(ValueError): from_name('nxx(0,0,4)')
     with pytest.raises(ValueError): from_name('nxx(0,0,5,0)')
 
-    assert from_name('nxx(0,0)').seq == 'GUUUUAGAGCUAGAAAUAGCAAGUUAAAAUAAAUACCAGCCGAAAGGCCCUUGGCAGGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
-    assert from_name('nxx(1,1)').seq == 'GUUUUAGAGCUAGAAAUAGCAAGUUAAAAUAAGAUACCAGCCGAAAGGCCCUUGGCAGCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
-    assert from_name('nxx(2,2)').seq == 'GUUUUAGAGCUAGAAAUAGCAAGUUAAAAUAAGGAUACCAGCCGAAAGGCCCUUGGCAGCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
-    assert from_name('nxx(2,3)').seq == 'GUUUUAGAGCUAGAAAUAGCAAGUUAAAAUAAGGAUACCAGCCGAAAGGCCCUUGGCAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
-    assert from_name('nxx(4,5,5)').seq == 'GUUUUAGAGCUAGAAAUAGCAAGUUAAAAUAAGGCUAUACCAGCCUUUCCGGCCCUUGGCAGAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
-    assert from_name('nxx(4,5,6)').seq == 'GUUUUAGAGCUAGAAAUAGCAAGUUAAAAUAAGGCUAUACCAGCCUUUCCCGGCCCUUGGCAGAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
-    assert from_name('nxx(4,5,7)').seq == 'GUUUUAGAGCUAGAAAUAGCAAGUUAAAAUAAGGCUAUACCAGCCUUUCCCUGGCCCUUGGCAGAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
-    assert from_name('nxx(4,5,8)').seq == 'GUUUUAGAGCUAGAAAUAGCAAGUUAAAAUAAGGCUAUACCAGCCUUUCCCUUGGCCCUUGGCAGAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
-    assert from_name('nxx(4,5,0,2)').seq == 'GUUUUAGAGCUAGAAAUAGCAAGUUAAAAUAAGGCUAUACCAGCCAUACCAGCCGAAAGGCCCUUGGCAGGGCCCUUGGCAGAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
-    assert from_name('nxx(4,5,0,3)').seq == 'GUUUUAGAGCUAGAAAUAGCAAGUUAAAAUAAGGCUAUACCAGCCAUACCAGCCAUACCAGCCGAAAGGCCCUUGGCAGGGCCCUUGGCAGGGCCCUUGGCAGAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
-    assert from_name('nxx(4,5,10,2)').seq == 'GUUUUAGAGCUAGAAAUAGCAAGUUAAAAUAAGGCUAUACCAGCCAUACCAGCCUUUCCCUUUCGGCCCUUGGCAGGGCCCUUGGCAGAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
+    assert from_name('nxx(0,0)') == 'GUUUUAGAGCUAGAAAUAGCAAGUUAAAAUAAAUACCAGCCGAAAGGCCCUUGGCAGGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
+    assert from_name('nxx(1,1)') == 'GUUUUAGAGCUAGAAAUAGCAAGUUAAAAUAAGAUACCAGCCGAAAGGCCCUUGGCAGCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
+    assert from_name('nxx(2,2)') == 'GUUUUAGAGCUAGAAAUAGCAAGUUAAAAUAAGGAUACCAGCCGAAAGGCCCUUGGCAGCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
+    assert from_name('nxx(2,3)') == 'GUUUUAGAGCUAGAAAUAGCAAGUUAAAAUAAGGAUACCAGCCGAAAGGCCCUUGGCAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
+    assert from_name('nxx(4,5,5)') == 'GUUUUAGAGCUAGAAAUAGCAAGUUAAAAUAAGGCUAUACCAGCCUUUCCGGCCCUUGGCAGAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
+    assert from_name('nxx(4,5,6)') == 'GUUUUAGAGCUAGAAAUAGCAAGUUAAAAUAAGGCUAUACCAGCCUUUCCCGGCCCUUGGCAGAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
+    assert from_name('nxx(4,5,7)') == 'GUUUUAGAGCUAGAAAUAGCAAGUUAAAAUAAGGCUAUACCAGCCUUUCCCUGGCCCUUGGCAGAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
+    assert from_name('nxx(4,5,8)') == 'GUUUUAGAGCUAGAAAUAGCAAGUUAAAAUAAGGCUAUACCAGCCUUUCCCUUGGCCCUUGGCAGAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
+    assert from_name('nxx(4,5,0,2)') == 'GUUUUAGAGCUAGAAAUAGCAAGUUAAAAUAAGGCUAUACCAGCCAUACCAGCCGAAAGGCCCUUGGCAGGGCCCUUGGCAGAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
+    assert from_name('nxx(4,5,0,3)') == 'GUUUUAGAGCUAGAAAUAGCAAGUUAAAAUAAGGCUAUACCAGCCAUACCAGCCAUACCAGCCGAAAGGCCCUUGGCAGGGCCCUUGGCAGGGCCCUUGGCAGAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
+    assert from_name('nxx(4,5,10,2)') == 'GUUUUAGAGCUAGAAAUAGCAAGUUAAAAUAAGGCUAUACCAGCCAUACCAGCCUUUCCCUUUCGGCCCUUGGCAGGGCCCUUGGCAGAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
 
 def test_hairpin_replacement():
-    assert from_name('hp(0)').seq == 'GUUUUAGAGCUAGAAAUAGCAAGUUAAAAUAAGGCUAGUCCGUAUACCAGCCGAAAGGCCCUUGGCAGUUUUUU'
-    assert from_name('hp(18)').seq == 'GUUUUAGAGCUAGAAAUAGCAAGUUAAAAUAAGGCUAGUCCGUUAUCAACUUGAAAAAGUGAUACCAGCCGAAAGGCCCUUGGCAGUUUUUU'
-    assert from_name('hp(33)').seq == 'GUUUUAGAGCUAGAAAUAGCAAGUUAAAAUAAGGCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCAUACCAGCCGAAAGGCCCUUGGCAGUUUUUU'
-    assert from_name('hp(39)').seq == 'GUUUUAGAGCUAGAAAUAGCAAGUUAAAAUAAGGCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUCCCAUACCAGCCGAAAGGCCCUUGGCAGUUUUUU'
-    assert from_name('hp(49)').seq == 'GUUUUAGAGCUAGAAAUAGCAAGUUAAAAUAAGGCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUCCCUUUCCCUUUCAUACCAGCCGAAAGGCCCUUGGCAGUUUUUU'
+    assert from_name('hp(0)') == 'GUUUUAGAGCUAGAAAUAGCAAGUUAAAAUAAGGCUAGUCCGUAUACCAGCCGAAAGGCCCUUGGCAGUUUUUU'
+    assert from_name('hp(18)') == 'GUUUUAGAGCUAGAAAUAGCAAGUUAAAAUAAGGCUAGUCCGUUAUCAACUUGAAAAAGUGAUACCAGCCGAAAGGCCCUUGGCAGUUUUUU'
+    assert from_name('hp(33)') == 'GUUUUAGAGCUAGAAAUAGCAAGUUAAAAUAAGGCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCAUACCAGCCGAAAGGCCCUUGGCAGUUUUUU'
+    assert from_name('hp(39)') == 'GUUUUAGAGCUAGAAAUAGCAAGUUAAAAUAAGGCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUCCCAUACCAGCCGAAAGGCCCUUGGCAGUUUUUU'
+    assert from_name('hp(49)') == 'GUUUUAGAGCUAGAAAUAGCAAGUUAAAAUAAGGCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUCCCUUUCCCUUUCAUACCAGCCGAAAGGCCCUUGGCAGUUUUUU'
 
 def test_induced_dimerization():
     import pytest
@@ -1601,17 +1665,17 @@ def test_induced_dimerization():
     with pytest.raises(ValueError): from_name('id(3,5)')
     with pytest.raises(ValueError): from_name('id(3,hello)')
 
-    assert from_name('id(5,0)').seq == 'GUUUUAGAAUACCAGCC'
-    assert from_name('id(5,1)').seq == 'GUUUUAGAGAUACCAGCC'
-    assert from_name('id(5,2)').seq == 'GUUUUAGAGCAUACCAGCC'
-    assert from_name('id(5,3)').seq == 'GUUUUAGAGCUAUACCAGCC'
-    assert from_name('id(5,4)').seq == 'GUUUUAGAGCUAAUACCAGCC'
+    assert from_name('id(5,0)') == 'GUUUUAGAAUACCAGCC'
+    assert from_name('id(5,1)') == 'GUUUUAGAGAUACCAGCC'
+    assert from_name('id(5,2)') == 'GUUUUAGAGCAUACCAGCC'
+    assert from_name('id(5,3)') == 'GUUUUAGAGCUAUACCAGCC'
+    assert from_name('id(5,4)') == 'GUUUUAGAGCUAAUACCAGCC'
 
-    assert from_name('id(3,0)').seq == 'GGCCCUUGGCAGAAGUUAAAAUAAGGCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
-    assert from_name('id(3,1)').seq == 'GGCCCUUGGCAGCAAGUUAAAAUAAGGCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
-    assert from_name('id(3,2)').seq == 'GGCCCUUGGCAGGCAAGUUAAAAUAAGGCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
-    assert from_name('id(3,3)').seq == 'GGCCCUUGGCAGAGCAAGUUAAAAUAAGGCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
-    assert from_name('id(3,4)').seq == 'GGCCCUUGGCAGUAGCAAGUUAAAAUAAGGCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
+    assert from_name('id(3,0)') == 'GGCCCUUGGCAGAAGUUAAAAUAAGGCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
+    assert from_name('id(3,1)') == 'GGCCCUUGGCAGCAAGUUAAAAUAAGGCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
+    assert from_name('id(3,2)') == 'GGCCCUUGGCAGGCAAGUUAAAAUAAGGCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
+    assert from_name('id(3,3)') == 'GGCCCUUGGCAGAGCAAGUUAAAAUAAGGCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
+    assert from_name('id(3,4)') == 'GGCCCUUGGCAGUAGCAAGUUAAAAUAAGGCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
 
 
 if __name__ == '__main__':
