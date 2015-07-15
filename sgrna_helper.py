@@ -593,11 +593,12 @@ class Construct (Sequence):
         return base_pairs, unpaired_bases
 
     def _has_index(self, domain, rel_index):
-        for iter in self._iterate_domains():
-            if iter.domain is domain and \
-                    iter.rel_start <= rel_index < iter.rel_end:
-                return True
-        return False
+        if domain in self._attachments:
+            attachment = self._attachments[domain] 
+            return 0 <= rel_index < attachment.start or \
+                   attachment.end <= rel_index < len(domain)
+        else:
+            return 0 <= rel_index < len(domain)
 
 
 class Domain (Sequence):
