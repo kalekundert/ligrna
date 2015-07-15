@@ -117,11 +117,11 @@ print("""\
 
    Microwave for 90 sec to dissolve.
 
-9. Add 7.5 μL 6x Orange G loading dye to each
+10. Add 7.5 μL 6x Orange G loading dye to each
    reaction.  Unlike most other dyes, Orange G 
    doesn't overlap the bands we're interested in.
 
-10. Load the gel and run at 100V for 1 hour.
+11. Load the gel and run at 100V for 1 hour.
 """)
 
 # vim: tw=53
