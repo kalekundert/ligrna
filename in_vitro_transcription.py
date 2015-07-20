@@ -23,6 +23,7 @@ Options:
 
     -c --cleanup METHOD     [default: zymo]
         Choose the method for removing free nucleotides from the RNA:
+        'none': Carry on the crude reaction mix.
         'zymo': Zymo spin kits.
         'ammonium': Ammonium acetate precipitation.
 """
@@ -110,6 +111,10 @@ elif args['--cleanup'] == 'ammonium':
 
    e. Dissolve pellet in 20μL nuclease-free water.
 """)
+
+elif args['--cleanup'] == 'none':
+    raise SystemExit
+
 else:
     raise ValueError("unknown RNA clean-up method: '{}'".format(args['--cleanup']))
 
