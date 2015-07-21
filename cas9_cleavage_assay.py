@@ -107,21 +107,12 @@ print("""\
 8. Incubate at 37°C for 20 min, then at 55°C for 20
    min, then hold at 12°C.
 
-9. Cast a 2% agarose gel.
-
-   2% Agarose Gel (<59 reactions)
-   ==============================
-   150 mL  1x TAE
-     3 g   agarose
-    15 μL  10000x GelRed
-
-   Microwave for 90 sec to dissolve.
-
-10. Add 7.5 μL 6x Orange G loading dye to each
+9. Add 7.5 μL 6x Orange G loading dye to each
    reaction.  Unlike most other dyes, Orange G 
    doesn't overlap the bands we're interested in.
 
-11. Load the gel and run at 100V for 1 hour.
+10. Load on a 2% TAE/agarose/GelRed gel and run at 
+    100V for 1 hour.
 """)
 
 # vim: tw=53
