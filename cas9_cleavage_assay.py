@@ -37,6 +37,7 @@ cas9 = float(args['--cas9'])
 dna = float(args['--dna'])
 theo = float(args['--theo'])
 water = 27 - sgrna - cas9 - dna - theo
+master_mix = 30 - theo - sgrna - dna
 
 cas9_reagents = [
         scale(water, "nuclease-free water"),
@@ -84,7 +85,7 @@ print('   Each Cas9 Reaction')
 print('   ' + 30 * '=')
 print('   ' + row.format(theo, "30 mM theophylline (or water)"))
 print('   ' + row.format(sgrna, "300 nM sgRNA (or water)"))
-print('   ' + row.format(30 - theo - sgrna - dna, 'Cas9 mix (or 8 μL water + 3 μL buffer)'))
+print('   ' + row.format(master_mix, 'Cas9 mix (or {} μL water + 3 μL buffer)'.format(master_mix - 3)))
 print('   ' + 30 * '-')
 print('   ' + row.format(dna, "30 nM target DNA (or water)"))
 print("""\
