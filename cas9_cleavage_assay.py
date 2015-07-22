@@ -85,7 +85,7 @@ print('   Each Cas9 Reaction')
 print('   ' + 30 * '=')
 print('   ' + row.format(theo, "30 mM theophylline (or water)"))
 print('   ' + row.format(sgrna, "300 nM sgRNA (or water)"))
-print('   ' + row.format(master_mix, 'Cas9 mix (or {} μL water + 3 μL buffer)'.format(master_mix - 3)))
+print('   ' + row.format(master_mix, 'Cas9 MM (or 3 μL buffer + {:.1f} μL water)'.format(master_mix - 3)))
 print('   ' + 30 * '-')
 print('   ' + row.format(dna, "30 nM target DNA (or water)"))
 print("""\
