@@ -11,9 +11,9 @@ def show(table, suffix=''):
 
 ng_uL = {
         'nx_0': 1684,
-        'nx_1': 2121,
-        'nx_2': 2771,
-        'nx_3': 5531,
+        #'nx_1': 2121,
+        #'nx_2': 2771,
+        #'nx_3': 5531,
 }
 #ng_uL = {
 #        'nx_2': 330.7,
@@ -66,7 +66,7 @@ target_conc = 300
 f = (target_conc / nM) ** (1 / (steps - 1))
 
 #leave = 7.5
-leave = 10
+leave = 3
 take = leave * f / (1 - f)
 
 print('Perform a serial dilution using the following parameters:')
