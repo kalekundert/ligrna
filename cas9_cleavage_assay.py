@@ -53,7 +53,7 @@ digestion_reagents = [
 cas9_volume = sum(amount for amount, x in cas9_reagents)
 max_volume = sum(x for x, y in cas9_reagents + digestion_reagents) 
 max_digits = int(math.ceil(math.log10(max_volume)))
-row = '{{:{}.1f}} μL  {{}}'.format(max_digits + 2)
+row = '{{:{}.2f}} μL  {{}}'.format(max_digits + 2)
 
 print("""\
 1. Prepare fresh 30 mM theophylline. 
