@@ -45,9 +45,8 @@ cas9_reagents = [
         scale(cas9, "1 μM Cas9 (NEB)"),
 ]
 digestion_reagents = [
-        scale(3.375, "nuclease-free water"),
-        scale(0.375, "Proteinase K (NEB)"),
-        scale(3.750, "Buffer P1 with RNase A (Qiagen)"),
+        scale(0.337, "Proteinase K (NEB)"),
+        scale(3.371, "Buffer P1 with RNase A (Qiagen)"),
 ]
 
 
@@ -96,10 +95,10 @@ print("""\
 
 6. Incubate at 37°C for 1 hour.
 
-7. Add 7.5 μL of 5x digestion mixture to each 
+7. Add 3.7 μL of ≈9x digestion mixture to each 
    reaction.  Prepare immediately before adding.
 """)
-print('   5x Digestion Mixture')
+print('   ≈9x Digestion Mixture')
 print('   ' + 30 * '=')
 for amount, reagent in digestion_reagents:
     print('   ' + row.format(amount, reagent))
@@ -108,7 +107,7 @@ print("""\
 8. Incubate at 37°C for 20 min, then at 55°C for 20
    min, then hold at 12°C.
 
-9. Add 7.5 μL 6x Orange G loading dye to each
+9. Add 6.4 μL 6x Orange G loading dye to each
    reaction.  Unlike most other dyes, Orange G 
    doesn't overlap the bands we're interested in.
 
