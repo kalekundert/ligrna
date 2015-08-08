@@ -61,7 +61,7 @@ def scale(*reagents):   # (no fold)
     if using_robot:
         scaled_volume = max(
                 scaled_volume,
-                num_reactions * volume_per_reaction + 22
+                num_reactions * volume_per_reaction + 14
         )
 
     scaled_reagents = [
@@ -75,12 +75,31 @@ cas9_reagents, cas9_volume = scale(
         (3.0, "10x reaction buffer"),
         (cas9, "1 μM Cas9 (NEB)"),
 )
-ka_reagents, ka_volume = scale(
+kag_reagents, kag_volume = scale(
         (0.337, "Proteinase K (NEB)"),
         (3.371, "Buffer P1 with RNase A (Qiagen)"),
+        (6.292, "Orange G loading buffer"),
 )
 
-max_volume = sum(x for x, y in cas9_reagents + ka_reagents) 
+def cas9_master_mix():  # (no fold)
+    return '\n'.join([
+        "Cas9 Master Mix for {} reactions".format(num_reactions),
+        35 * '='] + [
+        row.format(amount, reagent) for amount, reagent in cas9_reagents] + [
+        35 * '-',
+        row.format(cas9_volume, "total master mix"),
+    ])
+
+def kag_master_mix():   # (no fold)
+    return '\n'.join([
+        "3x KAG Master Mix for {} reactions".format(num_reactions),
+        35 * '='] + [
+        row.format(amount, reagent) for amount, reagent in kag_reagents] + [
+        35 * '-',
+        row.format(kag_volume, "total master mix"),
+    ])
+
+max_volume = sum(x for x, y in cas9_reagents + kag_reagents) 
 max_digits = int(math.ceil(math.log10(max_volume)))
 row = '{{:{}.2f}} μL  {{}}'.format(max_digits + 3)
 
@@ -103,21 +122,16 @@ Thaw the sgRNA, then refold it by incubating at
 95°C for 2 min.
 """)
 
-## Run the Cas9 reactions (using the robot).
+## Setup the Cas9 reactions (using the robot).
 
 if using_robot:
     # Prepare the Cas9 master mix.
 
-    steps.append('\n'.join([
-"Prepare the Cas9 master mix:\n".format(args['<reactions>']),
-"Cas9 Master Mix for {} reactions".format(num_reactions),
-35 * '='] + [
-    row.format(amount, reagent)
-    for amount, reagent in cas9_reagents] + [
-35 * '-',
-row.format(cas9_volume, "total master mix"),
-'',
-]))
+    steps.append("""\
+Prepare the Cas9 master mix:
+
+{}
+""".format(cas9_master_mix()))
     
     # Put everything into the robot.
 
@@ -144,49 +158,28 @@ C2: sgRNAs in a plastic 96-well rack with a 2 mm
     top left down.
 """)
 
-    # Run the Cas9 reactions.
+    # Setup the Cas9 reactions.
 
     steps.append("""\
-Run the method.  Answer the robot's questions as 
-follows:
+Run the method.  The robot will setup all the 
+reactions.  Answer its questions as follows:
 
 - The number of sgRNAs to test: {num_sgrnas}
-
-- The number of reactions to test: {num_reactions}
 
 - Levelsensor settings:
   [ ] Levels
   [x] Tips
   [ ] Locations
 
-- Fill in volumes for each reagent.  Specify the 
-  minimum values for the Cas9 and KA mixes.  Make 
-  sure everything else agrees with the defaults.
+Provide reasonably accurate volumes for all the 
+reagents.  The volumes of the Cas9 and KAG master 
+mixes are included in this protocol.
 
 Watch to make sure that liquid is actually being 
 pipetted for each step.
 """.format(**locals()))
 
-    # Quench the Cas9 reactions.
-
-    steps.append('\n'.join(["""\
-Just before the 1 hour 37°C incubation finishes, 
-prepare the KA master mix:
-""",
-"≈9x KA Master Mix for {} reactions".format(num_reactions),
-35 * '='] + [
-    row.format(amount, reagent)
-    for amount, reagent in ka_reagents] + [
-35 * '-',
-row.format(ka_volume, "total master mix"),
-'',
-]))
-    steps.append("""\
-Put the KA master mix in position B1-5 when the 
-robot asks for it, then finish running the method.
-""")
-
-## Run the Cas9 reactions (by hand).
+## Setup the Cas9 reactions (by hand).
 
 else:
     # Setup the Cas9 reactions.
@@ -196,12 +189,7 @@ Setup {} Cas9 reactions.  Add theophylline,
 sgRNA, and Cas9 master mix in that order to each 
 reaction (as appropriate).
 """.format(args['<reactions>']),
-'Cas9 Master Mix for {:.1f} reactions'.format(num_scaled_reactions),
-35 * '='] + [
-    row.format(amount, reagent)
-    for amount, reagent in cas9_reagents] + [
-35 * '-',
-row.format(cas9_volume, 'total master mix'),
+cas9_master_mix(),
 '',
 'Each Cas9 Reaction',
 35 * '=',
@@ -219,38 +207,42 @@ Incubate at room temperature for 10 min.
 Add target DNA (as appropriate) to each reaction.
 """)
 
-    # Run the Cas9 reactions.
+## Run the Cas9 reactions.
 
-    steps.append("""\
-Incubate at 37°C for 1 hour.
+steps.append("""\
+Incubate at 37°C for 1 hour (thermocycler).
 """)
 
-    # Quench the Cas9 reactions.
+## Quench the Cas9 reactions.
 
-    steps.append('\n'.join(["""\
-Add 3.7 μL of ≈9x KA master mix to each 
-reaction.  Prepare immediately before adding:
-""",
-"≈9x KA Master Mix for {:.1f} reactions".format(num_scaled_reactions),
-35 * '='] + [
-    row.format(amount, reagent)
-    for amount, reagent in ka_reagents] + [
-'',
-]))
+steps.append("""\
+Prepare 3x KAG master mix just before the 
+reaction finishes:
+
+{}
+""".format(kag_master_mix()))
+
+if using_robot:
     steps.append("""\
-Incubate at 37°C for 20 min, then at 55°C for 20
-min, then hold at 12°C.
+Put the KAG master mix in position B1-5 when the 
+robot asks for it, then finish running the method.
+The robot will add the mix to each reaction.
+""")
+
+else:
+    steps.append("""\
+Add 10 μL 3x KAG master mix to each reaction.  
+""")
+
+steps.append("""\
+Incubate the reactions at 37°C for 20 min, then at 
+55°C for 20 min, then hold at 12°C (thermocycler).
 """) 
 
-## Analyze the reactions.
+## Analyze the products.
 
 steps.append("""\
-Add 6.3 μL 6x Orange G loading buffer to each 
-reaction.  Flick to mix and spin to collect.
-""")
-
-steps.append("""\
-Load on a 2% TAE/agarose/GelRed gel and run at 
+Load on a 2% agarose/TAE/GelRed gel and run at 
 100V for 1 hour.""")
 
 ## Print the protocol.
