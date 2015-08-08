@@ -26,6 +26,10 @@ Options:
     -r --robot
         Display the protocol for having the Eppendorf liquid handling robot
         setup and carry out the Cas9 reaction.
+
+    -f --fresh
+        Include a step for preparing fresh theophylline, if you've run out of
+        frozen stocks.
 """
 
 import docopt
@@ -82,7 +86,8 @@ row = '{{:{}.2f}} μL  {{}}'.format(max_digits + 3)
 
 ## Setup the reagents.
 
-steps.append("""\
+if args['--fresh']:
+    steps.append("""\
 Prepare fresh 30 mM theophylline. 
 
 30 mM Theophylline
