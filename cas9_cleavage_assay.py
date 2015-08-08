@@ -78,7 +78,7 @@ ka_reagents, ka_volume = scale(
 
 max_volume = sum(x for x, y in cas9_reagents + ka_reagents) 
 max_digits = int(math.ceil(math.log10(max_volume)))
-row = '{{:{}.2f}} μL  {{}}'.format(max_digits + 2)
+row = '{{:{}.2f}} μL  {{}}'.format(max_digits + 3)
 
 ## Setup the reagents.
 
