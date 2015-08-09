@@ -27,7 +27,7 @@ Options:
         Display the protocol for having the Eppendorf liquid handling robot
         setup and carry out the Cas9 reaction.
 
-    -f --fresh
+    -f --fresh-theo
         Include a step for preparing fresh theophylline, if you've run out of
         frozen stocks.
 """
@@ -105,21 +105,29 @@ row = '{{:{}.2f}} μL  {{}}'.format(max_digits + 3)
 
 ## Setup the reagents.
 
-if args['--fresh']:
+if args['--fresh-theo']:
     steps.append("""\
-Prepare fresh 30 mM theophylline. 
+Prepare solutions with and without theophylline.  
+Treat both solutions in exactly the same way, just 
+don't add theophylline to one:
 
 30 mM Theophylline
 ===================================
  x≈5 mg  theophylline
 185x μL  nuclease-free water
 
-Vortex and incubate at 37°C to dissolve.
+Vortex and incubate at 37°C to dissolve.  Use 
+immediately or store at -20°C.
 """)
 
 steps.append("""\
-Thaw the sgRNA, then refold it by incubating at 
-95°C for 2 min.
+Thaw the water, theophylline, 10x Cas9 buffer, 
+and target DNA on the 37°C heat block.
+""")
+
+steps.append("""\
+Thaw the sgRNAs at room temperature, then refold 
+them by incubating at 95°C for 2 min.
 """)
 
 ## Setup the Cas9 reactions (using the robot).
@@ -165,6 +173,8 @@ Run the method.  The robot will setup all the
 reactions.  Answer its questions as follows:
 
 - The number of sgRNAs to test: {num_sgrnas}
+
+- The number of reactions to run: {num_reactions}
 
 - Levelsensor settings:
   [ ] Levels
