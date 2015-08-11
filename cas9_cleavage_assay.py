@@ -150,10 +150,10 @@ setup the robot's worktable:
 A2: 50 μL filter tips.
 
 B1: Reagents and master mixes in a tube rack:
-    1: water
-    2: theophylline
-    3: Cas9 master mix
-    4: target DNA
+    19: water
+    20: theophylline
+    21: Cas9 master mix
+    22: target DNA
 
 B2: 50 μL filter tips.
 
@@ -234,7 +234,7 @@ reaction finishes:
 
 if using_robot:
     steps.append("""\
-Put the KAG master mix in position B1-5 when the 
+Put the KAG master mix in position B1-23 when the 
 robot asks for it, then finish running the method.
 The robot will add the mix to each reaction.
 """)
