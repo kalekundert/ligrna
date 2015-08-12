@@ -121,8 +121,9 @@ else:
 print("""\
 4. Nanodrop to determine the RNA concentration.
 
-5. Make 2 22 μL aliquots in PCR tubes, then 
-   flash-freeze in liquid N₂ and store at -80°C.
+5. Make 15 μL aliquots of the sgRNA at the desired 
+   concentration.  Keep any left-over RNA undiluted.  
+   Flash-freeze in liquid N₂ and store at -80°C.
 """)
 
 # vim: tw=53
