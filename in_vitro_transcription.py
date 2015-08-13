@@ -70,7 +70,7 @@ print("""\
 print('   T7 Master Mix for {:.1f} reactions'.format(volume))
 print('   ' + 30 * '=')
 for amount, reagent in reagents:
-    row = '{{:{}.1f}} μL  {{}}'.format(longest_amount + 2)
+    row = '{{:{}.2f}} μL  {{}}'.format(longest_amount + 3)
     print('   ' + row.format(amount, reagent))
 print('   ' + 30 * '-')
 print('   ' + row.format(total_amount, 'total master mix'))
