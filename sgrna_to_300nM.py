@@ -5,7 +5,7 @@ Calculate how to dilute sgRNA to particular concentration (300 nM by default).
 
 Usage:
     sgrna_to_300nM.py <name> <ng_uL> [options]
-    sgrna_to_300nM.py <csv> [options]
+    sgrna_to_300nM.py <tsv> [options]
 
 Options:
     -c --target-concentration <nM>  [default: 300]
@@ -74,11 +74,11 @@ def process_sample(sgrna, initial_ng_uL, args):
 
 
 # Figure out if name is filename or sgRNA name
-if args['<csv>']:
-    df = pd.read_csv(args['<csv>'], sep='\t')
+if args['<tsv>']:
+    df = pd.read_csv(args['<tsv>'], sep='\t')
     for row in df.iterrows():
         sgrna = sgrna_helper.from_name( row[1]['Sample ID'].lower() )
-        print(sgrna)
+        print(sgrna.name)
         print(30 * '-')
         initial_ng_uL = float(row[1]['Nucleic Acid Conc.'])
         process_sample(sgrna, initial_ng_uL, args)
