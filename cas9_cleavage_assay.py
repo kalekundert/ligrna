@@ -56,13 +56,11 @@ cas9_mm = 30 - theo - sgrna - dna
 
 def scale(*reagents):   # (no fold)
     volume_per_reaction = sum(amount for amount, x in reagents)
-    scaled_volume = num_scaled_reactions * volume_per_reaction
 
     if using_robot:
-        scaled_volume = max(
-                scaled_volume,
-                num_reactions * volume_per_reaction + 14
-        )
+        scaled_volume = num_reactions * volume_per_reaction + 14
+    else:
+        scaled_volume = num_scaled_reactions * volume_per_reaction
 
     scaled_reagents = [
             (ref * scaled_volume / volume_per_reaction, name)
@@ -163,7 +161,7 @@ C1: Empty PCR tubes for each reaction in a 96-well
 C2: sgRNAs in a plastic 96-well rack with a 2 mm 
     cardboard support underneath.  There must be 
     at least 15 μL of each sgRNA.  Fill from the 
-    top left down.
+    top left down, skipping every other column.
 """)
 
     # Setup the Cas9 reactions.
