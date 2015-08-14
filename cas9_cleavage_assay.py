@@ -8,19 +8,23 @@ Usage:
     ./cas9_master_mix.py <reactions> [options]
 
 Options:
-    -s --sgrna MICROLITERS   [default: 3.0]
+    -s --sgrna MICROLITERS      [default: 3.0]
         How much sgRNA to use (in μL).
 
-    -c --cas9 MICROLITERS    [default: 1.0]
+    -c --cas9-rxn-conc NANOMOLAR        [default: 30.0]
+        The working concentration of Cas9 (in nM)
         How much Cas9 to use (in μL).
 
-    -d --dna MICROLITERS     [default: 3.0]
+    -C --cas9-stock-conc MICROMOLAR     [default: 4.0]
+        The stock Cas9 concentration (in μM).
+
+    -d --dna MICROLITERS        [default: 3.0]
         How much target DNA to use (in μL).
 
-    -t --theo MICROLITERS    [default: 10.0]
+    -t --theo MICROLITERS       [default: 10.0]
         How much theophylline to use (in μL).
 
-    -x --extra PERCENT       [default: 10]
+    -x --extra PERCENT          [default: 10]
         How much extra master mix to create.
 
     -r --robot
@@ -48,7 +52,9 @@ num_sgrnas = num_reactions // 2
 ## Calculate how much of each reagent will be needed.
 
 sgrna = float(args['--sgrna'])
-cas9 = float(args['--cas9'])
+cas9_stock_conc = float(args['--cas9-stock-conc'])
+cas9_rxn_conc = float(args['--cas9-rxn-conc'])
+cas9 = 30 * cas9_rxn_conc / cas9_stock_conc / 1000
 dna = float(args['--dna'])
 theo = float(args['--theo'])
 water = 27 - sgrna - cas9 - dna - theo
@@ -71,10 +77,10 @@ def scale(*reagents):   # (no fold)
 cas9_reagents, cas9_volume = scale(
         (water, "nuclease-free water"),
         (3.0, "10x reaction buffer"),
-        (cas9, "1 μM Cas9 (NEB)"),
+        (cas9, "{} μM Cas9 (NEB)".format(cas9_stock_conc)),
 )
 kag_reagents, kag_volume = scale(
-        (0.337, "Proteinase K (NEB)"),
+        (0.337, "Proteinase K (Denville)"),
         (3.371, "Buffer P1 with RNase A (Qiagen)"),
         (6.292, "Orange G loading buffer"),
 )
