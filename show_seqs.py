@@ -42,6 +42,9 @@ Options:
         Specify the sequence that the sgRNA should target.  If an empty string 
         is given, no spacer sequence will be included.
 
+    -a, --aptamer NAME      [default: theo]
+        Specify the aptamer that should be inserted into the sgRNA.
+
     -S, --subset RANGE
         Specify a subset of the design to display.  If only one number is 
         given, it is taken as the start position.  If two numbers are given, 
@@ -78,9 +81,13 @@ import docopt
 args = docopt.docopt(__doc__)
 designs = []
 
+kwargs = {}
+kwargs['target'] = args['--spacer'] or None
+kwargs['small_molecule'] = args['--aptamer']
+
 for name in args['<names>']:
     try:
-        design = sgrna_helper.from_name(name)
+        design = sgrna_helper.from_name(name, **kwargs)
         designs.append(design)
     except ValueError as error:
         print(error)
@@ -112,8 +119,6 @@ longest_name = max([8] + [len(x.name) for x in designs])
 header_template = '{{0:{}s}}'.format(longest_name)
 
 for design in designs:
-    if args['--spacer']:
-        design.prepend(sgrna_helper.spacer(args['--spacer']))
     if args['--t7'] or args['--batch']:
         design.prepend(sgrna_helper.t7_promoter())
 
