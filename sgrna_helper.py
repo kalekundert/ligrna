@@ -708,15 +708,20 @@ class Domain (Sequence):
 
 
 
-def from_name(name):
+def from_name(name, **kwargs):
+    from inspect import getargspec
+
     construct = Construct()
     names = []
 
-    for factory, arguments in parse_name(name):
+    for factory, args in parse_name(name):
         if factory not in globals():
             raise ValueError("No designs named '{}'.".format(factory))
 
-        fragment = globals()[factory](*arguments)
+        factory = globals()[factory]
+        argspec = getargspec(factory)
+        known_kwargs = {k:v for k,v in kwargs.items() if k in argspec.args}
+        fragment = factory(*args, **known_kwargs)
         names.append(fragment.name)
         construct += fragment
 
@@ -774,7 +779,7 @@ def reverse_complement(sequence):
     return complement(sequence[::-1])
 
 
-def wt_sgrna():
+def wt_sgrna(target=None):
     """
     Return the wildtype sgRNA sequence, without a spacer.
 
@@ -785,6 +790,9 @@ def wt_sgrna():
     to make random attachments.
     """
     sgrna = Construct('wt sgrna')
+
+    if target is not None:
+        sgrna += spacer(target)
 
     sgrna += Domain('stem', 'GUUUUAGAGCUAGAAAUAGCAAGUUAAAAU')
     sgrna += Domain('nexus', 'AAGGCUAGUCCGU')
@@ -884,10 +892,7 @@ def aptamer(ligand, piece='whole'):
 
     return construct
 
-def aptamer_insert(ligand,
-        linker_len=0,
-        spacer_len=0,
-        repeat_factory=repeat,
+def aptamer_insert(ligand, linker_len=0, spacer_len=0, repeat_factory=repeat,
         num_aptamers=1):
 
     insert = aptamer(ligand)
@@ -935,12 +940,12 @@ def spacer(target='aavs'):
     while not sequence.startswith('GG'):
         sequence = 'G' + sequence
 
-    spacer = Domain('spacer', sequence)
+    spacer = Domain('target', sequence)
     spacer.style = 'yellow'
 
-    return Construct('spacer', spacer)
+    return Construct(target, spacer)
 
-def target(target='aavs'):
+def dna_to_cut(target='aavs'):
     """
     Return the specified target sequence.
 
@@ -990,7 +995,7 @@ def t7_promoter(source='briner'):
             '{} t7'.format(source),
             Domain('t7', sequence))
 
-def upper_stem_insertion(N, linker_len=0, spacer_len=0):
+def upper_stem_insertion(N, linker_len=0, spacer_len=0, num_aptamers=1, small_molecule='theo', target='aavs'):
     """
     Insert the aptamer into the upper stem region of the sgRNA.
 
@@ -1015,6 +1020,11 @@ def upper_stem_insertion(N, linker_len=0, spacer_len=0):
         the 5' half.  The spacer sequence will have the same pattern as the 
         linker (see above).
 
+    num_aptamers: int
+        The number of aptamers to insert into the sgRNA.  The aptamers are 
+        inserted within each other, in a manner than should give rise to 
+        positive cooperativity.
+
     Returns
     -------
     sgRNA: Construct
@@ -1023,21 +1033,28 @@ def upper_stem_insertion(N, linker_len=0, spacer_len=0):
     if not 0 <= N <= 4:
         raise ValueError("Location for upper stem insertion must be between 0 and 4, not {}.".format(N))
 
-    if spacer_len != 0:
+    if num_aptamers != 1:
+        args = N, linker_len, spacer_len, num_aptamers
+    elif spacer_len != 0:
         args = N, linker_len, spacer_len
     else:
         args = N, linker_len
+    if target != 'aavs':
+        args = args + ('s='+target,)
+    if small_molecule != 'theo':
+        args = args + ('a='+small_molecule,)
 
-    sgrna = wt_sgrna()
+    sgrna = wt_sgrna(target)
     sgrna.name = make_name('us', *args)
     sgrna.attach('stem', 8 + N, 20 - N, aptamer_insert(
-            'theo',
+            small_molecule,
             linker_len=linker_len,
             spacer_len=spacer_len,
+            num_aptamers=num_aptamers,
     ))
     return sgrna
 
-def lower_stem_insertion(N, linker_len=0, spacer_len=0):
+def lower_stem_insertion(N, linker_len=0, spacer_len=0, small_molecule='theo', target='aavs'):
     """
     Insert the aptamer into the lower stem region of the sgRNA.
 
@@ -1071,17 +1088,21 @@ def lower_stem_insertion(N, linker_len=0, spacer_len=0):
         args = N, linker_len, spacer_len
     else:
         args = N, linker_len
+    if target != 'aavs':
+        args = args + ('s='+target,)
+    if small_molecule != 'theo':
+        args = args + ('a='+small_molecule,)
 
-    sgrna = wt_sgrna()
+    sgrna = wt_sgrna(target)
     sgrna.name = make_name('ls', *args)
     sgrna.attach('stem', 0 + N, 30 - N, aptamer_insert(
-            'theo',
+            small_molecule,
             linker_len=linker_len,
             spacer_len=spacer_len,
     ))
     return sgrna
 
-def nexus_insertion(linker_len=0):
+def nexus_insertion(linker_len=0, small_molecule='theo', target='aavs'):
     """
     Insert the aptamer into the nexus region of the sgRNA.
 
@@ -1112,16 +1133,22 @@ def nexus_insertion(linker_len=0):
     sgRNA: Construct
     """
 
-    sgrna = wt_sgrna()
+    args = (linker_len,)
+    if target != 'aavs':
+        args = args + ('s='+target,)
+    if small_molecule != 'theo':
+        args = args + ('a='+small_molecule,)
+
+    sgrna = wt_sgrna(target)
     sgrna.name = make_name('nx', linker_len)
     sgrna.attach('nexus', 4, 9, aptamer_insert(
-            'theo',
+            small_molecule,
             linker_len=linker_len,
             repeat_factory=lambda name, length: repeat(name, length, 'U'),
     ))
     return sgrna
     
-def nexus_insertion_2(N, M, spacer_len=0, num_aptamers=1):
+def nexus_insertion_2(N, M, spacer_len=0, num_aptamers=1, small_molecule='theo', target='aavs'):
     """
     Insert the aptamer into the nexus region of the sgRNA.
 
@@ -1179,19 +1206,23 @@ def nexus_insertion_2(N, M, spacer_len=0, num_aptamers=1):
         args = N, M, spacer_len
     else:
         args = N, M
+    if target != 'aavs':
+        args = args + ('s='+target,)
+    if small_molecule != 'theo':
+        args = args + ('a='+small_molecule,)
 
     # Create and return the construct using a helper function.
 
-    sgrna = wt_sgrna()
+    sgrna = wt_sgrna(target)
     sgrna.name = make_name('nxx', *args)
     sgrna.attach('nexus', 2 + N, 11 - M, aptamer_insert(
-            'theo',
+            small_molecule,
             spacer_len=spacer_len,
             num_aptamers=num_aptamers,
     ))
     return sgrna
 
-def hairpin_replacement(N):
+def hairpin_replacement(N, small_molecule='theo', target='aavs'):
     """
     Remove a portion of the 3' terminal hairpins and replace it with the 
     aptamer.
@@ -1214,8 +1245,14 @@ def hairpin_replacement(N):
         The specified construct will be returned, with a hexa-uracil tail will 
         added to the end for the benefit of the T7 polymerase.
     """
-    design = wt_sgrna()
-    design.name = make_name('hp', N)
+    args = (N,)
+    if target != 'aavs':
+        args = args + ('s='+target,)
+    if small_molecule != 'theo':
+        args = args + ('a='+small_molecule,)
+
+    design = wt_sgrna(target)
+    design.name = make_name('hp', *args)
 
     domain_len = len(design['hairpins'])
     insertion_site = min(N, domain_len)
@@ -1225,11 +1262,11 @@ def hairpin_replacement(N):
             'hairpins',
             insertion_site,
             domain_len,
-            aptamer_insert('theo', linker_len=linker_len),
+            aptamer_insert(small_molecule, linker_len=linker_len),
     )
     return design
 
-def induced_dimerization(half, N):
+def induced_dimerization(half, N, small_molecule='theo', target='aavs'):
     """
     Split the guide RNA into its two naturally occurring halves, and use the 
     aptamer to bring those halves together in the presence of the ligand.  The 
@@ -1261,18 +1298,26 @@ def induced_dimerization(half, N):
     if not 0 <= N <= 4:
         raise ValueError("Location for upper stem insertion must be between 0 and 4, not {}.".format(N))
 
+    args = half, N
+    if target != 'aavs':
+        args = args + ('s='+target,)
+    if small_molecule != 'theo':
+        args = args + ('a='+small_molecule,)
+
     # Construct and return the requested sequence.
 
     design = Construct()
-    design.name = make_name('id', half, N)
+    design.name = make_name('id', *args)
+    wt = wt_sgrna(target)
 
     if half == '5':
-        design += wt_sgrna()['stem']
-        design.attach('stem', 8 + N, ..., aptamer('theo', '5'))
+        design += wt['target']
+        design += wt['stem']
+        design.attach('stem', 8 + N, ..., aptamer(small_molecule, '5'))
 
     elif half == '3':
-        design += wt_sgrna()
-        design.attach('stem', ..., 20 - N, aptamer('theo', '3'))
+        design += wt
+        design.attach('stem', ..., 20 - N, aptamer(small_molecule, '3'))
 
     else:
         raise ValueError("Half for induced dimerization must be either 5 (for the 5' half) or 3 (for the 3' half), not '{}'.".format(half))
@@ -1284,7 +1329,7 @@ def induced_dimerization(half, N):
 wt = wt_sgrna
 dead = dead_sgrna
 th = theo = lambda: aptamer('theo')
-aavs = lambda: target('aavs')
+aavs = lambda: dna_to_cut('aavs')
 t7 = t7_promoter
 us = upper_stem_insertion
 ls = lower_stem_insertion
@@ -1568,7 +1613,8 @@ def test_complements():
     assert reverse_complement('ACTG') == 'CAGT'
 
 def test_wt_sgrna():
-    assert from_name('wt').seq == 'GUUUUAGAGCUAGAAAUAGCAAGUUAAAAUAAGGCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
+    assert from_name('wt') == 'GUUUUAGAGCUAGAAAUAGCAAGUUAAAAUAAGGCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
+    assert from_name('wt(aavs)') == 'GGGGCCACTAGGGACAGGATGUUUUAGAGCUAGAAAUAGCAAGUUAAAAUAAGGCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
 
 def test_dead_sgrna():
     assert from_name('dead').seq == 'GUUUUAGAGCUAGAAAUAGCAAGUUAAAAUAACCCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
@@ -1603,33 +1649,34 @@ def test_upper_stem_insertion():
 
     with pytest.raises(ValueError): from_name('us(5)')
 
-    assert from_name('us(4)') == from_name('us(4,0)') == 'GUUUUAGAGCUAAUACCAGCCGAAAGGCCCUUGGCAGUAGCAAGUUAAAAUAAGGCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
-    assert from_name('us(2)') == from_name('us(2,0)') == 'GUUUUAGAGCAUACCAGCCGAAAGGCCCUUGGCAGGCAAGUUAAAAUAAGGCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
-    assert from_name('us(0)') == from_name('us(0,0)') == 'GUUUUAGAAUACCAGCCGAAAGGCCCUUGGCAGAAGUUAAAAUAAGGCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
-    assert from_name('us(4,1)') == 'GUUUUAGAGCUAUAUACCAGCCGAAAGGCCCUUGGCAGUUAGCAAGUUAAAAUAAGGCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
-    assert from_name('us(4,7)') == 'GUUUUAGAGCUAUUUCCCUAUACCAGCCGAAAGGCCCUUGGCAGUUUCCCUUAGCAAGUUAAAAUAAGGCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
-    assert from_name('us(0,1)') == 'GUUUUAGAUAUACCAGCCGAAAGGCCCUUGGCAGUAAGUUAAAAUAAGGCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
-    assert from_name('us(0,7)') == 'GUUUUAGAUUUCCCUAUACCAGCCGAAAGGCCCUUGGCAGUUUCCCUAAGUUAAAAUAAGGCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
-    assert from_name('us(0,0,1)') == 'GUUUUAGAAUACCAGCCUGGCCCUUGGCAGAAGUUAAAAUAAGGCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
-    assert from_name('us(0,0,7)') == 'GUUUUAGAAUACCAGCCUUUCCCUGGCCCUUGGCAGAAGUUAAAAUAAGGCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
+    assert from_name('us(4)') == from_name('us(4,0)') == 'GGGGCCACTAGGGACAGGATGUUUUAGAGCUAAUACCAGCCGAAAGGCCCUUGGCAGUAGCAAGUUAAAAUAAGGCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
+    assert from_name('us(2)') == from_name('us(2,0)') == 'GGGGCCACTAGGGACAGGATGUUUUAGAGCAUACCAGCCGAAAGGCCCUUGGCAGGCAAGUUAAAAUAAGGCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
+    assert from_name('us(0)') == from_name('us(0,0)') == 'GGGGCCACTAGGGACAGGATGUUUUAGAAUACCAGCCGAAAGGCCCUUGGCAGAAGUUAAAAUAAGGCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
+    assert from_name('us(4,1)') == 'GGGGCCACTAGGGACAGGATGUUUUAGAGCUAUAUACCAGCCGAAAGGCCCUUGGCAGUUAGCAAGUUAAAAUAAGGCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
+    assert from_name('us(4,7)') == 'GGGGCCACTAGGGACAGGATGUUUUAGAGCUAUUUCCCUAUACCAGCCGAAAGGCCCUUGGCAGUUUCCCUUAGCAAGUUAAAAUAAGGCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
+    assert from_name('us(0,1)') == 'GGGGCCACTAGGGACAGGATGUUUUAGAUAUACCAGCCGAAAGGCCCUUGGCAGUAAGUUAAAAUAAGGCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
+    assert from_name('us(0,7)') == 'GGGGCCACTAGGGACAGGATGUUUUAGAUUUCCCUAUACCAGCCGAAAGGCCCUUGGCAGUUUCCCUAAGUUAAAAUAAGGCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
+    assert from_name('us(0,0,1)') == 'GGGGCCACTAGGGACAGGATGUUUUAGAAUACCAGCCUGGCCCUUGGCAGAAGUUAAAAUAAGGCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
+    assert from_name('us(0,0,7)') == 'GGGGCCACTAGGGACAGGATGUUUUAGAAUACCAGCCUUUCCCUGGCCCUUGGCAGAAGUUAAAAUAAGGCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
+    assert from_name('us(0,0,0,2)') == 'GGGGCCACTAGGGACAGGATGUUUUAGAAUACCAGCCAUACCAGCCGAAAGGCCCUUGGCAGGGCCCUUGGCAGAAGUUAAAAUAAGGCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
 
 def test_lower_stem_insertion():
     import pytest
 
     with pytest.raises(ValueError): from_name('ls(7)')
 
-    assert from_name('ls(6,0)') == from_name('ls(6)') == 'GUUUUAAUACCAGCCGAAAGGCCCUUGGCAGUAAAAUAAGGCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
-    assert from_name('ls(5,0)') == from_name('ls(5)') == 'GUUUUAUACCAGCCGAAAGGCCCUUGGCAGAAAAUAAGGCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
-    assert from_name('ls(0,0)') == from_name('ls(0)') == 'AUACCAGCCGAAAGGCCCUUGGCAGAAGGCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
-    assert from_name('ls(6,1)') == 'GUUUUAUAUACCAGCCGAAAGGCCCUUGGCAGUUAAAAUAAGGCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
-    assert from_name('ls(6,7)') == 'GUUUUAUUUCCCUAUACCAGCCGAAAGGCCCUUGGCAGUUUCCCUUAAAAUAAGGCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
-    assert from_name('ls(0,1)') == 'UAUACCAGCCGAAAGGCCCUUGGCAGUAAGGCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
-    assert from_name('ls(0,7)') == 'UUUCCCUAUACCAGCCGAAAGGCCCUUGGCAGUUUCCCUAAGGCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
+    assert from_name('ls(6,0)') == from_name('ls(6)') == 'GGGGCCACTAGGGACAGGATGUUUUAAUACCAGCCGAAAGGCCCUUGGCAGUAAAAUAAGGCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
+    assert from_name('ls(5,0)') == from_name('ls(5)') == 'GGGGCCACTAGGGACAGGATGUUUUAUACCAGCCGAAAGGCCCUUGGCAGAAAAUAAGGCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
+    assert from_name('ls(0,0)') == from_name('ls(0)') == 'GGGGCCACTAGGGACAGGATAUACCAGCCGAAAGGCCCUUGGCAGAAGGCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
+    assert from_name('ls(6,1)') == 'GGGGCCACTAGGGACAGGATGUUUUAUAUACCAGCCGAAAGGCCCUUGGCAGUUAAAAUAAGGCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
+    assert from_name('ls(6,7)') == 'GGGGCCACTAGGGACAGGATGUUUUAUUUCCCUAUACCAGCCGAAAGGCCCUUGGCAGUUUCCCUUAAAAUAAGGCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
+    assert from_name('ls(0,1)') == 'GGGGCCACTAGGGACAGGATUAUACCAGCCGAAAGGCCCUUGGCAGUAAGGCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
+    assert from_name('ls(0,7)') == 'GGGGCCACTAGGGACAGGATUUUCCCUAUACCAGCCGAAAGGCCCUUGGCAGUUUCCCUAAGGCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
 
 def test_nexus_insertion():
-    assert from_name('nx(0)') == 'GUUUUAGAGCUAGAAAUAGCAAGUUAAAAUAAGGAUACCAGCCGAAAGGCCCUUGGCAGCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
-    assert from_name('nx(1)') == 'GUUUUAGAGCUAGAAAUAGCAAGUUAAAAUAAGGUAUACCAGCCGAAAGGCCCUUGGCAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
-    assert from_name('nx(6)') == 'GUUUUAGAGCUAGAAAUAGCAAGUUAAAAUAAGGUUUUUUAUACCAGCCGAAAGGCCCUUGGCAGUUUUUUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
+    assert from_name('nx(0)') == 'GGGGCCACTAGGGACAGGATGUUUUAGAGCUAGAAAUAGCAAGUUAAAAUAAGGAUACCAGCCGAAAGGCCCUUGGCAGCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
+    assert from_name('nx(1)') == 'GGGGCCACTAGGGACAGGATGUUUUAGAGCUAGAAAUAGCAAGUUAAAAUAAGGUAUACCAGCCGAAAGGCCCUUGGCAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
+    assert from_name('nx(6)') == 'GGGGCCACTAGGGACAGGATGUUUUAGAGCUAGAAAUAGCAAGUUAAAAUAAGGUUUUUUAUACCAGCCGAAAGGCCCUUGGCAGUUUUUUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
 
 def test_nexus_insertion_2():
     import pytest
@@ -1639,24 +1686,24 @@ def test_nexus_insertion_2():
     with pytest.raises(ValueError): from_name('nxx(0,0,4)')
     with pytest.raises(ValueError): from_name('nxx(0,0,5,0)')
 
-    assert from_name('nxx(0,0)') == 'GUUUUAGAGCUAGAAAUAGCAAGUUAAAAUAAAUACCAGCCGAAAGGCCCUUGGCAGGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
-    assert from_name('nxx(1,1)') == 'GUUUUAGAGCUAGAAAUAGCAAGUUAAAAUAAGAUACCAGCCGAAAGGCCCUUGGCAGCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
-    assert from_name('nxx(2,2)') == 'GUUUUAGAGCUAGAAAUAGCAAGUUAAAAUAAGGAUACCAGCCGAAAGGCCCUUGGCAGCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
-    assert from_name('nxx(2,3)') == 'GUUUUAGAGCUAGAAAUAGCAAGUUAAAAUAAGGAUACCAGCCGAAAGGCCCUUGGCAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
-    assert from_name('nxx(4,5,5)') == 'GUUUUAGAGCUAGAAAUAGCAAGUUAAAAUAAGGCUAUACCAGCCUUUCCGGCCCUUGGCAGAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
-    assert from_name('nxx(4,5,6)') == 'GUUUUAGAGCUAGAAAUAGCAAGUUAAAAUAAGGCUAUACCAGCCUUUCCCGGCCCUUGGCAGAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
-    assert from_name('nxx(4,5,7)') == 'GUUUUAGAGCUAGAAAUAGCAAGUUAAAAUAAGGCUAUACCAGCCUUUCCCUGGCCCUUGGCAGAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
-    assert from_name('nxx(4,5,8)') == 'GUUUUAGAGCUAGAAAUAGCAAGUUAAAAUAAGGCUAUACCAGCCUUUCCCUUGGCCCUUGGCAGAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
-    assert from_name('nxx(4,5,0,2)') == 'GUUUUAGAGCUAGAAAUAGCAAGUUAAAAUAAGGCUAUACCAGCCAUACCAGCCGAAAGGCCCUUGGCAGGGCCCUUGGCAGAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
-    assert from_name('nxx(4,5,0,3)') == 'GUUUUAGAGCUAGAAAUAGCAAGUUAAAAUAAGGCUAUACCAGCCAUACCAGCCAUACCAGCCGAAAGGCCCUUGGCAGGGCCCUUGGCAGGGCCCUUGGCAGAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
-    assert from_name('nxx(4,5,10,2)') == 'GUUUUAGAGCUAGAAAUAGCAAGUUAAAAUAAGGCUAUACCAGCCAUACCAGCCUUUCCCUUUCGGCCCUUGGCAGGGCCCUUGGCAGAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
+    assert from_name('nxx(0,0)') == 'GGGGCCACTAGGGACAGGATGUUUUAGAGCUAGAAAUAGCAAGUUAAAAUAAAUACCAGCCGAAAGGCCCUUGGCAGGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
+    assert from_name('nxx(1,1)') == 'GGGGCCACTAGGGACAGGATGUUUUAGAGCUAGAAAUAGCAAGUUAAAAUAAGAUACCAGCCGAAAGGCCCUUGGCAGCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
+    assert from_name('nxx(2,2)') == 'GGGGCCACTAGGGACAGGATGUUUUAGAGCUAGAAAUAGCAAGUUAAAAUAAGGAUACCAGCCGAAAGGCCCUUGGCAGCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
+    assert from_name('nxx(2,3)') == 'GGGGCCACTAGGGACAGGATGUUUUAGAGCUAGAAAUAGCAAGUUAAAAUAAGGAUACCAGCCGAAAGGCCCUUGGCAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
+    assert from_name('nxx(4,5,5)') == 'GGGGCCACTAGGGACAGGATGUUUUAGAGCUAGAAAUAGCAAGUUAAAAUAAGGCUAUACCAGCCUUUCCGGCCCUUGGCAGAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
+    assert from_name('nxx(4,5,6)') == 'GGGGCCACTAGGGACAGGATGUUUUAGAGCUAGAAAUAGCAAGUUAAAAUAAGGCUAUACCAGCCUUUCCCGGCCCUUGGCAGAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
+    assert from_name('nxx(4,5,7)') == 'GGGGCCACTAGGGACAGGATGUUUUAGAGCUAGAAAUAGCAAGUUAAAAUAAGGCUAUACCAGCCUUUCCCUGGCCCUUGGCAGAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
+    assert from_name('nxx(4,5,8)') == 'GGGGCCACTAGGGACAGGATGUUUUAGAGCUAGAAAUAGCAAGUUAAAAUAAGGCUAUACCAGCCUUUCCCUUGGCCCUUGGCAGAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
+    assert from_name('nxx(4,5,0,2)') == 'GGGGCCACTAGGGACAGGATGUUUUAGAGCUAGAAAUAGCAAGUUAAAAUAAGGCUAUACCAGCCAUACCAGCCGAAAGGCCCUUGGCAGGGCCCUUGGCAGAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
+    assert from_name('nxx(4,5,0,3)') == 'GGGGCCACTAGGGACAGGATGUUUUAGAGCUAGAAAUAGCAAGUUAAAAUAAGGCUAUACCAGCCAUACCAGCCAUACCAGCCGAAAGGCCCUUGGCAGGGCCCUUGGCAGGGCCCUUGGCAGAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
+    assert from_name('nxx(4,5,10,2)') == 'GGGGCCACTAGGGACAGGATGUUUUAGAGCUAGAAAUAGCAAGUUAAAAUAAGGCUAUACCAGCCAUACCAGCCUUUCCCUUUCGGCCCUUGGCAGGGCCCUUGGCAGAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
 
 def test_hairpin_replacement():
-    assert from_name('hp(0)') == 'GUUUUAGAGCUAGAAAUAGCAAGUUAAAAUAAGGCUAGUCCGUAUACCAGCCGAAAGGCCCUUGGCAGUUUUUU'
-    assert from_name('hp(18)') == 'GUUUUAGAGCUAGAAAUAGCAAGUUAAAAUAAGGCUAGUCCGUUAUCAACUUGAAAAAGUGAUACCAGCCGAAAGGCCCUUGGCAGUUUUUU'
-    assert from_name('hp(33)') == 'GUUUUAGAGCUAGAAAUAGCAAGUUAAAAUAAGGCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCAUACCAGCCGAAAGGCCCUUGGCAGUUUUUU'
-    assert from_name('hp(39)') == 'GUUUUAGAGCUAGAAAUAGCAAGUUAAAAUAAGGCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUCCCAUACCAGCCGAAAGGCCCUUGGCAGUUUUUU'
-    assert from_name('hp(49)') == 'GUUUUAGAGCUAGAAAUAGCAAGUUAAAAUAAGGCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUCCCUUUCCCUUUCAUACCAGCCGAAAGGCCCUUGGCAGUUUUUU'
+    assert from_name('hp(0)') == 'GGGGCCACTAGGGACAGGATGUUUUAGAGCUAGAAAUAGCAAGUUAAAAUAAGGCUAGUCCGUAUACCAGCCGAAAGGCCCUUGGCAGUUUUUU'
+    assert from_name('hp(18)') == 'GGGGCCACTAGGGACAGGATGUUUUAGAGCUAGAAAUAGCAAGUUAAAAUAAGGCUAGUCCGUUAUCAACUUGAAAAAGUGAUACCAGCCGAAAGGCCCUUGGCAGUUUUUU'
+    assert from_name('hp(33)') == 'GGGGCCACTAGGGACAGGATGUUUUAGAGCUAGAAAUAGCAAGUUAAAAUAAGGCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCAUACCAGCCGAAAGGCCCUUGGCAGUUUUUU'
+    assert from_name('hp(39)') == 'GGGGCCACTAGGGACAGGATGUUUUAGAGCUAGAAAUAGCAAGUUAAAAUAAGGCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUCCCAUACCAGCCGAAAGGCCCUUGGCAGUUUUUU'
+    assert from_name('hp(49)') == 'GGGGCCACTAGGGACAGGATGUUUUAGAGCUAGAAAUAGCAAGUUAAAAUAAGGCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUCCCUUUCCCUUUCAUACCAGCCGAAAGGCCCUUGGCAGUUUUUU'
 
 def test_induced_dimerization():
     import pytest
@@ -1666,17 +1713,17 @@ def test_induced_dimerization():
     with pytest.raises(ValueError): from_name('id(3,5)')
     with pytest.raises(ValueError): from_name('id(3,hello)')
 
-    assert from_name('id(5,0)') == 'GUUUUAGAAUACCAGCC'
-    assert from_name('id(5,1)') == 'GUUUUAGAGAUACCAGCC'
-    assert from_name('id(5,2)') == 'GUUUUAGAGCAUACCAGCC'
-    assert from_name('id(5,3)') == 'GUUUUAGAGCUAUACCAGCC'
-    assert from_name('id(5,4)') == 'GUUUUAGAGCUAAUACCAGCC'
+    assert from_name('id(5,0)') == 'GGGGCCACTAGGGACAGGATGUUUUAGAAUACCAGCC'
+    assert from_name('id(5,1)') == 'GGGGCCACTAGGGACAGGATGUUUUAGAGAUACCAGCC'
+    assert from_name('id(5,2)') == 'GGGGCCACTAGGGACAGGATGUUUUAGAGCAUACCAGCC'
+    assert from_name('id(5,3)') == 'GGGGCCACTAGGGACAGGATGUUUUAGAGCUAUACCAGCC'
+    assert from_name('id(5,4)') == 'GGGGCCACTAGGGACAGGATGUUUUAGAGCUAAUACCAGCC'
 
-    assert from_name('id(3,0)') == 'GGCCCUUGGCAGAAGUUAAAAUAAGGCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
-    assert from_name('id(3,1)') == 'GGCCCUUGGCAGCAAGUUAAAAUAAGGCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
-    assert from_name('id(3,2)') == 'GGCCCUUGGCAGGCAAGUUAAAAUAAGGCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
-    assert from_name('id(3,3)') == 'GGCCCUUGGCAGAGCAAGUUAAAAUAAGGCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
-    assert from_name('id(3,4)') == 'GGCCCUUGGCAGUAGCAAGUUAAAAUAAGGCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
+    assert from_name('id(3,0)') == 'GGGGCCACTAGGGACAGGATGGCCCUUGGCAGAAGUUAAAAUAAGGCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
+    assert from_name('id(3,1)') == 'GGGGCCACTAGGGACAGGATGGCCCUUGGCAGCAAGUUAAAAUAAGGCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
+    assert from_name('id(3,2)') == 'GGGGCCACTAGGGACAGGATGGCCCUUGGCAGGCAAGUUAAAAUAAGGCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
+    assert from_name('id(3,3)') == 'GGGGCCACTAGGGACAGGATGGCCCUUGGCAGAGCAAGUUAAAAUAAGGCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
+    assert from_name('id(3,4)') == 'GGGGCCACTAGGGACAGGATGGCCCUUGGCAGUAGCAAGUUAAAAUAAGGCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
 
 
 if __name__ == '__main__':
