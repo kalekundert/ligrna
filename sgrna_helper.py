@@ -809,14 +809,14 @@ def wt_sgrna(target=None):
 
     return sgrna
 
-def dead_sgrna():
+def dead_sgrna(target=None):
     """
     Return the sequence for the negative control sgRNA.
 
     This sequence has two mutations in the nexus region that prevent the sgRNA 
     from folding properly.  These mutations were described by Briner et al.
     """
-    sgrna = wt_sgrna()
+    sgrna = wt_sgrna(target)
     sgrna.name = 'dead sgrna'
 
     sgrna['nexus'].mutable = True
