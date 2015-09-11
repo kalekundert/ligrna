@@ -84,7 +84,7 @@ kag_reagents, kag_volume = scale(
         #(3.371, "Buffer P1 with RNase A (Qiagen)"),
         #(6.292, "Orange G loading buffer"),
         (0.18, "200x Proteinase K (Denville)"),
-        (0.18, "200x RNase (Sigma)"),
+        (0.18, "200x RNase A (Sigma)"),
         (5.64, "Orange G loading buffer"),
 )
 
