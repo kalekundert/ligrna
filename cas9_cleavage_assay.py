@@ -80,9 +80,12 @@ cas9_reagents, cas9_volume = scale(
         (cas9, "{} μM Cas9 (NEB)".format(cas9_stock_conc)),
 )
 kag_reagents, kag_volume = scale(
-        (0.337, "Proteinase K (Denville)"),
-        (3.371, "Buffer P1 with RNase A (Qiagen)"),
-        (6.292, "Orange G loading buffer"),
+        #(0.337, "Proteinase K (Denville)"),
+        #(3.371, "Buffer P1 with RNase A (Qiagen)"),
+        #(6.292, "Orange G loading buffer"),
+        (0.18, "200x Proteinase K (Denville)"),
+        (0.18, "200x RNase (Sigma)"),
+        (5.64, "Orange G loading buffer"),
 )
 
 def cas9_master_mix():  # (no fold)
@@ -96,7 +99,7 @@ def cas9_master_mix():  # (no fold)
 
 def kag_master_mix():   # (no fold)
     return '\n'.join([
-        "3x KAG Master Mix for {} reactions".format(num_reactions),
+        "6x KAG Master Mix for {} reactions".format(num_reactions),
         35 * '='] + [
         row.format(amount, reagent) for amount, reagent in kag_reagents] + [
         35 * '-',
@@ -230,7 +233,7 @@ Incubate at 37°C for 1 hour (thermocycler).
 ## Quench the Cas9 reactions.
 
 steps.append("""\
-Prepare 3x KAG master mix just before the 
+Prepare 6x KAG master mix just before the 
 reaction finishes:
 
 {}
@@ -245,7 +248,7 @@ The robot will add the mix to each reaction.
 
 else:
     steps.append("""\
-Add 10 μL 3x KAG master mix to each reaction.  
+Add 6 μL 6x KAG master mix to each reaction.  
 """)
 
 steps.append("""\
