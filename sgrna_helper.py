@@ -836,10 +836,10 @@ def aptamer(ligand, piece='whole'):
         Specify the aptamer to generate.  Right now only the theophylline 
         aptamer is known.
 
-    piece: 'whole', '5', '3', or 'spacer'
+    piece: 'whole', '5', '3', or 'splitter'
         Specify which part of the aptamer to generate.  The whole aptamer 
         is returned by default, but each aptamer can be broken into a 
-        5' half, a 3' half, and a spacer between those halves.  
+        5' half, a 3' half, and a splitter between those halves.  
 
     Returns
     -------
@@ -860,7 +860,7 @@ def aptamer(ligand, piece='whole'):
     # Define the domains that make up the aptamer.
 
     aptamer_5 = Domain("aptamer/5'", sequence_pieces[0])
-    aptamer_S = Domain("spacer", sequence_pieces[1])
+    aptamer_S = Domain("splitter", sequence_pieces[1])
     aptamer_3 = Domain("aptamer/3'", sequence_pieces[2])
 
     aptamer_5.constraints = constraint_pieces[0]
@@ -883,16 +883,16 @@ def aptamer(ligand, piece='whole'):
         construct += aptamer_3
     elif str(piece) == '5':
         construct += aptamer_5
-    elif piece == 'linker':
+    elif piece == 'splitter':
         construct += aptamer_S
     elif str(piece) == '3':
         construct += aptamer_3
     else:
-        raise ValueError("must request 'whole', '5', '3', or 'linker' piece of aptamer, not {}.".format(piece))
+        raise ValueError("must request 'whole', '5', '3', or 'splitter' piece of aptamer, not {}.".format(piece))
 
     return construct
 
-def aptamer_insert(ligand, linker_len=0, spacer_len=0, repeat_factory=repeat,
+def aptamer_insert(ligand, linker_len=0, splitter_len=0, repeat_factory=repeat,
         num_aptamers=1):
 
     insert = aptamer(ligand)
@@ -900,12 +900,12 @@ def aptamer_insert(ligand, linker_len=0, spacer_len=0, repeat_factory=repeat,
     # If multiple aptamers were requested, build them around the central one.
 
     for i in range(1, num_aptamers):
-        insert.replace('spacer', aptamer(ligand))
+        insert.replace('splitter', aptamer(ligand))
 
-    # If a spacer was requested, insert it into the middle of the aptamer.
+    # If a splitter was requested, insert it into the middle of the aptamer.
 
-    if spacer_len != 0:
-        insert.replace('spacer', repeat_factory('spacer', spacer_len))
+    if splitter_len != 0:
+        insert.replace('splitter', repeat_factory('splitter', splitter_len))
 
     # Add a linker between the aptamer and the sgRNA.
 
@@ -917,33 +917,32 @@ def aptamer_insert(ligand, linker_len=0, spacer_len=0, repeat_factory=repeat,
 
     return insert
 
-def spacer(target='aavs'):
+def spacer(name='aavs'):
     """
-    Return the specified spacer sequence.  A 'GG' motif, which is required for 
-    transcription by T7, will be added to the start of the spacer if one is not 
-    already present.
+    Return the specified spacer sequence.
 
     Parameters
     ----------
     target: 'rfp', 'aavs', 'vegfa'
         The sequence to target.
     """
-    if target == 'rfp':
-        sequence = 'AACUUUCAGUUUAGCGGUCU'
-    elif target == 'aavs':
+    if name == 'rfp':
+        sequence = 'GGAACUUUCAGUUUAGCGGUCU'
+    elif name == 'aavs':
         sequence = 'GGGGCCACTAGGGACAGGAT'
-    elif target == 'vegfa':
+    elif name == 'vegfa':
         sequence = 'GGGTGGGGGGAGTTTGCTCC'
+    elif name == 'klein1':
+        sequence = 'GGGCACGGGCAGCTTGCCCG'
+    elif name == 'klein2':
+        sequence = 'GTCGCCCTCGAACTTCACCT'
     else:
-        raise ValueError("Unknown target: '{}'".format(target))
+        raise ValueError("Unknown spacer: '{}'".format(name))
 
-    while not sequence.startswith('GG'):
-        sequence = 'G' + sequence
-
-    spacer = Domain('target', sequence)
+    spacer = Domain('spacer', sequence)
     spacer.style = 'yellow'
 
-    return Construct(target, spacer)
+    return Construct(name, spacer)
 
 def dna_to_cut(target='aavs'):
     """
@@ -995,7 +994,7 @@ def t7_promoter(source='briner'):
             '{} t7'.format(source),
             Domain('t7', sequence))
 
-def upper_stem_insertion(N, linker_len=0, spacer_len=0, num_aptamers=1, small_molecule='theo', target='aavs'):
+def upper_stem_insertion(N, linker_len=0, splitter_len=0, num_aptamers=1, small_molecule='theo', target='aavs'):
     """
     Insert the aptamer into the upper stem region of the sgRNA.
 
@@ -1015,9 +1014,9 @@ def upper_stem_insertion(N, linker_len=0, spacer_len=0, num_aptamers=1, small_mo
         stem.  The linker sequence will have a UUUCCCUUUCCC... pattern so that 
         the design doesn't have really long repeats or an out-of-whack GC%.
 
-    spacer_len: int
+    splitter_len: int
         Indicate how many bases should separate the 3' half of the aptamer from 
-        the 5' half.  The spacer sequence will have the same pattern as the 
+        the 5' half.  The splitter sequence will have the same pattern as the 
         linker (see above).
 
     num_aptamers: int
@@ -1034,9 +1033,9 @@ def upper_stem_insertion(N, linker_len=0, spacer_len=0, num_aptamers=1, small_mo
         raise ValueError("Location for upper stem insertion must be between 0 and 4, not {}.".format(N))
 
     if num_aptamers != 1:
-        args = N, linker_len, spacer_len, num_aptamers
-    elif spacer_len != 0:
-        args = N, linker_len, spacer_len
+        args = N, linker_len, splitter_len, num_aptamers
+    elif splitter_len != 0:
+        args = N, linker_len, splitter_len
     else:
         args = N, linker_len
     if target != 'aavs':
@@ -1049,12 +1048,12 @@ def upper_stem_insertion(N, linker_len=0, spacer_len=0, num_aptamers=1, small_mo
     sgrna.attach('stem', 8 + N, 20 - N, aptamer_insert(
             small_molecule,
             linker_len=linker_len,
-            spacer_len=spacer_len,
+            splitter_len=splitter_len,
             num_aptamers=num_aptamers,
     ))
     return sgrna
 
-def lower_stem_insertion(N, linker_len=0, spacer_len=0, small_molecule='theo', target='aavs'):
+def lower_stem_insertion(N, linker_len=0, splitter_len=0, small_molecule='theo', target='aavs'):
     """
     Insert the aptamer into the lower stem region of the sgRNA.
 
@@ -1071,9 +1070,9 @@ def lower_stem_insertion(N, linker_len=0, spacer_len=0, small_molecule='theo', t
         stem.  The linker sequence will have a UUUCCCUUUCCC... pattern so that 
         the design doesn't have really long repeats or an out-of-whack GC%.
 
-    spacer_len: int
+    splitter_len: int
         Indicate how many bases should separate the 3' half of the aptamer from 
-        the 5' half.  The spacer sequence will have the same pattern as the 
+        the 5' half.  The splitter sequence will have the same pattern as the 
         linker (see above).
 
     Returns
@@ -1084,8 +1083,8 @@ def lower_stem_insertion(N, linker_len=0, spacer_len=0, small_molecule='theo', t
     if not 0 <= N <= 6:
         raise ValueError("Location for lower stem insertion must be between 0 and 6, not {}.".format(N))
 
-    if spacer_len != 0:
-        args = N, linker_len, spacer_len
+    if splitter_len != 0:
+        args = N, linker_len, splitter_len
     else:
         args = N, linker_len
     if target != 'aavs':
@@ -1098,7 +1097,7 @@ def lower_stem_insertion(N, linker_len=0, spacer_len=0, small_molecule='theo', t
     sgrna.attach('stem', 0 + N, 30 - N, aptamer_insert(
             small_molecule,
             linker_len=linker_len,
-            spacer_len=spacer_len,
+            splitter_len=splitter_len,
     ))
     return sgrna
 
@@ -1148,7 +1147,7 @@ def nexus_insertion(linker_len=0, small_molecule='theo', target='aavs'):
     ))
     return sgrna
     
-def nexus_insertion_2(N, M, spacer_len=0, num_aptamers=1, small_molecule='theo', target='aavs'):
+def nexus_insertion_2(N, M, splitter_len=0, num_aptamers=1, small_molecule='theo', target='aavs'):
     """
     Insert the aptamer into the nexus region of the sgRNA.
 
@@ -1169,7 +1168,7 @@ def nexus_insertion_2(N, M, spacer_len=0, num_aptamers=1, small_molecule='theo',
         The number of base pairs to keep on the 3' side of the nexus, starting 
         from the base of the hairpin at position 61.
 
-    spacer_len: int
+    splitter_len: int
         The number of base pairs to insert into the middle of the aptamer.  The 
         linker will have the sequence 'UCGUCG...', which was chosen because it 
         has very low complementarity with the rest of the design.
@@ -1186,14 +1185,14 @@ def nexus_insertion_2(N, M, spacer_len=0, num_aptamers=1, small_molecule='theo',
 
     # Make sure the arguments have reasonable values.
 
-    min_spacer_len = len(aptamer('theo', 'linker'))
+    min_splitter_len = len(aptamer('theo', 'splitter'))
 
     if not 0 <= N <= 4:
         raise ValueError("nxx: N must be between 0 and 4, not {}".format(N))
     if not 0 <= M <= 5:
         raise ValueError("nxx: M must be between 0 and 5, not {}".format(N))
-    if 0 < spacer_len <= min_spacer_len:
-        raise ValueError("nxx: spacer_len must be longer than {} (the natural linker length).".format(min_spacer_len))
+    if 0 < splitter_len <= min_splitter_len:
+        raise ValueError("nxx: splitter_len must be longer than {} (the natural linker length).".format(min_splitter_len))
     if num_aptamers < 1:
         raise ValueError("nxx: Must have at least 1 aptamer")
 
@@ -1201,9 +1200,9 @@ def nexus_insertion_2(N, M, spacer_len=0, num_aptamers=1, small_molecule='theo',
     # arguments that the user didn't actually specify from the name.
 
     if num_aptamers != 1:
-        args = N, M, spacer_len, num_aptamers
-    elif spacer_len != 0:
-        args = N, M, spacer_len
+        args = N, M, splitter_len, num_aptamers
+    elif splitter_len != 0:
+        args = N, M, splitter_len
     else:
         args = N, M
     if target != 'aavs':
@@ -1217,7 +1216,7 @@ def nexus_insertion_2(N, M, spacer_len=0, num_aptamers=1, small_molecule='theo',
     sgrna.name = make_name('nxx', *args)
     sgrna.attach('nexus', 2 + N, 11 - M, aptamer_insert(
             small_molecule,
-            spacer_len=spacer_len,
+            splitter_len=splitter_len,
             num_aptamers=num_aptamers,
     ))
     return sgrna
@@ -1311,7 +1310,8 @@ def induced_dimerization(half, N, small_molecule='theo', target='aavs'):
     wt = wt_sgrna(target)
 
     if half == '5':
-        design += wt['target']
+        print(wt)
+        design += wt['spacer']
         design += wt['stem']
         design.attach('stem', 8 + N, ..., aptamer(small_molecule, '5'))
 
@@ -1632,7 +1632,7 @@ def test_spacer():
 
     with pytest.raises(ValueError): spacer('not a spacer')
 
-    assert spacer() == 'GGGGCCACTAGGGACAGGAT'
+    assert spacer('aavs') == 'GGGGCCACTAGGGACAGGAT'
     assert spacer('rfp') == 'GGAACUUUCAGUUUAGCGGUCU'
     assert spacer('vegfa') == 'GGGTGGGGGGAGTTTGCTCC'
 
