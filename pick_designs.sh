@@ -73,6 +73,11 @@ elif [ "$round" = 3 ]; then
         nxx/3/4/16          \
         nxx/2/4/0/2         \
 
+elif [ "$round" = 4 ]; then
+    ./show_seqs.py $@       \
+        us/0/0/0/2          \
+        us/0/0/0/3          \
+
 else
     echo "Error: round '$round' not yet defined."
 fi
