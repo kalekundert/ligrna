@@ -1,0 +1,24 @@
+1. Transform pBPK764 (Cas9+CamR) into BW25141 (λDE3) 
+   cells already harboring p11-LacY-wtx1 (ccdB+AmpR).
+
+2. Recover in SOC ∓ theo for 1h.
+
+3. Measure transformation efficiency by plating on LB 
+   + Carb.  Incubate overnight at 37°C.
+
+4. Select against sgRNAs that cut promiscuously by 
+   plating on LB + Chlor + Carb ∓ theo.  Incubate 
+   overnight at 37°C.
+
+5. Harvest colonies from the negative selection plate 
+   and resuspend them in LB Chlor ± theo.  Incubate 
+   at 37°C for 1h.
+
+   http://www.boneandcancer.org/protocolsa13.htm
+
+6. Select against sgRNAs that never cut by plating on 
+   LB + Chlor + arabinose ± theo.  Incubate overnight 
+   at 37°C.
+
+7. Sequence the surviving colonies.
+
