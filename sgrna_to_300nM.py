@@ -8,7 +8,7 @@ Usage:
     sgrna_to_300nM.py <tsv> [options]
 
 Options:
-    -c --target-concentration <nM>  [default: 300]
+    -c --target-conc <nM>  [default: 300]
         The desired final concentration.
 
     -v --target-volume <uL>
@@ -35,7 +35,11 @@ args = docopt.docopt(__doc__)
 
 def process_sample(sgrna, initial_ng_uL, args):
     initial_nM = initial_ng_uL * 1e6 / sgrna.mass('rna')
-    target_nM = float(args['--target-concentration'])
+
+    if args['--target-conc'].endswith('x'):
+        target_nM = 300 * float(args['--target-conc'][:-1])
+    else:
+        target_nM = float(args['--target-conc'])
 
     if initial_nM < target_nM:
         print("Warning: Cannot reach {:.1f} nM!\n".format(target_nM))
