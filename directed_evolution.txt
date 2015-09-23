@@ -1,24 +1,30 @@
 1. Transform pBPK764 (Cas9+CamR) into BW25141 (λDE3) 
    cells already harboring p11-LacY-wtx1 (ccdB+AmpR).
 
-2. Recover in SOC ∓ theo for 1h.
+2. Measure transformation efficiency by plating on LB 
+   + Chlor.  Incubate overnight at 37°C.
 
-3. Measure transformation efficiency by plating on LB 
-   + Carb.  Incubate overnight at 37°C.
-
-4. Select against sgRNAs that cut promiscuously by 
+3. Select against sgRNAs that cut promiscuously by 
    plating on LB + Chlor + Carb ∓ theo.  Incubate 
    overnight at 37°C.
 
-5. Harvest colonies from the negative selection plate 
-   and resuspend them in LB Chlor ± theo.  Incubate 
-   at 37°C for 1h.
+4. Harvest colonies from the negative selection plate 
+   and give them a chance to cut p11-Lacy-wtx1.  Ming 
+   suggested two ways to do this:
 
-   http://www.boneandcancer.org/protocolsa13.htm
+   - Harvest the cells and grow overnight in LB + 
+     Chlor.  Mini-prep to purify pBPK764, then 
+     re-transform and recover with SOC ± theo.
+   
+   - Harvest the cells and resuspend them in LB + 
+     Chlor ± theo.  Incubate for 1h (to give Cas9 
+     time to cut p11-LacY-wtx1) at 20°C (to prevent 
+     the cells from growing too much and spitting out  
+     p11-LacY-wtx1).
 
-6. Select against sgRNAs that never cut by plating on 
+5. Select against sgRNAs that never cut by plating on 
    LB + Chlor + arabinose ± theo.  Incubate overnight 
    at 37°C.
 
-7. Sequence the surviving colonies.
+6. Manually pick and sequence the surviving colonies.
 
