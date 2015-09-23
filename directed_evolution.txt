@@ -9,7 +9,7 @@
    overnight at 37°C.
 
 4. Harvest colonies from the negative selection plate 
-   and give them a chance to cut p11-Lacy-wtx1.  Ming 
+   and give them a chance to cut p11-LacY-wtx1.  Ming 
    suggested two ways to do this:
 
    - Harvest the cells and grow overnight in LB + 
