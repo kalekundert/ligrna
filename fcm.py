@@ -48,6 +48,9 @@ class PlatePos:
         else:
             return self.row < other.row
 
+    def __hash__(self):
+        return hash( str(self) )
+
     def __eq__(self, other):
         return self.row == other.row and self.col == other.col
 
@@ -93,12 +96,20 @@ class PlateInfo:
             self.positions.append(pos)
             self.positions.sort()
 
+    @property
+    def position_set(self):
+        return_set = set()
+        for pos in self.positions:
+            return_set.add(pos)
+        return return_set
+
     def __repr__(self):
         return str( self.positions )
         
 class Plate:
     def __init__ (self, plate_info_list):
         self.info_dict = {}
+        self.samples = {}
         for plate_info in plate_info_list:
             if plate_info.name not in self.info_dict:
                 self.info_dict[plate_info.name] = {}
@@ -108,8 +119,40 @@ class Plate:
     def __repr__(self):
         return str(self.info_dict)
 
-    def load_fcs_dir(self, sample_directory):
+    @property
+    def all_position_set(self):
+        s = set()
+        for name in self.info_dict:
+            for value in self.info_dict[name]:
+                s = s.union(self.info_dict[name][value].position_set)
+        return s
+    
+    def parameter_values(self, parameter_name):
+        return sorted( self.info_dict[parameter_name].keys() )
+
+    def well_set(self, parameter_name, parameter_value=np.nan):
+        return self.info_dict[parameter_name][parameter_value].position_set
+        
+    @property
+    def experimental_parameters(self):
+        experimental_parameters = []
+        for parameter_name in self.info_dict.keys():
+            if not parameter_name.startswith('Control-'):
+                if len(self.info_dict[parameter_name]) == 1 and np.nan in self.info_dict[parameter_name]:
+                    experimental_parameters.append(parameter_name)
+        return experimental_parameters
+    
+    def gate(self, gate):
+        for pos in self.samples:
+            self.samples[pos] = self.samples[pos].gate(gate)
+    
+    def load_fcs_dir(self, sample_directory, verbose=False):
         fcs_files = find_fcs_files(sample_directory)
+        for plate_pos, filepath in fcs_files:
+            assert(plate_pos not in self.samples)
+            self.samples[plate_pos] = FCMeasurement(ID=str(plate_pos), datafile=filepath)
+        if verbose:
+            print 'Loaded %d FCS files from directory %s' % (len(fcs_files), sample_directory)
     
 class FCSFile:
     def __init__ (self, filepath, plate_position_str):
