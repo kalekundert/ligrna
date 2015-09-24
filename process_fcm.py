@@ -1,10 +1,11 @@
 #!/usr/bin/python
 
 blank_datafile = '/home/kyleb/Dropbox/UCSF/cas9/FCS/150916-3.1/kyleb/150916-rfp-cas9/96 Well - Flat bottom_002/Specimen_001_F1_F01_046.fcs'
-sample_directory = '/home/kyleb/Dropbox/UCSF/cas9/FCS/150916-3.1/kyleb/150916-rfp-cas9/96 Well - Flat bottom_002'
 script_output_dir = 'script_output'
+sample_directory = '/home/kyleb/Dropbox/UCSF/cas9/FCS/150916-3.1/kyleb/150916-rfp-cas9/96 Well - Flat bottom_002'
 
-row_chars = 'ABCDEFGH'
+rows_in_plate = 'ABCDEFGH'
+cols_in_plate = range(1, 13)
 
 from FlowCytometryTools import FCMeasurement, ThresholdGate
 from FlowCytometryTools.core.gates import CompositeGate
@@ -15,34 +16,101 @@ import numpy as np
 class PlatePos:
     def __init__ (self, plate_position_str):
         self.row = plate_position_str[0]
-        assert( self.row in row_chars )
+        assert( self.row in rows_in_plate )
         self.col = int(plate_position_str[1:])
 
+    # Returns the next position on the plate
     @property
+    def next_pos(self):
+        if self.row_index == len(rows_in_plate)-1:
+            if self.col == cols_in_plate[-1]:
+                return None
+
+        if self.col == cols_in_plate[-1]:
+            next_pos_row = rows_in_plate[ self.row_index+1 ]
+            next_pos_col = 1
+        else:
+            next_pos_row = self.row
+            next_pos_col = self.col + 1
+
+        return PlatePos( '%s%d' % (next_pos_row, next_pos_col) )
+
+    @property
+    def row_index(self):
+        return rows_in_plate.index(self.row)
+            
     def __repr__(self):
-        return self.plate_row + '%02d' % self.plate_col
+        return '%s%02d' % (self.row, self.col)
 
     def __lt__ (self, other):
-        return str(self) < str(other)
+        if self.row == other.row:
+            return self.col < other.col
+        else:
+            return self.row < other.row
 
-class PlateRange:
-    def __init__ (self, plate_position_str):
-        pass
+    def __eq__(self, other):
+        return self.row == other.row and self.col == other.col
 
-# experiment_definitions = {
-#     'TEP_conc' : {
-#         0.0 : PlateRange(['A1-E3']),
-#         1.0e-3 : PlateRange(['A4-E6']), # 1mM
-#         10.0e-3 : PlateRange(['A7-E9']), # 10 mM
-#     },
-#     'ATC_conc' : {
-#         0.0 : PlateRange(['A1-E1','A4-E4','A7-E7']),
-#         2.0e-6 : PlateRange(['A2-E2','A5-E5','A8-E8']), # 2uM
-#         1.0e-6 : PlateRange(['A3-E3','A6-E6','A9-E9']), # 1uM
-#     },
-#     'blank_media' : PlateRange(['F1']),
-# }
+    def __ne__(self, other):
+        return not self.__eq__(other)
 
+class PlateInfo:
+    def __init__ (self, name, value, new_positions):
+        self.name = name
+        
+        if value == None:
+            self.value = np.nan
+        else:
+            self.value = value
+
+        self.positions = []
+            
+        if isinstance(new_positions, list):
+            for new_position_range in new_positions:
+                self.add_position_range(new_position_range)
+        elif isinstance(new_positions, basestring):
+            self.add_position_range(new_positions)
+        else:
+            raise Exception('Input new positions must be a list or string')
+
+    def add_position_range(self, pos_range):
+        if '-' in pos_range:
+            first_pos_str, second_pos_str = pos_range.split('-')
+            first_pos = PlatePos(first_pos_str)
+            second_pos = PlatePos(second_pos_str)
+            first_pos_char_index = rows_in_plate.index(first_pos.row)
+            second_pos_char_index = rows_in_plate.index(second_pos.row)
+            for char_index in xrange(first_pos_char_index, second_pos_char_index + 1):
+                row = rows_in_plate[char_index]
+                for col in xrange(first_pos.col, second_pos.col + 1):
+                    self.add_position( '%s%d' % (row, col) )
+        else:
+            self.add_position(pos_range)
+
+    def add_position(self, pos_str):
+        pos = PlatePos(pos_str)
+        if pos not in self.positions:
+            self.positions.append(pos)
+            self.positions.sort()
+
+    def __repr__(self):
+        return str( self.positions )
+        
+class Plate:
+    def __init__ (self, plate_info_list):
+        self.info_dict = {}
+        for plate_info in plate_info_list:
+            if plate_info.name not in self.info_dict:
+                self.info_dict[plate_info.name] = {}
+            assert( plate_info.value not in self.info_dict[plate_info.name] )
+            self.info_dict[plate_info.name][plate_info.value] = plate_info
+            
+    def __repr__(self):
+        return str(self.info_dict)
+
+    def load_fcs_dir(self, sample_directory):
+        fcs_files = find_fcs_files(sample_directory)
+    
 class FCSFile:
     def __init__ (self, filepath, plate_position_str):
         self.filepath = filepath
@@ -74,9 +142,6 @@ def find_fcs_files(sample_directory):
             fcs_files.append( (PlatePos(filename.split('_')[2]), full_filename) )
     fcs_files.sort()
     return fcs_files
-
-def process_experiment():
-    pass
 
 def output_medians_and_sums():
     fsc_gate = ThresholdGate(10000.0, 'FSC-A', region='above')
@@ -125,4 +190,3 @@ def output_medians_and_sums():
 
 if __name__ == '__main__':
     output_medians_and_sums()
-    process_experiment()
