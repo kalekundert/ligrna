@@ -42,8 +42,8 @@ if __name__ == '__main__':
     
     for atc_conc in exp.parameter_values('ATC_conc'):
         atc_wells = exp.well_set('ATC_conc', atc_conc)
-        for name in ['Control-Pos', 'Control-Neg', 'NX-2']:
-            P.title('%s - ATC conc %.1E' % (name, atc_conc))
+        for name in ['Control-Pos', 'Control-Neg', 'US-0,0']:
+            P.title('%s - ATC conc %.1E M' % (name, atc_conc))
             exp_wells = exp.well_set(name).intersection(atc_wells)
             exp_tep_0_wells = list(tep_0_wells.intersection(exp_wells))
             exp_tep_1_wells = list(tep_1_wells.intersection(exp_wells))
