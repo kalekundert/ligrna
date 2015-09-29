@@ -9,8 +9,8 @@
    overnight at 37°C.
 
 4. Harvest colonies from the negative selection plate 
-   and give them a chance to cut p11-LacY-wtx1.  Ming 
-   suggested two ways to do this:
+   and give them a chance to cut p11-LacY-wtx1.  This 
+   could be done in several ways:
 
    - Harvest the cells and grow overnight in LB + 
      Chlor.  Mini-prep to purify pBPK764, then 
@@ -22,9 +22,13 @@
      the cells from growing too much and spitting out  
      p11-LacY-wtx1).
 
+   - Replica plate the cells directly onto the 
+     arabinose plate in step 5.
+
 5. Select against sgRNAs that never cut by plating on 
    LB + Chlor + arabinose ± theo.  Incubate overnight 
    at 37°C.
 
 6. Manually pick and sequence the surviving colonies.
 
+vim: tw=53
