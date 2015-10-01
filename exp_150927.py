@@ -117,12 +117,20 @@ if __name__ == '__main__':
                     exp_tep_wells[tep_conc] = exp_tep_wells[tep_conc][0]
                 tep_medians = {}
                 count = 0
-                colors = [(0,0,1,1), (0,1,0,1), (1,0,0,1)]
+                colors = [(0,0,1,0.3), (0,1,0,0.3), (1,0,0,0.3)]
                 for tep_conc, tep_conc_name in tep_concs:
+                    color = colors[count % len(colors)]
                     tep_medians[tep_conc] = exp.samples[exp_tep_wells[tep_conc]].data[channel_name].median()
-                    exp.samples[exp_tep_wells[tep_conc]].plot(channel_name, bins=100, fc=colors[count%len(colors)], lw=1, label='%s TEP - median %.0f' % (tep_conc_name, tep_medians[tep_conc]) )
+                    exp.samples[exp_tep_wells[tep_conc]].plot(channel_name, bins=40, fc=color, lw=1, stacked=True, label='%s TEP - median %.0f' % (tep_conc_name, tep_medians[tep_conc]) )
                     count += 1
                 # blank_sample.plot(channel_name, bins=100, alpha=0.1, color='black', label='blank media')
+                ylim = P.ylim()
+                count = 0
+                for tep_conc, tep_conc_name in tep_concs:
+                    color = colors[count % len(colors)]
+                    P.plot((tep_medians[tep_conc], tep_medians[tep_conc]), (ylim[0], ylim[1]), color=(color[0], color[1], color[2], 1.0), linestyle='--', linewidth=2)
+                    count += 1
+
                 P.legend()
                 P.grid(True)
                 P.show()
