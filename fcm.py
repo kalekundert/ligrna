@@ -107,14 +107,18 @@ class PlateInfo:
         return str( self.positions )
         
 class Plate:
-    def __init__ (self, plate_info_list):
+    def __init__ (self, plate_info_list, sample_dir=None, verbose=True, name=None):
+        self.name = name
         self.info_dict = {}
         self.samples = {}
+        self.sample_dir = sample_dir
         for plate_info in plate_info_list:
             if plate_info.name not in self.info_dict:
                 self.info_dict[plate_info.name] = {}
             assert( plate_info.value not in self.info_dict[plate_info.name] )
             self.info_dict[plate_info.name][plate_info.value] = plate_info
+        if sample_dir != None:
+            self.load_fcs_dir(sample_dir, verbose=verbose)
             
     def __repr__(self):
         return str(self.info_dict)
@@ -132,7 +136,7 @@ class Plate:
 
     def well_set(self, parameter_name, parameter_value=np.nan):
         return self.info_dict[parameter_name][parameter_value].position_set
-        
+
     @property
     def experimental_parameters(self):
         experimental_parameters = []
