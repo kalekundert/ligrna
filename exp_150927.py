@@ -4,11 +4,13 @@ from FlowCytometryTools import FCMeasurement, PolyGate
 import os, FlowCytometryTools
 import pylab as P
 import numpy as np
+import numpy.random as npr
 from fcm import Plate, PlateInfo
 import sys
 import scipy
 import scipy.stats
 import scipy.optimize
+import scikits.bootstrap as bootstrap
 
 channel_name = 'B-A'
 
@@ -79,6 +81,7 @@ tep_concs = [
     (1.0e-3, '1mM'),
 ]
 
+
 def points_above_line(x_data, y_data, m, b):
     # Calculate y-intercepts for all points given slope m
     comp_bs = np.subtract(y_data, np.multiply(x_data, m))
@@ -104,6 +107,13 @@ def find_perpendicular_gating_line(x_data, y_data, threshold):
     inv_b = res.x[0]
     return (inv_m, inv_b)
 
+def bootstrap_mean(data):
+    return bootstrap.ci(data, statfunction=np.median, alpha=0.05, epsilon=0.001, multi=False)
+
+def median_diff(tup):
+    d1, d2 = tup
+    return np.median(d1) - np.median(d2)
+
 if __name__ == '__main__':
     for exp in all_plates:
         blank_samples = list(exp.well_set('Control-Blank'))
@@ -114,7 +124,7 @@ if __name__ == '__main__':
         all_exp_data_fsc = []
         all_exp_data_ssc = []
         for i, nonblank_sample in enumerate(nonblank_samples):
-            exp.samples[nonblank_sample].plot(['FSC-A', 'SSC-A'], kind='scatter', color=np.random.rand(3,1), s=1, alpha=0.1)
+            #### exp.samples[nonblank_sample].plot(['FSC-A', 'SSC-A'], kind='scatter', color=np.random.rand(3,1), s=1, alpha=0.1)
             all_exp_data_fsc.append( exp.samples[nonblank_sample].data['FSC-A'] )
             all_exp_data_ssc.append( exp.samples[nonblank_sample].data['SSC-A'] )
 
@@ -158,20 +168,39 @@ if __name__ == '__main__':
                     exp_tep_wells[tep_conc] = list(tep_wells[tep_conc].intersection(exp_wells))
                     assert( len(exp_tep_wells[tep_conc]) == 1 )
                     exp_tep_wells[tep_conc] = exp_tep_wells[tep_conc][0]
-                tep_medians = {}
+                tep_means = {}
+                hist_output = {}
                 count = 0
                 colors = [(0,0,1,0.3), (0,1,0,0.3), (1,0,0,0.3)]
                 for tep_conc, tep_conc_name in tep_concs:
                     color = colors[count % len(colors)]
-                    tep_medians[tep_conc] = exp.samples[exp_tep_wells[tep_conc]].data[channel_name].median()
-                    exp.samples[exp_tep_wells[tep_conc]].plot(channel_name, bins=40, fc=color, lw=1, stacked=True, label='%s TEP - median %.0f' % (tep_conc_name, tep_medians[tep_conc]) )
+                    tep_mean = exp.samples[exp_tep_wells[tep_conc]].data[channel_name].mean()
+                    tep_mean_low, tep_mean_high = bootstrap.ci(exp.samples[exp_tep_wells[tep_conc]].data[channel_name].as_matrix(), statfunction=np.average, method='bca', n_samples=15000)
+                    tep_means[tep_conc] = (tep_mean, tep_mean_low, tep_mean_high)
+                    hist_output[tep_conc] = exp.samples[exp_tep_wells[tep_conc]].plot(channel_name, bins=40, fc=color, lw=1, stacked=True, label='%s TEP - %.0f (%.0f-%.0f)' % (tep_conc_name, tep_mean, tep_mean_low, tep_mean_high) )
                     count += 1
+
                 # blank_sample.plot(channel_name, bins=100, alpha=0.1, color='black', label='blank media')
                 ylim = P.ylim()
+                xlim = P.xlim()
                 count = 0
                 for tep_conc, tep_conc_name in tep_concs:
                     color = colors[count % len(colors)]
-                    P.plot((tep_medians[tep_conc], tep_medians[tep_conc]), (ylim[0], ylim[1]), color=(color[0], color[1], color[2], 1.0), linestyle='--', linewidth=2)
+                    n, bins, patches = hist_output[tep_conc]
+                    P.plot((tep_means[tep_conc][1], tep_means[tep_conc][1]), (ylim[0], ylim[1]), color=(color[0], color[1], color[2], 1.0), linestyle='--', linewidth=1)
+                    P.plot((tep_means[tep_conc][0], tep_means[tep_conc][0]), (ylim[0], ylim[1]), color=(color[0], color[1], color[2], 1.0), linestyle='-', linewidth=2)
+                    P.plot((tep_means[tep_conc][2], tep_means[tep_conc][2]), (ylim[0], ylim[1]), color=(color[0], color[1], color[2], 1.0), linestyle='--', linewidth=1)
+
+                    mu, std = scipy.stats.norm.fit(exp.samples[exp_tep_wells[tep_conc]].data[channel_name]) # distribution fitting
+                    # now, mu and std are the mean and 
+                    # the standard deviation of the fitted distribution
+                    # fitted distribution
+
+                    # Plot normalized distibution
+                    # Normal normal distribution is scaled to area of 1, so multiply by actual
+                    # area of histogram (np.sum(n * np.diff(bins)))
+                    pdf_fitted = scipy.stats.norm.pdf(bins, loc=mu, scale=std) * np.sum(n * np.diff(bins))
+                    P.plot(bins, pdf_fitted, color=(color[0], color[1], color[2], 1.0), linewidth=2)
                     count += 1
 
                 P.legend()
