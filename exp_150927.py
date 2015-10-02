@@ -1,12 +1,14 @@
 #!/usr/bin/python
 
-from FlowCytometryTools import FCMeasurement, ThresholdGate
-from FlowCytometryTools.core.gates import CompositeGate
+from FlowCytometryTools import FCMeasurement, PolyGate
 import os, FlowCytometryTools
 import pylab as P
 import numpy as np
 from fcm import Plate, PlateInfo
 import sys
+import scipy
+import scipy.stats
+import scipy.optimize
 
 channel_name = 'B-A'
 
@@ -77,30 +79,71 @@ tep_concs = [
     (1.0e-3, '1mM'),
 ]
 
-if __name__ == '__main__':
-    fsc_gate_above = 16000.0
-    fsc_gate = ThresholdGate(fsc_gate_above, 'FSC-A', region='above')
-    ssc_gate = ThresholdGate(9000.0, 'SSC-A', region='above')
-    fsc_ssc_gate = CompositeGate(fsc_gate, 'and', ssc_gate)
-    fsc_ssc_axis_limits = (-50000, 100000)
+def points_above_line(x_data, y_data, m, b):
+    # Calculate y-intercepts for all points given slope m
+    comp_bs = np.subtract(y_data, np.multiply(x_data, m))
+    # Return number of points whose y intercept is above passed in b
+    return np.count_nonzero(comp_bs > b)
 
+def find_perpendicular_gating_line(x_data, y_data, threshold):
+    # Returns the line parameters which give you a certain percentage (threshold) of population
+    # above the line
+    x_data = np.sort( x_data  )
+    y_data = np.sort( y_data  )
+    x_max = np.amax(x_data)
+    y_max = np.amax(y_data)
+    # y = mx + b
+    m, b, r, p, stderr = scipy.stats.linregress(x_data, y_data)
+    inv_m = -1.0 / m
+    inv_b = y_max
+    percent_above_line = points_above_line(x_data, y_data, inv_m, inv_b) / float(len(x_data))
+    desired_points_above_line = int(threshold * len(x_data))
+    def obj_helper(calc_b):
+        return abs(points_above_line(x_data, y_data, inv_m, calc_b) - desired_points_above_line)
+    res = scipy.optimize.minimize(obj_helper, inv_b, method='nelder-mead', options={'disp': False, 'maxiter': 1000})
+    inv_b = res.x[0]
+    return (inv_m, inv_b)
+    
+if __name__ == '__main__':
     for exp in all_plates:
         blank_samples = list(exp.well_set('Control-Blank'))
         assert( len(blank_samples) == 1 )
         blank_sample = exp.samples[blank_samples[0]]
         nonblank_samples = list(exp.all_position_set.difference(exp.well_set('Control-Blank')))
         P.title('%s - FSC/SSC gating' % (exp.name))
+        all_exp_data_fsc = []
+        all_exp_data_ssc = []
         for i, nonblank_sample in enumerate(nonblank_samples):
             exp.samples[nonblank_sample].plot(['FSC-A', 'SSC-A'], kind='scatter', color=np.random.rand(3,1), s=1, alpha=0.1)
+            all_exp_data_fsc.append( exp.samples[nonblank_sample].data['FSC-A'] )
+            all_exp_data_ssc.append( exp.samples[nonblank_sample].data['SSC-A'] )
+
+        gate_m, gate_b = find_perpendicular_gating_line( np.concatenate(all_exp_data_fsc), np.concatenate(all_exp_data_ssc), 0.6)
+            
+        # fsc_gate_above = 10000.0
+        # fsc_gate = ThresholdGate(fsc_gate_above, 'FSC-A', region='above')
+        # ssc_gate = ThresholdGate(9000.0, 'SSC-A', region='above')
+        # fsc_ssc_gate = CompositeGate(fsc_gate, 'and', ssc_gate)
+        fsc_ssc_axis_limits = (-50000, 100000)
+
+        x_max = np.amax(np.concatenate(all_exp_data_fsc))
+        x_min = np.amin(np.concatenate(all_exp_data_fsc))
+        y_max = np.amax(np.concatenate(all_exp_data_ssc))
+        y_min = np.amin(np.concatenate(all_exp_data_ssc))
         blank_sample.plot(['FSC-A', 'SSC-A'], kind='scatter', color='red', s=2, alpha=1.0, label='Blank media')
         P.ylim(fsc_ssc_axis_limits)
         P.xlim(fsc_ssc_axis_limits)
-        P.plot((fsc_gate_above, fsc_gate_above), (fsc_ssc_axis_limits[0], fsc_ssc_axis_limits[1]), color='black', linestyle='--', linewidth=2, label='FSC gate')
+        fudge = 1.0
+        polygon_xs = [x_min-fudge, x_min-fudge, (y_min-gate_b)/float(gate_m), x_max+fudge, x_max+fudge]
+        polygon_ys = [y_max+fudge, gate_m*x_min+gate_b, y_min-fudge, y_min-fudge, y_max+fudge]
+        P.plot(polygon_xs, polygon_ys, color='black', linestyle='--', linewidth=2, label='FSC gate')
         P.grid(True)
         P.legend()
         P.show()
-        
-        exp.gate(fsc_ssc_gate)
+
+        poly_gate = PolyGate(np.array([[x,y] for x, y in zip(polygon_xs, polygon_ys)]), ['FSC-A', 'SSC-A'], region='in', name='60pcells')
+        poly_gate.validiate_input()
+        exp.gate(poly_gate)
         tep_wells = {}
         for tep_conc, tep_conc_name in tep_concs:
             tep_wells[tep_conc] = exp.well_set('TEP_conc', tep_conc)
