@@ -16,7 +16,7 @@ plate_1 = Plate([
     PlateInfo('TEP_conc', 0.0, ['A1-E3']),
     PlateInfo('TEP_conc', 100.0e-6, ['A4-E6']), # 100 uM
     PlateInfo('TEP_conc', 1.0e-3, ['A7-E9']), # 1 mM
-    
+
     PlateInfo('ATC_conc', 0.0, ['A1-E1','A4-E4','A7-E7']),
     PlateInfo('ATC_conc', 2.0e-6, ['A2-E2','A5-E5','A8-E8']), # 2uM
     PlateInfo('ATC_conc', 1.0e-6, ['A3-E3','A6-E6','A9-E9']), # 1uM
@@ -37,7 +37,7 @@ plate_2 = Plate([
     PlateInfo('TEP_conc', 0.0, ['F1-H3', 'A10-C11']),
     PlateInfo('TEP_conc', 100.0e-6, ['F4-H6', 'D10-F11']), # 100 uM
     PlateInfo('TEP_conc', 1.0e-3, ['F7-H9', 'G10-H11', 'A12-B12']), # 1 mM
-    
+
     PlateInfo('ATC_conc', 0.0, ['F1-H1', 'F4-H4', 'F7-H7', 'A10-A11', 'D10-D11', 'G10-G11']),
     PlateInfo('ATC_conc', 2.0e-6, ['F2-H2', 'F5-H5', 'F8-H8', 'B10-B11', 'E10-E11', 'H10-H11']), # 2uM
     PlateInfo('ATC_conc', 1.0e-6, ['F3-H3', 'F6-H6', 'F9-H9', 'C10-C11', 'F10-F11', 'A12-B12']), # 1uM
@@ -56,7 +56,7 @@ plate_3 = Plate([
     PlateInfo('TEP_conc', 0.0, ['A1-E3']),
     PlateInfo('TEP_conc', 100.0e-6, ['A4-E6']), # 100 uM
     PlateInfo('TEP_conc', 1.0e-3, ['A7-E9']), # 1 mM
-    
+
     PlateInfo('ATC_conc', 0.0, ['A1-E1','A4-E4','A7-E7']),
     PlateInfo('ATC_conc', 2.0e-6, ['A2-E2','A5-E5','A8-E8']), # 2uM
     PlateInfo('ATC_conc', 1.0e-6, ['A3-E3','A6-E6','A9-E9']), # 1uM
@@ -103,7 +103,7 @@ def find_perpendicular_gating_line(x_data, y_data, threshold):
     res = scipy.optimize.minimize(obj_helper, inv_b, method='nelder-mead', options={'disp': False, 'maxiter': 1000})
     inv_b = res.x[0]
     return (inv_m, inv_b)
-    
+
 if __name__ == '__main__':
     for exp in all_plates:
         blank_samples = list(exp.well_set('Control-Blank'))
@@ -119,7 +119,7 @@ if __name__ == '__main__':
             all_exp_data_ssc.append( exp.samples[nonblank_sample].data['SSC-A'] )
 
         gate_m, gate_b = find_perpendicular_gating_line( np.concatenate(all_exp_data_fsc), np.concatenate(all_exp_data_ssc), 0.6)
-            
+
         # fsc_gate_above = 10000.0
         # fsc_gate = ThresholdGate(fsc_gate_above, 'FSC-A', region='above')
         # ssc_gate = ThresholdGate(9000.0, 'SSC-A', region='above')
@@ -147,7 +147,7 @@ if __name__ == '__main__':
         tep_wells = {}
         for tep_conc, tep_conc_name in tep_concs:
             tep_wells[tep_conc] = exp.well_set('TEP_conc', tep_conc)
-    
+
         for atc_conc in exp.parameter_values('ATC_conc'):
             atc_wells = exp.well_set('ATC_conc', atc_conc)
             for name in exp.experimental_parameters:
