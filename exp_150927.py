@@ -1,6 +1,6 @@
 #!/usr/bin/python
 
-from FlowCytometryTools import FCMeasurement, PolyGate
+from FlowCytometryTools import FCMeasurement, PolyGate, ThresholdGate
 import os, FlowCytometryTools
 import matplotlib.pyplot as plt
 import numpy as np
@@ -11,6 +11,7 @@ import scipy
 import scipy.stats
 import scipy.optimize
 import scikits.bootstrap as bootstrap
+import copy
 
 channel_name = 'B-A'
 
@@ -107,9 +108,17 @@ def find_perpendicular_gating_line(x_data, y_data, threshold):
     inv_b = res.x[0]
     return (inv_m, inv_b)
 
+def mean_confidence_interval(data, confidence=0.95):
+    a = 1.0*np.array(data)
+    n = len(a)
+    m, se = np.mean(a), scipy.stats.sem(a)
+    h = se * scipy.stats.t._ppf((1+confidence)/2., n-1)
+    return m, m-h, m+h
+
 if __name__ == '__main__':
     gating_fig = plt.figure()
     gating_axes = []
+    mean_diffs = {}
     for plate_num, exp in enumerate(all_plates):
         blank_samples = list(exp.well_set('Control-Blank'))
         assert( len(blank_samples) == 1 )
@@ -129,10 +138,10 @@ if __name__ == '__main__':
             all_exp_data_fsc.append( exp.samples[nonblank_sample].data['FSC-A'] )
             all_exp_data_ssc.append( exp.samples[nonblank_sample].data['SSC-A'] )
 
-        gate_m, gate_b = find_perpendicular_gating_line( np.concatenate(all_exp_data_fsc), np.concatenate(all_exp_data_ssc), 0.4)
+        gate_m, gate_b = find_perpendicular_gating_line( np.concatenate(all_exp_data_fsc), np.concatenate(all_exp_data_ssc), 0.1)
 
-        # fsc_gate_above = 10000.0
-        # fsc_gate = ThresholdGate(fsc_gate_above, 'FSC-A', region='above')
+        fsc_gate_above = 10000.0
+        fsc_gate = ThresholdGate(fsc_gate_above, 'FSC-A', region='above')
         # ssc_gate = ThresholdGate(9000.0, 'SSC-A', region='above')
         # fsc_ssc_gate = CompositeGate(fsc_gate, 'and', ssc_gate)
         fsc_ssc_axis_limits = (-50000, 100000)
@@ -205,6 +214,16 @@ if __name__ == '__main__':
                 xlim = ax.get_xlim()
                 count = 0
                 for tep_conc, tep_conc_name in tep_concs:
+                    if tep_conc != 0.0:
+                        if name not in mean_diffs:
+                            mean_diffs[name] = {}
+                        if atc_conc not in mean_diffs[name]:
+                            mean_diffs[name][atc_conc] = {}
+                        if tep_conc not in mean_diffs[name][atc_conc]:
+                            mean_diffs[name][atc_conc][tep_conc] = {}
+
+                        assert( exp.name not in mean_diffs[name][atc_conc][tep_conc] )
+                        mean_diffs[name][atc_conc][tep_conc][exp.name] = tep_means[tep_conc][0] / tep_means[0.0][0]
                     color = colors[count % len(colors)]
                     n, bins, patches = hist_output[tep_conc]
                     ax.plot((tep_means[tep_conc][1], tep_means[tep_conc][1]), (ylim[0], ylim[1]), color=(color[0], color[1], color[2], 1.0), linestyle='--', linewidth=1)
@@ -225,4 +244,18 @@ if __name__ == '__main__':
 
                 ax.legend()
         # plate_fig.tight_layout()
-    plt.show()
+    print mean_diffs
+    mean_cis = copy.deepcopy(mean_diffs)
+    sig_results = {}
+    for name in mean_cis:
+        sig_results[name] = 0
+        for atc_conc in mean_cis[name]:
+            for tep_conc in mean_cis[name][atc_conc]:
+                mean, mean_low, mean_high = mean_confidence_interval( mean_cis[name][atc_conc][tep_conc].values() )
+                mean_cis[name][atc_conc][tep_conc] = (mean, mean_low, mean_high)
+                if mean_low > 1.0 or mean_high < 1.0:
+                    sig_results[name] += 1
+    print mean_cis
+    print sig_results
+    ### plt.show()
+    
