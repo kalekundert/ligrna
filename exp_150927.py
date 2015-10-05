@@ -4,6 +4,7 @@ import matplotlib
 matplotlib.use('Agg')
 import multiprocessing as mp
 from fcm import Plate, PlateInfo
+import fcm
 import os
 import numpy as np
 import scipy
@@ -19,6 +20,7 @@ import copy
 import gc
 import subprocess
 
+fast_run = False
 channel_name = 'B-A'
 
 plate_1 = Plate([
@@ -124,36 +126,45 @@ def mean_confidence_interval(data, confidence=0.95):
 def main():
     outer_fig_dir = os.path.join('script_output', 'exp_150927')
 
-    func_args = []
-    # Append fsc threshold gates
-    fsc_gate_above = -20000.0
-    while fsc_gate_above <= 60000.0:
-        fsc_gate_above += 10000.0
-        func_args.append( ('fsc_%d'% int(fsc_gate_above), fsc_gate_above, outer_fig_dir) )
-    # Append poly gates
-    for gate_val in np.arange(0.1,1.0,0.1):
-        func_args.append( ('poly_%.1f' % gate_val, gate_val, outer_fig_dir) )
+    if fast_run:
+        plot_gate_value('poly_0.6', 0.6, outer_fig_dir)
+    else:
+        func_args = []
+        # Append fsc threshold gates
+        fsc_gate_above = -20000.0
+        while fsc_gate_above <= 60000.0:
+            break
+            fsc_gate_above += 10000.0
+            func_args.append( ('fsc_%d'% int(fsc_gate_above), fsc_gate_above, outer_fig_dir) )
+        # Append poly gates
+        for gate_val in np.arange(0.1,1.0,0.1):
+            if gate_val != 0.6:
+                continue
+            func_args.append( ('poly_%.1f' % gate_val, gate_val, outer_fig_dir) )
 
-    for arg_tup in func_args:
-        run_subprocess
+        for arg_tup in func_args:
+            run_subprocess
 
-    pool = mp.Pool()
-    pool.map(run_subprocess, func_args)
-    pool.close()
-    pool.join()
+        pool = mp.Pool()
+        pool.map(run_subprocess, func_args)
+        pool.close()
+        pool.join()
 
 def run_subprocess(function_argument_tuple):
-    subprocess.check_call([
+    subprocess.call([
         'python', os.path.basename(__file__),
         str(function_argument_tuple[0]),
         str(function_argument_tuple[1]),
         str(function_argument_tuple[2]),
     ])
 
-def plot_gate_value():
-    gate_name = sys.argv[1]
-    gate_val = float(sys.argv[2])
-    outer_fig_dir = sys.argv[3]
+def plot_gate_value(gate_name=None, gate_val=None, outer_fig_dir=None):
+    if not gate_name:
+        gate_name = sys.argv[1]
+    if not gate_val:
+        gate_val = float(sys.argv[2])
+    if not outer_fig_dir:
+        outer_fig_dir = sys.argv[3]
 
     fig_dir = os.path.join(outer_fig_dir, gate_name)
     if not os.path.isdir(fig_dir):
@@ -179,7 +190,8 @@ def plot_gate_value():
             all_exp_data_fsc = []
             all_exp_data_ssc = []
             for i, nonblank_sample in enumerate(nonblank_samples):
-                exp.samples[nonblank_sample].plot(['FSC-A', 'SSC-A'], kind='scatter', color=np.random.rand(3,1), s=1, alpha=0.1, ax=ax)
+                if not fast_run:
+                    exp.samples[nonblank_sample].plot(['FSC-A', 'SSC-A'], kind='scatter', color=np.random.rand(3,1), s=1, alpha=0.1, ax=ax)
                 all_exp_data_fsc.append( exp.samples[nonblank_sample].data['FSC-A'] )
                 all_exp_data_ssc.append( exp.samples[nonblank_sample].data['SSC-A'] )
 
@@ -245,13 +257,15 @@ def plot_gate_value():
                     color = colors[count % len(colors)]
                     tep_mean = exp.samples[exp_tep_wells[tep_conc]].data[channel_name].mean()
 
-                    # Fast line to not bootstrap
-                    #### tep_mean_low, tep_mean_high = (tep_mean, tep_mean)
-                    # Slow bootstrapping
-                    try:
-                        tep_mean_low, tep_mean_high = bootstrap.ci(exp.samples[exp_tep_wells[tep_conc]].data[channel_name].as_matrix(), statfunction=np.average, method='bca', n_samples=15000)
-                    except Exception:
+                    # Fast way to make code work and not bootstrap
+                    if fast_run:
                         tep_mean_low, tep_mean_high = (tep_mean, tep_mean)
+                    else:
+                        # Slow bootstrapping
+                        try:
+                            tep_mean_low, tep_mean_high = bootstrap.ci(exp.samples[exp_tep_wells[tep_conc]].data[channel_name].as_matrix(), statfunction=np.average, method='bca', n_samples=15000)
+                        except Exception:
+                            tep_mean_low, tep_mean_high = (tep_mean, tep_mean)
 
                     tep_means[tep_conc] = (tep_mean, tep_mean_low, tep_mean_high)
                     hist_output[tep_conc] = exp.samples[exp_tep_wells[tep_conc]].plot(channel_name, bins=40, fc=color, lw=1, ax=ax, autolabel=False, stacked=True, label='%s TEP - %.0f (%.0f-%.0f)' % (tep_conc_name, tep_mean, tep_mean_low, tep_mean_high) )
@@ -317,9 +331,10 @@ def plot_gate_value():
         f.write( str(sig_results) )
         f.write('\n')
 
-    diffs_fig = plt.figure(figsize=(11.0*len(mean_cis)/3.0, 6.0), dpi=300)
+    diffs_fig = plt.figure()
     axes = []
     colors = [(0,1,0,0.3), (1,0,0,0.3)]
+    legend_info = []
     for name_count, name in enumerate(mean_cis):
         if len(axes) == 0:
             ax = diffs_fig.add_subplot(1, len(mean_cis), name_count+1)
@@ -343,7 +358,7 @@ def plot_gate_value():
                 mean_cis[name][atc_conc][tep_conc][0]-mean_cis[name][atc_conc][tep_conc][1]
                 for atc_conc in atc_concs
             ]
-            rects = ax.bar(ind + width*tep_conc_count + width/2.0, data, width, color=colors[tep_conc_count % len(colors)], label='TEP %.1E' % tep_conc)
+            rects = ax.bar(ind + width*tep_conc_count + width/2.0, data, width, color=colors[tep_conc_count % len(colors)])
             bar_centers = [r.get_x()+r.get_width()/2.0 for r in rects]
             for i, center in enumerate(bar_centers):
                 group_centers[i].append(center)
@@ -361,10 +376,9 @@ def plot_gate_value():
                 for y_pt in mean_cis[name][atc_conc][tep_conc][3]:
                     x_pts.append(bar_centers[i])
                     y_pts.append(y_pt)
-            if tep_conc_count == 0:
-                ax.plot(x_pts, y_pts, linewidth=0, marker='+', markersize=5.0, color='black', label='Replicate mean')
-            else:
-                ax.plot(x_pts, y_pts, linewidth=0, marker='+', markersize=5.0, color='black')
+            rep_line = ax.plot(x_pts, y_pts, linewidth=0, marker='+', markersize=5.0, color='black')
+            if name_count == 0:
+                legend_info.append( (rects, 'TEP %.1E' % tep_conc) )
 
             # Plot stars for significant values
             star_xs = []
@@ -383,6 +397,7 @@ def plot_gate_value():
         ax.plot((xlim[0], xlim[1]), (1.0, 1.0), color='black', linestyle='--', linewidth=1)
 
         ax.set_ylim( (0.0, 10.0) )
+        ax.set_yscale("log", nonposy='clip')
 
         if len(axes) == 1:
             ax.set_ylabel('Fold signal over TEP 0')
@@ -391,8 +406,21 @@ def plot_gate_value():
         ax.set_xticklabels( atc_concs )
         ax.set_xlabel( 'ATC conc. (M)' )
 
-        ax.legend()
-    diffs_fig.savefig(os.path.join(fig_dir, 'diffs.pdf'))
+        subs = [2.0, 4.0, 6.0, 8.0]  # ticks to show per decade
+        ax.yaxis.set_minor_locator(matplotlib.ticker.LogLocator(subs=subs)) #set the ticks position
+        # ax.yaxis.set_major_formatter(matplotlib.ticker.NullFormatter())   # remove the major ticks
+        ax.yaxis.set_minor_formatter(matplotlib.ticker.FuncFormatter(fcm.ticks_format))  #add the custom ticks
+
+    stars_proxy = matplotlib.lines.Line2D([], [], linewidth=0, marker='*', markersize=10.0, color='gold')
+    pts_proxy = matplotlib.lines.Line2D([], [], linewidth=0, marker='+', markersize=5.0, color='black')
+    legend_info.append( (stars_proxy, 'Sig. results') )
+    legend_info.append( (pts_proxy, 'Replicates') )
+    diffs_fig.suptitle('Experiment %s - Mean biological replicate fold signal over TEP 0.0 conc. (mean of replicate means of gated distributions)' % exp.name, y=1.04)
+    diffs_fig.tight_layout()
+    diffs_fig.legend([t[0] for t in legend_info], [t[1] for t in legend_info], loc = 'lower center', ncol=4)
+    # diffs_fig.tight_layout()
+    diffs_fig.set_size_inches(11.0*len(mean_cis)/3.0, 6.0)
+    diffs_fig.savefig(os.path.join(fig_dir, 'diffs.pdf'), dpi=300,  bbox_inches='tight', pad_inches=0.6)
     diffs_fig.clf()
     plt.close(diffs_fig)
     del diffs_fig
