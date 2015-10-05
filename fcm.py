@@ -38,7 +38,7 @@ class PlatePos:
     @property
     def row_index(self):
         return rows_in_plate.index(self.row)
-            
+
     def __repr__(self):
         return '%s%02d' % (self.row, self.col)
 
@@ -60,14 +60,14 @@ class PlatePos:
 class PlateInfo:
     def __init__ (self, name, value, new_positions):
         self.name = name
-        
+
         if value == None:
             self.value = np.nan
         else:
             self.value = value
 
         self.positions = []
-            
+
         if isinstance(new_positions, list):
             for new_position_range in new_positions:
                 self.add_position_range(new_position_range)
@@ -105,7 +105,7 @@ class PlateInfo:
 
     def __repr__(self):
         return str( self.positions )
-        
+
 class Plate:
     def __init__ (self, plate_info_list, sample_dir=None, verbose=False, name=None):
         self.name = name
@@ -119,7 +119,7 @@ class Plate:
             self.info_dict[plate_info.name][plate_info.value] = plate_info
         if sample_dir != None:
             self.load_fcs_dir(sample_dir, verbose=verbose)
-            
+
     def __repr__(self):
         return str(self.info_dict)
 
@@ -130,7 +130,7 @@ class Plate:
             for value in self.info_dict[name]:
                 s = s.union(self.info_dict[name][value].position_set)
         return s
-    
+
     def parameter_values(self, parameter_name):
         return sorted( self.info_dict[parameter_name].keys() )
 
@@ -145,11 +145,11 @@ class Plate:
                 if len(self.info_dict[parameter_name]) == 1 and np.nan in self.info_dict[parameter_name]:
                     experimental_parameters.append(parameter_name)
         return experimental_parameters
-    
+
     def gate(self, gate):
         for pos in self.samples:
             self.samples[pos] = self.samples[pos].gate(gate)
-    
+
     def load_fcs_dir(self, sample_directory, verbose=False):
         fcs_files = find_fcs_files(sample_directory)
         for plate_pos, filepath in fcs_files:
@@ -157,7 +157,7 @@ class Plate:
             self.samples[plate_pos] = FCMeasurement(ID=str(plate_pos), datafile=filepath)
         if verbose:
             print 'Loaded %d FCS files from directory %s' % (len(fcs_files), sample_directory)
-    
+
 class FCSFile:
     def __init__ (self, filepath, plate_position_str):
         self.filepath = filepath
@@ -177,7 +177,7 @@ class FCSFile:
 
     def __lt__ (self, other):
         return self.plate_position < other.plate_position
-    
+
     def __repr__(self):
         return self.plate_position
 
@@ -190,6 +190,25 @@ def find_fcs_files(sample_directory):
     fcs_files.sort()
     return fcs_files
 
+def ticks_format(value, index):
+    """
+    get the value and returns the value as:
+       integer: [0,99]
+       1 digit float: [0.1, 0.99]
+       n*10^m: otherwise
+    To have all the number of the same size they are all returned as latex strings
+
+    http://stackoverflow.com/questions/17165435/matplotlib-show-labels-for-minor-ticks-also
+    """
+    exp = np.floor(np.log10(value))
+    base = value/10**exp
+    if exp == 0 or exp == 1:
+        return '${0:d}$'.format(int(value))
+    if exp == -1:
+        return '${0:.1f}$'.format(value)
+    else:
+        return '${0:d}\\times10^{{{1:d}}}$'.format(int(base), int(exp))
+
 def output_medians_and_sums():
     fsc_gate = ThresholdGate(10000.0, 'FSC-A', region='above')
     ssc_gate = ThresholdGate(9000.0, 'SSC-A', region='above')
@@ -199,7 +218,7 @@ def output_medians_and_sums():
     blank_sample = FCMeasurement(ID='blank', datafile=blank_datafile).gate(fsc_gate)
 
     fcs_files = find_fcs_files(sample_directory)
-    
+
     channel_medians = {channel_name : {} for channel_name in blank_sample.channel_names}
     channel_sums = {channel_name : {} for channel_name in blank_sample.channel_names}
     for plate_pos, filepath in fcs_files:
