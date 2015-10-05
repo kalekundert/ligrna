@@ -116,7 +116,11 @@ def mean_confidence_interval(data, confidence=0.95):
     return m, m-h, m+h
 
 if __name__ == '__main__':
-    gating_fig = plt.figure()
+    fig_dir = os.path.join('script_output', 'exp_150927')
+    if not os.path.isdir(fig_dir):
+        os.makedirs(fig_dir)
+
+    gating_fig = plt.figure(figsize=(len(all_plates)*9, 11), dpi=600)
     gating_axes = []
     mean_diffs = {}
     for plate_num, exp in enumerate(all_plates):
@@ -163,13 +167,14 @@ if __name__ == '__main__':
         poly_gate = PolyGate(np.array([[x,y] for x, y in zip(polygon_xs, polygon_ys)]), ['FSC-A', 'SSC-A'], region='in', name='60pcells')
         poly_gate.validiate_input()
         exp.gate(poly_gate)
+
         tep_wells = {}
         for tep_conc, tep_conc_name in tep_concs:
             tep_wells[tep_conc] = exp.well_set('TEP_conc', tep_conc)
 
         plot_rows = len(exp.parameter_values('ATC_conc'))
         plot_cols = len(exp.experimental_parameters)
-        plate_fig = plt.figure()
+        plate_fig = plt.figure(figsize=(22.0*len(exp.experimental_parameters)/3.0, 17.0*len(exp.parameter_values('ATC_conc'))/3.0), dpi=300)
         plot_num = 1
         plate_fig.suptitle(exp.name, fontsize=12)
         for atc_conc_count, atc_conc in enumerate(exp.parameter_values('ATC_conc')):
@@ -231,7 +236,7 @@ if __name__ == '__main__':
                     ax.plot((tep_means[tep_conc][2], tep_means[tep_conc][2]), (ylim[0], ylim[1]), color=(color[0], color[1], color[2], 1.0), linestyle='--', linewidth=1)
 
                     mu, std = scipy.stats.norm.fit(exp.samples[exp_tep_wells[tep_conc]].data[channel_name]) # distribution fitting
-                    # now, mu and std are the mean and 
+                    # now, mu and std are the mean and
                     # the standard deviation of the fitted distribution
                     # fitted distribution
 
@@ -243,8 +248,11 @@ if __name__ == '__main__':
                     count += 1
 
                 ax.legend()
+        plate_fig.savefig(os.path.join(fig_dir, 'plate-%s.pdf' % exp.name))
         # plate_fig.tight_layout()
-    print mean_diffs
+    gating_fig.savefig(os.path.join(fig_dir, 'gates.png'))
+
+    # Prepare mean diffs figure
     mean_cis = copy.deepcopy(mean_diffs)
     sig_results = {}
     for name in mean_cis:
@@ -255,7 +263,67 @@ if __name__ == '__main__':
                 mean_cis[name][atc_conc][tep_conc] = (mean, mean_low, mean_high)
                 if mean_low > 1.0 or mean_high < 1.0:
                     sig_results[name] += 1
-    print mean_cis
-    print sig_results
-    ### plt.show()
-    
+    print 'Significant results:', sig_results
+    diffs_fig = plt.figure(figsize=(11.0*len(mean_cis)/3.0, 6.0), dpi=300)
+    axes = []
+    colors = [(0,1,0,0.3), (1,0,0,0.3)]
+    for name_count, name in enumerate(mean_cis):
+        if len(axes) == 0:
+            ax = diffs_fig.add_subplot(1, len(mean_cis), name_count+1)
+        else:
+            ax = diffs_fig.add_subplot(1, len(mean_cis), name_count+1, sharey=axes[0])
+        axes.append(ax)
+        atc_concs = sorted( mean_cis[name].keys() )
+        tep_concs = set()
+        for atc_conc in atc_concs:
+            for tep_conc in mean_cis[name][atc_conc]:
+                tep_concs.add(tep_conc)
+        tep_concs = sorted([x for x in tep_concs])
+
+        ind = np.arange(len(atc_concs))  # the x locations for the groups
+        width = 0.9 / len(tep_concs) # the width of the bars
+
+        group_centers = [[] for x in xrange(len(atc_concs))]
+        for tep_conc_count, tep_conc in enumerate(tep_concs):
+            data = [mean_cis[name][atc_conc][tep_conc][0] for atc_conc in atc_concs]
+            yerr = [
+                mean_cis[name][atc_conc][tep_conc][0]-mean_cis[name][atc_conc][tep_conc][1]
+                for atc_conc in atc_concs
+            ]
+            rects = ax.bar(ind + width*tep_conc_count + width/2.0, data, width, color=colors[tep_conc_count % len(colors)])
+            bar_centers = [r.get_x()+r.get_width()/2.0 for r in rects]
+            for i, center in enumerate(bar_centers):
+                group_centers[i].append(center)
+            color = colors[tep_conc_count % len(colors)]
+            ax.errorbar(bar_centers, data, yerr=yerr,
+                        # zorder = 4,
+                        linewidth = 1, capthick = 1,
+                        # lolims=True, uplims=True,
+                        fmt='none', ecolor=(color[0], color[1], color[2], 1.0))
+
+            # Plot stars for significant values
+            star_xs = []
+            star_ys = []
+            for x, tup in zip(bar_centers, [mean_cis[name][atc_conc][tep_conc] for atc_conc in atc_concs]):
+                y, y_min, y_max = tup
+                if y_min > 1.0 or y_max < 1.0:
+                    star_xs.append(x)
+                    star_ys.append(y)
+            if len(star_xs) > 0:
+                ax.plot(star_xs, star_ys, linewidth=0, marker='*', markersize=10.0, color='gold')
+
+        group_centers = [np.average(x) for x in group_centers]
+
+        # Plot line at 1 for comparison
+        xlim = ax.get_xlim()
+        ax.plot((xlim[0], xlim[1]), (1.0, 1.0), color='black', linestyle='--', linewidth=1)
+
+        if len(axes) == 1:
+            ax.set_ylabel('Fold signal over TEP 0')
+        ax.set_title(name)
+        ax.set_xticks(group_centers)
+        ax.set_xticklabels( atc_concs )
+        ax.set_xlabel( 'ATC conc. (M)' )
+
+        # ax.legend( (rects1[0], rects2[0]), ('Men', 'Women') )
+    diffs_fig.savefig(os.path.join(fig_dir, 'diffs.pdf'))
