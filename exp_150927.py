@@ -128,7 +128,7 @@ def main():
     # Append fsc threshold gates
     fsc_gate_above = -20000.0
     while fsc_gate_above <= 60000.0:
-        fsc_gate_above += 1000.0
+        fsc_gate_above += 10000.0
         func_args.append( ('fsc_%d'% int(fsc_gate_above), fsc_gate_above, outer_fig_dir) )
     # Append poly gates
     for gate_val in np.arange(0.1,1.0,0.1):
@@ -179,14 +179,12 @@ def plot_gate_value():
             all_exp_data_fsc = []
             all_exp_data_ssc = []
             for i, nonblank_sample in enumerate(nonblank_samples):
-                #### exp.samples[nonblank_sample].plot(['FSC-A', 'SSC-A'], kind='scatter', color=np.random.rand(3,1), s=1, alpha=0.1, ax=ax)
+                exp.samples[nonblank_sample].plot(['FSC-A', 'SSC-A'], kind='scatter', color=np.random.rand(3,1), s=1, alpha=0.1, ax=ax)
                 all_exp_data_fsc.append( exp.samples[nonblank_sample].data['FSC-A'] )
                 all_exp_data_ssc.append( exp.samples[nonblank_sample].data['SSC-A'] )
 
             gate_m, gate_b = find_perpendicular_gating_line( np.concatenate(all_exp_data_fsc), np.concatenate(all_exp_data_ssc), gate_val)
 
-            # ssc_gate = ThresholdGate(9000.0, 'SSC-A', region='above')
-            # fsc_ssc_gate = CompositeGate(fsc_gate, 'and', ssc_gate)
             fsc_ssc_axis_limits = (-50000, 100000)
 
             x_max = np.amax(np.concatenate(all_exp_data_fsc))
@@ -200,11 +198,11 @@ def plot_gate_value():
             polygon_ys = [y_max+fudge, gate_m*x_min+gate_b, y_min-fudge, y_min-fudge, y_max+fudge]
             gate = PolyGate(np.array([[x,y] for x, y in zip(polygon_xs, polygon_ys)]), ['FSC-A', 'SSC-A'], region='in', name='polygate')
 
-        # ax.legend()
 
         exp.gate(gate)
         blank_sample.plot(['FSC-A', 'SSC-A'], kind='scatter', color='red', s=2, alpha=1.0, gates=[gate], label='Blank media', ax=ax)
         ax.grid(True)
+        ax.legend()
 
         tep_wells = {}
         for tep_conc, tep_conc_name in exp_tep_concs:
@@ -233,7 +231,6 @@ def plot_gate_value():
                 if ylabel:
                     ax.set_ylabel('%s - ATC Conc. %s' % ('Count', atc_conc), size=18)
                 plot_num += 1
-                # ax.set_title('%s - %s - ATC conc %.1E M' % (exp.name, name, atc_conc))
                 exp_wells = exp.well_set(name).intersection(atc_wells)
                 exp_tep_wells = {}
                 for tep_conc, tep_conc_name in exp_tep_concs:
@@ -247,7 +244,15 @@ def plot_gate_value():
                 for tep_conc, tep_conc_name in exp_tep_concs:
                     color = colors[count % len(colors)]
                     tep_mean = exp.samples[exp_tep_wells[tep_conc]].data[channel_name].mean()
-                    tep_mean_low, tep_mean_high = (tep_mean, tep_mean) #### bootstrap.ci(exp.samples[exp_tep_wells[tep_conc]].data[channel_name].as_matrix(), statfunction=np.average, method='bca', n_samples=15000)
+
+                    # Fast line to not bootstrap
+                    #### tep_mean_low, tep_mean_high = (tep_mean, tep_mean)
+                    # Slow bootstrapping
+                    try:
+                        tep_mean_low, tep_mean_high = bootstrap.ci(exp.samples[exp_tep_wells[tep_conc]].data[channel_name].as_matrix(), statfunction=np.average, method='bca', n_samples=15000)
+                    except Exception:
+                        tep_mean_low, tep_mean_high = (tep_mean, tep_mean)
+
                     tep_means[tep_conc] = (tep_mean, tep_mean_low, tep_mean_high)
                     hist_output[tep_conc] = exp.samples[exp_tep_wells[tep_conc]].plot(channel_name, bins=40, fc=color, lw=1, ax=ax, autolabel=False, stacked=True, label='%s TEP - %.0f (%.0f-%.0f)' % (tep_conc_name, tep_mean, tep_mean_low, tep_mean_high) )
                     count += 1
@@ -304,7 +309,7 @@ def plot_gate_value():
         for atc_conc in mean_cis[name]:
             for tep_conc in mean_cis[name][atc_conc]:
                 mean, mean_low, mean_high = mean_confidence_interval( mean_cis[name][atc_conc][tep_conc].values() )
-                mean_cis[name][atc_conc][tep_conc] = (mean, mean_low, mean_high)
+                mean_cis[name][atc_conc][tep_conc] = (mean, mean_low, mean_high, mean_cis[name][atc_conc][tep_conc].values() )
                 if mean_low > 1.0 or mean_high < 1.0:
                     sig_results[name] += 1
     with open(os.path.join(fig_dir, 'sig_results.txt'), 'w') as f:
@@ -338,7 +343,7 @@ def plot_gate_value():
                 mean_cis[name][atc_conc][tep_conc][0]-mean_cis[name][atc_conc][tep_conc][1]
                 for atc_conc in atc_concs
             ]
-            rects = ax.bar(ind + width*tep_conc_count + width/2.0, data, width, color=colors[tep_conc_count % len(colors)])
+            rects = ax.bar(ind + width*tep_conc_count + width/2.0, data, width, color=colors[tep_conc_count % len(colors)], label='TEP %.1E' % tep_conc)
             bar_centers = [r.get_x()+r.get_width()/2.0 for r in rects]
             for i, center in enumerate(bar_centers):
                 group_centers[i].append(center)
@@ -349,22 +354,35 @@ def plot_gate_value():
                         # lolims=True, uplims=True,
                         fmt='none', ecolor=(color[0], color[1], color[2], 1.0))
 
+            # Plot all points
+            y_pts = []
+            x_pts = []
+            for i, atc_conc in enumerate(atc_concs):
+                for y_pt in mean_cis[name][atc_conc][tep_conc][3]:
+                    x_pts.append(bar_centers[i])
+                    y_pts.append(y_pt)
+            if tep_conc_count == 0:
+                ax.plot(x_pts, y_pts, linewidth=0, marker='+', markersize=5.0, color='black', label='Replicate mean')
+            else:
+                ax.plot(x_pts, y_pts, linewidth=0, marker='+', markersize=5.0, color='black')
+
             # Plot stars for significant values
             star_xs = []
             star_ys = []
             for x, tup in zip(bar_centers, [mean_cis[name][atc_conc][tep_conc] for atc_conc in atc_concs]):
-                y, y_min, y_max = tup
+                y, y_min, y_max, y_pts = tup
                 if y_min > 1.0 or y_max < 1.0:
                     star_xs.append(x)
                     star_ys.append(y)
             if len(star_xs) > 0:
                 ax.plot(star_xs, star_ys, linewidth=0, marker='*', markersize=10.0, color='gold')
-
         group_centers = [np.average(x) for x in group_centers]
 
         # Plot line at 1 for comparison
         xlim = ax.get_xlim()
         ax.plot((xlim[0], xlim[1]), (1.0, 1.0), color='black', linestyle='--', linewidth=1)
+
+        ax.set_ylim( (0.0, 10.0) )
 
         if len(axes) == 1:
             ax.set_ylabel('Fold signal over TEP 0')
@@ -373,7 +391,7 @@ def plot_gate_value():
         ax.set_xticklabels( atc_concs )
         ax.set_xlabel( 'ATC conc. (M)' )
 
-        # ax.legend( (rects1[0], rects2[0]), ('Men', 'Women') )
+        ax.legend()
     diffs_fig.savefig(os.path.join(fig_dir, 'diffs.pdf'))
     diffs_fig.clf()
     plt.close(diffs_fig)
