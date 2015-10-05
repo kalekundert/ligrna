@@ -107,7 +107,7 @@ class PlateInfo:
         return str( self.positions )
         
 class Plate:
-    def __init__ (self, plate_info_list, sample_dir=None, verbose=True, name=None):
+    def __init__ (self, plate_info_list, sample_dir=None, verbose=False, name=None):
         self.name = name
         self.info_dict = {}
         self.samples = {}

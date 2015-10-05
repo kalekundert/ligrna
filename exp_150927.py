@@ -1,17 +1,23 @@
 #!/usr/bin/python
 
-from FlowCytometryTools import FCMeasurement, PolyGate, ThresholdGate
-import os, FlowCytometryTools
-import matplotlib.pyplot as plt
-import numpy as np
-import numpy.random as npr
+import matplotlib
+matplotlib.use('Agg')
+import multiprocessing as mp
 from fcm import Plate, PlateInfo
-import sys
+import os
+import numpy as np
 import scipy
 import scipy.stats
+from FlowCytometryTools import FCMeasurement, PolyGate, ThresholdGate
+import FlowCytometryTools
+import matplotlib.pyplot as plt
+import numpy.random as npr
+import sys
 import scipy.optimize
 import scikits.bootstrap as bootstrap
 import copy
+import gc
+import subprocess
 
 channel_name = 'B-A'
 
@@ -76,7 +82,7 @@ plate_3 = Plate([
 
 all_plates = [plate_1, plate_2, plate_3]
 
-tep_concs = [
+exp_tep_concs = [
     (0.0, '0'),
     (100.0e-6, '100uM'),
     (1.0e-3, '1mM'),
@@ -115,11 +121,43 @@ def mean_confidence_interval(data, confidence=0.95):
     h = se * scipy.stats.t._ppf((1+confidence)/2., n-1)
     return m, m-h, m+h
 
-if __name__ == '__main__':
-    fig_dir = os.path.join('script_output', 'exp_150927')
+def main():
+    outer_fig_dir = os.path.join('script_output', 'exp_150927')
+
+    func_args = []
+    # Append fsc threshold gates
+    fsc_gate_above = -20000.0
+    while fsc_gate_above <= 60000.0:
+        fsc_gate_above += 1000.0
+        func_args.append( ('fsc_%d'% int(fsc_gate_above), fsc_gate_above, outer_fig_dir) )
+    # Append poly gates
+    for gate_val in np.arange(0.1,1.0,0.1):
+        func_args.append( ('poly_%.1f' % gate_val, gate_val, outer_fig_dir) )
+
+    for arg_tup in func_args:
+        run_subprocess
+
+    pool = mp.Pool()
+    pool.map(run_subprocess, func_args)
+    pool.close()
+    pool.join()
+
+def run_subprocess(function_argument_tuple):
+    subprocess.check_call([
+        'python', os.path.basename(__file__),
+        str(function_argument_tuple[0]),
+        str(function_argument_tuple[1]),
+        str(function_argument_tuple[2]),
+    ])
+
+def plot_gate_value():
+    gate_name = sys.argv[1]
+    gate_val = float(sys.argv[2])
+    outer_fig_dir = sys.argv[3]
+
+    fig_dir = os.path.join(outer_fig_dir, gate_name)
     if not os.path.isdir(fig_dir):
         os.makedirs(fig_dir)
-
     gating_fig = plt.figure(figsize=(len(all_plates)*9, 11), dpi=600)
     gating_axes = []
     mean_diffs = {}
@@ -134,42 +172,42 @@ if __name__ == '__main__':
             ax = gating_fig.add_subplot(1, len(all_plates), plate_num+1)
         gating_axes.append(ax)
         ax.set_title(exp.name)
-        # ax.set_title('%s - FSC/SSC gating' % (exp.name))
-        all_exp_data_fsc = []
-        all_exp_data_ssc = []
-        for i, nonblank_sample in enumerate(nonblank_samples):
-            #### exp.samples[nonblank_sample].plot(['FSC-A', 'SSC-A'], kind='scatter', color=np.random.rand(3,1), s=1, alpha=0.1, ax=ax)
-            all_exp_data_fsc.append( exp.samples[nonblank_sample].data['FSC-A'] )
-            all_exp_data_ssc.append( exp.samples[nonblank_sample].data['SSC-A'] )
 
-        gate_m, gate_b = find_perpendicular_gating_line( np.concatenate(all_exp_data_fsc), np.concatenate(all_exp_data_ssc), 0.1)
+        if gate_name.startswith('fsc'):
+            gate = ThresholdGate(gate_val, 'FSC-A', region='above')
+        elif gate_name.startswith('poly'):
+            all_exp_data_fsc = []
+            all_exp_data_ssc = []
+            for i, nonblank_sample in enumerate(nonblank_samples):
+                #### exp.samples[nonblank_sample].plot(['FSC-A', 'SSC-A'], kind='scatter', color=np.random.rand(3,1), s=1, alpha=0.1, ax=ax)
+                all_exp_data_fsc.append( exp.samples[nonblank_sample].data['FSC-A'] )
+                all_exp_data_ssc.append( exp.samples[nonblank_sample].data['SSC-A'] )
 
-        fsc_gate_above = 10000.0
-        fsc_gate = ThresholdGate(fsc_gate_above, 'FSC-A', region='above')
-        # ssc_gate = ThresholdGate(9000.0, 'SSC-A', region='above')
-        # fsc_ssc_gate = CompositeGate(fsc_gate, 'and', ssc_gate)
-        fsc_ssc_axis_limits = (-50000, 100000)
+            gate_m, gate_b = find_perpendicular_gating_line( np.concatenate(all_exp_data_fsc), np.concatenate(all_exp_data_ssc), gate_val)
 
-        x_max = np.amax(np.concatenate(all_exp_data_fsc))
-        x_min = np.amin(np.concatenate(all_exp_data_fsc))
-        y_max = np.amax(np.concatenate(all_exp_data_ssc))
-        y_min = np.amin(np.concatenate(all_exp_data_ssc))
-        blank_sample.plot(['FSC-A', 'SSC-A'], kind='scatter', color='red', s=2, alpha=1.0, label='Blank media', ax=ax)
-        ax.set_ylim(fsc_ssc_axis_limits)
-        ax.set_xlim(fsc_ssc_axis_limits)
-        fudge = 1.0
-        polygon_xs = [x_min-fudge, x_min-fudge, (y_min-gate_b)/float(gate_m), x_max+fudge, x_max+fudge]
-        polygon_ys = [y_max+fudge, gate_m*x_min+gate_b, y_min-fudge, y_min-fudge, y_max+fudge]
-        ax.plot(polygon_xs, polygon_ys, color='black', linestyle='--', linewidth=2, label='FSC gate')
-        ax.grid(True)
+            # ssc_gate = ThresholdGate(9000.0, 'SSC-A', region='above')
+            # fsc_ssc_gate = CompositeGate(fsc_gate, 'and', ssc_gate)
+            fsc_ssc_axis_limits = (-50000, 100000)
+
+            x_max = np.amax(np.concatenate(all_exp_data_fsc))
+            x_min = np.amin(np.concatenate(all_exp_data_fsc))
+            y_max = np.amax(np.concatenate(all_exp_data_ssc))
+            y_min = np.amin(np.concatenate(all_exp_data_ssc))
+            ax.set_ylim(fsc_ssc_axis_limits)
+            ax.set_xlim(fsc_ssc_axis_limits)
+            fudge = 1.0
+            polygon_xs = [x_min-fudge, x_min-fudge, (y_min-gate_b)/float(gate_m), x_max+fudge, x_max+fudge]
+            polygon_ys = [y_max+fudge, gate_m*x_min+gate_b, y_min-fudge, y_min-fudge, y_max+fudge]
+            gate = PolyGate(np.array([[x,y] for x, y in zip(polygon_xs, polygon_ys)]), ['FSC-A', 'SSC-A'], region='in', name='polygate')
+
         # ax.legend()
 
-        poly_gate = PolyGate(np.array([[x,y] for x, y in zip(polygon_xs, polygon_ys)]), ['FSC-A', 'SSC-A'], region='in', name='60pcells')
-        poly_gate.validiate_input()
-        exp.gate(poly_gate)
+        exp.gate(gate)
+        blank_sample.plot(['FSC-A', 'SSC-A'], kind='scatter', color='red', s=2, alpha=1.0, gates=[gate], label='Blank media', ax=ax)
+        ax.grid(True)
 
         tep_wells = {}
-        for tep_conc, tep_conc_name in tep_concs:
+        for tep_conc, tep_conc_name in exp_tep_concs:
             tep_wells[tep_conc] = exp.well_set('TEP_conc', tep_conc)
 
         plot_rows = len(exp.parameter_values('ATC_conc'))
@@ -198,7 +236,7 @@ if __name__ == '__main__':
                 # ax.set_title('%s - %s - ATC conc %.1E M' % (exp.name, name, atc_conc))
                 exp_wells = exp.well_set(name).intersection(atc_wells)
                 exp_tep_wells = {}
-                for tep_conc, tep_conc_name in tep_concs:
+                for tep_conc, tep_conc_name in exp_tep_concs:
                     exp_tep_wells[tep_conc] = list(tep_wells[tep_conc].intersection(exp_wells))
                     assert( len(exp_tep_wells[tep_conc]) == 1 )
                     exp_tep_wells[tep_conc] = exp_tep_wells[tep_conc][0]
@@ -206,7 +244,7 @@ if __name__ == '__main__':
                 hist_output = {}
                 count = 0
                 colors = [(0,0,1,0.3), (0,1,0,0.3), (1,0,0,0.3)]
-                for tep_conc, tep_conc_name in tep_concs:
+                for tep_conc, tep_conc_name in exp_tep_concs:
                     color = colors[count % len(colors)]
                     tep_mean = exp.samples[exp_tep_wells[tep_conc]].data[channel_name].mean()
                     tep_mean_low, tep_mean_high = (tep_mean, tep_mean) #### bootstrap.ci(exp.samples[exp_tep_wells[tep_conc]].data[channel_name].as_matrix(), statfunction=np.average, method='bca', n_samples=15000)
@@ -218,7 +256,7 @@ if __name__ == '__main__':
                 ylim = ax.get_ylim()
                 xlim = ax.get_xlim()
                 count = 0
-                for tep_conc, tep_conc_name in tep_concs:
+                for tep_conc, tep_conc_name in exp_tep_concs:
                     if tep_conc != 0.0:
                         if name not in mean_diffs:
                             mean_diffs[name] = {}
@@ -249,8 +287,14 @@ if __name__ == '__main__':
 
                 ax.legend()
         plate_fig.savefig(os.path.join(fig_dir, 'plate-%s.pdf' % exp.name))
+        plate_fig.clf()
+        plt.close(plate_fig)
+        del plate_fig
         # plate_fig.tight_layout()
     gating_fig.savefig(os.path.join(fig_dir, 'gates.png'))
+    gating_fig.clf()
+    plt.close(gating_fig)
+    del gating_fig
 
     # Prepare mean diffs figure
     mean_cis = copy.deepcopy(mean_diffs)
@@ -263,7 +307,11 @@ if __name__ == '__main__':
                 mean_cis[name][atc_conc][tep_conc] = (mean, mean_low, mean_high)
                 if mean_low > 1.0 or mean_high < 1.0:
                     sig_results[name] += 1
-    print 'Significant results:', sig_results
+    with open(os.path.join(fig_dir, 'sig_results.txt'), 'w') as f:
+        f.write('Significant results:\n')
+        f.write( str(sig_results) )
+        f.write('\n')
+
     diffs_fig = plt.figure(figsize=(11.0*len(mean_cis)/3.0, 6.0), dpi=300)
     axes = []
     colors = [(0,1,0,0.3), (1,0,0,0.3)]
@@ -327,3 +375,15 @@ if __name__ == '__main__':
 
         # ax.legend( (rects1[0], rects2[0]), ('Men', 'Women') )
     diffs_fig.savefig(os.path.join(fig_dir, 'diffs.pdf'))
+    diffs_fig.clf()
+    plt.close(diffs_fig)
+    del diffs_fig
+    plt.clf()
+    plt.cla()
+    gc.collect()
+
+if __name__ == '__main__':
+    if len(sys.argv) == 1:
+        main()
+    else:
+        plot_gate_value()
