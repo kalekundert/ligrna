@@ -415,7 +415,7 @@ def plot_gate_value(gate_name=None, gate_val=None, outer_fig_dir=None):
     pts_proxy = matplotlib.lines.Line2D([], [], linewidth=0, marker='+', markersize=5.0, color='black')
     legend_info.append( (stars_proxy, 'Sig. results') )
     legend_info.append( (pts_proxy, 'Replicates') )
-    diffs_fig.suptitle('2015/09/27 - Mean biological replicate fold signal over TEP 0.0 conc. (mean of replicate means of gated distributions)' % exp.name, y=1.04)
+    diffs_fig.suptitle('2015/09/27 - Mean biological replicate fold signal over TEP 0.0 conc. (mean of replicate means of gated distributions)', y=1.04)
     diffs_fig.tight_layout()
     diffs_fig.legend([t[0] for t in legend_info], [t[1] for t in legend_info], loc = 'lower center', ncol=4)
     # diffs_fig.tight_layout()
