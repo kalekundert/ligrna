@@ -227,7 +227,7 @@ def plot_gate_value(gate_name=None, gate_val=None, outer_fig_dir=None):
         plate_fig.suptitle(exp.name, fontsize=12)
         for atc_conc_count, atc_conc in enumerate(exp.parameter_values('ATC_conc')):
             atc_wells = exp.well_set('ATC_conc', atc_conc)
-            for name_count, name in enumerate(exp.experimental_parameters):
+            for name_count, name in enumerate(sorted(exp.experimental_parameters)):
                 if name_count == 0:
                     ylabel = True
                 else:
@@ -335,12 +335,14 @@ def plot_gate_value(gate_name=None, gate_val=None, outer_fig_dir=None):
     axes = []
     colors = [(0,1,0,0.3), (1,0,0,0.3)]
     legend_info = []
-    for name_count, name in enumerate(mean_cis):
+    for name_count, name in enumerate(sorted(mean_cis)):
         if len(axes) == 0:
             ax = diffs_fig.add_subplot(1, len(mean_cis), name_count+1)
         else:
             ax = diffs_fig.add_subplot(1, len(mean_cis), name_count+1, sharey=axes[0])
         axes.append(ax)
+        ax.set_ylim( (0.1, 10.0) )
+
         atc_concs = sorted( mean_cis[name].keys() )
         tep_concs = set()
         for atc_conc in atc_concs:
@@ -396,7 +398,6 @@ def plot_gate_value(gate_name=None, gate_val=None, outer_fig_dir=None):
         xlim = ax.get_xlim()
         ax.plot((xlim[0], xlim[1]), (1.0, 1.0), color='black', linestyle='--', linewidth=1)
 
-        ax.set_ylim( (0.0, 10.0) )
         ax.set_yscale("log", nonposy='clip')
 
         if len(axes) == 1:

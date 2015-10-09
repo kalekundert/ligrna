@@ -141,7 +141,7 @@ class Plate:
     def experimental_parameters(self):
         experimental_parameters = []
         for parameter_name in self.info_dict.keys():
-            if not parameter_name.startswith('Control-'):
+            if 'blank' not in parameter_name.lower():
                 if len(self.info_dict[parameter_name]) == 1 and np.nan in self.info_dict[parameter_name]:
                     experimental_parameters.append(parameter_name)
         return experimental_parameters
