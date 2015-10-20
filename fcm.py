@@ -135,7 +135,10 @@ class Plate:
         return sorted( self.info_dict[parameter_name].keys() )
 
     def well_set(self, parameter_name, parameter_value=np.nan):
-        return self.info_dict[parameter_name][parameter_value].position_set
+        if parameter_name not in self.info_dict or parameter_value not in self.info_dict[parameter_name]:
+            return set()
+        else:
+            return self.info_dict[parameter_name][parameter_value].position_set
 
     @property
     def experimental_parameters(self):
