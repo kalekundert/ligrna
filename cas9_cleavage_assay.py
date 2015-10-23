@@ -129,12 +129,9 @@ immediately or store at -20°C.
 
 steps.append("""\
 Thaw the water, theophylline, 10x Cas9 buffer, 
-and target DNA on the 37°C heat block.
-""")
-
-steps.append("""\
-Thaw the sgRNAs at room temperature, then refold 
-them by incubating at 95°C for 2 min.
+and target DNA on the 37°C heat block.  Thaw the 
+sgRNAs at room temperature, then refold them by
+incubating at 95°C for 2 min.
 """)
 
 ## Setup the Cas9 reactions (using the robot).
