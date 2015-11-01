@@ -478,8 +478,7 @@ class Construct (Sequence):
 
                 while domain is not attachment.end_domain:
                     domain_cursor += 1
-                    try: domain = self._domains[domain_cursor]
-                    except IndexError: break
+                    domain = self._domains[domain_cursor]
 
                 # Yield whatever fraction of that domain comes after the 
                 # attachment.
