@@ -109,7 +109,7 @@ class Construct (Sequence):
     """
 
     Attachment = collections.namedtuple(
-            'Attachment', 'start end construct')
+            'Attachment', 'start_domain start_index end_domain end_index construct')
     BasePair = collections.namedtuple(
             'BasePair', 'domain_i i domain_j j')
     FoldEvaluation = collections.namedtuple(
@@ -140,6 +140,9 @@ class Construct (Sequence):
                 raise KeyError("{} domains named '{}'.".format(len(domains), key))
         else:
             return super().__getitem__(key)
+
+    def __setitem__(self, key, construct):
+        self.attach(construct, *key)
 
     def __add__(self, other):
         construct = Construct()
@@ -299,32 +302,29 @@ class Construct (Sequence):
         index = self._remove_sequence(domain)
         self._add_sequence(index, sequence)
 
-    def attach(self, domain, start, end, construct):
+    def attach(self, construct, start_domain, start_index, end_domain, end_index):
         """
         Insert a construct into one of the domains comprising this construct, 
         possibly replacing some of that domain.
 
         Parameters
         ----------
-        domain: str or Domain
+        construct: Construct
+            The construct to attach.  Note that what is stored is a reference 
+            to the given construct, so changes to that object will be reflected 
+            by this one.
+
+        start_domain, end_domain: str or Domain
             The domain into which the new sequence will be inserted.  You can 
             either provide the name or the domain or the domain object itself.  
             If you provide a name, there must be only one domain with that name 
             in the construct.
             
-        start: int
+        start_index, end_index: int
             The index (relative to the domain) where the attachment will start.  
             As usual in python, think of this as indexing the spaces between 
             the nucleotides.
             
-        end: int
-            See previous.
-            
-        construct: Construct
-            The construct to attach.  Note that a reference to the construct 
-            object is stored, so if that construct is changed elsewhere, the 
-            change will be reflected in this construct.
-
         Be aware that this method is fundamentally different that append(), 
         prepend(), and remove().  Those methods manage a flat list of domains 
         that you can think of as the "base layer" of the construct.  This 
@@ -338,46 +338,45 @@ class Construct (Sequence):
         shouldn't be an issue so long as you take care to compose your 
         constructs from functionally separate domains.
         """
-        if isinstance(domain, str):
-            domain = self[domain]
-        if domain not in self._domains:
-            raise ValueError("no '{}' domain in '{}'.".format(domain.name, self.name))
+        if isinstance(start_domain, str):
+            start_domain = self[start_domain]
+        if start_domain not in self._domains:
+            raise ValueError("no '{}' domain in '{}'.".format(start_domain, self.name))
 
-        if start is ...:
-            start = 0
-        if start not in domain.attachment_sites:
-            raise ValueError("Position {} of domain {} is not an attachment site.".format(start, domain.name))
+        if isinstance(end_domain, str):
+            end_domain = self[end_domain]
+        if end_domain not in self._domains:
+            raise ValueError("no '{}' domain in '{}'.".format(end_domain, self.name))
 
-        if end is ...:
-            end = len(domain)
-        if end not in domain.attachment_sites:
-            raise ValueError("Position {} of domain {} is not an attachment site.".format(end, domain.name))
+        if start_index is ...:
+            start_index = 0
+        if start_index not in start_domain.attachment_sites:
+            raise ValueError("Position {} of domain {} is not an attachment site.".format(start_index, start_domain.name))
 
-        self._attachments[domain] = self.Attachment(start, end, construct)
+        if end_index is ...:
+            end_index = len(end_domain)
+        if end_index not in end_domain.attachment_sites:
+            raise ValueError("Position {} of domain {} is not an attachment site.".format(end_index, end_domain.name))
 
-    def unattach(self, domain):
+        self._attachments[start_domain] = self.Attachment(
+                start_domain, start_index, end_domain, end_index, construct)
+
+    def unattach(self, construct):
         """
-        Remove an attachment from the construct.  The previously attached 
-        construct is returned, to make it easy for you to reattach it 
-        elsewhere, if you so desire.
+        Remove the specified attachment from the construct.
 
         Parameters
         ----------
-        domain: str or Domain
-            The domain to which a construct has been attached.  This construct 
-            will be unattached and returned.
-
-        Returns
-        -------
         construct: Construct
-            The construct that was previously attached to the specified domain.
+            The construct to unattach from this one.  If this construct has 
+            been attached more than once, all the copies will be removed.
         """
-        if isinstance(domain, str):
-            domain = self[domain]
+        self._attachments = {
+                k: a for k, a in self._attachments.items()
+                if a.construct is not construct
+        }
 
-        return self._attachments.pop(domain).construct
-
-    def reattach(self, domain, start, end):
+    def reattach(self, construct, start_domain, start_index, end_domain, end_index):
         """
         Reposition an attachment within a domain.
 
@@ -395,79 +394,8 @@ class Construct (Sequence):
         If you want to move an attachment into a new domain, you can't use this 
         method.  Instead use unattach() followed by attach().
         """
-        self.attach(domain, start, end, self.unattach(domain))
-
-    def define_expected_fold(self, fold):
-        """
-        Record the given fold so that it can be compared against later.
-
-        Parameters
-        ----------
-        fold: str
-            A string representing the secondary structure of the RNA construct.  
-            This string must be the same length as the construct and must be 
-            composed of only '.', '(', and ')'.  The dots indicate positions 
-            that aren't base paired and the parens indicate positions that are.
-        """
-        self._expected_base_pairs, self._expected_unpaired_bases = \
-                self._find_base_pairs(fold)
-
-    def evaluate_fold(self, fold):
-        """
-        Compare the given fold to the one passed to define_expected_fold().  
-
-        This comparison is relatively robust against changes in sequence.  All 
-        of the secondary structural elements (base pairs and unpaired bases) 
-        are stored relative to the domain they occur in.  So even if other 
-        domains are added or removed or grown or shrunk, the fold should still 
-        be properly evaluated.
-
-        Parameters
-        ----------
-        fold: str
-            A string representing the secondary structure of the RNA construct.  
-            This string must be the same length as the construct and must be 
-            composed of only '.', '(', and ')'.  The dots indicate positions 
-            that aren't base paired and the parens indicate positions that are.
-
-        Returns
-        -------
-        fold_evaluation: collections.namedtuple
-            A simple data structure indicating how many of the expected base 
-            pairs and unpaired bases were kept and lost.  In total, this data 
-            structure contains four pieces of information.
-        """
-        base_pairs, unpaired_bases = self._find_base_pairs(fold)
-
-        # Remove positions that are no longer in the construct from the sets of 
-        # expected base pairs and unpaired bases.
-
-        expected_base_pairs = set()
-        expected_unpaired_bases = set()
-
-        for base_pair in self._expected_base_pairs:
-            has_i = self._has_index(base_pair.domain_i, base_pair.i)
-            has_j = self._has_index(base_pair.domain_j, base_pair.j)
-            if has_i and has_j:
-                expected_base_pairs.add(base_pair)
-
-        for unpaired_base in self._expected_unpaired_bases:
-            if self._has_index(*unpaired_base):
-                expected_unpaired_bases.add(unpaired_base)
-
-        # Count the number of expected base pairs and unpaired bases that were 
-        # either kept or lost.
-
-        base_pairs_kept = len(base_pairs & expected_base_pairs)
-        base_pairs_lost = len(expected_base_pairs) - base_pairs_kept
-        unpaired_bases_kept = len(unpaired_bases & expected_unpaired_bases)
-        unpaired_bases_lost = len(expected_unpaired_bases) - unpaired_bases_kept
-
-        return self.FoldEvaluation(
-                base_pairs_kept,
-                base_pairs_lost,
-                unpaired_bases_kept,
-                unpaired_bases_lost)
+        self.unattach(construct)
+        self.attach(construct, start_domain, start_index, end_domain, end_index)
 
     def _iterate_domains(self):
         """
@@ -478,7 +406,7 @@ class Construct (Sequence):
         This method is very important because it provides an easy-to-use 
         interface for methods that want to read data from the construct.  The 
         actual data structures that make up the construct are designed to be 
-        easy to modify, but not to be especially easy to work with.  This 
+        easy to modify, but they are not especially easy to work with.  This 
         function takes the easy-to-modify data and converts it into an 
         easy-to-use iterator.  That way we get the best of both worlds!
         """
@@ -510,27 +438,57 @@ class Construct (Sequence):
             def rel_index(self, index):
                 return index - self.start + self.rel_start
 
-        cursor = 0
+        domain_cursor = 0
+        index_cursor = 0
+    
+        while domain_cursor < len(self._domains):
+            domain = self._domains[domain_cursor]
 
-        for domain in self._domains:
+            # If this domain doesn't have anything attached to it, then we can 
+            # just yield the whole thing right away.
 
             if domain not in self._attachments:
-                yield DomainIter(domain, cursor, 0, len(domain))
-                cursor += len(domain)
+                yield DomainIter(domain, index_cursor, 0, len(domain))
+                index_cursor += len(domain)
+
+            # If this domain does have something attached to it, then we need 
+            # to carefully yield only the parts of it that aren't covered by 
+            # the attachment.
 
             else:
                 attachment = self._attachments[domain]
 
-                yield DomainIter(domain, cursor, 0, attachment.start)
-                cursor += attachment.start
+                # Yield whatever fraction of this domain comes before the 
+                # attachment.
+
+                yield DomainIter(domain,
+                        index_cursor, 0, attachment.start_index)
+                index_cursor += attachment.start_index
+
+                # Yield the domains in the attachment itself by recursively 
+                # calling this method.
 
                 for domain_iter in attachment.construct._iterate_domains():
-                    domain_iter.start += cursor
+                    domain_iter.start += index_cursor
                     yield domain_iter
-                cursor += len(attachment.construct)
+                index_cursor += len(attachment.construct)
 
-                yield DomainIter(domain, cursor, attachment.end, len(domain))
-                cursor += len(domain) - attachment.end
+                # Skip domains until we reach the one where the attachment 
+                # ends.
+
+                while domain is not attachment.end_domain:
+                    domain_cursor += 1
+                    try: domain = self._domains[domain_cursor]
+                    except IndexError: break
+
+                # Yield whatever fraction of that domain comes after the 
+                # attachment.
+
+                yield DomainIter(domain,
+                        index_cursor, attachment.end_index, len(domain))
+                index_cursor += len(domain) - attachment.end_index
+
+            domain_cursor += 1
 
     def _add_sequence(self, position, sequence):
         if position < 0:
@@ -550,55 +508,13 @@ class Construct (Sequence):
         if isinstance(domain, str):
             domain = self[domain]
 
-        index = self._domains.index(domain)
+        idx = self._domains.index(domain)
         self._domains.remove(domain)
-        self._attachments.pop(domain, None)
-        return index
-
-    def _find_base_pairs(self, fold):
-        if len(fold) != len(self):
-            raise ValueError("2° structure prediction has {} positions, not {}.".format(len(fold), len(self)))
-        if fold.count('(') != fold.count(')'):
-            raise ValueError("mismatched base pairs: {} '(' and {} ')'.".format(fold.count('('), fold.count(')')))
-
-        base_pairs = set()
-        unpaired_bases = set()
-        pending_base_pairs = list()
-
-        for j, symbol in enumerate(fold):
-
-            # When we find the start of a base pair, keep track of where it 
-            # occurred in a LIFO queue.
-
-            if symbol == '(':
-                pending_base_pairs.append(j)
-
-            # When we find the end of a base pair, pop the start off the LIFO 
-            # queue and record the base pair.
-
-            if symbol == ')':
-                i = pending_base_pairs.pop()
-                domain_i, rel_i = self.domain_from_index(i)
-                domain_j, rel_j = self.domain_from_index(j)
-                base_pair = self.BasePair(domain_i, rel_i, domain_j, rel_j)
-                base_pairs.add(base_pair)
-
-            # When we find an unpaired base, record it.
-
-            if symbol == '.':
-                unpaired_base = self.domain_from_index(j)
-                unpaired_bases.add(unpaired_base)
-
-        assert not pending_base_pairs
-        return base_pairs, unpaired_bases
-
-    def _has_index(self, domain, rel_index):
-        if domain in self._attachments:
-            attachment = self._attachments[domain] 
-            return 0 <= rel_index < attachment.start or \
-                   attachment.end <= rel_index < len(domain)
-        else:
-            return 0 <= rel_index < len(domain)
+        self._attachments = {
+                k: a for k, a in self._attachments.items()
+                if a.start_domain is not domain and a.end_domain is not domain
+        }
+        return idx
 
 
 class Domain (Sequence):
@@ -606,14 +522,14 @@ class Domain (Sequence):
     A mutable sequence that can be used to compose larger constructs.
     """
 
-    def __init__(self, name, sequence):
+    def __init__(self, name, sequence, style=None, mutable=False):
         super().__init__(name)
         self._sequence = sequence
         self._attachment_sites = []
         self._constraints = None
         self.construct = None
-        self.mutable = False
-        self.style = None
+        self.style = style
+        self.mutable = mutable
 
     def __repr__(self):
         return 'Domain("{}", "{}")'.format(self.name, self.seq)
@@ -757,6 +673,10 @@ def repeat(name, length, pattern='UUUCCC'):
     """
     Construct a repeating sequence using the given pattern.
 
+    Oct 31, 2015: After having read some more of the literature, especially 
+    Rhiju's EteRNA papers, I've realized that poly-A is a more common 
+    "unstructured" linker sequence.
+
     Parameters
     ----------
     length: int
@@ -767,6 +687,19 @@ def repeat(name, length, pattern='UUUCCC'):
     """
     sequence = pattern * (1 + length // len(pattern))
     return Domain(name, sequence[:length])
+
+def manual(*sequences):
+    from itertools import cycle
+
+    if len(sequences) == 1:
+        colors = 'white',
+    else:
+        colors = 'magenta', 'red', 'yellow', 'green', 'cyan', 'blue'
+
+    return Construct('manual', *[
+        Domain('.', seq, style=color)
+        for seq, color in zip(sequences, cycle(colors))
+    ])
 
 def molecular_weight(name, polymer='rna'):
     return from_name(name).mass(polymer)
@@ -1045,12 +978,16 @@ def upper_stem_insertion(N, linker_len=0, splitter_len=0, num_aptamers=1, small_
 
     sgrna = wt_sgrna(target)
     sgrna.name = make_name('us', *args)
-    sgrna.attach('stem', 8 + N, 20 - N, aptamer_insert(
-            small_molecule,
-            linker_len=linker_len,
-            splitter_len=splitter_len,
-            num_aptamers=num_aptamers,
-    ))
+    sgrna.attach(
+            aptamer_insert(
+                small_molecule,
+                linker_len=linker_len,
+                splitter_len=splitter_len,
+                num_aptamers=num_aptamers,
+            ),
+            'stem', 8 + N,
+            'stem', 20 - N,
+    )
     return sgrna
 
 def lower_stem_insertion(N, linker_len=0, splitter_len=0, small_molecule='theo', target='aavs'):
@@ -1094,11 +1031,15 @@ def lower_stem_insertion(N, linker_len=0, splitter_len=0, small_molecule='theo',
 
     sgrna = wt_sgrna(target)
     sgrna.name = make_name('ls', *args)
-    sgrna.attach('stem', 0 + N, 30 - N, aptamer_insert(
-            small_molecule,
-            linker_len=linker_len,
-            splitter_len=splitter_len,
-    ))
+    sgrna.attach(
+            aptamer_insert(
+                small_molecule,
+                linker_len=linker_len,
+                splitter_len=splitter_len,
+            ),
+            'stem', 0 + N,
+            'stem', 30 - N,
+    )
     return sgrna
 
 def nexus_insertion(linker_len=0, small_molecule='theo', target='aavs'):
@@ -1140,11 +1081,15 @@ def nexus_insertion(linker_len=0, small_molecule='theo', target='aavs'):
 
     sgrna = wt_sgrna(target)
     sgrna.name = make_name('nx', linker_len)
-    sgrna.attach('nexus', 4, 9, aptamer_insert(
-            small_molecule,
-            linker_len=linker_len,
-            repeat_factory=lambda name, length: repeat(name, length, 'U'),
-    ))
+    sgrna.attach(
+            aptamer_insert(
+                small_molecule,
+                linker_len=linker_len,
+                repeat_factory=lambda name, length: repeat(name, length, 'U'),
+            ),
+            'nexus', 4,
+            'nexus', 9,
+    )
     return sgrna
     
 def nexus_insertion_2(N, M, splitter_len=0, num_aptamers=1, small_molecule='theo', target='aavs'):
@@ -1214,11 +1159,15 @@ def nexus_insertion_2(N, M, splitter_len=0, num_aptamers=1, small_molecule='theo
 
     sgrna = wt_sgrna(target)
     sgrna.name = make_name('nxx', *args)
-    sgrna.attach('nexus', 2 + N, 11 - M, aptamer_insert(
-            small_molecule,
-            splitter_len=splitter_len,
-            num_aptamers=num_aptamers,
-    ))
+    sgrna.attach(
+            aptamer_insert(
+                small_molecule,
+                splitter_len=splitter_len,
+                num_aptamers=num_aptamers,
+            ),
+            'nexus', 2 + N,
+            'nexus', 11 - M,
+    )
     return sgrna
 
 def hairpin_replacement(N, small_molecule='theo', target='aavs'):
@@ -1258,10 +1207,9 @@ def hairpin_replacement(N, small_molecule='theo', target='aavs'):
     linker_len = max(0, N - domain_len), 0
 
     design.attach(
-            'hairpins',
-            insertion_site,
-            domain_len,
             aptamer_insert(small_molecule, linker_len=linker_len),
+            'hairpins', insertion_site,
+            'hairpins', ...,
     )
     return design
 
@@ -1310,19 +1258,87 @@ def induced_dimerization(half, N, small_molecule='theo', target='aavs'):
     wt = wt_sgrna(target)
 
     if half == '5':
-        print(wt)
         design += wt['spacer']
         design += wt['stem']
-        design.attach('stem', 8 + N, ..., aptamer(small_molecule, '5'))
-
+        design.attach(
+                aptamer(small_molecule, '5'),
+                'stem', 8 + N, 'stem', ...,
+        )
     elif half == '3':
         design += wt
-        design.attach('stem', ..., 20 - N, aptamer(small_molecule, '3'))
-
+        design.attach(
+                aptamer(small_molecule, '3'),
+                'stem', ..., 'stem', 20 - N,
+        )
     else:
         raise ValueError("Half for induced dimerization must be either 5 (for the 5' half) or 3 (for the 3' half), not '{}'.".format(half))
 
     return design
+
+
+def make_serpentine_insert():
+    # target, direction, tetraloop
+
+    target = 'GUUAAAAU'
+    loop = 'GAAA'    # AA not mutable
+    aptamer
+
+    pass
+
+
+def fold_the_upper_stem():
+    pass
+
+def serpentine_the_bulge(N):
+    """
+    Sequester the bulge in a non-productive hairpin when the ligand isn't 
+    present.  The bulge is an interesting target because it doesn't have to be 
+    there, but if it is there it must be unpaired and it must have its wildtype 
+    sequence.  This design uses the two adenosines that are naturally in the 
+    bulge to construct a tetraloop that caps the non-productive hairpin.  Below 
+    is an ASCII-art schematic of the design, along with an example sequence:
+
+       ┌──────────┐ ┌───────────┐ ┌────┐ ┌────────────┐ ┌─────┐ ┌──────────┐ 
+    5'─┤lower stem├─┤  bulge''  ├─┤theo├─┤   bulge'   ├─┤bulge├─┤lower stem├─3'
+       └──────────┘ └───────────┘ └────┘ └────────────┘ └─────┘ └──────────┘ 
+        GUUUUAga     UCGU(UAAAAU)  ...   (GUUUUA)AC-GA   AA-GU   UAAAAU
+                                                   └───────┘
+                                                   tetraloop
+
+    The length of the non-productive hairpin can be extended by including bases 
+    from the lower stem, as shown in parentheses.  Mutations can be made in the 
+    bulge', bulge'', and lower stem regions to tune the balance between the 
+    "on" and "off" states.  The bulge itself is never changed.
+
+    Parameters
+    ----------
+    N: int
+        Indicate how long the non-productive hairpin should be.  Must be 
+        between 2 and 7.  The first two bases in the hairpin come from the 
+        bulge, and subsequent bases come from the lower stem.
+
+    Returns
+    -------
+    sgRNA: Construct
+    """
+    if not 2 <= N <= 7:
+        raise ValueError("sb(N): N must be between 2 and 7")
+
+    sense = 'GUUAAAAU'[:N]
+    antisense = 'GUUAAAAU'[:N]
+
+    sgrna = wt_sgrna(target)
+    sgrna.name = make_name('sb', N)
+    sgrna.attach('stem', 8 + N, 20 - N, aptamer_insert(
+            small_molecule,
+            linker_len=linker_len,
+            splitter_len=splitter_len,
+            num_aptamers=num_aptamers,
+    ))
+    return sgrna
+
+def circle_the_bulge():
+    pass
 
 
 ## Abbreviations
@@ -1417,12 +1433,12 @@ def test_domain_class():
 def test_construct_class():
     import pytest
 
-    # Test making a one domain construct.
+    ## Test making a one domain construct.
 
     bob = Construct('Bob')
-    bob += Domain('HindIII', 'AAGCTT')
+    bob += Domain('A', 'AAAAAA')
 
-    assert bob.seq == 'AAGCTT'
+    assert bob.seq == 'AAAAAA'
     assert bob.seq == bob.copy().seq
     assert bob.format(color='never') == bob.seq
     assert bob.constraints == 6 * '.'
@@ -1431,155 +1447,174 @@ def test_construct_class():
     with pytest.raises(KeyError):
         bob['not a domain']
 
-    for i, expected_nucleotide in enumerate('AAGCTT'):
+    for i, expected_nucleotide in enumerate(bob.seq):
         assert bob[i] == expected_nucleotide
 
-    # Test making a two domain construct.
+    ## Test making a two domain construct.
 
-    bob += Domain('EcoRI', 'GAATTC')
+    bob += Domain('C', 'CCCCCC')
 
-    assert bob.seq == 'AAGCTTGAATTC'
+    assert bob.seq == 'AAAAAACCCCCC'
     assert bob.seq == bob.copy().seq
     assert bob.format(color='never') == bob.seq
     assert bob.constraints == 12 * '.'
     assert len(bob) == 12
 
-    # Test appending one construct onto another.
+    ## Test appending one construct onto another.
 
     carol = Construct('Carol')
-    carol += Domain('BamHI', 'GGATCC')
+    carol += Domain('G', 'GGGGGG')
     carol = carol + bob
 
-    assert carol.seq == 'GGATCCAAGCTTGAATTC'
+    assert carol.seq == 'GGGGGGAAAAAACCCCCC'
     assert carol.constraints == 18 * '.'
     assert len(carol) == 18
 
-    carol.prepend(Domain('DraI', 'TTTAAA'))
+    carol.prepend(Domain('T', 'TTTTTT'))
 
-    assert carol.seq == 'TTTAAAGGATCCAAGCTTGAATTC'
+    assert carol.seq == 'TTTTTTGGGGGGAAAAAACCCCCC'
     assert carol.constraints == 24 * '.'
     assert len(carol) == 24
 
-    carol.replace('DraI', Domain('SalI', 'GTCGAC'))
+    carol.replace('G', Domain('CG', 'CGCGCG'))
 
-    assert carol.seq == 'GTCGACGGATCCAAGCTTGAATTC'
+    assert carol.seq == 'TTTTTTCGCGCGAAAAAACCCCCC'
     assert carol.constraints == 24 * '.'
     assert len(carol) == 24
 
-    carol.remove('SalI')
+    carol.remove('CG')
 
-    assert carol.seq == 'GGATCCAAGCTTGAATTC'
+    assert carol.seq == 'TTTTTTAAAAAACCCCCC'
     assert carol.constraints == 18 * '.'
     assert len(carol) == 18
 
-    # Test inserting one construct into another.
+    ## Test attaching one construct into another.
 
     dave = Construct('Dave')
-    dave += Domain('SpeI', 'ACTAGT')
-    dave += Domain('XbaI', 'TCTAGA')
-    dave['XbaI'].attachment_sites = 2, 4, 6
+    dave += Domain('G', 'GGGGGG')
+    dave += Domain('T', 'TTTTTT')
+    dave['G'].attachment_sites = 0, 3, 6
+    dave['T'].attachment_sites = 0, 3, 6
 
     with pytest.raises(ValueError):
-        dave.attach('XbaI', 2, 5, bob)
+        dave.attach(bob, 'G', 0, 'T', 5)
     with pytest.raises(ValueError):
-        dave.attach('XbaI', 3, 6, bob)
-    with pytest.raises(ValueError):
-        dave.attach(Domain('ZzzI', 'NNNN'), 2, 6, bob)
+        dave.attach(bob, 'G', 1, 'T', 6)
+    with pytest.raises(KeyError):
+        dave.attach(bob, '?', 0, 'T', 6)
 
-    dave.attach('XbaI', 2, 6, bob)
+    dave.attach(bob, 'G', 0, 'G', 3)
 
-    assert dave.seq == 'ACTAGTTCAAGCTTGAATTC'
+    assert dave.seq == 'AAAAAACCCCCCGGGTTTTTT'
     assert dave.format(color='never') == dave.seq
-    assert dave.constraints == 20 * '.'
-    assert len(dave) == 20
+    assert dave.constraints == 21 * '.'
+    assert len(dave) == 21
 
-    dave.reattach('XbaI', 2, 4)
+    dave.reattach(bob, 'G', 3, 'G', 6)
 
-    assert dave.seq == 'ACTAGTTCAAGCTTGAATTCGA'
-    assert dave.constraints == 22 * '.'
-    assert len(dave) == 22
+    assert dave.seq == 'GGGAAAAAACCCCCCTTTTTT'
+    assert dave.format(color='never') == dave.seq
+    assert dave.constraints == 21 * '.'
+    assert len(dave) == 21
 
-    # Test accessing domains by index.
+    dave.reattach(bob, 'G', 0, 'G', 6)
+
+    assert dave.seq == 'AAAAAACCCCCCTTTTTT'
+    assert dave.format(color='never') == dave.seq
+    assert dave.constraints == 18 * '.'
+    assert len(dave) == 18
+
+    dave.reattach(bob, 'G', 0, 'T', 0)
+
+    assert dave.seq == 'AAAAAACCCCCCTTTTTT'
+    assert dave.format(color='never') == dave.seq
+    assert dave.constraints == 18 * '.'
+    assert len(dave) == 18
+
+    dave.reattach(bob, 'G', 0, 'T', 6)
+
+    assert dave.seq == 'AAAAAACCCCCC'
+    assert dave.format(color='never') == dave.seq
+    assert dave.constraints == 12 * '.'
+    assert len(dave) == 12
+
+    dave.reattach(bob, 'G', 6, 'T', 0)
+
+    assert dave.seq == 'GGGGGGAAAAAACCCCCCTTTTTT'
+    assert dave.format(color='never') == dave.seq
+    assert dave.constraints == 24 * '.'
+    assert len(dave) == 24
+
+    dave.reattach(bob, 'G', 6, 'T', 6)
+
+    assert dave.seq == 'GGGGGGAAAAAACCCCCC'
+    assert dave.format(color='never') == dave.seq
+    assert dave.constraints == 18 * '.'
+    assert len(dave) == 18
+
+    dave.reattach(bob, 'G', 3, 'T', 3)
+
+    assert dave.seq == 'GGGAAAAAACCCCCCTTT'
+    assert dave.format(color='never') == dave.seq
+    assert dave.constraints == 18 * '.'
+    assert len(dave) == 18
+
+    ## Test removing a domain with an attached construct.
+
+    dave_copy = dave.copy()
+    dave_copy.remove('G')
+    assert dave_copy.seq == 'TTTTTT'
+
+    dave_copy = dave.copy()
+    dave_copy.remove('T')
+    assert dave_copy.seq == 'GGGGGG'
+
+    ## Test accessing domains by index.
 
     expected_domains = [
-            (dave['SpeI'], 0),
-            (dave['SpeI'], 1),
-            (dave['SpeI'], 2),
-            (dave['SpeI'], 3),
-            (dave['SpeI'], 4),
-            (dave['SpeI'], 5),
-            (dave['XbaI'], 0),
-            (dave['XbaI'], 1),
-            (dave['HindIII'], 0),
-            (dave['HindIII'], 1),
-            (dave['HindIII'], 2),
-            (dave['HindIII'], 3),
-            (dave['HindIII'], 4),
-            (dave['HindIII'], 5),
-            (dave['EcoRI'], 0),
-            (dave['EcoRI'], 1),
-            (dave['EcoRI'], 2),
-            (dave['EcoRI'], 3),
-            (dave['EcoRI'], 4),
-            (dave['EcoRI'], 5),
-            (dave['XbaI'], 4),
-            (dave['XbaI'], 5),
+            (dave['G'], 0),
+            (dave['G'], 1),
+            (dave['G'], 2),
+            (dave['A'], 0),
+            (dave['A'], 1),
+            (dave['A'], 2),
+            (dave['A'], 3),
+            (dave['A'], 4),
+            (dave['A'], 5),
+            (dave['C'], 0),
+            (dave['C'], 1),
+            (dave['C'], 2),
+            (dave['C'], 3),
+            (dave['C'], 4),
+            (dave['C'], 5),
+            (dave['T'], 3),
+            (dave['T'], 4),
+            (dave['T'], 5),
     ]
     for index, domain in enumerate(expected_domains):
         assert dave.domain_from_index(index) == domain
     for index, domain in enumerate(reversed(expected_domains), 1):
         assert dave.domain_from_index(-index) == domain
     with pytest.raises(IndexError):
-        dave.domain_from_index(22)
+        dave.domain_from_index(len(dave))
 
-    # Test changing the sequence of a domain.
+    ## Test changing the sequence of a domain.
 
-    bob['HindIII'].mutable = True
-    bob['HindIII'].seq = 'NNNN'
+    bob['A'].mutable = True
+    bob['A'].seq = 'AAAA'
 
-    assert bob.seq == 'NNNNGAATTC'
-    assert carol.seq == 'GGATCCNNNNGAATTC'
-    assert dave.seq == 'ACTAGTTCNNNNGAATTCGA'
+    assert bob.seq == 'AAAACCCCCC'
+    assert carol.seq == 'TTTTTTAAAACCCCCC'
+    assert dave.seq == 'GGGAAAACCCCCCTTT'
 
-    # Test adding constraints to a domain.
+    ## Test adding constraints to a domain.
 
-    bob['HindIII'].constraints = '(())'
+    bob['A'].constraints = '(())'
 
     assert bob.constraints == '(())......'
     assert carol.constraints == '......(())......'
-    assert dave.constraints == '........(())........'
+    assert dave.constraints == '...(()).........'
 
-    # Test labeling expected base pairs.
-
-    erin = Construct('Erin')
-    erin += Domain('AfeI', 'AGCGCT')
-    erin += Domain('NheI', 'GCTAGC')
-
-    erin.define_expected_fold('(((..)))..()')
-
-    with pytest.raises(ValueError):
-        erin.define_expected_fold('(((..)))..(')
-    with pytest.raises(ValueError):
-        erin.define_expected_fold('(((..)))..(.')
-    with pytest.raises(ValueError):
-        erin.define_expected_fold('(((..)))...)')
-
-    evaluation = erin.evaluate_fold('((....)).(.)')
-
-    assert evaluation.base_pairs_kept == 2
-    assert evaluation.base_pairs_lost == 2
-    assert evaluation.unpaired_bases_kept == 3
-    assert evaluation.unpaired_bases_lost == 1
-
-    erin['AfeI'].attachment_sites = 2, 6
-    erin.attach('AfeI', 2, 6, bob)
-
-    evaluation = erin.evaluate_fold('(((((....)))))..()')
-
-    assert evaluation.base_pairs_kept == 3
-    assert evaluation.base_pairs_lost == 0
-    assert evaluation.unpaired_bases_kept == 2
-    assert evaluation.unpaired_bases_lost == 0
 
 def test_from_name():
     equivalent_constructs = [
