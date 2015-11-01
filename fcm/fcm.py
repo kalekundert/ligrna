@@ -12,6 +12,7 @@ from FlowCytometryTools.core.gates import CompositeGate
 import os, FlowCytometryTools
 import pylab as P
 import numpy as np
+import scipy
 
 class PlatePos:
     def __init__ (self, plate_position_str):
@@ -130,6 +131,12 @@ class Plate:
             for value in self.info_dict[name]:
                 s = s.union(self.info_dict[name][value].position_set)
         return s
+
+    def get_by_well(self, well_pos):
+        search_pos = PlatePos(well_pos)
+        for pos in self.all_position_set:
+            if pos == search_pos:
+                return self.samples[pos]
 
     def parameter_values(self, parameter_name):
         return sorted( self.info_dict[parameter_name].keys() )
@@ -256,6 +263,38 @@ def output_medians_and_sums():
                         else:
                             f.write('NA,')
                     f.write('\n')
+
+def points_above_line(x_data, y_data, m, b):
+    # Calculate y-intercepts for all points given slope m
+    comp_bs = np.subtract(y_data, np.multiply(x_data, m))
+    # Return number of points whose y intercept is above passed in b
+    return np.count_nonzero(comp_bs > b)
+
+def find_perpendicular_gating_line(x_data, y_data, threshold):
+    # Returns the line parameters which give you a certain percentage (threshold) of population
+    # above the line
+    x_data = np.sort( x_data  )
+    y_data = np.sort( y_data  )
+    x_max = np.amax(x_data)
+    y_max = np.amax(y_data)
+    # y = mx + b
+    m, b, r, p, stderr = scipy.stats.linregress(x_data, y_data)
+    inv_m = -1.0 / m
+    inv_b = y_max
+    percent_above_line = points_above_line(x_data, y_data, inv_m, inv_b) / float(len(x_data))
+    desired_points_above_line = int(threshold * len(x_data))
+    def obj_helper(calc_b):
+        return abs(points_above_line(x_data, y_data, inv_m, calc_b) - desired_points_above_line)
+    res = scipy.optimize.minimize(obj_helper, inv_b, method='nelder-mead', options={'disp': False, 'maxiter': 1000})
+    inv_b = res.x[0]
+    return (inv_m, inv_b)
+
+def mean_confidence_interval(data, confidence=0.95):
+    a = 1.0*np.array(data)
+    n = len(a)
+    m, se = np.mean(a), scipy.stats.sem(a)
+    h = se * scipy.stats.t._ppf((1+confidence)/2., n-1)
+    return m, m-h, m+h
 
 if __name__ == '__main__':
     output_medians_and_sums()
