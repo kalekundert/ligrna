@@ -712,6 +712,44 @@ def reverse_complement(sequence):
     return complement(sequence[::-1])
 
 
+def make_aptamer_insert(ligand, linker_len=0, splitter_len=0, repeat_factory=repeat,
+        num_aptamers=1):
+
+    insert = aptamer(ligand)
+
+    # If multiple aptamers were requested, build them around the central one.
+
+    for i in range(1, num_aptamers):
+        insert.replace('splitter', aptamer(ligand))
+
+    # If a splitter was requested, insert it into the middle of the aptamer.
+
+    if splitter_len != 0:
+        insert.replace('splitter', repeat_factory('splitter', splitter_len))
+
+    # Add a linker between the aptamer and the sgRNA.
+
+    try: linker_len_5, linker_len_3 = linker_len
+    except TypeError: linker_len_5 = linker_len_3 = linker_len
+
+    insert.prepend(repeat_factory("linker/5'", linker_len_5))
+    insert.append(repeat_factory("linker/3'", linker_len_3))
+
+    return insert
+
+def make_serpentine_insert():
+    # target, direction, tetraloop
+
+    target = 'GUUAAAAU'
+    loop = 'GAAA'    # AA not mutable
+    aptamer
+
+    pass
+
+def make_circle_insert():
+    pass
+
+
 def wt_sgrna(target=None):
     """
     Return the wildtype sgRNA sequence, without a spacer.
@@ -824,31 +862,6 @@ def aptamer(ligand, piece='whole'):
         raise ValueError("must request 'whole', '5', '3', or 'splitter' piece of aptamer, not {}.".format(piece))
 
     return construct
-
-def aptamer_insert(ligand, linker_len=0, splitter_len=0, repeat_factory=repeat,
-        num_aptamers=1):
-
-    insert = aptamer(ligand)
-
-    # If multiple aptamers were requested, build them around the central one.
-
-    for i in range(1, num_aptamers):
-        insert.replace('splitter', aptamer(ligand))
-
-    # If a splitter was requested, insert it into the middle of the aptamer.
-
-    if splitter_len != 0:
-        insert.replace('splitter', repeat_factory('splitter', splitter_len))
-
-    # Add a linker between the aptamer and the sgRNA.
-
-    try: linker_len_5, linker_len_3 = linker_len
-    except TypeError: linker_len_5 = linker_len_3 = linker_len
-
-    insert.prepend(repeat_factory("linker/5'", linker_len_5))
-    insert.append(repeat_factory("linker/3'", linker_len_3))
-
-    return insert
 
 def spacer(name='aavs'):
     """
@@ -979,7 +992,7 @@ def upper_stem_insertion(N, linker_len=0, splitter_len=0, num_aptamers=1, small_
     sgrna = wt_sgrna(target)
     sgrna.name = make_name('us', *args)
     sgrna.attach(
-            aptamer_insert(
+            make_aptamer_insert(
                 small_molecule,
                 linker_len=linker_len,
                 splitter_len=splitter_len,
@@ -1032,7 +1045,7 @@ def lower_stem_insertion(N, linker_len=0, splitter_len=0, small_molecule='theo',
     sgrna = wt_sgrna(target)
     sgrna.name = make_name('ls', *args)
     sgrna.attach(
-            aptamer_insert(
+            make_aptamer_insert(
                 small_molecule,
                 linker_len=linker_len,
                 splitter_len=splitter_len,
@@ -1082,7 +1095,7 @@ def nexus_insertion(linker_len=0, small_molecule='theo', target='aavs'):
     sgrna = wt_sgrna(target)
     sgrna.name = make_name('nx', linker_len)
     sgrna.attach(
-            aptamer_insert(
+            make_aptamer_insert(
                 small_molecule,
                 linker_len=linker_len,
                 repeat_factory=lambda name, length: repeat(name, length, 'U'),
@@ -1160,7 +1173,7 @@ def nexus_insertion_2(N, M, splitter_len=0, num_aptamers=1, small_molecule='theo
     sgrna = wt_sgrna(target)
     sgrna.name = make_name('nxx', *args)
     sgrna.attach(
-            aptamer_insert(
+            make_aptamer_insert(
                 small_molecule,
                 splitter_len=splitter_len,
                 num_aptamers=num_aptamers,
@@ -1207,7 +1220,7 @@ def hairpin_replacement(N, small_molecule='theo', target='aavs'):
     linker_len = max(0, N - domain_len), 0
 
     design.attach(
-            aptamer_insert(small_molecule, linker_len=linker_len),
+            make_aptamer_insert(small_molecule, linker_len=linker_len),
             'hairpins', insertion_site,
             'hairpins', ...,
     )
@@ -1276,16 +1289,6 @@ def induced_dimerization(half, N, small_molecule='theo', target='aavs'):
     return design
 
 
-def make_serpentine_insert():
-    # target, direction, tetraloop
-
-    target = 'GUUAAAAU'
-    loop = 'GAAA'    # AA not mutable
-    aptamer
-
-    pass
-
-
 def fold_the_upper_stem():
     pass
 
@@ -1329,7 +1332,7 @@ def serpentine_the_bulge(N):
 
     sgrna = wt_sgrna(target)
     sgrna.name = make_name('sb', N)
-    sgrna.attach('stem', 8 + N, 20 - N, aptamer_insert(
+    sgrna.attach('stem', 8 + N, 20 - N, make_aptamer_insert(
             small_molecule,
             linker_len=linker_len,
             splitter_len=splitter_len,
