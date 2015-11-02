@@ -115,12 +115,13 @@ class Construct (Sequence):
     FoldEvaluation = collections.namedtuple(
             'FoldEvaluation', 'base_pairs_kept base_pairs_lost unpaired_bases_kept unpaired_bases_lost')
 
-    def __init__(self, *args):
-        if len(args) == 0:
-            args = '',
-
-        super().__init__(args[0])
-        self._domains = list(args[1:])
+    def __init__(self, name='', domains=None):
+        super().__init__(name)
+        if domains is None:
+            domains = []
+        if isinstance(domains, Domain):
+            domains = [domains]
+        self._domains = domains
         self._attachments = dict()
         self._expected_base_pairs = set()
         self._expected_unpaired_bases = set()
@@ -668,6 +669,107 @@ def parse_name(name):
 def make_name(factory, *args):
     return factory + '(' + ','.join(str(x) for x in args) + ')'
 
+def molecular_weight(name, polymer='rna'):
+    return from_name(name).mass(polymer)
+
+def complement(sequence):
+    complements = str.maketrans('ACUG', 'UGAC')
+    return sequence.translate(complements)
+
+def reverse_complement(sequence):
+    return complement(sequence[::-1])
+
+
+def t7_promoter(source='briner'):
+    """
+    Return the sequence for the T7 promoter.
+
+    Parameters
+    ----------
+    source: 'briner', 'igem'
+        Specify which T7 sequence to use.  All the sequences are similar, but 
+        different sequences may give better or worse transcription.
+    """
+    if source == 'igem':
+        # The "T7 consensus -10 and rest" sequence from IGEM:
+        # http://parts.igem.org/Promoters/Catalog/T7
+        sequence = 'TAATACGACTCACTATA'
+
+    elif source == 'briner':
+        # The T7 sequence used by Briner et al. (2014):
+        sequence = 'TATAGTAATAATACGACTCACTATAG'
+
+    else:
+        raise ValueError("Unknown T7 sequence: '{}'".format(source))
+
+    return Construct(
+            '{} t7'.format(source),
+            Domain('t7', sequence))
+
+def manual(*sequences):
+    from itertools import cycle
+
+    if len(sequences) == 1:
+        colors = 'white',
+    else:
+        colors = 'magenta', 'red', 'yellow', 'green', 'cyan', 'blue'
+
+    return Construct('manual', [
+        Domain('.', seq, style=color)
+        for seq, color in zip(sequences, cycle(colors))
+    ])
+
+def spacer(name='aavs'):
+    """
+    Return the specified spacer sequence.
+
+    Parameters
+    ----------
+    target: 'rfp', 'aavs', 'vegfa'
+        The sequence to target.
+    """
+    if name == 'rfp':
+        sequence = 'GGAACUUUCAGUUUAGCGGUCU'
+    elif name == 'aavs':
+        sequence = 'GGGGCCACTAGGGACAGGAT'
+    elif name == 'vegfa':
+        sequence = 'GGGTGGGGGGAGTTTGCTCC'
+    elif name == 'klein1':
+        sequence = 'GGGCACGGGCAGCTTGCCCG'
+    elif name == 'klein2':
+        sequence = 'GTCGCCCTCGAACTTCACCT'
+    else:
+        raise ValueError("Unknown spacer: '{}'".format(name))
+
+    spacer = Domain('spacer', sequence)
+    spacer.style = 'yellow'
+
+    return Construct(name, spacer)
+
+def dna_to_cut(target='aavs'):
+    """
+    Return the specified target sequence.
+
+    Parameters
+    ----------
+    target: 'rfp', 'aavs', 'vegfa'
+        The sequence to return.
+    """
+    if target == 'aavs':
+        return Construct('aavs', Domain('target', 
+            'CCCCGTTCTCCTGTGGATTCGGGTCACCTCTCACTCCTTTCATTTGGGCA'
+            'GCTCCCCTACCCCCCTTACCTCTCTAGTCTGTGCTAGCTCTTCCAGCCCC'
+            'CTGTCATGGCATCTTCCAGGGGTCCGAGAGCTCAGCTAGTCTTCTTCCTC'
+            'CAACCCGGGCCCCTATGTCCACTTCAGGACAGCATGTTTGCTGCCTCCAG'
+            'GGATCCTGTGTCCCCGAGCTGGGACCACCTTATATTCCCAGGGCCGGTTA'
+            'ATGTGGCTCTGGTTCTGGGTACTTTTATCTGTCCCCTCCACCCCACAGTG'
+            'GGGCCACTAGGGACAGGATTGGTGACAGAAAAGCCCCATCCTTAGGCCTC'
+            'CTCCTTCCTAGTCTCCTGATATTGGGTCTAACCCCCACCTCCTGTTAGGC'
+            'AGATTCCTTATCTGGTGACACACCCCCATTTCCTGGAGCCATCTCTCTCC'
+            'TTGCCAGAACCTCTAAGGTTTGCTTACGATGGAGCCAGAGAGGAT'))
+    else:
+        raise ValueError("Unknown target: '{}'".format(target))
+
 def repeat(name, length, pattern='UUUCCC'):
     """
     Construct a repeating sequence using the given pattern.
@@ -686,115 +788,6 @@ def repeat(name, length, pattern='UUUCCC'):
     """
     sequence = pattern * (1 + length // len(pattern))
     return Domain(name, sequence[:length])
-
-def manual(*sequences):
-    from itertools import cycle
-
-    if len(sequences) == 1:
-        colors = 'white',
-    else:
-        colors = 'magenta', 'red', 'yellow', 'green', 'cyan', 'blue'
-
-    return Construct('manual', *[
-        Domain('.', seq, style=color)
-        for seq, color in zip(sequences, cycle(colors))
-    ])
-
-def molecular_weight(name, polymer='rna'):
-    return from_name(name).mass(polymer)
-
-def complement(sequence):
-    complements = str.maketrans('ACTG', 'TGAC')
-    return sequence.translate(complements)
-
-def reverse_complement(sequence):
-    return complement(sequence[::-1])
-
-
-def make_aptamer_insert(ligand, linker_len=0, splitter_len=0, repeat_factory=repeat,
-        num_aptamers=1):
-
-    insert = aptamer(ligand)
-
-    # If multiple aptamers were requested, build them around the central one.
-
-    for i in range(1, num_aptamers):
-        insert.replace('splitter', aptamer(ligand))
-
-    # If a splitter was requested, insert it into the middle of the aptamer.
-
-    if splitter_len != 0:
-        insert.replace('splitter', repeat_factory('splitter', splitter_len))
-
-    # Add a linker between the aptamer and the sgRNA.
-
-    try: linker_len_5, linker_len_3 = linker_len
-    except TypeError: linker_len_5 = linker_len_3 = linker_len
-
-    insert.prepend(repeat_factory("linker/5'", linker_len_5))
-    insert.append(repeat_factory("linker/3'", linker_len_3))
-
-    return insert
-
-def make_serpentine_insert():
-    # target, direction, tetraloop
-
-    target = 'GUUAAAAU'
-    loop = 'GAAA'    # AA not mutable
-    aptamer
-
-    pass
-
-def make_circle_insert():
-    pass
-
-
-def wt_sgrna(target=None):
-    """
-    Return the wildtype sgRNA sequence, without a spacer.
-
-    The construct is composed of 3 domains: stem, nexus, and hairpins.  The 
-    stem domain encompasses the lower stem, the bulge, and the upper stem.  
-    Attachments are allowed pretty much anywhere, although it would be prudent 
-    to restrict this based on the structural biology of Cas9 if you're planning 
-    to make random attachments.
-    """
-    sgrna = Construct('wt sgrna')
-
-    if target is not None:
-        sgrna += spacer(target)
-
-    sgrna += Domain('stem', 'GUUUUAGAGCUAGAAAUAGCAAGUUAAAAU')
-    sgrna += Domain('nexus', 'AAGGCUAGUCCGU')
-    sgrna += Domain('hairpins', 'UAUCAACUUGAAAAAGUGGCACCGAGUCGGUGC')
-    sgrna += Domain('tail', 'UUUUUU')
-
-    sgrna['stem'].style = 'green'
-    sgrna['nexus'].style = 'red'
-    sgrna['hairpins'].style = 'blue'
-
-    sgrna['stem'].attachment_sites = 'anywhere'
-    sgrna['nexus'].attachment_sites = range(2, 12)
-    sgrna['hairpins'].attachment_sites = 'anywhere'
-
-    return sgrna
-
-def dead_sgrna(target=None):
-    """
-    Return the sequence for the negative control sgRNA.
-
-    This sequence has two mutations in the nexus region that prevent the sgRNA 
-    from folding properly.  These mutations were described by Briner et al.
-    """
-    sgrna = wt_sgrna(target)
-    sgrna.name = 'dead sgrna'
-
-    sgrna['nexus'].mutable = True
-    sgrna['nexus'].mutate(2, 'C')
-    sgrna['nexus'].mutate(3, 'C')
-    sgrna['nexus'].mutable = False
-
-    return sgrna
 
 def aptamer(ligand, piece='whole'):
     """
@@ -862,84 +855,115 @@ def aptamer(ligand, piece='whole'):
 
     return construct
 
-def spacer(name='aavs'):
+def aptamer_insert(ligand, linker_len=0, splitter_len=0, repeat_factory=repeat,
+        num_aptamers=1):
+
+    insert = aptamer(ligand)
+
+    # If multiple aptamers were requested, build them around the central one.
+
+    for i in range(1, num_aptamers):
+        insert.replace('splitter', aptamer(ligand))
+
+    # If a splitter was requested, insert it into the middle of the aptamer.
+
+    if splitter_len != 0:
+        insert.replace('splitter', repeat_factory('splitter', splitter_len))
+
+    # Add a linker between the aptamer and the sgRNA.
+
+    try: linker_len_5, linker_len_3 = linker_len
+    except TypeError: linker_len_5 = linker_len_3 = linker_len
+
+    insert.prepend(repeat_factory("linker/5'", linker_len_5))
+    insert.append(repeat_factory("linker/3'", linker_len_3))
+
+    return insert
+
+def serpentine_insert(ligand, target_seq, target_end, turn_seq='GAAA',
+        num_aptamers=1):
+
+    if not target_seq:
+        raise ValueError('target_seq cannot be empty')
+
+    domains = [
+            Domain('target', target_seq),
+            Domain('turn', turn_seq),
+            Domain('latch', reverse_complement(target_seq)),
+            aptamer_insert(ligand, num_aptamers=num_aptamers),
+            Domain('decoy', target_seq),
+    ]
+
+    if target_end == '3':
+        domains.reverse()
+
+    return Construct('serpentine', domains)
+
+def circle_insert(ligand, target_seq, target_end, num_aptamers=1):
+    if not target_seq:
+        raise ValueError('target_seq cannot be empty')
+
+    domains = [
+            Domain('target', target_seq),
+            Domain('decoy', target_seq),
+            aptamer_insert(ligand, num_aptamers=num_aptamers),
+            Domain('latch', reverse_complement(target_seq)),
+    ]
+
+    if target_end == '3':
+        domains.reverse()
+
+    return Construct('circle', domains)
+
+
+def wt_sgrna(target=None):
     """
-    Return the specified spacer sequence.
+    Return the wildtype sgRNA sequence, without a spacer.
 
-    Parameters
-    ----------
-    target: 'rfp', 'aavs', 'vegfa'
-        The sequence to target.
+    The construct is composed of 3 domains: stem, nexus, and hairpins.  The 
+    stem domain encompasses the lower stem, the bulge, and the upper stem.  
+    Attachments are allowed pretty much anywhere, although it would be prudent 
+    to restrict this based on the structural biology of Cas9 if you're planning 
+    to make random attachments.
     """
-    if name == 'rfp':
-        sequence = 'GGAACUUUCAGUUUAGCGGUCU'
-    elif name == 'aavs':
-        sequence = 'GGGGCCACTAGGGACAGGAT'
-    elif name == 'vegfa':
-        sequence = 'GGGTGGGGGGAGTTTGCTCC'
-    elif name == 'klein1':
-        sequence = 'GGGCACGGGCAGCTTGCCCG'
-    elif name == 'klein2':
-        sequence = 'GTCGCCCTCGAACTTCACCT'
-    else:
-        raise ValueError("Unknown spacer: '{}'".format(name))
+    sgrna = Construct('wt sgrna')
 
-    spacer = Domain('spacer', sequence)
-    spacer.style = 'yellow'
+    if target is not None:
+        sgrna += spacer(target)
 
-    return Construct(name, spacer)
+    sgrna += Domain('stem', 'GUUUUAGAGCUAGAAAUAGCAAGUUAAAAU')
+    sgrna += Domain('nexus', 'AAGGCUAGUCCGU')
+    sgrna += Domain('hairpins', 'UAUCAACUUGAAAAAGUGGCACCGAGUCGGUGC')
+    sgrna += Domain('tail', 'UUUUUU')
 
-def dna_to_cut(target='aavs'):
+    sgrna['stem'].style = 'green'
+    sgrna['nexus'].style = 'red'
+    sgrna['hairpins'].style = 'blue'
+
+    sgrna['stem'].attachment_sites = 'anywhere'
+    sgrna['nexus'].attachment_sites = range(2, 12)
+    sgrna['hairpins'].attachment_sites = 'anywhere'
+
+    return sgrna
+
+def dead_sgrna(target=None):
     """
-    Return the specified target sequence.
+    Return the sequence for the negative control sgRNA.
 
-    Parameters
-    ----------
-    target: 'rfp', 'aavs', 'vegfa'
-        The sequence to return.
+    This sequence has two mutations in the nexus region that prevent the sgRNA 
+    from folding properly.  These mutations were described by Briner et al.
     """
-    if target == 'aavs':
-        return Construct('aavs', Domain('target', 
-            'CCCCGTTCTCCTGTGGATTCGGGTCACCTCTCACTCCTTTCATTTGGGCA'
-            'GCTCCCCTACCCCCCTTACCTCTCTAGTCTGTGCTAGCTCTTCCAGCCCC'
-            'CTGTCATGGCATCTTCCAGGGGTCCGAGAGCTCAGCTAGTCTTCTTCCTC'
-            'CAACCCGGGCCCCTATGTCCACTTCAGGACAGCATGTTTGCTGCCTCCAG'
-            'GGATCCTGTGTCCCCGAGCTGGGACCACCTTATATTCCCAGGGCCGGTTA'
-            'ATGTGGCTCTGGTTCTGGGTACTTTTATCTGTCCCCTCCACCCCACAGTG'
-            'GGGCCACTAGGGACAGGATTGGTGACAGAAAAGCCCCATCCTTAGGCCTC'
-            'CTCCTTCCTAGTCTCCTGATATTGGGTCTAACCCCCACCTCCTGTTAGGC'
-            'AGATTCCTTATCTGGTGACACACCCCCATTTCCTGGAGCCATCTCTCTCC'
-            'TTGCCAGAACCTCTAAGGTTTGCTTACGATGGAGCCAGAGAGGAT'))
-    else:
-        raise ValueError("Unknown target: '{}'".format(target))
+    sgrna = wt_sgrna(target)
+    sgrna.name = 'dead sgrna'
 
-def t7_promoter(source='briner'):
-    """
-    Return the sequence for the T7 promoter.
+    sgrna['nexus'].mutable = True
+    sgrna['nexus'].mutate(2, 'C')
+    sgrna['nexus'].mutate(3, 'C')
+    sgrna['nexus'].mutable = False
 
-    Parameters
-    ----------
-    source: 'briner', 'igem'
-        Specify which T7 sequence to use.  All the sequences are similar, but 
-        different sequences may give better or worse transcription.
-    """
-    if source == 'igem':
-        # The "T7 consensus -10 and rest" sequence from IGEM:
-        # http://parts.igem.org/Promoters/Catalog/T7
-        sequence = 'TAATACGACTCACTATA'
+    return sgrna
 
-    elif source == 'briner':
-        # The T7 sequence used by Briner et al. (2014):
-        sequence = 'TATAGTAATAATACGACTCACTATAG'
-
-    else:
-        raise ValueError("Unknown T7 sequence: '{}'".format(source))
-
-    return Construct(
-            '{} t7'.format(source),
-            Domain('t7', sequence))
-
-def upper_stem_insertion(N, linker_len=0, splitter_len=0, num_aptamers=1, small_molecule='theo', target='aavs'):
+def fold_upper_stem(N, linker_len=0, splitter_len=0, num_aptamers=1, small_molecule='theo', target='aavs'):
     """
     Insert the aptamer into the upper stem region of the sgRNA.
 
@@ -991,7 +1015,7 @@ def upper_stem_insertion(N, linker_len=0, splitter_len=0, num_aptamers=1, small_
     sgrna = wt_sgrna(target)
     sgrna.name = make_name('us', *args)
     sgrna.attach(
-            make_aptamer_insert(
+            aptamer_insert(
                 small_molecule,
                 linker_len=linker_len,
                 splitter_len=splitter_len,
@@ -1002,7 +1026,7 @@ def upper_stem_insertion(N, linker_len=0, splitter_len=0, num_aptamers=1, small_
     )
     return sgrna
 
-def lower_stem_insertion(N, linker_len=0, splitter_len=0, small_molecule='theo', target='aavs'):
+def fold_lower_stem(N, linker_len=0, splitter_len=0, small_molecule='theo', target='aavs'):
     """
     Insert the aptamer into the lower stem region of the sgRNA.
 
@@ -1044,7 +1068,7 @@ def lower_stem_insertion(N, linker_len=0, splitter_len=0, small_molecule='theo',
     sgrna = wt_sgrna(target)
     sgrna.name = make_name('ls', *args)
     sgrna.attach(
-            make_aptamer_insert(
+            aptamer_insert(
                 small_molecule,
                 linker_len=linker_len,
                 splitter_len=splitter_len,
@@ -1054,7 +1078,7 @@ def lower_stem_insertion(N, linker_len=0, splitter_len=0, small_molecule='theo',
     )
     return sgrna
 
-def nexus_insertion(linker_len=0, small_molecule='theo', target='aavs'):
+def fold_nexus(linker_len=0, small_molecule='theo', target='aavs'):
     """
     Insert the aptamer into the nexus region of the sgRNA.
 
@@ -1094,7 +1118,7 @@ def nexus_insertion(linker_len=0, small_molecule='theo', target='aavs'):
     sgrna = wt_sgrna(target)
     sgrna.name = make_name('nx', linker_len)
     sgrna.attach(
-            make_aptamer_insert(
+            aptamer_insert(
                 small_molecule,
                 linker_len=linker_len,
                 repeat_factory=lambda name, length: repeat(name, length, 'U'),
@@ -1104,11 +1128,11 @@ def nexus_insertion(linker_len=0, small_molecule='theo', target='aavs'):
     )
     return sgrna
     
-def nexus_insertion_2(N, M, splitter_len=0, num_aptamers=1, small_molecule='theo', target='aavs'):
+def fold_nexus_2(N, M, splitter_len=0, num_aptamers=1, small_molecule='theo', target='aavs'):
     """
     Insert the aptamer into the nexus region of the sgRNA.
 
-    This design strategy expands upon the original nexus_insertion() function, 
+    This design strategy expands upon the original fold_nexus() function, 
     which produced promising initial hits.  This strategy allows more control 
     over where the aptamer is inserted, by having the user specify the number 
     of nucleotides to keep (N and M) on both sides of the nexus.  This strategy 
@@ -1172,7 +1196,7 @@ def nexus_insertion_2(N, M, splitter_len=0, num_aptamers=1, small_molecule='theo
     sgrna = wt_sgrna(target)
     sgrna.name = make_name('nxx', *args)
     sgrna.attach(
-            make_aptamer_insert(
+            aptamer_insert(
                 small_molecule,
                 splitter_len=splitter_len,
                 num_aptamers=num_aptamers,
@@ -1182,7 +1206,7 @@ def nexus_insertion_2(N, M, splitter_len=0, num_aptamers=1, small_molecule='theo
     )
     return sgrna
 
-def hairpin_replacement(N, small_molecule='theo', target='aavs'):
+def replace_hairpins(N, small_molecule='theo', target='aavs'):
     """
     Remove a portion of the 3' terminal hairpins and replace it with the 
     aptamer.
@@ -1219,13 +1243,13 @@ def hairpin_replacement(N, small_molecule='theo', target='aavs'):
     linker_len = max(0, N - domain_len), 0
 
     design.attach(
-            make_aptamer_insert(small_molecule, linker_len=linker_len),
+            aptamer_insert(small_molecule, linker_len=linker_len),
             'hairpins', insertion_site,
             'hairpins', ...,
     )
     return design
 
-def induced_dimerization(half, N, small_molecule='theo', target='aavs'):
+def induce_dimerization(half, N, small_molecule='theo', target='aavs'):
     """
     Split the guide RNA into its two naturally occurring halves, and use the 
     aptamer to bring those halves together in the presence of the ligand.  The 
@@ -1287,11 +1311,7 @@ def induced_dimerization(half, N, small_molecule='theo', target='aavs'):
 
     return design
 
-
-def fold_the_upper_stem():
-    pass
-
-def serpentine_the_bulge(N):
+def serpentine_bulge(N):
     """
     Sequester the bulge in a non-productive hairpin when the ligand isn't 
     present.  The bulge is an interesting target because it doesn't have to be 
@@ -1329,32 +1349,35 @@ def serpentine_the_bulge(N):
     sense = 'GUUAAAAU'[:N]
     antisense = 'GUUAAAAU'[:N]
 
+    insert = make_serpentine_insert('GUUAAAAU', '3', num_aptamers=num_aptamers)
+    insert["bulge''"].append('UC')
+
     sgrna = wt_sgrna(target)
     sgrna.name = make_name('sb', N)
-    sgrna.attach('stem', 8 + N, 20 - N, make_aptamer_insert(
-            small_molecule,
-            linker_len=linker_len,
-            splitter_len=splitter_len,
-            num_aptamers=num_aptamers,
-    ))
+
+    #target = sgrna['stem'][
+    #sgrna.attach(
+            #insert, 'stem', ???, 'stem', ???,
+    #)
     return sgrna
 
-def circle_the_bulge():
+def circle_bulge():
     pass
 
 
 ## Abbreviations
 wt = wt_sgrna
 dead = dead_sgrna
+fu = us = fold_upper_stem
+fl = ls = fold_lower_stem
+fn = nx = fold_nexus
+fnx = nxx = fold_nexus_2
+hp = replace_hairpins
+id = induce_dimerization
+
+t7 = t7_promoter
 th = theo = lambda: aptamer('theo')
 aavs = lambda: dna_to_cut('aavs')
-t7 = t7_promoter
-us = upper_stem_insertion
-ls = lower_stem_insertion
-nx = nexus_insertion
-nxx = nexus_insertion_2
-hp = hairpin_replacement
-id = induced_dimerization
 
 
 def test_domain_class():
@@ -1636,25 +1659,17 @@ def test_from_name():
     for construct in equivalent_constructs:
         assert construct.seq == equivalent_constructs[0].seq
 
-def test_repeat():
-    assert repeat('dummy', 1) == 'U'
-    assert repeat('dummy', 2) == 'UU'
-    assert repeat('dummy', 3) == 'UUU'
-    assert repeat('dummy', 4) == 'UUUC'
-    assert repeat('dummy', 5) == 'UUUCC'
-    assert repeat('dummy', 6) == 'UUUCCC'
-    assert repeat('dummy', 7) == 'UUUCCCU'
-
 def test_complements():
-    assert complement('ACTG') == 'TGAC'
-    assert reverse_complement('ACTG') == 'CAGT'
+    assert complement('ACUG') == 'UGAC'
+    assert reverse_complement('ACUG') == 'CAGU'
 
-def test_wt_sgrna():
-    assert from_name('wt') == 'GUUUUAGAGCUAGAAAUAGCAAGUUAAAAUAAGGCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
-    assert from_name('wt(aavs)') == 'GGGGCCACTAGGGACAGGATGUUUUAGAGCUAGAAAUAGCAAGUUAAAAUAAGGCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
+def test_t7_promoter():
+    import pytest
 
-def test_dead_sgrna():
-    assert from_name('dead').seq == 'GUUUUAGAGCUAGAAAUAGCAAGUUAAAAUAACCCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
+    with pytest.raises(ValueError): t7_promoter('not a promoter')
+
+    assert t7_promoter() == 'TATAGTAATAATACGACTCACTATAG'
+    assert t7_promoter('igem') == 'TAATACGACTCACTATA'
 
 def test_aptamer():
     import pytest
@@ -1673,15 +1688,38 @@ def test_spacer():
     assert spacer('rfp') == 'GGAACUUUCAGUUUAGCGGUCU'
     assert spacer('vegfa') == 'GGGTGGGGGGAGTTTGCTCC'
 
-def test_t7_promoter():
-    import pytest
+def test_repeat():
+    assert repeat('dummy', 1) == 'U'
+    assert repeat('dummy', 2) == 'UU'
+    assert repeat('dummy', 3) == 'UUU'
+    assert repeat('dummy', 4) == 'UUUC'
+    assert repeat('dummy', 5) == 'UUUCC'
+    assert repeat('dummy', 6) == 'UUUCCC'
+    assert repeat('dummy', 7) == 'UUUCCCU'
 
-    with pytest.raises(ValueError): t7_promoter('not a promoter')
+def test_serpentine_insert():
+    assert serpentine_insert('theo', 'G', '3') == 'GAUACCAGCCGAAAGGCCCUUGGCAGCGAAAG'
+    assert serpentine_insert('theo', 'G', '5') == 'GGAAACAUACCAGCCGAAAGGCCCUUGGCAGG'
+    assert serpentine_insert('theo', 'GUUAAAAU', '3') == 'GUUAAAAUAUACCAGCCGAAAGGCCCUUGGCAGAUUUUAACGAAAGUUAAAAU'
+    assert serpentine_insert('theo', 'GUUAAAAU', '5') == 'GUUAAAAUGAAAAUUUUAACAUACCAGCCGAAAGGCCCUUGGCAGGUUAAAAU'
+    assert serpentine_insert('theo', 'GUAC', '3', turn_seq='UAA') == 'GUACAUACCAGCCGAAAGGCCCUUGGCAGGUACUAAGUAC'
+    assert serpentine_insert('theo', 'GUAC', '3', num_aptamers=2) == 'GUACAUACCAGCCAUACCAGCCGAAAGGCCCUUGGCAGGGCCCUUGGCAGGUACGAAAGUAC'
 
-    assert t7_promoter() == 'TATAGTAATAATACGACTCACTATAG'
-    assert t7_promoter('igem') == 'TAATACGACTCACTATA'
+def test_circle_insert():
+    assert circle_insert('theo', 'G', '3') == 'CAUACCAGCCGAAAGGCCCUUGGCAGGG'
+    assert circle_insert('theo', 'G', '5') == 'GGAUACCAGCCGAAAGGCCCUUGGCAGC'
+    assert circle_insert('theo', 'AUGC', '3') == 'GCAUAUACCAGCCGAAAGGCCCUUGGCAGAUGCAUGC'
+    assert circle_insert('theo', 'AUGC', '5') == 'AUGCAUGCAUACCAGCCGAAAGGCCCUUGGCAGGCAU'
+    assert circle_insert('theo', 'AUGC', '3', num_aptamers=2) == 'GCAUAUACCAGCCAUACCAGCCGAAAGGCCCUUGGCAGGGCCCUUGGCAGAUGCAUGC'
 
-def test_upper_stem_insertion():
+def test_wt_sgrna():
+    assert from_name('wt') == 'GUUUUAGAGCUAGAAAUAGCAAGUUAAAAUAAGGCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
+    assert from_name('wt(aavs)') == 'GGGGCCACTAGGGACAGGATGUUUUAGAGCUAGAAAUAGCAAGUUAAAAUAAGGCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
+
+def test_dead_sgrna():
+    assert from_name('dead').seq == 'GUUUUAGAGCUAGAAAUAGCAAGUUAAAAUAACCCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
+
+def test_fold_upper_stem():
     import pytest
 
     with pytest.raises(ValueError): from_name('us(5)')
@@ -1697,7 +1735,7 @@ def test_upper_stem_insertion():
     assert from_name('us(0,0,7)') == 'GGGGCCACTAGGGACAGGATGUUUUAGAAUACCAGCCUUUCCCUGGCCCUUGGCAGAAGUUAAAAUAAGGCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
     assert from_name('us(0,0,0,2)') == 'GGGGCCACTAGGGACAGGATGUUUUAGAAUACCAGCCAUACCAGCCGAAAGGCCCUUGGCAGGGCCCUUGGCAGAAGUUAAAAUAAGGCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
 
-def test_lower_stem_insertion():
+def test_fold_lower_stem():
     import pytest
 
     with pytest.raises(ValueError): from_name('ls(7)')
@@ -1710,12 +1748,12 @@ def test_lower_stem_insertion():
     assert from_name('ls(0,1)') == 'GGGGCCACTAGGGACAGGATUAUACCAGCCGAAAGGCCCUUGGCAGUAAGGCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
     assert from_name('ls(0,7)') == 'GGGGCCACTAGGGACAGGATUUUCCCUAUACCAGCCGAAAGGCCCUUGGCAGUUUCCCUAAGGCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
 
-def test_nexus_insertion():
+def test_fold_nexus():
     assert from_name('nx(0)') == 'GGGGCCACTAGGGACAGGATGUUUUAGAGCUAGAAAUAGCAAGUUAAAAUAAGGAUACCAGCCGAAAGGCCCUUGGCAGCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
     assert from_name('nx(1)') == 'GGGGCCACTAGGGACAGGATGUUUUAGAGCUAGAAAUAGCAAGUUAAAAUAAGGUAUACCAGCCGAAAGGCCCUUGGCAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
     assert from_name('nx(6)') == 'GGGGCCACTAGGGACAGGATGUUUUAGAGCUAGAAAUAGCAAGUUAAAAUAAGGUUUUUUAUACCAGCCGAAAGGCCCUUGGCAGUUUUUUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
 
-def test_nexus_insertion_2():
+def test_fold_nexus_2():
     import pytest
 
     with pytest.raises(ValueError): from_name('nxx(5,0)')
@@ -1735,14 +1773,14 @@ def test_nexus_insertion_2():
     assert from_name('nxx(4,5,0,3)') == 'GGGGCCACTAGGGACAGGATGUUUUAGAGCUAGAAAUAGCAAGUUAAAAUAAGGCUAUACCAGCCAUACCAGCCAUACCAGCCGAAAGGCCCUUGGCAGGGCCCUUGGCAGGGCCCUUGGCAGAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
     assert from_name('nxx(4,5,10,2)') == 'GGGGCCACTAGGGACAGGATGUUUUAGAGCUAGAAAUAGCAAGUUAAAAUAAGGCUAUACCAGCCAUACCAGCCUUUCCCUUUCGGCCCUUGGCAGGGCCCUUGGCAGAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
 
-def test_hairpin_replacement():
+def test_replace_hairpins():
     assert from_name('hp(0)') == 'GGGGCCACTAGGGACAGGATGUUUUAGAGCUAGAAAUAGCAAGUUAAAAUAAGGCUAGUCCGUAUACCAGCCGAAAGGCCCUUGGCAGUUUUUU'
     assert from_name('hp(18)') == 'GGGGCCACTAGGGACAGGATGUUUUAGAGCUAGAAAUAGCAAGUUAAAAUAAGGCUAGUCCGUUAUCAACUUGAAAAAGUGAUACCAGCCGAAAGGCCCUUGGCAGUUUUUU'
     assert from_name('hp(33)') == 'GGGGCCACTAGGGACAGGATGUUUUAGAGCUAGAAAUAGCAAGUUAAAAUAAGGCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCAUACCAGCCGAAAGGCCCUUGGCAGUUUUUU'
     assert from_name('hp(39)') == 'GGGGCCACTAGGGACAGGATGUUUUAGAGCUAGAAAUAGCAAGUUAAAAUAAGGCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUCCCAUACCAGCCGAAAGGCCCUUGGCAGUUUUUU'
     assert from_name('hp(49)') == 'GGGGCCACTAGGGACAGGATGUUUUAGAGCUAGAAAUAGCAAGUUAAAAUAAGGCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUCCCUUUCCCUUUCAUACCAGCCGAAAGGCCCUUGGCAGUUUUUU'
 
-def test_induced_dimerization():
+def test_induce_dimerization():
     import pytest
 
     with pytest.raises(ValueError): from_name('id(0,0)')
