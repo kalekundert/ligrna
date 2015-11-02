@@ -182,11 +182,20 @@ class Construct (Sequence):
                 iter.domain.constraints[iter.rel_start:iter.rel_end]
                 for iter in self._iterate_domains())
 
+    def domains_from_name(self, *names):
+        """
+        Return a list of all the domains in this construct (or any of its 
+        attached constructs) with the given name.  
+        """
+        domains = [x for x in self._domains if x.name in names]
+        for attachment in self._attachments.values():
+            domains += attachment.construct.domains_from_name(*names)
+        return domains
+
     def domain_from_index(self, index):
         """
         Return the domain that includes the given index.
         """
-
         if index < 0:
             index += len(self)
 
@@ -196,11 +205,15 @@ class Construct (Sequence):
 
         raise IndexError('index out of range')
 
-    def domains_from_name(self, *names):
-        domains = [x for x in self._domains if x.name in names]
-        for attachment in self._attachments.values():
-            domains += attachment.construct.domains_from_name(*names)
-        return domains
+    def index_from_domain(self, domain, rel_index):
+        """
+        Return the absolute index of the given index of the given domain.  If 
+        more than one domain has the same name, only returned value will be for 
+        the first.
+        """
+        for iter in self._iterate_domains():
+            if iter.domain.name == domain:
+                return iter.abs_index(rel_index)
 
     def format(self, dna=False, rna=False, start=None, end=None, pad=False, labels=False, color='auto'):
         sequence = ''
@@ -439,6 +452,9 @@ class Construct (Sequence):
             def rel_index(self, index):
                 return index - self.start + self.rel_start
 
+            def abs_index(self, rel_index):
+                return self.start + rel_index - self.rel_start
+
         domain_cursor = 0
         index_cursor = 0
     
@@ -615,6 +631,12 @@ class Domain (Sequence):
 
     def insert(self, index, insert):
         self[index:index] = insert
+
+    def append(self, sequence):
+        self.seq = self.seq + sequence
+
+    def prepend(self, sequence):
+        self.seq = sequence + self.seq
 
     def replace(self, start, end, insert):
         self[start:end] = insert
@@ -941,7 +963,7 @@ def wt_sgrna(target=None):
     sgrna['hairpins'].style = 'blue'
 
     sgrna['stem'].attachment_sites = 'anywhere'
-    sgrna['nexus'].attachment_sites = range(2, 12)
+    sgrna['nexus'].attachment_sites = 'anywhere'
     sgrna['hairpins'].attachment_sites = 'anywhere'
 
     return sgrna
@@ -1311,7 +1333,7 @@ def induce_dimerization(half, N, small_molecule='theo', target='aavs'):
 
     return design
 
-def serpentine_bulge(N):
+def serpentine_bulge(N, A=1, target='aavs'):
     """
     Sequester the bulge in a non-productive hairpin when the ligand isn't 
     present.  The bulge is an interesting target because it doesn't have to be 
@@ -1335,34 +1357,67 @@ def serpentine_bulge(N):
     Parameters
     ----------
     N: int
-        Indicate how long the non-productive hairpin should be.  Must be 
-        between 2 and 7.  The first two bases in the hairpin come from the 
-        bulge, and subsequent bases come from the lower stem.
+        Indicate how long the non-productive hairpin should be.  It can't be 
+        shorter than 2 base pairs.  The first two bases in the hairpin come 
+        from the bulge, and subsequent bases come from the lower stem.
 
     Returns
     -------
     sgRNA: Construct
     """
-    if not 2 <= N <= 7:
-        raise ValueError("sb(N): N must be between 2 and 7")
-
-    sense = 'GUUAAAAU'[:N]
-    antisense = 'GUUAAAAU'[:N]
-
-    insert = make_serpentine_insert('GUUAAAAU', '3', num_aptamers=num_aptamers)
-    insert["bulge''"].append('UC')
+    if N < 2:
+        raise ValueError("sb(N): N must be 2 or greater")
 
     sgrna = wt_sgrna(target)
     sgrna.name = make_name('sb', N)
+    sgrna.attach(
+            serpentine_insert(
+                'theo',
+                wt_sgrna()['stem'][22:22+N], '3',
+                num_aptamers=A,
+            ),
+            'stem', 8,
+            *sgrna.domain_from_index(
+                sgrna.index_from_domain('stem', 22) + N)
+    )
+    sgrna['decoy'].mutable = True
+    sgrna['decoy'].prepend('UC')
+    sgrna['decoy'].mutable = False
 
-    #target = sgrna['stem'][
-    #sgrna.attach(
-            #insert, 'stem', ???, 'stem', ???,
-    #)
     return sgrna
 
-def circle_bulge():
-    pass
+def circle_bulge(A=1, target='aavs'):
+    """
+    Extend the lower stem hairpin through the bulge when the small molecule is 
+    absent.  This design is based off the fact that "straightening" the bulge 
+    (i.e. mutating both side so they can base pair) completely eliminates Cas9 
+    activity.  Note that this design unconditionally removes the 5' part of the 
+    bulge, which has the sequence 'GA'.  In wildtype sgRNA, this mutation does
+    not have a significant effect.  
+
+    This design is name "circle_bulge" because it uses the "circle" strategy to 
+    sequester the bulge region of the sgRNA.  A schematic of this strategy is 
+    shown below.  The circle is formed when bulge' binds to either bulge'' or 
+    bulge.  The sgRNA is only active when bulge is unpaired, and ligand binding 
+    by the aptamer should encourage this conformation.
+
+       ┌──────────┐ ┌──────┐ ┌────┐ ┌───────┐ ┌─────┐ ┌──────────┐ 
+    5'─┤lower stem├─┤bulge'├─┤theo├─┤bulge''├─┤bulge├─┤lower stem├─3'
+       └──────────┘ └──────┘ └────┘ └───────┘ └─────┘ └──────────┘ 
+        GUUUUA       ACUU     ...    AAGU      AAGU    UAAAAU
+
+    Returns
+    -------
+    sgRNA: Construct
+    """
+    sgrna = wt_sgrna(target)
+    sgrna.name = make_name('sc')
+    sgrna.attach(
+            circle_insert('theo', 'AAGU', '3', num_aptamers=A),
+            'stem', 6,
+            'stem', 24,
+    )
+    return sgrna
 
 
 ## Abbreviations
@@ -1374,6 +1429,8 @@ fn = nx = fold_nexus
 fnx = nxx = fold_nexus_2
 hp = replace_hairpins
 id = induce_dimerization
+sb = serpentine_bulge
+cb = circle_bulge
 
 t7 = t7_promoter
 th = theo = lambda: aptamer('theo')
@@ -1454,6 +1511,12 @@ def test_domain_class():
 
     domain.delete(2, 4)
     assert domain.seq == 'GACA'
+
+    domain.append('UU')
+    assert domain.seq == 'GACAUU'
+
+    domain.prepend('UU')
+    assert domain.seq == 'UUGACAUU'
 
 def test_construct_class():
     import pytest
@@ -1616,10 +1679,11 @@ def test_construct_class():
             (dave['T'], 4),
             (dave['T'], 5),
     ]
-    for index, domain in enumerate(expected_domains):
-        assert dave.domain_from_index(index) == domain
-    for index, domain in enumerate(reversed(expected_domains), 1):
-        assert dave.domain_from_index(-index) == domain
+    for i, domain in enumerate(expected_domains):
+        assert dave.domain_from_index(i) == domain
+        assert dave.index_from_domain(domain[0].name, domain[1]) == i
+    for i, domain in enumerate(reversed(expected_domains), 1):
+        assert dave.domain_from_index(-i) == domain
     with pytest.raises(IndexError):
         dave.domain_from_index(len(dave))
 
@@ -1799,6 +1863,17 @@ def test_induce_dimerization():
     assert from_name('id(3,2)') == 'GGGGCCACTAGGGACAGGATGGCCCUUGGCAGGCAAGUUAAAAUAAGGCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
     assert from_name('id(3,3)') == 'GGGGCCACTAGGGACAGGATGGCCCUUGGCAGAGCAAGUUAAAAUAAGGCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
     assert from_name('id(3,4)') == 'GGGGCCACTAGGGACAGGATGGCCCUUGGCAGUAGCAAGUUAAAAUAAGGCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
+
+def test_serpentine_bulge():
+    import pytest
+
+    with pytest.raises(ValueError): from_name('sb(1)')
+
+    assert from_name('sb(2)').seq == 'GGGGCCACTAGGGACAGGATGUUUUAGAUCGUAUACCAGCCGAAAGGCCCUUGGCAGACGAAAGUUAAAAUAAGGCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
+    assert from_name('sb(8)').seq == 'GGGGCCACTAGGGACAGGATGUUUUAGAUCGUUAAAAUAUACCAGCCGAAAGGCCCUUGGCAGAUUUUAACGAAAGUUAAAAUAAGGCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
+
+def test_circle_bulge():
+    assert from_name('cb').seq == 'GGGGCCACTAGGGACAGGATGUUUUAACUUAUACCAGCCGAAAGGCCCUUGGCAGAAGUAAGUUAAAAUAAGGCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
 
 
 if __name__ == '__main__':
