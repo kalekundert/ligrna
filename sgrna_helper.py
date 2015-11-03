@@ -926,7 +926,6 @@ def circle_insert(ligand, target_seq, target_end, num_aptamers=1):
         raise ValueError('target_seq cannot be empty')
 
     domains = [
-            Domain('target', target_seq),
             Domain('decoy', target_seq),
             aptamer_insert(ligand, num_aptamers=num_aptamers),
             Domain('latch', reverse_complement(target_seq)),
@@ -1572,28 +1571,91 @@ def circle_bulge(A=1, target='aavs'):
     or bulge.  The sgRNA is only active when bulge is unpaired, and ligand 
     binding by the aptamer should encourage this conformation.
 
-       ┌──────────┐ ┌──────┐ ┌────┐ ┌───────┐ ┌─────┐ ┌──────────┐ 
-    5'─┤lower stem├─┤bulge'├─┤theo├─┤bulge''├─┤bulge├─┤lower stem├─3'
-       └──────────┘ └──────┘ └────┘ └───────┘ └─────┘ └──────────┘ 
-        GUUUUA       ACUU     ...    AAGU      AAGU    UAAAAU
+       ┌──────────┐┌──────┐┌────┐┌───────┐┌─────┐┌──────────┐ 
+    5'─┤lower stem├┤bulge'├┤theo├┤bulge''├┤bulge├┤lower stem├─3'
+       └──────────┘└──────┘└────┘└───────┘└─────┘└──────────┘ 
+        GUUUUA      ACUU    ...   AAGU     AAGU   UAAAAU
+
+    Parameters
+    ----------
+    A: int
+        The number of aptamers to insert into the sgRNA.  The aptamers are 
+        inserted within each other, in a manner than should give rise to 
+        positive cooperativity.
+
+    target: str
+        The name of the sequence the sgRNA should target, or None if you just 
+        want the sgRNA without any spacer sequence at all.
 
     Returns
     -------
     sgRNA: Construct
     """
     sgrna = wt_sgrna(target)
-    sgrna.name = make_name('sc')
+    sgrna.name = make_name('cb')
     sgrna.attach(
             circle_insert('theo', 'AAGU', '3', num_aptamers=A),
             'stem', 6,
-            'stem', 24,
+            'stem', 20,
     )
     return sgrna
 
 def circle_lower_stem(A=1, target='aavs'):
-    pass
+    """
+    Sequester the 5' half of the nexus in base pairs with the 5' half of the 
+    lower stem in the absence of aptamer ligand.  This strategy is based on  
+    the fact that the nexus must be natively folded for the sgRNA to function 
+    and that the specific sequence in the lower stem doesn't matter as long as 
+    it's well base paired.
 
-def circle_hairpin(A=1, target='aavs'):
+    This is an application of the "circle" strategy, which is known as "strand 
+    displacement" in the literature.  The 5' half of the lower stem (nexus') 
+    can either base pair with the 3' half of the lower stem (nexus'') or the 5' 
+    half of the nexus.  The former is the active state and the latter is the 
+    inactive state.  When the aptamer binds its ligand, that should encourage 
+    the formation of the active state.  A schematic of the design strategy is 
+    shown below:
+
+       ┌──────┐┌──┐┌────┐┌────┐┌───────┐┌─────┐ 
+    5'─┤nexus'├┤AG├┤theo├┤AAGU├┤nexus''├┤nexus├─3'
+       └──────┘└──┘└────┘└────┘└───────┘└─────┘ 
+        AGCCUU  AG  ...   AAGU  AAGGCU   AAGGCU 
+
+    Note that the length of the nexus' and nexus'' sequences must be six, 
+    because the length of the lower stem cannot change.  Currently, the 
+    sequence is also fixed to match the start of the nexus (AAGGCU), but this 
+    doesn't have to be the case.  Sliding this sequence in the 3' direction 
+    could also yield viable designs.
+
+    Parameters
+    ----------
+    A: int
+        The number of aptamers to insert into the sgRNA.  The aptamers are 
+        inserted within each other, in a manner than should give rise to 
+        positive cooperativity.
+
+    target: str
+        The name of the sequence the sgRNA should target, or None if you just 
+        want the sgRNA without any spacer sequence at all.
+
+    Returns
+    -------
+    sgRNA: Construct
+    """
+    sgrna = wt_sgrna(target)
+    sgrna.name = make_name('cl')
+    sgrna.attach(
+            circle_insert('theo', 'AAGGCU', '3', num_aptamers=A),
+            'stem', 0,
+            'stem', ...,
+    )
+    sgrna['decoy'].mutable = sgrna['latch'].mutable = True
+    sgrna['latch'].append('GA')
+    sgrna['decoy'].prepend('AAGU')
+    sgrna['decoy'].mutable = sgrna['latch'].mutable = False
+    return sgrna
+
+def circle_hairpin(N, A=1, target='aavs'):
     pass
 
 
@@ -1970,11 +2032,11 @@ def test_serpentine_insert():
     assert serpentine_insert('theo', 'GUAC', '3', num_aptamers=2) == 'GUACAUACCAGCCAUACCAGCCGAAAGGCCCUUGGCAGGGCCCUUGGCAGGUACGAAA'
 
 def test_circle_insert():
-    assert circle_insert('theo', 'G', '3') == 'CAUACCAGCCGAAAGGCCCUUGGCAGGG'
-    assert circle_insert('theo', 'G', '5') == 'GGAUACCAGCCGAAAGGCCCUUGGCAGC'
-    assert circle_insert('theo', 'AUGC', '3') == 'GCAUAUACCAGCCGAAAGGCCCUUGGCAGAUGCAUGC'
-    assert circle_insert('theo', 'AUGC', '5') == 'AUGCAUGCAUACCAGCCGAAAGGCCCUUGGCAGGCAU'
-    assert circle_insert('theo', 'AUGC', '3', num_aptamers=2) == 'GCAUAUACCAGCCAUACCAGCCGAAAGGCCCUUGGCAGGGCCCUUGGCAGAUGCAUGC'
+    assert circle_insert('theo', 'G', '3') == 'CAUACCAGCCGAAAGGCCCUUGGCAGG'
+    assert circle_insert('theo', 'G', '5') == 'GAUACCAGCCGAAAGGCCCUUGGCAGC'
+    assert circle_insert('theo', 'AUGC', '3') == 'GCAUAUACCAGCCGAAAGGCCCUUGGCAGAUGC'
+    assert circle_insert('theo', 'AUGC', '5') == 'AUGCAUACCAGCCGAAAGGCCCUUGGCAGGCAU'
+    assert circle_insert('theo', 'AUGC', '3', num_aptamers=2) == 'GCAUAUACCAGCCAUACCAGCCGAAAGGCCCUUGGCAGGGCCCUUGGCAGAUGC'
 
 def test_wt_sgrna():
     assert from_name('wt') == 'GUUUUAGAGCUAGAAAUAGCAAGUUAAAAUAAGGCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
@@ -2084,11 +2146,15 @@ def test_serpentine_hairpin():
     with pytest.raises(ValueError): from_name('sh(3)')
     with pytest.raises(ValueError): from_name('sh(15)')
 
-    assert from_name('sh(4)').seq == 'GGGGCCACTAGGGACAGGATGUUUUAGAGCUAGAAAUAGCAAGUUAAAAUAAGGCUAGUCCGUUAUCAAACGAUACCAGCCGAAAGGCCCUUGGCAGCGUUGGCACCGAGUCGGUGCUUUUUU'
+    assert from_name('sh(4)') == 'GGGGCCACTAGGGACAGGATGUUUUAGAGCUAGAAAUAGCAAGUUAAAAUAAGGCUAGUCCGUUAUCAAACGAUACCAGCCGAAAGGCCCUUGGCAGCGUUGGCACCGAGUCGGUGCUUUUUU'
     assert from_name('sh(14)') == 'GGGGCCACTAGGGACAGGATGUUUUAGAGCUAGAAAUAGCAAGUUAAAAUAAGGCUAGUCCGUUAUCAAACGGACUAGCCUUAUACCAGCCGAAAGGCCCUUGGCAGAAGGCUAGUCCGUUGGCACCGAGUCGGUGCUUUUUU'
 
 def test_circle_bulge():
     assert from_name('cb') == 'GGGGCCACTAGGGACAGGATGUUUUAACUUAUACCAGCCGAAAGGCCCUUGGCAGAAGUAAGUUAAAAUAAGGCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
+
+def test_circle_lower_stem():
+    assert from_name('cl') == 'GGGGCCACTAGGGACAGGATAGCCUUGAAUACCAGCCGAAAGGCCCUUGGCAGAAGUAAGGCUAAGGCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
+
 
 
 
