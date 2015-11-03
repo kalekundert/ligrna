@@ -2,6 +2,7 @@
 
 import nonstdlib
 import collections
+import contextlib
 import random
 
 class Sequence:
@@ -909,7 +910,6 @@ def serpentine_insert(ligand, target_seq, target_end, turn_seq='GAAA',
         raise ValueError('target_seq cannot be empty')
 
     domains = [
-            Domain('target', target_seq),
             Domain('turn', turn_seq),
             Domain('latch', reverse_complement(target_seq)),
             aptamer_insert(ligand, num_aptamers=num_aptamers),
@@ -1228,6 +1228,8 @@ def fold_nexus_2(N, M, splitter_len=0, num_aptamers=1, small_molecule='theo', ta
     )
     return sgrna
 
+def fold_hairpin():
+    pass
 def replace_hairpins(N, small_molecule='theo', target='aavs'):
     """
     Remove a portion of the 3' terminal hairpins and replace it with the 
@@ -1342,12 +1344,12 @@ def serpentine_bulge(N, A=1, target='aavs'):
     bulge to construct a tetraloop that caps the non-productive hairpin.  Below 
     is an ASCII-art schematic of the design, along with an example sequence:
 
-       ┌──────────┐ ┌───────────┐ ┌────┐ ┌────────────┐ ┌─────┐ ┌──────────┐ 
-    5'─┤lower stem├─┤  bulge''  ├─┤theo├─┤   bulge'   ├─┤bulge├─┤lower stem├─3'
-       └──────────┘ └───────────┘ └────┘ └────────────┘ └─────┘ └──────────┘ 
-        GUUUUAga     UCGU(UAAAAU)  ...   (GUUUUA)AC-GA   AA-GU   UAAAAU
-                                                   └───────┘
-                                                   tetraloop
+       ┌──────────┐┌───────────┐┌────┐┌────────────┐┌─────┐┌──────────┐ 
+    5'─┤lower stem├┤  bulge''  ├┤theo├┤   bulge'   ├┤bulge├┤lower stem├─3'
+       └──────────┘└───────────┘└────┘└────────────┘└─────┘└──────────┘ 
+        GUUUUAga    UCGU(UAAAAU) ...  (GUUUUA)AC-GA  AA-GU  UAAAAU
+                                                 └────┘
+                                                tetraloop
 
     The length of the non-productive hairpin can be extended by including bases 
     from the lower stem, as shown in parentheses.  Mutations can be made in the 
@@ -1377,14 +1379,104 @@ def serpentine_bulge(N, A=1, target='aavs'):
                 num_aptamers=A,
             ),
             'stem', 8,
-            *sgrna.domain_from_index(
-                sgrna.index_from_domain('stem', 22) + N)
+            'stem', 22,
     )
     sgrna['decoy'].mutable = True
     sgrna['decoy'].prepend('UC')
     sgrna['decoy'].mutable = False
 
     return sgrna
+
+def serpentine_lower_stem(A=1, target='aavs'):
+    """
+    Sequester the nexus in base pairs with the lower stem in the absence of the 
+    ligand.  This design is based off two ideas:
+    
+    1. That disrupting the nexus will be an effective way to deactivate the 
+       sgRNA, because the nexus seems to be very sensitive to mutation.
+
+    2. That the lower stem can be modified to have some complementarity with 
+       the nexus, because the exact sequence of the lower stem seems to be 
+       important, so long as it does actually form a stem.
+    
+    This design is named "serpentine_lower_stem" because it uses applies the 
+    "serpentine" strategy to the lower stem region of the sgRNA.  A schematic 
+    of this strategy is shown below.  The "serpentine" pattern is formed 
+    because nexus' can base pair either with nexus or nexus''.  Note that the 
+    length of the serpentine pattern is fixed at four base pairs, because the 
+    length of the lower stem must be six base pairs (and two base pairs are 
+    required to form the tetraloop).
+
+       ┌───────┐┌──┐┌────┐┌────┐┌──────┐┌───────┐ 
+    5'─┤nexus''├┤GA├┤theo├┤AAGU├┤nexus'├┤ nexus ├─3'
+       └───────┘└──┘└────┘└────┘└──────┘└───────┘ 
+        UC-GGCU  GA  ...   AAGU  AGCC-GA AA-GGCU
+                                          └────┘
+                                          tetraloop
+    Returns
+    -------
+    sgRNA: Construct
+    """
+    sgrna = wt_sgrna(target)
+    sgrna.name = make_name('sl')
+    sgrna.attach(
+            serpentine_insert(
+                'theo',
+                'GGCU', '3',
+                num_aptamers=A,
+            ),
+            'stem', 0,
+            'nexus', 2,
+    )
+    sgrna['decoy'].mutable = sgrna['latch'].mutable = True
+    sgrna['decoy'].prepend('UC')
+    sgrna['decoy'].append('GA')
+    sgrna['latch'].prepend('AAGU')
+    sgrna['decoy'].mutable = sgrna['latch'].mutable = False
+    return sgrna
+
+def serpentine_lower_stem_around_nexus(A=1, target='aavs'):
+    """
+    Use the lower stem to extend the nexus stem in the absence of the aptamer 
+    ligand.  This design is based of the idea that the sgRNA is very sensitive 
+    to the length of the nexus stem and that the bases in the lower stem can be 
+    freely mutated to complement the region just beyond the nexus stem.  The 
+    extended stem will have a bulge because there is a short AA linker between 
+    the lower stem and the nexus, and the length of the complementary region 
+    will be fixed at 6 base pairs because the lower stem cannot be lengthened 
+    or shortened.  A schematic of this design is shown below:
+
+       ┌────────┐┌──┐┌────┐┌────┐┌───────┐┌──┐┌─────────┐┌──────┐ 
+    5'─┤nx=>hp''├┤GA├┤theo├┤AAGU├┤nx=>hp'├┤AA├┤  nexus  ├┤nx=>hp├─3'
+       └────────┘└──┘└────┘└────┘└───────┘└──┘└─────────┘└──────┘ 
+        GUUAUC    GA  ...   AAGU  GAUAAC   AA  GGCUAGUCC  GUUAUC
+    
+    Returns
+    -------
+    sgRNA: Construct
+    """
+    sgrna = wt_sgrna(target)
+    sgrna.name = make_name('slx')
+    sgrna.attach(
+            serpentine_insert(
+                'theo',
+                'GUUAUC', '3',
+                turn_seq='',
+                num_aptamers=A,
+            ),
+            'stem', ...,
+            'stem', ...,
+    )
+    sgrna['decoy'].mutable = sgrna['latch'].mutable = True
+    sgrna['decoy'].append('GA')
+    sgrna['latch'].prepend('AAGU')
+    sgrna['decoy'].mutable = sgrna['latch'].mutable = False
+    return sgrna
+
+
+
+def serpentine_hairpin():
+    pass
 
 def circle_bulge(A=1, target='aavs'):
     """
@@ -1395,11 +1487,11 @@ def circle_bulge(A=1, target='aavs'):
     bulge, which has the sequence 'GA'.  In wildtype sgRNA, this mutation does
     not have a significant effect.  
 
-    This design is name "circle_bulge" because it uses the "circle" strategy to 
-    sequester the bulge region of the sgRNA.  A schematic of this strategy is 
-    shown below.  The circle is formed when bulge' binds to either bulge'' or 
-    bulge.  The sgRNA is only active when bulge is unpaired, and ligand binding 
-    by the aptamer should encourage this conformation.
+    This design is named "circle_bulge" because it uses the "circle" strategy 
+    to sequester the bulge region of the sgRNA.  A schematic of this strategy 
+    is shown below.  The circle is formed when bulge' binds to either bulge'' 
+    or bulge.  The sgRNA is only active when bulge is unpaired, and ligand 
+    binding by the aptamer should encourage this conformation.
 
        ┌──────────┐ ┌──────┐ ┌────┐ ┌───────┐ ┌─────┐ ┌──────────┐ 
     5'─┤lower stem├─┤bulge'├─┤theo├─┤bulge''├─┤bulge├─┤lower stem├─3'
@@ -1419,22 +1511,51 @@ def circle_bulge(A=1, target='aavs'):
     )
     return sgrna
 
+def circle_lower_stem(A=1, target='aavs'):
+    pass
+
+def circle_hairpin(A=1, target='aavs'):
+    pass
+
 
 ## Abbreviations
 wt = wt_sgrna
 dead = dead_sgrna
 fu = us = fold_upper_stem
 fl = ls = fold_lower_stem
-fn = nx = fold_nexus
-fnx = nxx = fold_nexus_2
+fx = nx = fold_nexus
+fxx = nxx = fold_nexus_2
+fh = fold_hairpin
 hp = replace_hairpins
 id = induce_dimerization
 sb = serpentine_bulge
+sl = serpentine_lower_stem
+slx = serpentine_lower_stem_around_nexus
+sh = serpentine_hairpin
 cb = circle_bulge
+cl = circle_lower_stem
+ch = circle_hairpin
 
 t7 = t7_promoter
 th = theo = lambda: aptamer('theo')
 aavs = lambda: dna_to_cut('aavs')
+
+## sgRNA Fragments
+# Provided to make it easier to assemble test cases.
+#
+# AUACCAGCCGAAAGGCCCUUGGCAG
+#
+# GGGGCCACTAGGGACAGGAT
+# GUUUUA
+# GA
+# GCUAGAAAUAGC
+# AAGU
+# UAAAAU
+# AA
+# GGCUAGUCC
+# GUUAUCA
+# ACUUGAAAAAGU
+# GGCACCGAGUCGGUGCUUUUUU'
 
 
 def test_domain_class():
@@ -1741,7 +1862,7 @@ def test_aptamer():
     with pytest.raises(ValueError): aptamer('unknown ligand')
     with pytest.raises(ValueError): aptamer('theo', 'unknown piece')
 
-    assert aptamer('theo').seq == 'AUACCAGCCGAAAGGCCCUUGGCAG'
+    assert aptamer('theo') == 'AUACCAGCCGAAAGGCCCUUGGCAG'
 
 def test_spacer():
     import pytest
@@ -1762,12 +1883,12 @@ def test_repeat():
     assert repeat('dummy', 7) == 'UUUCCCU'
 
 def test_serpentine_insert():
-    assert serpentine_insert('theo', 'G', '3') == 'GAUACCAGCCGAAAGGCCCUUGGCAGCGAAAG'
-    assert serpentine_insert('theo', 'G', '5') == 'GGAAACAUACCAGCCGAAAGGCCCUUGGCAGG'
-    assert serpentine_insert('theo', 'GUUAAAAU', '3') == 'GUUAAAAUAUACCAGCCGAAAGGCCCUUGGCAGAUUUUAACGAAAGUUAAAAU'
-    assert serpentine_insert('theo', 'GUUAAAAU', '5') == 'GUUAAAAUGAAAAUUUUAACAUACCAGCCGAAAGGCCCUUGGCAGGUUAAAAU'
-    assert serpentine_insert('theo', 'GUAC', '3', turn_seq='UAA') == 'GUACAUACCAGCCGAAAGGCCCUUGGCAGGUACUAAGUAC'
-    assert serpentine_insert('theo', 'GUAC', '3', num_aptamers=2) == 'GUACAUACCAGCCAUACCAGCCGAAAGGCCCUUGGCAGGGCCCUUGGCAGGUACGAAAGUAC'
+    assert serpentine_insert('theo', 'G', '3') == 'GAUACCAGCCGAAAGGCCCUUGGCAGCGAAA'
+    assert serpentine_insert('theo', 'G', '5') == 'GAAACAUACCAGCCGAAAGGCCCUUGGCAGG'
+    assert serpentine_insert('theo', 'GUUAAAAU', '3') == 'GUUAAAAUAUACCAGCCGAAAGGCCCUUGGCAGAUUUUAACGAAA'
+    assert serpentine_insert('theo', 'GUUAAAAU', '5') == 'GAAAAUUUUAACAUACCAGCCGAAAGGCCCUUGGCAGGUUAAAAU'
+    assert serpentine_insert('theo', 'GUAC', '3', turn_seq='UAA') == 'GUACAUACCAGCCGAAAGGCCCUUGGCAGGUACUAA'
+    assert serpentine_insert('theo', 'GUAC', '3', num_aptamers=2) == 'GUACAUACCAGCCAUACCAGCCGAAAGGCCCUUGGCAGGGCCCUUGGCAGGUACGAAA'
 
 def test_circle_insert():
     assert circle_insert('theo', 'G', '3') == 'CAUACCAGCCGAAAGGCCCUUGGCAGGG'
@@ -1781,7 +1902,7 @@ def test_wt_sgrna():
     assert from_name('wt(aavs)') == 'GGGGCCACTAGGGACAGGATGUUUUAGAGCUAGAAAUAGCAAGUUAAAAUAAGGCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
 
 def test_dead_sgrna():
-    assert from_name('dead').seq == 'GUUUUAGAGCUAGAAAUAGCAAGUUAAAAUAACCCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
+    assert from_name('dead') == 'GUUUUAGAGCUAGAAAUAGCAAGUUAAAAUAACCCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
 
 def test_fold_upper_stem():
     import pytest
@@ -1869,11 +1990,22 @@ def test_serpentine_bulge():
 
     with pytest.raises(ValueError): from_name('sb(1)')
 
-    assert from_name('sb(2)').seq == 'GGGGCCACTAGGGACAGGATGUUUUAGAUCGUAUACCAGCCGAAAGGCCCUUGGCAGACGAAAGUUAAAAUAAGGCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
-    assert from_name('sb(8)').seq == 'GGGGCCACTAGGGACAGGATGUUUUAGAUCGUUAAAAUAUACCAGCCGAAAGGCCCUUGGCAGAUUUUAACGAAAGUUAAAAUAAGGCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
+    assert from_name('sb(2)') == 'GGGGCCACTAGGGACAGGATGUUUUAGAUCGUAUACCAGCCGAAAGGCCCUUGGCAGACGAAAGUUAAAAUAAGGCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
+    assert from_name('sb(8)') == 'GGGGCCACTAGGGACAGGATGUUUUAGAUCGUUAAAAUAUACCAGCCGAAAGGCCCUUGGCAGAUUUUAACGAAAGUUAAAAUAAGGCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
+
+def test_serpentine_lower_stem():
+    assert from_name('sl') == 'GGGGCCACTAGGGACAGGATUCGGCUGAAUACCAGCCGAAAGGCCCUUGGCAGAAGUAGCCGAAAGGCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
+
+def test_serpentine_lower_stem_around_nexus():
+    assert from_name('slx') == 'GGGGCCACTAGGGACAGGATGUUAUCGAAUACCAGCCGAAAGGCCCUUGGCAGAAGUGAUAACAAGGCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
+
+def test_serpentine_hairpin():
+    #assert from_name('sh') == 'GGGGCCACTAGGGACAGGATGUUAUCGAAUACCAGCCGAAAGGCCCUUGGCAGAAGUGAUAACAAGGCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
+    pass
 
 def test_circle_bulge():
-    assert from_name('cb').seq == 'GGGGCCACTAGGGACAGGATGUUUUAACUUAUACCAGCCGAAAGGCCCUUGGCAGAAGUAAGUUAAAAUAAGGCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
+    assert from_name('cb') == 'GGGGCCACTAGGGACAGGATGUUUUAACUUAUACCAGCCGAAAGGCCCUUGGCAGAAGUAAGUUAAAAUAAGGCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
+
 
 
 if __name__ == '__main__':
