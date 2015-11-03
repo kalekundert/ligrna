@@ -1363,6 +1363,15 @@ def serpentine_bulge(N, A=1, target='aavs'):
         shorter than 2 base pairs.  The first two bases in the hairpin come 
         from the bulge, and subsequent bases come from the lower stem.
 
+    A: int
+        The number of aptamers to insert into the sgRNA.  The aptamers are 
+        inserted within each other, in a manner than should give rise to 
+        positive cooperativity.
+
+    target: str
+        The name of the sequence the sgRNA should target, or None if you just 
+        want the sgRNA without any spacer sequence at all.
+
     Returns
     -------
     sgRNA: Construct
@@ -1413,6 +1422,17 @@ def serpentine_lower_stem(A=1, target='aavs'):
         UC-GGCU  GA  ...   AAGU  AGCC-GA AA-GGCU
                                           └────┘
                                           tetraloop
+    Parameters
+    ----------
+    A: int
+        The number of aptamers to insert into the sgRNA.  The aptamers are 
+        inserted within each other, in a manner than should give rise to 
+        positive cooperativity.
+
+    target: str
+        The name of the sequence the sgRNA should target, or None if you just 
+        want the sgRNA without any spacer sequence at all.
+
     Returns
     -------
     sgRNA: Construct
@@ -1447,10 +1467,21 @@ def serpentine_lower_stem_around_nexus(A=1, target='aavs'):
     or shortened.  A schematic of this design is shown below:
 
        ┌────────┐┌──┐┌────┐┌────┐┌───────┐┌──┐┌─────────┐┌──────┐ 
-    5'─┤nx=>hp''├┤GA├┤theo├┤AAGU├┤nx=>hp'├┤AA├┤  nexus  ├┤nx=>hp├─3'
+    5'─┤extend''├┤GA├┤theo├┤AAGU├┤extend'├┤AA├┤  nexus  ├┤extend├─3'
        └────────┘└──┘└────┘└────┘└───────┘└──┘└─────────┘└──────┘ 
         GUUAUC    GA  ...   AAGU  GAUAAC   AA  GGCUAGUCC  GUUAUC
     
+    Parameters
+    ----------
+    A: int
+        The number of aptamers to insert into the sgRNA.  The aptamers are 
+        inserted within each other, in a manner than should give rise to 
+        positive cooperativity.
+
+    target: str
+        The name of the sequence the sgRNA should target, or None if you just 
+        want the sgRNA without any spacer sequence at all.
+
     Returns
     -------
     sgRNA: Construct
@@ -1473,10 +1504,58 @@ def serpentine_lower_stem_around_nexus(A=1, target='aavs'):
     sgrna['decoy'].mutable = sgrna['latch'].mutable = False
     return sgrna
 
+def serpentine_hairpin(N, A=1, target='aavs'):
+    """
+    Sequester the 3' end of the nexus in base pairs with the 5' strand of the 
+    first hairpin in the absence of aptamer ligand.  This design is based on 
+    the fact that proper nexus folding is required for sgRNA function and the 
+    assumption that the sequence of the first hairpin can be changed if its 
+    base pairing is maintained.  Briner et al. didn't actually test any point
+    mutations in the first hairpin, but they did find that the whole hairpin 
+    can be deleted so long as a two residue spacer is added to maintain the 
+    positioning of the second hairpin.
 
+       ┌────────────┐┌────┐┌───────┐┌────┐┌───────┐ 
+    5'─┤   nexus    ├┤AUCA├┤nexus' ├┤theo├┤nexus''├─3'
+       └────────────┘└────┘└───────┘└────┘└───────┘ 
+        GGCUAGUCCGUU  AUCA  AACG...  ...   ...CGUU
+    
+    Parameters
+    ----------
+    N : int
+        The length of the complementary region to insert, and also the length 
+        of the first hairpin.  The hairpin is naturally 4 base pairs long, but 
+        it's solvent exposed so in theory you can make it as long as you want.
 
-def serpentine_hairpin():
-    pass
+    A: int
+        The number of aptamers to insert into the sgRNA.  The aptamers are 
+        inserted within each other, in a manner than should give rise to 
+        positive cooperativity.
+
+    target: str
+        The name of the sequence the sgRNA should target, or None if you just 
+        want the sgRNA without any spacer sequence at all.
+
+    Returns
+    -------
+    sgRNA: Construct
+    """
+    if not 4 <= N <= 14:
+        raise ValueError("sh(N): N must be between 4 and 14")
+
+    sgrna = wt_sgrna(target)
+    sgrna.name = make_name('sh')
+    sgrna.attach(
+            serpentine_insert(
+                'theo',
+                wt_sgrna().seq[44-N:44], '5',
+                turn_seq='AUCA', # ANYA
+                num_aptamers=A,
+            ),
+            'hairpins', 1,
+            'hairpins', 17,
+    )
+    return sgrna
 
 def circle_bulge(A=1, target='aavs'):
     """
@@ -2000,8 +2079,13 @@ def test_serpentine_lower_stem_around_nexus():
     assert from_name('slx') == 'GGGGCCACTAGGGACAGGATGUUAUCGAAUACCAGCCGAAAGGCCCUUGGCAGAAGUGAUAACAAGGCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
 
 def test_serpentine_hairpin():
-    #assert from_name('sh') == 'GGGGCCACTAGGGACAGGATGUUAUCGAAUACCAGCCGAAAGGCCCUUGGCAGAAGUGAUAACAAGGCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
-    pass
+    import pytest
+
+    with pytest.raises(ValueError): from_name('sh(3)')
+    with pytest.raises(ValueError): from_name('sh(15)')
+
+    assert from_name('sh(4)').seq == 'GGGGCCACTAGGGACAGGATGUUUUAGAGCUAGAAAUAGCAAGUUAAAAUAAGGCUAGUCCGUUAUCAAACGAUACCAGCCGAAAGGCCCUUGGCAGCGUUGGCACCGAGUCGGUGCUUUUUU'
+    assert from_name('sh(14)') == 'GGGGCCACTAGGGACAGGATGUUUUAGAGCUAGAAAUAGCAAGUUAAAAUAAGGCUAGUCCGUUAUCAAACGGACUAGCCUUAUACCAGCCGAAAGGCCCUUGGCAGAAGGCUAGUCCGUUGGCACCGAGUCGGUGCUUUUUU'
 
 def test_circle_bulge():
     assert from_name('cb') == 'GGGGCCACTAGGGACAGGATGUUUUAACUUAUACCAGCCGAAAGGCCCUUGGCAGAAGUAAGUUAAAAUAAGGCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
