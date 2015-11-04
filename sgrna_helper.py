@@ -1229,13 +1229,20 @@ def fold_nexus_2(N, M, splitter_len=0, num_aptamers=1, small_molecule='theo', ta
 
 def fold_hairpin(H, N, A=1, ligand='theo', target='aavs'):
     """
-    Replace the first hairpin with the aptamer.  Briner et al. showed that the 
+    Replace either of the hairpins with the aptamer.  Briner et al. showed that the 
     sgRNA is at least somewhat sensitive to the distance between the nexus and 
     the hairpins, so unfolding the first hairpin may be a successful way to 
-    create a sensor.  Briner et al. didn't try changing the sequence of the 
-    hairpins, so I'm just assuming that the sequence can be changed as long as 
-    the base pairing is maintained.  However, the first hairpin is definitely 
-    solvent exposed, so it should at least be able to sterically accommodate 
+    create a sensor.  They also showed that the sgRNA is very sensitive to the 
+    removal of both hairpins, but not so much to the removal of just the first.  
+    They didn't try removing just the second, but it's not unreasonable to 
+    think that that might be a viable way to control the sgRNA.  
+
+    Briner et al. also didn't try changing the sequence of either  hairpins, so 
+    I'm just assuming that they can be freely changed as long as the base 
+    pairing is maintained.  In the crystal structure, the first hairpin is not 
+    interacting with Cas9 at all and the second hairpin is unresolved, so I 
+    think this assumption is reasonable.  It's also worth noting that the first 
+    hairpin is solvent exposed, so it should be able to sterically accommodate 
     the aptamer.
 
     Parameters
@@ -1475,8 +1482,8 @@ def serpentine_lower_stem(A=1, target='aavs'):
     5'─┤nexus''├┤GA├┤theo├┤AAGU├┤nexus'├┤ nexus ├─3'
        └───────┘└──┘└────┘└────┘└──────┘└───────┘ 
         UC-GGCU  GA  ...   AAGU  AGCC-GA AA-GGCU
-                                          └────┘
-                                          tetraloop
+                                      └───┘
+                                    tetraloop
     Parameters
     ----------
     A: int
@@ -1570,10 +1577,10 @@ def serpentine_hairpin(N, A=1, target='aavs'):
     can be deleted so long as a two residue spacer is added to maintain the 
     positioning of the second hairpin.
 
-       ┌────────────┐┌────┐┌───────┐┌────┐┌───────┐ 
-    5'─┤   nexus    ├┤AUCA├┤nexus' ├┤theo├┤nexus''├─3'
-       └────────────┘└────┘└───────┘└────┘└───────┘ 
-        GGCUAGUCCGUU  AUCA  AACG...  ...   ...CGUU
+       ┌────────────┐┌────┐┌──────┐┌────┐┌───────┐ 
+    5'─┤   nexus    ├┤turn├┤nexus'├┤theo├┤nexus''├─3'
+       └────────────┘└────┘└──────┘└────┘└───────┘ 
+        GGCUAGUCCGUU  AUCA  AACG... ...   ...CGUU
     
     Parameters
     ----------
