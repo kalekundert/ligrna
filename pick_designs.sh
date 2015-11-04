@@ -9,14 +9,14 @@ else
 fi
 
 if [ "$round" -eq 1 ]; then
-    ./show_seqs.py $@       \
+    ./show_seqs.py "$@"     \
         us/0/0              \
         us/0/1              \
         us/0/2              \
         us/0/3              \
 
 elif [ "$round" = 2 ]; then
-    ./show_seqs.py $@       \
+    ./show_seqs.py "$@"     \
         us/1/0              \
         us/1/1              \
         us/1/2              \
@@ -43,7 +43,7 @@ elif [ "$round" = 2 ]; then
         hp/33               \
 
 elif [ "$round" = 3 ]; then
-    ./show_seqs.py $@       \
+    ./show_seqs.py "$@"     \
         id/5/0              \
         id/3/0              \
         id/5/1              \
@@ -74,13 +74,13 @@ elif [ "$round" = 3 ]; then
         nxx/2/4/0/2         \
 
 elif [ "$round" = 4 ]; then
-    ./show_seqs.py $@       \
+    ./show_seqs.py "$@"     \
         us/0/0/0/2          \
         us/0/0/0/3          \
 
 elif [ "$round" = 5 ]; then
     # Estimated price: $1157
-    ./show_seqs.py $@       \
+    ./show_seqs.py "$@"     \
         fh/1/0              \
         fh/2/0              \
         sb/2                \
