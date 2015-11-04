@@ -78,6 +78,24 @@ elif [ "$round" = 4 ]; then
         us/0/0/0/2          \
         us/0/0/0/3          \
 
+elif [ "$round" = 5 ]; then
+    # Estimated price: $1157
+    ./show_seqs.py $@       \
+        fh/1/0              \
+        fh/2/0              \
+        sb/2                \
+        sb/4                \
+        sb/6                \
+        sb/8                \
+        sl                  \
+        slx                 \
+        sh/5                \
+        sh/7                \
+        cb                  \
+        cl                  \
+        ch/4                \
+
+
 else
     echo "Error: round '$round' not yet defined."
 fi
