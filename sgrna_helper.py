@@ -1227,7 +1227,7 @@ def fold_nexus_2(N, M, splitter_len=0, num_aptamers=1, small_molecule='theo', ta
     )
     return sgrna
 
-def fold_hairpin(N, A=1, ligand='theo', target='aavs'):
+def fold_hairpin(H, N, A=1, ligand='theo', target='aavs'):
     """
     Replace the first hairpin with the aptamer.  Briner et al. showed that the 
     sgRNA is at least somewhat sensitive to the distance between the nexus and 
@@ -1240,10 +1240,17 @@ def fold_hairpin(N, A=1, ligand='theo', target='aavs'):
 
     Parameters
     ----------
+    H: int
+        Which hairpin to replace.  Must be either 1 or 2.  Replacing the second 
+        hairpin may not be a good idea, because it think it's part of the T7 
+        terminator, but I can still test it in vitro.  Worst case is that it 
+        won't work as expected in vivo.
+
     N: int
-        Indicate how many of the 4 wildtpye base pairs should be preserved.  
-        This parameters must be between 0 and 4.  The aptamer will be inserted 
-        between the two ends of the stem.
+        Indicate how many of the wildtype base pairs should be preserved.  
+        This parameters must be between 0 and the number of wildtype base 
+        pairs, which is 4 for the first hairpin and 6 for the second.  The 
+        aptamer will be inserted between the two ends of the stem.
 
     A: int
         The number of aptamers to insert into the sgRNA.  The aptamers are 
@@ -1262,15 +1269,19 @@ def fold_hairpin(N, A=1, ligand='theo', target='aavs'):
     -------
     sgRNA: Construct
     """
-    if not 0 <= N <= 4:
-        raise ValueError("fh(N): N must be between 0 and 4")
+    if H not in (1, 2):
+        raise ValueError("fh(H,N): H must be either 1 or 2")
+
+    max_N = (4 if H == 1 else 6)
+    if not 0 <= N <= max_N:
+        raise ValueError("fh(H,N): N must be between 0 and {}".format(max_N))
 
     sgrna = wt_sgrna(target)
-    sgrna.name = make_name('fh', N)
+    sgrna.name = make_name('fh', H, N)
     sgrna.attach(
             aptamer_insert(ligand, num_aptamers=A),
-            'hairpins',  5 + N,
-            'hairpins', 17 - N,
+            'hairpins',  5 + N if H == 1 else 18 + N,
+            'hairpins', 17 - N if H == 1 else 33 - N,
     )
     return sgrna
 
@@ -2201,13 +2212,15 @@ def test_fold_nexus_2():
 def test_fold_hairpin():
     import pytest
 
-    with pytest.raises(ValueError): from_name('fh(5)')
+    with pytest.raises(ValueError): from_name('fh(0,0)')
+    with pytest.raises(ValueError): from_name('fh(3,0)')
+    with pytest.raises(ValueError): from_name('fh(1,5)')
+    with pytest.raises(ValueError): from_name('fh(2,7)')
 
-    assert from_name('fh(0)') == 'GGGGCCACTAGGGACAGGATGUUUUAGAGCUAGAAAUAGCAAGUUAAAAUAAGGCUAGUCCGUUAUCAAUACCAGCCGAAAGGCCCUUGGCAGGGCACCGAGUCGGUGCUUUUUU'
-    assert from_name('fh(1)') == 'GGGGCCACTAGGGACAGGATGUUUUAGAGCUAGAAAUAGCAAGUUAAAAUAAGGCUAGUCCGUUAUCAAAUACCAGCCGAAAGGCCCUUGGCAGUGGCACCGAGUCGGUGCUUUUUU'
-    assert from_name('fh(2)') == 'GGGGCCACTAGGGACAGGATGUUUUAGAGCUAGAAAUAGCAAGUUAAAAUAAGGCUAGUCCGUUAUCAACAUACCAGCCGAAAGGCCCUUGGCAGGUGGCACCGAGUCGGUGCUUUUUU'
-    assert from_name('fh(3)') == 'GGGGCCACTAGGGACAGGATGUUUUAGAGCUAGAAAUAGCAAGUUAAAAUAAGGCUAGUCCGUUAUCAACUAUACCAGCCGAAAGGCCCUUGGCAGAGUGGCACCGAGUCGGUGCUUUUUU'
-    assert from_name('fh(4)') == 'GGGGCCACTAGGGACAGGATGUUUUAGAGCUAGAAAUAGCAAGUUAAAAUAAGGCUAGUCCGUUAUCAACUUAUACCAGCCGAAAGGCCCUUGGCAGAAGUGGCACCGAGUCGGUGCUUUUUU'
+    assert from_name('fh(1,0)') == 'GGGGCCACTAGGGACAGGATGUUUUAGAGCUAGAAAUAGCAAGUUAAAAUAAGGCUAGUCCGUUAUCAAUACCAGCCGAAAGGCCCUUGGCAGGGCACCGAGUCGGUGCUUUUUU'
+    assert from_name('fh(1,4)') == 'GGGGCCACTAGGGACAGGATGUUUUAGAGCUAGAAAUAGCAAGUUAAAAUAAGGCUAGUCCGUUAUCAACUUAUACCAGCCGAAAGGCCCUUGGCAGAAGUGGCACCGAGUCGGUGCUUUUUU'
+    assert from_name('fh(2,0)') == 'GGGGCCACTAGGGACAGGATGUUUUAGAGCUAGAAAUAGCAAGUUAAAAUAAGGCUAGUCCGUUAUCAACUUGAAAAAGUGAUACCAGCCGAAAGGCCCUUGGCAGUUUUUU'
+    assert from_name('fh(2,6)') == 'GGGGCCACTAGGGACAGGATGUUUUAGAGCUAGAAAUAGCAAGUUAAAAUAAGGCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAUACCAGCCGAAAGGCCCUUGGCAGCGGUGCUUUUUU'
 
 def test_replace_hairpins():
     assert from_name('hp(0)') == 'GGGGCCACTAGGGACAGGATGUUUUAGAGCUAGAAAUAGCAAGUUAAAAUAAGGCUAGUCCGUAUACCAGCCGAAAGGCCCUUGGCAGUUUUUU'

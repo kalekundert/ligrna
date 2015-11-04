@@ -119,7 +119,7 @@ longest_name = max([8] + [len(x.name) for x in designs])
 header_template = '{{0:{}s}}'.format(longest_name)
 
 for design in designs:
-    if args['--t7'] or args['--batch']:
+    if args['--t7']:
         design.prepend(sgrna_helper.t7_promoter())
 
     if args['--pretty']:
