@@ -1227,8 +1227,53 @@ def fold_nexus_2(N, M, splitter_len=0, num_aptamers=1, small_molecule='theo', ta
     )
     return sgrna
 
-def fold_hairpin():
-    pass
+def fold_hairpin(N, A=1, ligand='theo', target='aavs'):
+    """
+    Replace the first hairpin with the aptamer.  Briner et al. showed that the 
+    sgRNA is at least somewhat sensitive to the distance between the nexus and 
+    the hairpins, so unfolding the first hairpin may be a successful way to 
+    create a sensor.  Briner et al. didn't try changing the sequence of the 
+    hairpins, so I'm just assuming that the sequence can be changed as long as 
+    the base pairing is maintained.  However, the first hairpin is definitely 
+    solvent exposed, so it should at least be able to sterically accommodate 
+    the aptamer.
+
+    Parameters
+    ----------
+    N: int
+        Indicate how many of the 4 wildtpye base pairs should be preserved.  
+        This parameters must be between 0 and 4.  The aptamer will be inserted 
+        between the two ends of the stem.
+
+    A: int
+        The number of aptamers to insert into the sgRNA.  The aptamers are 
+        inserted within each other, in a manner than should give rise to 
+        positive cooperativity.
+
+    ligand: str
+        Which aptamer to insert into the sgRNA.  Must be one of the strings 
+        accepted by the aptamer() function.
+
+    target: str
+        The name of the sequence the sgRNA should target, or None if you just 
+        want the sgRNA without any spacer sequence at all.
+
+    Returns
+    -------
+    sgRNA: Construct
+    """
+    if not 0 <= N <= 4:
+        raise ValueError("fh(N): N must be between 0 and 4")
+
+    sgrna = wt_sgrna(target)
+    sgrna.name = make_name('fh', N)
+    sgrna.attach(
+            aptamer_insert(ligand, num_aptamers=A),
+            'hairpins',  5 + N,
+            'hairpins', 17 - N,
+    )
+    return sgrna
+
 def replace_hairpins(N, small_molecule='theo', target='aavs'):
     """
     Remove a portion of the 3' terminal hairpins and replace it with the 
@@ -2152,6 +2197,17 @@ def test_fold_nexus_2():
     assert from_name('nxx(4,5,0,2)') == 'GGGGCCACTAGGGACAGGATGUUUUAGAGCUAGAAAUAGCAAGUUAAAAUAAGGCUAUACCAGCCAUACCAGCCGAAAGGCCCUUGGCAGGGCCCUUGGCAGAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
     assert from_name('nxx(4,5,0,3)') == 'GGGGCCACTAGGGACAGGATGUUUUAGAGCUAGAAAUAGCAAGUUAAAAUAAGGCUAUACCAGCCAUACCAGCCAUACCAGCCGAAAGGCCCUUGGCAGGGCCCUUGGCAGGGCCCUUGGCAGAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
     assert from_name('nxx(4,5,10,2)') == 'GGGGCCACTAGGGACAGGATGUUUUAGAGCUAGAAAUAGCAAGUUAAAAUAAGGCUAUACCAGCCAUACCAGCCUUUCCCUUUCGGCCCUUGGCAGGGCCCUUGGCAGAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
+
+def test_fold_hairpin():
+    import pytest
+
+    with pytest.raises(ValueError): from_name('fh(5)')
+
+    assert from_name('fh(0)') == 'GGGGCCACTAGGGACAGGATGUUUUAGAGCUAGAAAUAGCAAGUUAAAAUAAGGCUAGUCCGUUAUCAAUACCAGCCGAAAGGCCCUUGGCAGGGCACCGAGUCGGUGCUUUUUU'
+    assert from_name('fh(1)') == 'GGGGCCACTAGGGACAGGATGUUUUAGAGCUAGAAAUAGCAAGUUAAAAUAAGGCUAGUCCGUUAUCAAAUACCAGCCGAAAGGCCCUUGGCAGUGGCACCGAGUCGGUGCUUUUUU'
+    assert from_name('fh(2)') == 'GGGGCCACTAGGGACAGGATGUUUUAGAGCUAGAAAUAGCAAGUUAAAAUAAGGCUAGUCCGUUAUCAACAUACCAGCCGAAAGGCCCUUGGCAGGUGGCACCGAGUCGGUGCUUUUUU'
+    assert from_name('fh(3)') == 'GGGGCCACTAGGGACAGGATGUUUUAGAGCUAGAAAUAGCAAGUUAAAAUAAGGCUAGUCCGUUAUCAACUAUACCAGCCGAAAGGCCCUUGGCAGAGUGGCACCGAGUCGGUGCUUUUUU'
+    assert from_name('fh(4)') == 'GGGGCCACTAGGGACAGGATGUUUUAGAGCUAGAAAUAGCAAGUUAAAAUAAGGCUAGUCCGUUAUCAACUUAUACCAGCCGAAAGGCCCUUGGCAGAAGUGGCACCGAGUCGGUGCUUUUUU'
 
 def test_replace_hairpins():
     assert from_name('hp(0)') == 'GGGGCCACTAGGGACAGGATGUUUUAGAGCUAGAAAUAGCAAGUUAAAAUAAGGCUAGUCCGUAUACCAGCCGAAAGGCCCUUGGCAGUUUUUU'
