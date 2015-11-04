@@ -1656,7 +1656,61 @@ def circle_lower_stem(A=1, target='aavs'):
     return sgrna
 
 def circle_hairpin(N, A=1, target='aavs'):
-    pass
+    """
+    Move the nexus closer to the hairpins in the absence of the aptamer's 
+    ligand.  This design is supported by the fact that inserting one residue 
+    into the region between the nexus and the hairpins substantially reduces 
+    sgRNA function.  Briner et al. didn't try to remove residues from this 
+    region, but it seems reasonable to expect that doing so would also be 
+    quite deleterious.
+    
+    This is an application of the "circle" strategy, which is known as "strand 
+    displacement" in the literature.  The 5' half of the first hairpin (ruler') 
+    can either base pair with the 3' half of the same hairpin (ruler'') or the 
+    region between the nexus and the hairpin (ruler).  The former is the 
+    active state and the latter is the inactive state.  When the aptamer binds 
+    its ligand, that should encourage the formation of the active state.  A 
+    schematic of the design strategy is shown below:
+
+       ┌──────┐┌───────┐┌────┐┌──────┐ 
+    5'─┤ruler ├┤ruler''├┤theo├┤ruler'├─3'
+       └──────┘└───────┘└────┘└──────┘ 
+        ..AUCA  ..AUCA   ...   UGAU..  
+
+    Parameters
+    ----------
+    N : int
+        The length of the complementary region to insert, and also the length 
+        of the first hairpin.  The hairpin is naturally 4 base pairs long, but 
+        it's solvent exposed so in theory you can make it as long as you want.
+
+    A: int
+        The number of aptamers to insert into the sgRNA.  The aptamers are 
+        inserted within each other, in a manner than should give rise to 
+        positive cooperativity.
+
+    target: str
+        The name of the sequence the sgRNA should target, or None if you just 
+        want the sgRNA without any spacer sequence at all.
+
+    Returns
+    -------
+    sgRNA: Construct
+    """
+    if not 4 <= N <= 18:
+        raise ValueError("sh(N): N must be between 4 and 18")
+
+    sgrna = wt_sgrna(target)
+    sgrna.name = make_name('ch')
+    sgrna.attach(
+            circle_insert(
+                'theo',
+                wt_sgrna().seq[48-N:48], '5',
+                num_aptamers=A),
+            'hairpins', 5,
+            'hairpins', 17,
+    )
+    return sgrna
 
 
 ## Abbreviations
@@ -2155,7 +2209,14 @@ def test_circle_bulge():
 def test_circle_lower_stem():
     assert from_name('cl') == 'GGGGCCACTAGGGACAGGATAGCCUUGAAUACCAGCCGAAAGGCCCUUGGCAGAAGUAAGGCUAAGGCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
 
+def test_circle_hairpin():
+    import pytest
 
+    with pytest.raises(ValueError): from_name('sh(3)')
+    with pytest.raises(ValueError): from_name('sh(19)')
+
+    assert from_name('ch(4)') == 'GGGGCCACTAGGGACAGGATGUUUUAGAGCUAGAAAUAGCAAGUUAAAAUAAGGCUAGUCCGUUAUCAAUCAAUACCAGCCGAAAGGCCCUUGGCAGUGAUGGCACCGAGUCGGUGCUUUUUU'
+    assert from_name('ch(18)') == 'GGGGCCACTAGGGACAGGATGUUUUAGAGCUAGAAAUAGCAAGUUAAAAUAAGGCUAGUCCGUUAUCAAAGGCUAGUCCGUUAUCAAUACCAGCCGAAAGGCCCUUGGCAGUGAUAACGGACUAGCCUUGGCACCGAGUCGGUGCUUUUUU'
 
 
 if __name__ == '__main__':
