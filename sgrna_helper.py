@@ -1588,7 +1588,7 @@ def serpentine_hairpin(N, A=1, target='aavs'):
         raise ValueError("sh(N): N must be between 4 and 14")
 
     sgrna = wt_sgrna(target)
-    sgrna.name = make_name('sh')
+    sgrna.name = make_name('sh', N)
     sgrna.attach(
             serpentine_insert(
                 'theo',
@@ -1746,7 +1746,7 @@ def circle_hairpin(N, A=1, target='aavs'):
         raise ValueError("sh(N): N must be between 4 and 18")
 
     sgrna = wt_sgrna(target)
-    sgrna.name = make_name('ch')
+    sgrna.name = make_name('ch', N)
     sgrna.attach(
             circle_insert(
                 'theo',
