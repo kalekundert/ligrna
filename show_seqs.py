@@ -30,6 +30,10 @@ Arguments:
         hp_18       The hairpin replacement design with parameters N=18.
 
 Options:
+    -v, --verbose
+        Print out a description of the design goals behind each design, along 
+        with their sequences.
+
     -d, --dna
         Show the DNA sequence for the specified design instead of the RNA 
         sequence.
@@ -118,7 +122,34 @@ if args['--subset']:
 longest_name = max([8] + [len(x.name) for x in designs])
 header_template = '{{0:{}s}}'.format(longest_name)
 
+def rnafold(design, constraints=False):
+    from subprocess import Popen, PIPE; import shlex
+    design.show(labels=False, rna=True, color=args['--color'])
+    if constraints:
+        cmd = 'RNAfold --noPS --MEA -C'
+        stdin = design.rna + '\n' + design.constraints 
+        print(design.constraints, '(constraints)')
+    else:
+        cmd = 'RNAfold --noPS --MEA'
+        stdin = design.rna
+    process = Popen(shlex.split(cmd), stdin=PIPE, stdout=PIPE, stderr=PIPE)
+    stdout, stderr = process.communicate(stdin.encode())
+    print('\n'.join(
+        x for x in stdout.decode().split('\n')[1:]
+        if not x.startswith('WARNING')).strip())
+
 for design in designs:
+    if args['--verbose']:
+        from textwrap import dedent
+        header = "Description of {}".format(design.name)
+        no_doc_message = "No description available for this design."
+        print()
+        print(header)
+        print('=' * len(header))
+        print(dedent(design.doc or no_doc_message).strip())
+        print()
+        print("Sequence")
+        print("--------")
     if args['--t7']:
         design.prepend(sgrna_helper.t7_promoter())
 
@@ -129,18 +160,10 @@ for design in designs:
         print(header_template.format(design.underscore_name), end='\t')
         design.show(labels=False, **format_args)
     elif args['--rnafold']:
-        from subprocess import Popen, PIPE; import shlex
-        design.show(labels=False, rna=True, color=args['--color'])
+        rnafold(design)
         if args['--constraints']:
-            cmd = 'RNAfold --noPS --MEA -C'
-            stdin = design.rna + '\n' + design.constraints 
-            print(design.constraints, '(constraints)')
-        else:
-            cmd = 'RNAfold --noPS --MEA'
-            stdin = design.rna
-        process = Popen(shlex.split(cmd), stdin=PIPE, stdout=PIPE)
-        stdout, stderr = process.communicate(stdin.encode())
-        print('\n'.join(stdout.decode().split('\n')[1:]).strip())
+            print()
+            rnafold(design, True)
     else:
         design.show(labels=False, **format_args)
 

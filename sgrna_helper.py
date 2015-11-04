@@ -15,6 +15,7 @@ class Sequence:
 
     def __init__(self, name):
         self.name = name
+        self.doc = ""
 
     def __eq__(self, sequence):
         """
@@ -652,6 +653,7 @@ def from_name(name, **kwargs):
 
     construct = Construct()
     names = []
+    docs = []
 
     for factory, args in parse_name(name):
         if factory not in globals():
@@ -662,9 +664,11 @@ def from_name(name, **kwargs):
         known_kwargs = {k:v for k,v in kwargs.items() if k in argspec.args}
         fragment = factory(*args, **known_kwargs)
         names.append(fragment.name)
+        docs.append(factory.__doc__)
         construct += fragment
 
     construct.name = '+'.join(x for x in names if x)
+    construct.doc = ''.join(docs)
     return construct
 
 def parse_name(name):
@@ -765,7 +769,7 @@ def spacer(name='aavs'):
         raise ValueError("Unknown spacer: '{}'".format(name))
 
     spacer = Domain('spacer', sequence)
-    spacer.style = 'yellow'
+    spacer.style = 'white'
 
     return Construct(name, spacer)
 
@@ -853,9 +857,9 @@ def aptamer(ligand, piece='whole'):
     aptamer_S.constraints = constraint_pieces[1]
     aptamer_3.constraints = constraint_pieces[2]
 
-    aptamer_5.style = 'white', 'bold'
-    aptamer_S.style = 'white', 'bold'
-    aptamer_3.style = 'white', 'bold'
+    aptamer_5.style = 'yellow', 'bold'
+    aptamer_S.style = 'yellow', 'bold'
+    aptamer_3.style = 'yellow', 'bold'
 
     aptamer_S.mutable = True
 
@@ -1013,10 +1017,6 @@ def fold_upper_stem(N, linker_len=0, splitter_len=0, num_aptamers=1, small_molec
         The number of aptamers to insert into the sgRNA.  The aptamers are 
         inserted within each other, in a manner than should give rise to 
         positive cooperativity.
-
-    Returns
-    -------
-    sgRNA: Construct
     """
 
     if not 0 <= N <= 4:
@@ -1068,10 +1068,6 @@ def fold_lower_stem(N, linker_len=0, splitter_len=0, small_molecule='theo', targ
         Indicate how many bases should separate the 3' half of the aptamer from 
         the 5' half.  The splitter sequence will have the same pattern as the 
         linker (see above).
-
-    Returns
-    -------
-    sgRNA: Construct
     """
 
     if not 0 <= N <= 6:
@@ -1124,10 +1120,6 @@ def fold_nexus(linker_len=0, small_molecule='theo', target='aavs'):
         Indicate how many base pairs should separate the aptamer from the nexus 
         region stem.  The linker sequence will have a UUUCCC... pattern so that 
         the design doesn't have really long repeats or an out-of-whack GC%.
-
-    Returns
-    -------
-    sgRNA: Construct
     """
 
     args = (linker_len,)
@@ -1179,10 +1171,6 @@ def fold_nexus_2(N, M, splitter_len=0, num_aptamers=1, small_molecule='theo', ta
         The number of aptamers to insert into the sgRNA.  The aptamers are 
         inserted within each other, in a manner than should give rise to 
         positive cooperativity.
-
-    Returns
-    -------
-    sgRNA: Construct
     """
 
     # Make sure the arguments have reasonable values.
@@ -1229,15 +1217,15 @@ def fold_nexus_2(N, M, splitter_len=0, num_aptamers=1, small_molecule='theo', ta
 
 def fold_hairpin(H, N, A=1, ligand='theo', target='aavs'):
     """
-    Replace either of the hairpins with the aptamer.  Briner et al. showed that the 
-    sgRNA is at least somewhat sensitive to the distance between the nexus and 
-    the hairpins, so unfolding the first hairpin may be a successful way to 
+    Replace either of the hairpins with the aptamer.  Briner et al. showed that 
+    the sgRNA is at least somewhat sensitive to the distance between the nexus 
+    and the hairpins, so unfolding the first hairpin may be a successful way to 
     create a sensor.  They also showed that the sgRNA is very sensitive to the 
     removal of both hairpins, but not so much to the removal of just the first.  
     They didn't try removing just the second, but it's not unreasonable to 
     think that that might be a viable way to control the sgRNA.  
 
-    Briner et al. also didn't try changing the sequence of either  hairpins, so 
+    Briner et al. also didn't try changing the sequence of either hairpins, so 
     I'm just assuming that they can be freely changed as long as the base 
     pairing is maintained.  In the crystal structure, the first hairpin is not 
     interacting with Cas9 at all and the second hairpin is unresolved, so I 
@@ -1271,10 +1259,6 @@ def fold_hairpin(H, N, A=1, ligand='theo', target='aavs'):
     target: str
         The name of the sequence the sgRNA should target, or None if you just 
         want the sgRNA without any spacer sequence at all.
-
-    Returns
-    -------
-    sgRNA: Construct
     """
     if H not in (1, 2):
         raise ValueError("fh(H,N): H must be either 1 or 2")
@@ -1353,10 +1337,6 @@ def induce_dimerization(half, N, small_molecule='theo', target='aavs'):
     N: int
         Indicate how many of the 4 upper stem base pairs should be preserved.  
         This parameters must be between 0 and 4.
-
-    Returns
-    -------
-    sgRNA: Construct
     """
 
     # Make sure the arguments make sense.
@@ -1433,10 +1413,6 @@ def serpentine_bulge(N, A=1, target='aavs'):
     target: str
         The name of the sequence the sgRNA should target, or None if you just 
         want the sgRNA without any spacer sequence at all.
-
-    Returns
-    -------
-    sgRNA: Construct
     """
     if N < 2:
         raise ValueError("sb(N): N must be 2 or greater")
@@ -1494,10 +1470,6 @@ def serpentine_lower_stem(A=1, target='aavs'):
     target: str
         The name of the sequence the sgRNA should target, or None if you just 
         want the sgRNA without any spacer sequence at all.
-
-    Returns
-    -------
-    sgRNA: Construct
     """
     sgrna = wt_sgrna(target)
     sgrna.name = make_name('sl')
@@ -1543,10 +1515,6 @@ def serpentine_lower_stem_around_nexus(A=1, target='aavs'):
     target: str
         The name of the sequence the sgRNA should target, or None if you just 
         want the sgRNA without any spacer sequence at all.
-
-    Returns
-    -------
-    sgRNA: Construct
     """
     sgrna = wt_sgrna(target)
     sgrna.name = make_name('slx')
@@ -1584,7 +1552,7 @@ def serpentine_hairpin(N, A=1, target='aavs'):
     
     Parameters
     ----------
-    N : int
+    N: int
         The length of the complementary region to insert, and also the length 
         of the first hairpin.  The hairpin is naturally 4 base pairs long, but 
         it's solvent exposed so in theory you can make it as long as you want.
@@ -1597,10 +1565,6 @@ def serpentine_hairpin(N, A=1, target='aavs'):
     target: str
         The name of the sequence the sgRNA should target, or None if you just 
         want the sgRNA without any spacer sequence at all.
-
-    Returns
-    -------
-    sgRNA: Construct
     """
     if not 4 <= N <= 14:
         raise ValueError("sh(N): N must be between 4 and 14")
@@ -1649,10 +1613,6 @@ def circle_bulge(A=1, target='aavs'):
     target: str
         The name of the sequence the sgRNA should target, or None if you just 
         want the sgRNA without any spacer sequence at all.
-
-    Returns
-    -------
-    sgRNA: Construct
     """
     sgrna = wt_sgrna(target)
     sgrna.name = make_name('cb')
@@ -1700,10 +1660,6 @@ def circle_lower_stem(A=1, target='aavs'):
     target: str
         The name of the sequence the sgRNA should target, or None if you just 
         want the sgRNA without any spacer sequence at all.
-
-    Returns
-    -------
-    sgRNA: Construct
     """
     sgrna = wt_sgrna(target)
     sgrna.name = make_name('cl')
@@ -1742,7 +1698,7 @@ def circle_hairpin(N, A=1, target='aavs'):
 
     Parameters
     ----------
-    N : int
+    N: int
         The length of the complementary region to insert, and also the length 
         of the first hairpin.  The hairpin is naturally 4 base pairs long, but 
         it's solvent exposed so in theory you can make it as long as you want.
@@ -1755,14 +1711,7 @@ def circle_hairpin(N, A=1, target='aavs'):
     target: str
         The name of the sequence the sgRNA should target, or None if you just 
         want the sgRNA without any spacer sequence at all.
-
-    Returns
-    -------
-    sgRNA: Construct
     """
-    if not 4 <= N <= 18:
-        raise ValueError("sh(N): N must be between 4 and 18")
-
     sgrna = wt_sgrna(target)
     sgrna.name = make_name('ch', N)
     sgrna.attach(
