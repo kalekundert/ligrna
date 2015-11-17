@@ -11,8 +11,13 @@ Options:
     -d --dna MICROLITERS    [default: 1.0]
         How much template DNA to use (in μL).
 
-    -i --incubate HOURS     [default: 1]
-        How long to incubate the transcription reaction.
+    -k --kit BRAND   [default: hiscribe]
+        Which in vitro transcription kit to use.  Valid options are 'hiscribe'
+        and 'ampliscribe'.
+
+    -i --incubate HOURS
+        How long to incubate the transcription reaction.  The default depends
+        on which kit you're using.
 
     -x --extra PERCENT      [default: 10]
         How much extra master mix to create.
@@ -31,35 +36,64 @@ Options:
 import docopt
 import math
 
+## Calculate reagent volumes.
+
 args = docopt.docopt(__doc__)
 volume = eval(args['<reactions>']) * (1 + float(args['--extra'] or 0) / 100)
 scale = lambda ref, name: (ref * volume, name)
 dna = float(args['--dna'])
 
-reagents = [
-        scale(6.3 - dna, "nuclease-free water"),
-        scale(2.0, "10x reaction buffer"),
-]
-if args['--no-rntp-mix']:
+if 'hiscribe'.startswith(args['--kit'].lower()):
+    incubation_time = args['--incubate'] or 4
+    reagents = [
+            scale(11.0 - dna, "nuclease-free water"),
+            scale(1.5, "10x reaction buffer"),
+    ]
+    if args['--no-rntp-mix']:
+        reagents += [
+            scale(1.5, "100 mM ATP"),
+            scale(1.5, "100 mM CTP"),
+            scale(1.5, "100 mM GTP"),
+            scale(1.5, "100 mM UTP"),
+        ]
+    else:
+        reagents += [
+            scale(6.0, "100 mM rNTP mix"),
+        ]
     reagents += [
-        scale(1.8, "100 mM ATP"),
-        scale(1.8, "100 mM CTP"),
-        scale(1.8, "100 mM GTP"),
-        scale(1.8, "100 mM UTP"),
+            scale(1.5, "HiScribe T7 (NEB)"),
+    ]
+elif 'ampliscribe'.startswith(args['--kit'].lower()):
+    incubation_time = args['--incubate'] or 1
+    reagents = [
+            scale(6.3 - dna, "nuclease-free water"),
+            scale(2.0, "10x reaction buffer"),
+    ]
+    if args['--no-rntp-mix']:
+        reagents += [
+            scale(1.8, "100 mM ATP"),
+            scale(1.8, "100 mM CTP"),
+            scale(1.8, "100 mM GTP"),
+            scale(1.8, "100 mM UTP"),
+        ]
+    else:
+        reagents += [
+            scale(7.2, "100 mM rNTP mix"),
+        ]
+    reagents += [
+            scale(2.0, "100 mM DTT"),
+            scale(0.5, "RiboGuard RNase inhibitor"),
+            scale(2.0, "AmpliScribe T7 (Epicentre)"),
     ]
 else:
-    reagents += [
-        scale(7.2, "100 mM rNTP mix"),
-    ]
-reagents += [
-        scale(2.0, "100 mM DTT"),
-        scale(0.5, "RiboGuard RNase inhibitor"),
-        scale(2.0, "AmpliScribe T7"),
-]
-
+    print("Unknown in vitro transcription kit: '{}'".format(args['--kit']))
+    print("Known kits are: 'hiscribe' or 'ampliscribe'")
+    raise SystemExit
 
 total_amount = sum(amount for amount, reagent in reagents)
 longest_amount = int(math.ceil(math.log10(total_amount)))
+
+## Run the reactions.
 
 print("""\
 1. Setup {} in vitro transcription reaction(s) by 
@@ -81,8 +115,11 @@ print('   ' + row.format(total_amount / volume, 'master mix'))
 print('   ' + row.format(dna, '10 ng/μL DNA template'))
 print("""\
 
-2. Incubate at 42°C (water bath) for {} hour{}.
-""".format(args['--incubate'], '' if int(args['--incubate']) == 1 else 's'))
+2. Incubate at 42°C (thermocycler) for {} hour{}.
+""".format(incubation_time, '' if int(incubation_time) == 1 else 's'))
+
+## Clean up the reactions.
+
 if args['--cleanup'] == 'zymo':
     print("""\
 3. Remove unincorporated ribonucleotides using
