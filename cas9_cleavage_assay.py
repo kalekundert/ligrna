@@ -211,7 +211,7 @@ row.format(theo, "30 mM theophylline (or water)"),
 row.format(sgrna, "300 nM sgRNA (or water)"),
 row.format(cas9_mm, 'Cas9 mix (or 3 μL buffer + {:g} μL water)'.format(cas9_mm - 3)),
 35 * '-',
-row.format(dna, "30 nM target DNA (or water)"),
+row.format(dna, "30 nM 4kb target DNA (or water)"),
 '',
 ]))
     steps.append("""\
@@ -256,8 +256,8 @@ Incubate the reactions at 37°C for 20 min, then at
 ## Analyze the products.
 
 steps.append("""\
-Load on a 2% agarose/TAE/GelRed gel and run at 
-100V for 1 hour.""")
+Load on a 1% agarose/TAE/GelRed gel and run at 
+130V for 30 min.""")
 
 ## Print the protocol.
 
