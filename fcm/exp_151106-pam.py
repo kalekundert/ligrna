@@ -19,7 +19,7 @@ import copy
 import gc
 import subprocess
 
-fast_run = True
+fast_run = False
 channel_name = 'PE-Texas Red-A'
 colors = [(0,0,1,0.3), (0,1,0,0.3), (1,0,0,0.3)]
 well_types = ['Pos', 'Neg']
@@ -35,7 +35,7 @@ plate_1 = Plate([
     PlateInfo('design-4-Neg', None, ['E4']),
     PlateInfo('design-7-Pos', None, ['E5']),
     PlateInfo('design-7-Neg', None, ['E6']),
-], sample_dir = dir_to_load,
+], sample_dir = four_pm_dir,
     name = 'replicate_1',
 )
 
@@ -46,7 +46,7 @@ plate_2 = Plate([
     PlateInfo('design-4-Neg', None, ['F4']),
     PlateInfo('design-7-Pos', None, ['F5']),
     PlateInfo('design-7-Neg', None, ['F6']),
-], sample_dir = dir_to_load,
+], sample_dir = four_pm_dir,
     name = 'replicate_2',
 )
 
@@ -57,11 +57,46 @@ plate_3 = Plate([
     PlateInfo('design-4-Neg', None, ['G4']),
     PlateInfo('design-7-Pos', None, ['G5']),
     PlateInfo('design-7-Neg', None, ['G6']),
-], sample_dir = dir_to_load,
+], sample_dir = four_pm_dir,
     name = 'replicate_3',
 )
 
-all_plates = [plate_1, plate_2, plate_3]
+four_pm_plates = [plate_1]#, plate_2, plate_3]
+
+twopm_plate_1 = Plate([
+    PlateInfo('Control-Pos', None, ['A1']),
+    PlateInfo('Control-Neg', None, ['A2']),
+    PlateInfo('design-4-Pos', None, ['A3']),
+    PlateInfo('design-4-Neg', None, ['A4']),
+    PlateInfo('design-7-Pos', None, ['A5']),
+    PlateInfo('design-7-Neg', None, ['A6']),
+], sample_dir = two_pm_dir,
+    name = 'replicate_1',
+)
+
+twopm_plate_2 = Plate([
+    PlateInfo('Control-Pos', None, ['B1']),
+    PlateInfo('Control-Neg', None, ['B2']),
+    PlateInfo('design-4-Pos', None, ['B3']),
+    PlateInfo('design-4-Neg', None, ['B4']),
+    PlateInfo('design-7-Pos', None, ['B5']),
+    PlateInfo('design-7-Neg', None, ['B6']),
+], sample_dir = two_pm_dir,
+    name = 'replicate_2',
+)
+
+twopm_plate_3 = Plate([
+    PlateInfo('Control-Pos', None, ['C1']),
+    PlateInfo('Control-Neg', None, ['C2']),
+    PlateInfo('design-4-Pos', None, ['C3']),
+    PlateInfo('design-4-Neg', None, ['C4']),
+    PlateInfo('design-7-Pos', None, ['C5']),
+    PlateInfo('design-7-Neg', None, ['C6']),
+], sample_dir = two_pm_dir,
+    name = 'replicate_3',
+)
+
+two_pm_plates = [twopm_plate_1]#, twopm_plate_2, twopm_plate_3]
 
 def main():
     outer_fig_dir = os.path.join('script_output', os.path.basename(__file__).split('.')[0])
@@ -70,7 +105,7 @@ def main():
     fig_dir = os.path.join(outer_fig_dir, gate_name)
     if not os.path.isdir(fig_dir):
         os.makedirs(fig_dir)
-    gated_plates = make_gating_fig(all_plates, gate_val, gate_name, fig_dir, fast_run=fast_run)
+    gated_plates = make_gating_fig(two_pm_plates, gate_val, gate_name, fig_dir, fast_run=fast_run)
 
     for plate_num, exp in enumerate(gated_plates):
         data_names = set()
