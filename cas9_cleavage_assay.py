@@ -34,6 +34,9 @@ Options:
     -f --fresh-theo
         Include a step for preparing fresh theophylline, if you've run out of
         frozen stocks.
+
+    -D --short-dna
+        Use the 500 bp target DNA instead of the 4 kb target DNA.
 """
 
 import docopt
@@ -77,7 +80,7 @@ def scale(*reagents):   # (no fold)
 cas9_reagents, cas9_volume = scale(
         (water, "nuclease-free water"),
         (3.0, "10x reaction buffer"),
-        (cas9, "{} μM Cas9 (NEB)".format(cas9_stock_conc)),
+        (cas9, "{:g} μM Cas9".format(cas9_stock_conc)),
 )
 kag_reagents, kag_volume = scale(
         #(0.337, "Proteinase K (Denville)"),
@@ -211,7 +214,7 @@ row.format(theo, "30 mM theophylline (or water)"),
 row.format(sgrna, "300 nM sgRNA (or water)"),
 row.format(cas9_mm, 'Cas9 mix (or 3 μL buffer + {:g} μL water)'.format(cas9_mm - 3)),
 35 * '-',
-row.format(dna, "30 nM 4kb target DNA (or water)"),
+row.format(dna, "30 nM target DNA (or water)"),
 '',
 ]))
     steps.append("""\
@@ -255,9 +258,16 @@ Incubate the reactions at 37°C for 20 min, then at
 
 ## Analyze the products.
 
+if args['--short-dna']:
+    gel_load = 36
+    gel_percent = 2
+else:
+    gel_load = 18
+    gel_percent = 1
+
 steps.append("""\
-Load on a 1% agarose/TAE/GelRed gel and run at 
-130V for 30 min.""")
+Load {} μL on a {}% agarose/TAE/GelRed gel and run 
+at 130V for 30 min.""".format(gel_load, gel_percent))
 
 ## Print the protocol.
 
