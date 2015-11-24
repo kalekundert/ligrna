@@ -45,6 +45,7 @@ dna = float(args['--dna'])
 
 if 'hiscribe'.startswith(args['--kit'].lower()):
     incubation_time = args['--incubate'] or 4
+    incubation_temp = '37'
     reagents = [
             scale(11.0 - dna, "nuclease-free water"),
             scale(1.5, "10x reaction buffer"),
@@ -65,6 +66,7 @@ if 'hiscribe'.startswith(args['--kit'].lower()):
     ]
 elif 'ampliscribe'.startswith(args['--kit'].lower()):
     incubation_time = args['--incubate'] or 1
+    incubation_temp = '42'
     reagents = [
             scale(6.3 - dna, "nuclease-free water"),
             scale(2.0, "10x reaction buffer"),
@@ -115,8 +117,10 @@ print('   ' + row.format(total_amount / volume, 'master mix'))
 print('   ' + row.format(dna, '10 ng/μL DNA template'))
 print("""\
 
-2. Incubate at 42°C (thermocycler) for {} hour{}.
-""".format(incubation_time, '' if int(incubation_time) == 1 else 's'))
+2. Incubate at {}°C (thermocycler) for {} hour{}.
+""".format(
+    incubation_temp,
+    incubation_time, '' if int(incubation_time) == 1 else 's'))
 
 ## Clean up the reactions.
 
