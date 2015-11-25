@@ -2,9 +2,8 @@
 
 import matplotlib
 matplotlib.use('Agg')
-import multiprocessing as mp
-from fcm import Plate, PlateInfo
-import fcm
+from klab.fcm.fcm import Plate, PlateInfo
+import klab.fcm.fcm as fcm
 import os
 import numpy as np
 import scipy
@@ -21,6 +20,9 @@ import gc
 import subprocess
 
 fast_run = False
+use_multiprocessing = True
+if use_multiprocessing:
+    import multiprocessing as mp
 channel_name = 'PE-Texas Red-A'
 
 plate_1 = Plate([
@@ -91,17 +93,22 @@ def main():
             func_args.append( ('fsc_%d'% int(fsc_gate_above), fsc_gate_above, outer_fig_dir) )
             fsc_gate_above += 20000.0
         # Append poly gates
-        for gate_val in np.arange(0.2,1.0,0.2):
+        for gate_val in np.arange(0.1,0.9,0.1):
             func_args.append( ('poly_%.1f' % gate_val, gate_val, outer_fig_dir) )
 
-        pool = mp.Pool(1)
-        pool.map(run_subprocess, func_args)
-        pool.close()
-        pool.join()
+        if use_multiprocessing:
+            pool = mp.Pool()
+            pool.map(run_subprocess, func_args)
+            pool.close()
+            pool.join()
+        else:
+            for arg_tuple in func_args:
+                print arg_tuple
+                plot_gate_value( arg_tuple[0], arg_tuple[1], arg_tuple[2] )
 
 def run_subprocess(function_argument_tuple):
     subprocess.call([
-        'python', os.path.basename(__file__),
+        'nice', 'python', os.path.basename(__file__),
         str(function_argument_tuple[0]),
         str(function_argument_tuple[1]),
         str(function_argument_tuple[2]),
@@ -122,8 +129,8 @@ def plot_gate_value(gate_name=None, gate_val=None, outer_fig_dir=None):
     gating_axes = []
     mean_diffs = {}
     for plate_num, exp in enumerate(all_plates):
-        blank_samples = list(exp.well_set('Control-Blank'))
-        nonblank_samples = list(exp.all_position_set.difference(exp.well_set('Control-Blank')))
+        blank_samples = [] # list(exp.well_set('Control-Blank'))
+        nonblank_samples = list(exp.all_position_set)
         if len(gating_axes) >= 1:
             ax = gating_fig.add_subplot(1, len(all_plates), plate_num+1, sharey=gating_axes[0])
         else:
@@ -182,6 +189,7 @@ def plot_gate_value(gate_name=None, gate_val=None, outer_fig_dir=None):
             atc_wells = exp.well_set('ATC_conc', atc_conc)
             for iptg_conc_count, iptg_conc in enumerate(exp.parameter_values('IPTG_conc')):
                 iptg_wells = exp.well_set('IPTG_conc', iptg_conc)
+                       
                 for name_count, name in enumerate(sorted(exp.experimental_parameters)):
                     if name_count == 0:
                         ylabel = True
@@ -214,13 +222,15 @@ def plot_gate_value(gate_name=None, gate_val=None, outer_fig_dir=None):
                         color = colors[count % len(colors)]
                         tep_mean = exp.samples[exp_tep_wells[tep_conc]].data[channel_name].mean()
                         channel_data = exp.samples[exp_tep_wells[tep_conc]].data[channel_name].as_matrix()
+
+                        # Add pos/neg signal fold diff to mean diffs
                         # Fast way to make code work and not bootstrap
-                        if fast_run:
+                        if True:
                             tep_mean_low, tep_mean_high = (tep_mean, tep_mean)
                         else:
                             # Slow bootstrapping
                             try:
-                                tep_mean_low, tep_mean_high = bootstrap.ci(channel_data, statfunction=np.average, method='bca', n_samples=15000)
+                                tep_mean_low, tep_mean_high = bootstrap.ci(channel_data, statfunction=np.average, method='pi')
                             except Exception:
                                 tep_mean_low, tep_mean_high = (tep_mean, tep_mean)
 
@@ -253,9 +263,10 @@ def plot_gate_value(gate_name=None, gate_val=None, outer_fig_dir=None):
                             mean_diffs[name][atc_conc][tep_conc][exp.name] = tep_means[tep_conc][0] / tep_means[0.0][0]
                         color = colors[count % len(colors)]
                         n, bins, patches = hist_output[tep_conc]
-                        ax.plot((tep_means[tep_conc][1], tep_means[tep_conc][1]), (ylim[0], ylim[1]), color=(color[0], color[1], color[2], 1.0), linestyle='--', linewidth=1)
                         ax.plot((tep_means[tep_conc][0], tep_means[tep_conc][0]), (ylim[0], ylim[1]), color=(color[0], color[1], color[2], 1.0), linestyle='-', linewidth=2)
-                        ax.plot((tep_means[tep_conc][2], tep_means[tep_conc][2]), (ylim[0], ylim[1]), color=(color[0], color[1], color[2], 1.0), linestyle='--', linewidth=1)
+                        if tep_means[tep_conc][0] != tep_means[tep_conc][1] and tep_means[tep_conc][0] != tep_means[tep_conc][2]:
+                            ax.plot((tep_means[tep_conc][1], tep_means[tep_conc][1]), (ylim[0], ylim[1]), color=(color[0], color[1], color[2], 1.0), linestyle='--', linewidth=1)
+                            ax.plot((tep_means[tep_conc][2], tep_means[tep_conc][2]), (ylim[0], ylim[1]), color=(color[0], color[1], color[2], 1.0), linestyle='--', linewidth=1)
 
                         mu, std = scipy.stats.norm.fit(exp.samples[exp_tep_wells[tep_conc]].data[channel_name]) # distribution fitting
                         # now, mu and std are the mean and
@@ -292,6 +303,9 @@ def plot_gate_value(gate_name=None, gate_val=None, outer_fig_dir=None):
                 if mean_low > 1.0 or mean_high < 1.0:
                     sig_results[name] += 1
     with open(os.path.join(fig_dir, 'sig_results.txt'), 'w') as f:
+        if not use_multiprocessing:
+            print sig_results
+            print
         f.write('Significant results:\n')
         f.write( str(sig_results) )
         f.write('\n')
