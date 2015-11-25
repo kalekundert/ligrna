@@ -84,8 +84,7 @@ elif [ "$round" = 5 ]; then
         fh/1/0              \
         fh/2/0              \
         sb/2                \
-        sb/4                \
-        sb/6                \
+        sb/5                \
         sb/8                \
         sl                  \
         slx                 \
