@@ -46,14 +46,18 @@ Options:
         Specify the sequence that the sgRNA should target.  If an empty string 
         is given, no spacer sequence will be included.
 
+    -S, --no-spacer
+        Specify that the spacer sequence should be left out.  This is just 
+        shorthand for "-s ''".
+
     -a, --aptamer NAME      [default: theo]
         Specify the aptamer that should be inserted into the sgRNA.
 
-    -S, --subset RANGE
+    -i, --slice RANGE
         Specify a subset of the design to display.  If only one number is 
         given, it is taken as the start position.  If two numbers are given, 
         separated by a colon, they are taken as the start and end positions.  
-        If the subset starts with an underscore, the sequence will be padded.
+        If the slice starts with an underscore, the sequence will be padded.
 
     -p, --pretty
         Include pretty names and the "5'-" and "-3'" labels for each design.
@@ -86,8 +90,8 @@ args = docopt.docopt(__doc__)
 designs = []
 
 kwargs = {}
-kwargs['target'] = args['--spacer'] or None
-kwargs['small_molecule'] = args['--aptamer']
+kwargs['target'] = None if args['--no-spacer'] else (args['--spacer'] or None)
+kwargs['ligand'] = args['--aptamer']
 
 for name in args['<names>']:
     try:
@@ -107,17 +111,17 @@ format_args = {  # (no fold)
         'pad': False,
 }
 
-if args['--subset']:
+if args['--slice']:
     int_or_none = lambda x: int(x) if x else None
 
-    if args['--subset'].startswith('_'):
+    if args['--slice'].startswith('_'):
         format_args['pad'] = True
-        args['--subset'] = args['--subset'][1:]
-    if ':' in args['--subset']:
-        format_args['start'] = int_or_none(args['--subset'].split(':')[0])
-        format_args['end'] = int_or_none(args['--subset'].split(':')[1])
+        args['--slice'] = args['--slice'][1:]
+    if ':' in args['--slice']:
+        format_args['start'] = int_or_none(args['--slice'].split(':')[0])
+        format_args['end'] = int_or_none(args['--slice'].split(':')[1])
     else:
-        format_args['start'] = int(args['--subset'])
+        format_args['start'] = int(args['--slice'])
 
 longest_name = max([8] + [len(x.name) for x in designs])
 header_template = '{{0:{}s}}'.format(longest_name)
@@ -137,6 +141,7 @@ def rnafold(design, constraints=False):
     print('\n'.join(
         x for x in stdout.decode().split('\n')[1:]
         if not x.startswith('WARNING')).strip())
+
 
 for design in designs:
     if args['--verbose']:
