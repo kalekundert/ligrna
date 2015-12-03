@@ -1,0 +1,18 @@
+I now have a pretty large amount of data on which designs work and which don't, 
+which I can use to benchmark score functions.  
+
+The score function I have in mind right now would be to calculate the 
+equilibrium population of the wildtype base pairs for each design, with and 
+without the aptamer restraints.  I could benchmark this score function by 
+seeing how well it correlates with Cas9 activity.  I'm assuming that Cas9 
+activity reflects natively folded sgRNA, although in principle I could directly 
+measure RNA folding using SHAPE or something.
+
+Side note: Maybe Rhiju wold be interested in looking at a library of (mostly 
+failed) designs.  Although, one could probably make a better library just by 
+expanding around a known working ribozyme.
+
+This score function appeals to me because I think I can calculate it and I can 
+definitely measure it experimentally.  It's probably worth at least a day 
+looking into, and I have an ordering week coming up.  But I also need to find a 
+way to make shit-tons of DNA during that week...

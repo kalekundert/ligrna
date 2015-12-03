@@ -1,11 +1,17 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
+# encoding: utf-8
+
+from __future__ import division
+from __future__ import print_function
+from __future__ import unicode_literals
 
 import nonstdlib
 import collections
 import contextlib
 import random
+import six
 
-class Sequence:
+class Sequence (object):
     """
     Abstract base class that represents a sequence that's associated with a 
     name and provides some convenience functions to query that sequence.  How 
@@ -31,8 +37,7 @@ class Sequence:
         """
         Hash the sequence based on its location in memory.
         """
-        from builtins import id
-        return id(self)
+        return hash(self.seq)
 
     def __len__(self):
         """
@@ -44,7 +49,7 @@ class Sequence:
         """
         Iterate through the nucleotides in this sequence.
         """
-        yield from self.seq
+        for x in self.seq: yield x
 
     def __getitem__(self, index):
         """
@@ -118,7 +123,7 @@ class Construct (Sequence):
             'FoldEvaluation', 'base_pairs_kept base_pairs_lost unpaired_bases_kept unpaired_bases_lost')
 
     def __init__(self, name='', domains=None):
-        super().__init__(name)
+        Sequence.__init__(self, name)
         if domains is None:
             domains = []
         if isinstance(domains, Domain):
@@ -135,14 +140,14 @@ class Construct (Sequence):
         return self.format()
 
     def __getitem__(self, key):
-        if isinstance(key, str):
+        if isinstance(key, six.string_types):
             domains = self.domains_from_name(key)
             if len(domains) == 1:
                 return domains[0]
             else:
                 raise KeyError("{} domains named '{}'.".format(len(domains), key))
         else:
-            return super().__getitem__(key)
+            return Sequence.__getitem__(self, key)
 
     def __setitem__(self, key, construct):
         self.attach(construct, *key)
@@ -354,22 +359,22 @@ class Construct (Sequence):
         shouldn't be an issue so long as you take care to compose your 
         constructs from functionally separate domains.
         """
-        if isinstance(start_domain, str):
+        if isinstance(start_domain, six.string_types):
             start_domain = self[start_domain]
         if start_domain not in self._domains:
             raise ValueError("no '{}' domain in '{}'.".format(start_domain, self.name))
 
-        if isinstance(end_domain, str):
+        if isinstance(end_domain, six.string_types):
             end_domain = self[end_domain]
         if end_domain not in self._domains:
             raise ValueError("no '{}' domain in '{}'.".format(end_domain, self.name))
 
-        if start_index is ...:
+        if start_index == '...':
             start_index = 0
         if start_index not in start_domain.attachment_sites:
             raise ValueError("Position {} of domain {} is not an attachment site.".format(start_index, start_domain.name))
 
-        if end_index is ...:
+        if end_index == '...':
             end_index = len(end_domain)
         if end_index not in end_domain.attachment_sites:
             raise ValueError("Position {} of domain {} is not an attachment site.".format(end_index, end_domain.name))
@@ -523,7 +528,7 @@ class Construct (Sequence):
             raise ValueError("can't combine 'Construct' and '{}'".format(sequence.__class__.__name__))
 
     def _remove_sequence(self, domain):
-        if isinstance(domain, str):
+        if isinstance(domain, six.string_types):
             domain = self[domain]
 
         idx = self._domains.index(domain)
@@ -541,7 +546,7 @@ class Domain (Sequence):
     """
 
     def __init__(self, name, sequence, style=None, mutable=False):
-        super().__init__(name)
+        Sequence.__init__(self, name)
         self._sequence = sequence
         self._attachment_sites = []
         self._constraints = None
@@ -616,7 +621,7 @@ class Domain (Sequence):
         # weight is given, it is assumed to be normal.
 
         style = self.style or 'normal'
-        if isinstance(style, str):
+        if isinstance(style, six.string_types):
             style = style, 'normal'
 
         return nonstdlib.color(sequence, *style, when=color)
@@ -700,7 +705,12 @@ def molecular_weight(name, polymer='rna'):
     return from_name(name).mass(polymer)
 
 def complement(sequence):
-    complements = str.maketrans('ACUG', 'UGAC')
+    complements = {
+            ord('A'): 'U',
+            ord('C'): 'G',
+            ord('G'): 'C',
+            ord('U'): 'A',
+    }
     return sequence.translate(complements)
 
 def reverse_complement(sequence):
@@ -1315,7 +1325,7 @@ def replace_hairpins(N, small_molecule='theo', target='aavs'):
     design.attach(
             aptamer_insert(small_molecule, linker_len=linker_len),
             'hairpins', insertion_site,
-            'hairpins', ...,
+            'hairpins', '...',
     )
     return design
 
@@ -1364,13 +1374,13 @@ def induce_dimerization(half, N, small_molecule='theo', target='aavs'):
         design += wt['stem']
         design.attach(
                 aptamer(small_molecule, '5'),
-                'stem', 8 + N, 'stem', ...,
+                'stem', 8 + N, 'stem', '...',
         )
     elif half == '3':
         design += wt
         design.attach(
                 aptamer(small_molecule, '3'),
-                'stem', ..., 'stem', 20 - N,
+                'stem', '...', 'stem', 20 - N,
         )
     else:
         raise ValueError("Half for induced dimerization must be either 5 (for the 5' half) or 3 (for the 3' half), not '{}'.".format(half))
@@ -1525,8 +1535,8 @@ def serpentine_lower_stem_around_nexus(A=1, target='aavs'):
                 turn_seq='',
                 num_aptamers=A,
             ),
-            'stem', ...,
-            'stem', ...,
+            'stem', '...',
+            'stem', '...',
     )
     sgrna['decoy'].mutable = sgrna['latch'].mutable = True
     sgrna['decoy'].append('GA')
@@ -1666,7 +1676,7 @@ def circle_lower_stem(A=1, target='aavs'):
     sgrna.attach(
             circle_insert('theo', 'AAGGCU', '3', num_aptamers=A),
             'stem', 0,
-            'stem', ...,
+            'stem', '...',
     )
     sgrna['decoy'].mutable = sgrna['latch'].mutable = True
     sgrna['latch'].append('GA')

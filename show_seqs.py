@@ -1,4 +1,5 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
+# encoding: utf-8
 
 """\
 Display sequences relevant to the sgRNA sensor project.
@@ -82,6 +83,10 @@ Options:
         their architectural role in the design.
         
 """
+
+from __future__ import division
+from __future__ import print_function
+from __future__ import unicode_literals
 
 import sgrna_helper
 import docopt
