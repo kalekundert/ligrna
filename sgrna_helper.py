@@ -755,20 +755,17 @@ def find_middlemost(seq, pattern):
     seq_len = len(seq)
     min_dist = seq_len
 
-    print(matches)
     for match in matches:
         index, group = -1, 0
         while index < 0:
             group += 1
             index = match.start(group)
-            print(':', index, group, match.group(group), pattern, seq)
 
         dist = abs(index - (seq_len-1) / 2)
         if dist < min_dist:
             best_index = index
             min_dist = dist
 
-    print(best_index)
     return best_index
 
 
@@ -972,102 +969,6 @@ def aptamer_insert(ligand, linker_len=0, splitter_len=0, repeat_factory=repeat,
 
     return insert
 
-def serpentine_insert(ligand, target_seq, target_end, turn_seq='GAAA',
-        num_aptamers=1):
-
-    if not target_seq:
-        raise ValueError('target_seq cannot be empty')
-
-    domains = [
-            Domain('turn', turn_seq),
-            Domain('latch', reverse_complement(target_seq)),
-            aptamer_insert(ligand, num_aptamers=num_aptamers),
-            Domain('decoy', target_seq),
-    ]
-
-    if target_end == '5':
-        domains[1].expected_fold = '(' * len(target_seq)
-        domains[3].expected_fold = ')' * len(target_seq)
-
-    if target_end == '3':
-        domains.reverse()
-        domains[0].expected_fold = '(' * len(target_seq)
-        domains[2].expected_fold = ')' * len(target_seq)
-
-    return Construct('serpentine', domains)
-
-def circle_insert(ligand, target_seq, target_end, num_aptamers=1):
-    if not target_seq:
-        raise ValueError('target_seq cannot be empty')
-
-    domains = [
-            Domain('decoy', target_seq),
-            aptamer_insert(ligand, num_aptamers=num_aptamers),
-            Domain('latch', reverse_complement(target_seq)),
-    ]
-
-    if target_end == '3':
-        domains.reverse()
-
-    domains[0].expected_fold = '(' * len(target_seq)
-    domains[2].expected_fold = ')' * len(target_seq)
-    
-    return Construct('circle', domains)
-
-def tunable_switch(target_seq, tuning_strategy=''):
-    """
-    Return three domains that comprise a switch.  The first domain ("switch") 
-    is a sequence that can base pair with either of the two following domains, 
-    the second domain ("on") is what the first should bind in the "on" state, 
-    and the third domain ("off") is what the first should bind in the "off" 
-    state.  
-    
-    By default, "switch" is perfectly complementary with both "on" and "off", 
-    so it doesn't have a preference for one over the other.  You can tune the 
-    switch by weakening the interactions it makes with one of its partners so 
-    that it will prefer the other.  The tuning_strategy parameter specifies how 
-    this should be done.  Each strategy is a 2-3 letter string.  The first 
-    letter specifies what kind of mutation to make:
-
-        w: Insert a wobble (GU) base pair.
-        m: Insert a one nucleotide mismatch (1x1).
-        b: Insert a one nucleotide bulge (1x0).
-
-    Wobble base pairs are weaker perturbations and are only expected to shift 
-    the equilibrium by a factor of 10.  Mismatches and bulges are stronger and 
-    are both expected to shift the equilibrium by a factor of 100.
-
-    The second letter specifies which state to weaken:
-    
-        x: More cutting, weaken the off state.
-        o: Less cutting, weaken the on state.
-    
-    The third letter is only applicable to the 'bx' strategy:
-
-        g: Make the bulge a G instead on an A.  This should lead to a slightly 
-           stronger activating effect.
-    """
-
-    if not tuning_strategy:
-        return complementary_switch(target_seq)
-
-    if tuning_strategy[0] not in 'wmb':
-        raise ValueError("Tuning strategy must be one of 'wmb', not '{}'.".format(tuning_strategy[0]))
-    if tuning_strategy[1] not in 'xo':
-        raise ValueError("Desired tuning effect must be one of 'xo', not '{}'".format(tuning_strategy[1]))
-    if tuning_strategy != 'bxg' and len(tuning_strategy) > 2:
-        raise ValueError("Too many characters in tuning strategy, expected 2: '{}'".format(tuning_strategy))
-
-    favor_cutting = True if tuning_strategy[1] == 'x' else False
-
-    if tuning_strategy[0] == 'w':
-        return wobble_switch(target_seq, favor_cutting)
-    if tuning_strategy[0] == 'm':
-        return mismatch_switch(target_seq, favor_cutting)
-    if tuning_strategy[0] == 'b':
-        bulge_seq = 'G' if tuning_strategy == 'bxg' else 'A'
-        return bulge_switch(target_seq, favor_cutting, bulge_seq)
-
 def complementary_switch(target_seq):
     switch_domain = Domain('switch', reverse_complement(target_seq))
     on_domain = Domain('on', target_seq)
@@ -1131,6 +1032,110 @@ def bulge_switch(target_seq, favor_cutting, bulge_seq='A'):
 
     return switch_domain, on_domain, Domain('off', target_seq)
 
+def tunable_switch(target_seq, tuning_strategy=''):
+    """
+    Return three domains that comprise a switch.  The first domain ("switch") 
+    is a sequence that can base pair with either of the two following domains, 
+    the second domain ("on") is what the first should bind in the "on" state, 
+    and the third domain ("off") is what the first should bind in the "off" 
+    state.  
+    
+    By default, "switch" is perfectly complementary with both "on" and "off", 
+    so it doesn't have a preference for one over the other.  You can tune the 
+    switch by weakening the interactions it makes with one of its partners so 
+    that it will prefer the other.  The tuning_strategy parameter specifies how 
+    this should be done.  Each strategy is a 2-3 letter string.  The first 
+    letter specifies what kind of mutation to make:
+
+        w: Insert a wobble (GU) base pair.
+        m: Insert a one nucleotide mismatch (1x1).
+        b: Insert a one nucleotide bulge (1x0).
+
+    Wobble base pairs are weaker perturbations and are only expected to shift 
+    the equilibrium by a factor of 10.  Mismatches and bulges are stronger and 
+    are both expected to shift the equilibrium by a factor of 100.
+
+    The second letter specifies which state to weaken:
+    
+        x: More cutting, weaken the off state.
+        o: Less cutting, weaken the on state.
+    
+    The third letter is only applicable to the 'bx' strategy:
+
+        g: Make the bulge a G instead on an A.  This should lead to a slightly 
+           stronger activating effect.
+    """
+
+    if not tuning_strategy:
+        return complementary_switch(target_seq)
+
+    if tuning_strategy[0] not in 'wmb':
+        raise ValueError("Tuning strategy must be one of 'wmb', not '{}'.".format(tuning_strategy[0]))
+    if tuning_strategy[1] not in 'xo':
+        raise ValueError("Desired tuning effect must be one of 'xo', not '{}'".format(tuning_strategy[1]))
+    if tuning_strategy != 'bxg' and len(tuning_strategy) > 2:
+        raise ValueError("Too many characters in tuning strategy, expected 2: '{}'".format(tuning_strategy))
+
+    favor_cutting = True if tuning_strategy[1] == 'x' else False
+
+    if tuning_strategy[0] == 'w':
+        return wobble_switch(target_seq, favor_cutting)
+    if tuning_strategy[0] == 'm':
+        return mismatch_switch(target_seq, favor_cutting)
+    if tuning_strategy[0] == 'b':
+        bulge_seq = 'G' if tuning_strategy == 'bxg' else 'A'
+        return bulge_switch(target_seq, favor_cutting, bulge_seq)
+
+def serpentine_insert(ligand, target_seq, target_end, tuning_strategy='',
+        turn_seq='GAAA', num_aptamers=1):
+
+    if not target_seq:
+        raise ValueError('target_seq cannot be empty')
+
+    switch_domain, on_domain, off_domain = tunable_switch(
+            target_seq, tuning_strategy)
+
+    domains = [
+            Domain('turn', turn_seq),
+            switch_domain,
+            aptamer_insert(ligand, num_aptamers=num_aptamers),
+            on_domain,
+    ]
+
+    if target_end == '3':
+        domains.reverse()
+        i, j = 0, 2
+    else:
+        i, j = 1, 3
+
+    domains[i].expected_fold = '(' * len(domains[i])
+    domains[j].expected_fold = ')' * len(domains[j])
+
+    return Construct('serpentine', domains)
+
+def circle_insert(ligand, target_seq, target_end, tuning_strategy='',
+        num_aptamers=1):
+
+    if not target_seq:
+        raise ValueError('target_seq cannot be empty')
+
+    switch_domain, on_domain, off_domain = tunable_switch(
+            target_seq, tuning_strategy)
+
+    domains = [
+            on_domain,
+            aptamer_insert(ligand, num_aptamers=num_aptamers),
+            switch_domain,
+    ]
+
+    if target_end == '3':
+        domains.reverse()
+
+    domains[0].expected_fold = '(' * len(domains[0])
+    domains[2].expected_fold = ')' * len(domains[2])
+    
+    return Construct('circle', domains)
+
 
 def wt_sgrna(target=None):
     """
@@ -1182,7 +1187,7 @@ def dead_sgrna(target=None):
 
     return sgrna
 
-def fold_upper_stem(N, linker_len=0, splitter_len=0, num_aptamers=1, small_molecule='theo', target='aavs'):
+def fold_upper_stem(N, linker_len=0, splitter_len=0, num_aptamers=1, ligand='theo', target='aavs'):
     """
     Insert the aptamer into the upper stem region of the sgRNA.
 
@@ -1224,14 +1229,14 @@ def fold_upper_stem(N, linker_len=0, splitter_len=0, num_aptamers=1, small_molec
         args = N, linker_len
     if target != 'aavs':
         args = args + ('s='+target,)
-    if small_molecule != 'theo':
-        args = args + ('a='+small_molecule,)
+    if ligand != 'theo':
+        args = args + ('a='+ligand,)
 
     sgrna = wt_sgrna(target)
     sgrna.name = make_name('us', *args)
     sgrna.attach(
             aptamer_insert(
-                small_molecule,
+                ligand,
                 linker_len=linker_len,
                 splitter_len=splitter_len,
                 num_aptamers=num_aptamers,
@@ -1241,7 +1246,7 @@ def fold_upper_stem(N, linker_len=0, splitter_len=0, num_aptamers=1, small_molec
     )
     return sgrna
 
-def fold_lower_stem(N, linker_len=0, splitter_len=0, small_molecule='theo', target='aavs'):
+def fold_lower_stem(N, linker_len=0, splitter_len=0, ligand='theo', target='aavs'):
     """
     Insert the aptamer into the lower stem region of the sgRNA.
 
@@ -1273,14 +1278,14 @@ def fold_lower_stem(N, linker_len=0, splitter_len=0, small_molecule='theo', targ
         args = N, linker_len
     if target != 'aavs':
         args = args + ('s='+target,)
-    if small_molecule != 'theo':
-        args = args + ('a='+small_molecule,)
+    if ligand != 'theo':
+        args = args + ('a='+ligand,)
 
     sgrna = wt_sgrna(target)
     sgrna.name = make_name('ls', *args)
     sgrna.attach(
             aptamer_insert(
-                small_molecule,
+                ligand,
                 linker_len=linker_len,
                 splitter_len=splitter_len,
             ),
@@ -1289,7 +1294,7 @@ def fold_lower_stem(N, linker_len=0, splitter_len=0, small_molecule='theo', targ
     )
     return sgrna
 
-def fold_nexus(linker_len=0, small_molecule='theo', target='aavs'):
+def fold_nexus(linker_len=0, ligand='theo', target='aavs'):
     """
     Insert the aptamer into the nexus region of the sgRNA.
 
@@ -1319,14 +1324,14 @@ def fold_nexus(linker_len=0, small_molecule='theo', target='aavs'):
     args = (linker_len,)
     if target != 'aavs':
         args = args + ('s='+target,)
-    if small_molecule != 'theo':
-        args = args + ('a='+small_molecule,)
+    if ligand != 'theo':
+        args = args + ('a='+ligand,)
 
     sgrna = wt_sgrna(target)
     sgrna.name = make_name('nx', linker_len)
     sgrna.attach(
             aptamer_insert(
-                small_molecule,
+                ligand,
                 linker_len=linker_len,
                 repeat_factory=lambda name, length: repeat(name, length, 'U'),
             ),
@@ -1335,7 +1340,7 @@ def fold_nexus(linker_len=0, small_molecule='theo', target='aavs'):
     )
     return sgrna
     
-def fold_nexus_2(N, M, splitter_len=0, num_aptamers=1, small_molecule='theo', target='aavs'):
+def fold_nexus_2(N, M, splitter_len=0, num_aptamers=1, ligand='theo', target='aavs'):
     """
     Insert the aptamer into the nexus region of the sgRNA.
 
@@ -1391,8 +1396,8 @@ def fold_nexus_2(N, M, splitter_len=0, num_aptamers=1, small_molecule='theo', ta
         args = N, M
     if target != 'aavs':
         args = args + ('s='+target,)
-    if small_molecule != 'theo':
-        args = args + ('a='+small_molecule,)
+    if ligand != 'theo':
+        args = args + ('a='+ligand,)
 
     # Create and return the construct using a helper function.
 
@@ -1400,7 +1405,7 @@ def fold_nexus_2(N, M, splitter_len=0, num_aptamers=1, small_molecule='theo', ta
     sgrna.name = make_name('nxx', *args)
     sgrna.attach(
             aptamer_insert(
-                small_molecule,
+                ligand,
                 splitter_len=splitter_len,
                 num_aptamers=num_aptamers,
             ),
@@ -1470,7 +1475,7 @@ def fold_hairpin(H, N, A=1, ligand='theo', target='aavs'):
     )
     return sgrna
 
-def replace_hairpins(N, small_molecule='theo', target='aavs'):
+def replace_hairpins(N, ligand='theo', target='aavs'):
     """
     Remove a portion of the 3' terminal hairpins and replace it with the 
     aptamer.
@@ -1496,8 +1501,8 @@ def replace_hairpins(N, small_molecule='theo', target='aavs'):
     args = (N,)
     if target != 'aavs':
         args = args + ('s='+target,)
-    if small_molecule != 'theo':
-        args = args + ('a='+small_molecule,)
+    if ligand != 'theo':
+        args = args + ('a='+ligand,)
 
     design = wt_sgrna(target)
     design.name = make_name('hp', *args)
@@ -1507,13 +1512,13 @@ def replace_hairpins(N, small_molecule='theo', target='aavs'):
     linker_len = max(0, N - domain_len), 0
 
     design.attach(
-            aptamer_insert(small_molecule, linker_len=linker_len),
+            aptamer_insert(ligand, linker_len=linker_len),
             'hairpins', insertion_site,
             'hairpins', '...',
     )
     return design
 
-def induce_dimerization(half, N, small_molecule='theo', target='aavs'):
+def induce_dimerization(half, N, ligand='theo', target='aavs'):
     """
     Split the guide RNA into its two naturally occurring halves, and use the 
     aptamer to bring those halves together in the presence of the ligand.  The 
@@ -1544,8 +1549,8 @@ def induce_dimerization(half, N, small_molecule='theo', target='aavs'):
     args = half, N
     if target != 'aavs':
         args = args + ('s='+target,)
-    if small_molecule != 'theo':
-        args = args + ('a='+small_molecule,)
+    if ligand != 'theo':
+        args = args + ('a='+ligand,)
 
     # Construct and return the requested sequence.
 
@@ -1557,13 +1562,13 @@ def induce_dimerization(half, N, small_molecule='theo', target='aavs'):
         design += wt['spacer']
         design += wt['stem']
         design.attach(
-                aptamer(small_molecule, '5'),
+                aptamer(ligand, '5'),
                 'stem', 8 + N, 'stem', '...',
         )
     elif half == '3':
         design += wt
         design.attach(
-                aptamer(small_molecule, '3'),
+                aptamer(ligand, '3'),
                 'stem', '...', 'stem', 20 - N,
         )
     else:
@@ -1571,7 +1576,7 @@ def induce_dimerization(half, N, small_molecule='theo', target='aavs'):
 
     return design
 
-def serpentine_bulge(N, A=1, target='aavs'):
+def serpentine_bulge(N, tuning_strategy='', A=1, target='aavs'):
     """
     Sequester the bulge in a non-productive hairpin when the ligand isn't 
     present.  The bulge is an interesting target because it doesn't have to be 
@@ -1617,18 +1622,16 @@ def serpentine_bulge(N, A=1, target='aavs'):
             serpentine_insert(
                 'theo',
                 wt_sgrna()['stem'][22:22+N], '3',
-                num_aptamers=A,
+                tuning_strategy, num_aptamers=A,
             ),
             'stem', 8,
             'stem', 22,
     )
-    sgrna['decoy'].mutable = True
-    sgrna['decoy'].prepend('UC')
-    sgrna['decoy'].mutable = False
+    sgrna['on'].prepend('UC')
 
     return sgrna
 
-def serpentine_lower_stem(A=1, target='aavs'):
+def serpentine_lower_stem(tuning_strategy='', A=1, target='aavs'):
     """
     Sequester the nexus in base pairs with the lower stem in the absence of the 
     ligand.  This design is based off two ideas:
@@ -1671,19 +1674,18 @@ def serpentine_lower_stem(A=1, target='aavs'):
             serpentine_insert(
                 'theo',
                 'GGCU', '3',
+                tuning_strategy,
                 num_aptamers=A,
             ),
             'stem', 0,
             'nexus', 2,
     )
-    sgrna['decoy'].mutable = sgrna['latch'].mutable = True
-    sgrna['decoy'].prepend('UC')
-    sgrna['decoy'].append('GA')
-    sgrna['latch'].prepend('AAGU')
-    sgrna['decoy'].mutable = sgrna['latch'].mutable = False
+    sgrna['on'].prepend('UC')
+    sgrna['on'].append('GA')
+    sgrna['switch'].prepend('AAGU')
     return sgrna
 
-def serpentine_lower_stem_around_nexus(A=1, target='aavs'):
+def serpentine_lower_stem_around_nexus(tuning_strategy='', A=1, target='aavs'):
     """
     Use the lower stem to extend the nexus stem in the absence of the aptamer 
     ligand.  This design is based of the idea that the sgRNA is very sensitive 
@@ -1716,19 +1718,18 @@ def serpentine_lower_stem_around_nexus(A=1, target='aavs'):
             serpentine_insert(
                 'theo',
                 'GUUAUC', '3',
+                tuning_strategy,
                 turn_seq='',
                 num_aptamers=A,
             ),
             'stem', '...',
             'stem', '...',
     )
-    sgrna['decoy'].mutable = sgrna['latch'].mutable = True
-    sgrna['decoy'].append('GA')
-    sgrna['latch'].prepend('AAGU')
-    sgrna['decoy'].mutable = sgrna['latch'].mutable = False
+    sgrna['on'].append('GA')
+    sgrna['switch'].prepend('AAGU')
     return sgrna
 
-def serpentine_hairpin(N, A=1, target='aavs'):
+def serpentine_hairpin(N, tuning_strategy='', A=1, target='aavs'):
     """
     Sequester the 3' end of the nexus in base pairs with the 5' strand of the 
     first hairpin in the absence of aptamer ligand.  This design is based on 
@@ -1769,6 +1770,7 @@ def serpentine_hairpin(N, A=1, target='aavs'):
             serpentine_insert(
                 'theo',
                 wt_sgrna().seq[44-N:44], '5',
+                tuning_strategy,
                 turn_seq='AUCA', # ANYA
                 num_aptamers=A,
             ),
@@ -1777,7 +1779,7 @@ def serpentine_hairpin(N, A=1, target='aavs'):
     )
     return sgrna
 
-def circle_bulge(A=1, target='aavs'):
+def circle_bulge(tuning_strategy='', A=1, target='aavs'):
     """
     Extend the lower stem hairpin through the bulge when the small molecule is 
     absent.  This design is based off the fact that "straightening" the bulge 
@@ -1811,13 +1813,16 @@ def circle_bulge(A=1, target='aavs'):
     sgrna = wt_sgrna(target)
     sgrna.name = make_name('cb')
     sgrna.attach(
-            circle_insert('theo', 'AAGU', '3', num_aptamers=A),
+            circle_insert(
+                'theo', 'AAGU', '3',
+                tuning_strategy, num_aptamers=A,
+            ),
             'stem', 6,
             'stem', 20,
     )
     return sgrna
 
-def circle_lower_stem(A=1, target='aavs'):
+def circle_lower_stem(tuning_strategy='', A=1, target='aavs'):
     """
     Sequester the 5' half of the nexus in base pairs with the 5' half of the 
     lower stem in the absence of aptamer ligand.  This strategy is based on  
@@ -1858,17 +1863,18 @@ def circle_lower_stem(A=1, target='aavs'):
     sgrna = wt_sgrna(target)
     sgrna.name = make_name('cl')
     sgrna.attach(
-            circle_insert('theo', 'AAGGCU', '3', num_aptamers=A),
+            circle_insert(
+                'theo', 'AAGGCU', '3',
+                tuning_strategy, num_aptamers=A,
+            ),
             'stem', 0,
             'stem', '...',
     )
-    sgrna['decoy'].mutable = sgrna['latch'].mutable = True
-    sgrna['latch'].append('GA')
-    sgrna['decoy'].prepend('AAGU')
-    sgrna['decoy'].mutable = sgrna['latch'].mutable = False
+    sgrna['switch'].append('GA')
+    sgrna['on'].prepend('AAGU')
     return sgrna
 
-def circle_hairpin(N, A=1, target='aavs'):
+def circle_hairpin(N, tuning_strategy='', A=1, target='aavs'):
     """
     Move the nexus closer to the hairpins in the absence of the aptamer's 
     ligand.  This design is supported by the fact that inserting one residue 
@@ -1912,6 +1918,7 @@ def circle_hairpin(N, A=1, target='aavs'):
             circle_insert(
                 'theo',
                 wt_sgrna().seq[48-N:48], '5',
+                tuning_strategy,
                 num_aptamers=A),
             'hairpins', 5,
             'hairpins', 17,
@@ -2310,20 +2317,8 @@ def test_repeat():
     assert repeat('dummy', 6) == 'UUUCCC'
     assert repeat('dummy', 7) == 'UUUCCCU'
 
-def test_serpentine_insert():
-    assert serpentine_insert('theo', 'G', '3') == 'GAUACCAGCCGAAAGGCCCUUGGCAGCGAAA'
-    assert serpentine_insert('theo', 'G', '5') == 'GAAACAUACCAGCCGAAAGGCCCUUGGCAGG'
-    assert serpentine_insert('theo', 'GUUAAAAU', '3') == 'GUUAAAAUAUACCAGCCGAAAGGCCCUUGGCAGAUUUUAACGAAA'
-    assert serpentine_insert('theo', 'GUUAAAAU', '5') == 'GAAAAUUUUAACAUACCAGCCGAAAGGCCCUUGGCAGGUUAAAAU'
-    assert serpentine_insert('theo', 'GUAC', '3', turn_seq='UAA') == 'GUACAUACCAGCCGAAAGGCCCUUGGCAGGUACUAA'
-    assert serpentine_insert('theo', 'GUAC', '3', num_aptamers=2) == 'GUACAUACCAGCCAUACCAGCCGAAAGGCCCUUGGCAGGGCCCUUGGCAGGUACGAAA'
-
-def test_circle_insert():
-    assert circle_insert('theo', 'G', '3') == 'CAUACCAGCCGAAAGGCCCUUGGCAGG'
-    assert circle_insert('theo', 'G', '5') == 'GAUACCAGCCGAAAGGCCCUUGGCAGC'
-    assert circle_insert('theo', 'AUGC', '3') == 'GCAUAUACCAGCCGAAAGGCCCUUGGCAGAUGC'
-    assert circle_insert('theo', 'AUGC', '5') == 'AUGCAUACCAGCCGAAAGGCCCUUGGCAGGCAU'
-    assert circle_insert('theo', 'AUGC', '3', num_aptamers=2) == 'GCAUAUACCAGCCAUACCAGCCGAAAGGCCCUUGGCAGGGCCCUUGGCAGAUGC'
+def test_complementary_switch():
+    assert complementary_switch('AUGC') == ('GCAU', 'AUGC', 'AUGC')
 
 def test_wobble_switch():
     assert wobble_switch('AAGCC', True) == ('GGUUU', 'AAACC', 'AAGCC')
@@ -2357,6 +2352,38 @@ def test_bulge_switch():
     assert bulge_switch('GGAA', True, 'G') == ('UUGCC', 'GGCAA', 'GGAA')
     assert bulge_switch('GGAA', True, 'AA') == ('UUAACC', 'GGUUAA', 'GGAA')
     assert bulge_switch('UUCC', False) == ('GGAA', 'UUACC', 'UUCC')
+
+def test_tunable_switch():
+    import pytest
+
+    assert tunable_switch('AUGC') == complementary_switch('AUGC')
+    assert tunable_switch('AUGC', 'wx') == wobble_switch('AUGC', True)
+    assert tunable_switch('AUGC', 'wo') == wobble_switch('AUGC', False)
+    assert tunable_switch('AUGC', 'mx') == mismatch_switch('AUGC', True)
+    assert tunable_switch('AUGC', 'mo') == mismatch_switch('AUGC', False)
+    assert tunable_switch('AUGC', 'bx') == bulge_switch('AUGC', True)
+    assert tunable_switch('AUGC', 'bxg') == bulge_switch('AUGC', True, 'G')
+    assert tunable_switch('AUGC', 'bo') == bulge_switch('AUGC', False)
+
+    with pytest.raises(ValueError):
+        tunable_switch('AUGC', 'hello')
+    with pytest.raises(ValueError):
+        tunable_switch('AUGC', 'wxg')
+
+def test_serpentine_insert():
+    assert serpentine_insert('theo', 'G', '3') == 'GAUACCAGCCGAAAGGCCCUUGGCAGCGAAA'
+    assert serpentine_insert('theo', 'G', '5') == 'GAAACAUACCAGCCGAAAGGCCCUUGGCAGG'
+    assert serpentine_insert('theo', 'GUUAAAAU', '3') == 'GUUAAAAUAUACCAGCCGAAAGGCCCUUGGCAGAUUUUAACGAAA'
+    assert serpentine_insert('theo', 'GUUAAAAU', '5') == 'GAAAAUUUUAACAUACCAGCCGAAAGGCCCUUGGCAGGUUAAAAU'
+    assert serpentine_insert('theo', 'GUAC', '3', turn_seq='UAA') == 'GUACAUACCAGCCGAAAGGCCCUUGGCAGGUACUAA'
+    assert serpentine_insert('theo', 'GUAC', '3', num_aptamers=2) == 'GUACAUACCAGCCAUACCAGCCGAAAGGCCCUUGGCAGGGCCCUUGGCAGGUACGAAA'
+
+def test_circle_insert():
+    assert circle_insert('theo', 'G', '3') == 'CAUACCAGCCGAAAGGCCCUUGGCAGG'
+    assert circle_insert('theo', 'G', '5') == 'GAUACCAGCCGAAAGGCCCUUGGCAGC'
+    assert circle_insert('theo', 'AUGC', '3') == 'GCAUAUACCAGCCGAAAGGCCCUUGGCAGAUGC'
+    assert circle_insert('theo', 'AUGC', '5') == 'AUGCAUACCAGCCGAAAGGCCCUUGGCAGGCAU'
+    assert circle_insert('theo', 'AUGC', '3', num_aptamers=2) == 'GCAUAUACCAGCCAUACCAGCCGAAAGGCCCUUGGCAGGGCCCUUGGCAGAUGC'
 
 def test_wt_sgrna():
     assert from_name('wt') == 'GUUUUAGAGCUAGAAAUAGCAAGUUAAAAUAAGGCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
