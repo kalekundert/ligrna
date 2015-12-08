@@ -5,11 +5,8 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 
-import nonstdlib
-import collections
-import contextlib
-import random
-import six
+import collections, contextlib, random
+import nonstdlib, six
 
 class Sequence (object):
     """
@@ -179,15 +176,21 @@ class Construct (Sequence):
 
     @property
     def seq(self):
-        return ''.join(
+        return str(''.join(
                 iter.domain.seq[iter.rel_start:iter.rel_end]
-                for iter in self._iterate_domains())
+                for iter in self._iterate_domains()))
 
     @property
     def constraints(self):
-        return ''.join(
+        return str(''.join(
                 iter.domain.constraints[iter.rel_start:iter.rel_end]
-                for iter in self._iterate_domains())
+                for iter in self._iterate_domains()))
+
+    @property
+    def expected_fold(self):
+        return str(''.join(
+                iter.domain.expected_fold[iter.rel_start:iter.rel_end]
+                for iter in self._iterate_domains()))
 
     def domains_from_name(self, *names):
         """
@@ -545,11 +548,12 @@ class Domain (Sequence):
     A mutable sequence that can be used to compose larger constructs.
     """
 
-    def __init__(self, name, sequence, style=None, mutable=False):
+    def __init__(self, name, sequence, style=None, mutable=True):
         Sequence.__init__(self, name)
         self._sequence = sequence
         self._attachment_sites = []
         self._constraints = None
+        self._expected_fold = None
         self.construct = None
         self.style = style
         self.mutable = mutable
@@ -568,14 +572,19 @@ class Domain (Sequence):
             start, stop = index.start, index.stop
         else:
             start, stop = index, index + 1
+
         self.seq = self.seq[:start] + sequence + self.seq[stop:]
+        if self._constraints is not None:
+            self.constraints = self.constraints[:start] + '.' * len(sequence) + self.constraints[stop:]
+        if self._expected_fold is not None:
+            self.expected_fold = self.expected_fold[:start] + '.' * len(sequence) + self.expected_fold[stop:]
 
     def __delitem__(self, index):
         self[index] = ''
 
     @property
     def seq(self):
-        return self._sequence
+        return str(self._sequence)
 
     @seq.setter
     def seq(self, sequence):
@@ -594,6 +603,16 @@ class Domain (Sequence):
         if constraints and len(constraints) != len(self):
             raise ValueError("constraints don't match sequence")
         self._constraints = constraints
+
+    @property
+    def expected_fold(self):
+        return self._expected_fold or '.' * len(self)
+
+    @expected_fold.setter
+    def expected_fold(self, expected_fold):
+        if expected_fold and len(expected_fold) != len(self):
+            raise ValueError("expected_fold doesn't match sequence")
+        self._expected_fold = expected_fold
 
     @property
     def attachment_sites(self):
@@ -640,10 +659,11 @@ class Domain (Sequence):
         self[index:index] = insert
 
     def append(self, sequence):
-        self.seq = self.seq + sequence
+        N = len(self)
+        self[N:N] = sequence
 
     def prepend(self, sequence):
-        self.seq = sequence + self.seq
+        self[0:0] = sequence
 
     def replace(self, start, end, insert):
         self[start:end] = insert
@@ -704,17 +724,52 @@ def make_name(factory, *args):
 def molecular_weight(name, polymer='rna'):
     return from_name(name).mass(polymer)
 
+def reverse(sequence):
+    return sequence[::-1]
+
 def complement(sequence):
     complements = {
-            ord('A'): 'U',
-            ord('C'): 'G',
-            ord('G'): 'C',
-            ord('U'): 'A',
+            'A': 'U',
+            'C': 'G',
+            'G': 'C',
+            'U': 'A',
     }
-    return sequence.translate(complements)
+    return ''.join(complements[x] for x in sequence)
 
 def reverse_complement(sequence):
-    return complement(sequence[::-1])
+    return reverse(complement(sequence))
+
+def find_middlemost(seq, pattern):
+    """
+    Find all occurrences of the given pattern in the given sequence and return 
+    the index of the middlemost one.  The pattern must include at least one 
+    parenthetical group.  The start of the group will be the value used to 
+    calculate the middlemost match.
+    """
+    import regex as re
+    matches = [x for x in re.finditer(pattern, seq, overlapped=True)]
+
+    if not matches:
+        raise ValueError("'{}' not found in '{}'".format(pattern, seq))
+
+    seq_len = len(seq)
+    min_dist = seq_len
+
+    print(matches)
+    for match in matches:
+        index, group = -1, 0
+        while index < 0:
+            group += 1
+            index = match.start(group)
+            print(':', index, group, match.group(group), pattern, seq)
+
+        dist = abs(index - (seq_len-1) / 2)
+        if dist < min_dist:
+            best_index = index
+            min_dist = dist
+
+    print(best_index)
+    return best_index
 
 
 def t7_promoter(source='briner'):
@@ -853,7 +908,7 @@ def aptamer(ligand, piece='whole'):
     if ligand in ('th', 'theo', 'theophylline'):
         name = 'theo aptamer'
         sequence_pieces   = 'AUACCAGCC', 'GAAA', 'GGCCCUUGGCAG'
-        constraint_pieces = '(((((.(((', '....', ')))....)))))'
+        constraint_pieces = '.(.((((((', '....', ')))...))).).'
     else:
         raise ValueError("no aptamer for '{}'".format(ligand))
 
@@ -930,8 +985,14 @@ def serpentine_insert(ligand, target_seq, target_end, turn_seq='GAAA',
             Domain('decoy', target_seq),
     ]
 
+    if target_end == '5':
+        domains[1].expected_fold = '(' * len(target_seq)
+        domains[3].expected_fold = ')' * len(target_seq)
+
     if target_end == '3':
         domains.reverse()
+        domains[0].expected_fold = '(' * len(target_seq)
+        domains[2].expected_fold = ')' * len(target_seq)
 
     return Construct('serpentine', domains)
 
@@ -948,7 +1009,127 @@ def circle_insert(ligand, target_seq, target_end, num_aptamers=1):
     if target_end == '3':
         domains.reverse()
 
+    domains[0].expected_fold = '(' * len(target_seq)
+    domains[2].expected_fold = ')' * len(target_seq)
+    
     return Construct('circle', domains)
+
+def tunable_switch(target_seq, tuning_strategy=''):
+    """
+    Return three domains that comprise a switch.  The first domain ("switch") 
+    is a sequence that can base pair with either of the two following domains, 
+    the second domain ("on") is what the first should bind in the "on" state, 
+    and the third domain ("off") is what the first should bind in the "off" 
+    state.  
+    
+    By default, "switch" is perfectly complementary with both "on" and "off", 
+    so it doesn't have a preference for one over the other.  You can tune the 
+    switch by weakening the interactions it makes with one of its partners so 
+    that it will prefer the other.  The tuning_strategy parameter specifies how 
+    this should be done.  Each strategy is a 2-3 letter string.  The first 
+    letter specifies what kind of mutation to make:
+
+        w: Insert a wobble (GU) base pair.
+        m: Insert a one nucleotide mismatch (1x1).
+        b: Insert a one nucleotide bulge (1x0).
+
+    Wobble base pairs are weaker perturbations and are only expected to shift 
+    the equilibrium by a factor of 10.  Mismatches and bulges are stronger and 
+    are both expected to shift the equilibrium by a factor of 100.
+
+    The second letter specifies which state to weaken:
+    
+        x: More cutting, weaken the off state.
+        o: Less cutting, weaken the on state.
+    
+    The third letter is only applicable to the 'bx' strategy:
+
+        g: Make the bulge a G instead on an A.  This should lead to a slightly 
+           stronger activating effect.
+    """
+
+    if not tuning_strategy:
+        return complementary_switch(target_seq)
+
+    if tuning_strategy[0] not in 'wmb':
+        raise ValueError("Tuning strategy must be one of 'wmb', not '{}'.".format(tuning_strategy[0]))
+    if tuning_strategy[1] not in 'xo':
+        raise ValueError("Desired tuning effect must be one of 'xo', not '{}'".format(tuning_strategy[1]))
+    if tuning_strategy != 'bxg' and len(tuning_strategy) > 2:
+        raise ValueError("Too many characters in tuning strategy, expected 2: '{}'".format(tuning_strategy))
+
+    favor_cutting = True if tuning_strategy[1] == 'x' else False
+
+    if tuning_strategy[0] == 'w':
+        return wobble_switch(target_seq, favor_cutting)
+    if tuning_strategy[0] == 'm':
+        return mismatch_switch(target_seq, favor_cutting)
+    if tuning_strategy[0] == 'b':
+        bulge_seq = 'G' if tuning_strategy == 'bxg' else 'A'
+        return bulge_switch(target_seq, favor_cutting, bulge_seq)
+
+def complementary_switch(target_seq):
+    switch_domain = Domain('switch', reverse_complement(target_seq))
+    on_domain = Domain('on', target_seq)
+    off_domain = Domain('off', target_seq)
+    return switch_domain, on_domain, off_domain
+
+def wobble_switch(target_seq, favor_cutting):
+    # Find all the positions where a wobble base pair could be made, i.e. all 
+    # the positions in the "off" sequence that are either G or U.
+
+    if favor_cutting:
+        i = find_middlemost(target_seq, '([GU])')
+        I = len(target_seq) - i - 1
+        mutation = {'G':'U','U':'G'}[target_seq[i]] 
+
+        switch_domain = Domain('switch', reverse_complement(target_seq))
+        switch_domain.mutate(I, mutation)
+        on_domain = Domain('on', reverse_complement(switch_domain.seq))
+
+    else:
+        i = find_middlemost(target_seq, '([AC])')
+        mutation = {'C':'U','A':'G'}[target_seq[i]] 
+
+        on_domain = Domain('on', target_seq)
+        on_domain.mutate(i, mutation)
+        switch_domain = Domain('switch', reverse_complement(target_seq))
+
+    return switch_domain, on_domain, Domain('off', target_seq)
+
+def mismatch_switch(target_seq, favor_cutting):
+    i = find_middlemost(target_seq, '[AU](.)[GC]|[GC](.)[AU]')
+    I = len(target_seq) - i - 1
+    mutations = {'A':'C','C':'C','G':'A','U':'C'}
+
+    if favor_cutting:
+        switch_domain = Domain('switch', reverse_complement(target_seq))
+        print(I, mutations[target_seq[i]], target_seq, i, I)
+        switch_domain.mutate(I, mutations[target_seq[i]])
+        on_domain = Domain('on', reverse_complement(switch_domain.seq))
+
+    else:
+        on_domain = Domain('on', target_seq)
+        print(i, mutations[complement(target_seq[i])])
+        on_domain.mutate(i, mutations[complement(target_seq[i])])
+        switch_domain = Domain('switch', reverse_complement(target_seq))
+
+    return switch_domain, on_domain, Domain('off', target_seq)
+
+def bulge_switch(target_seq, favor_cutting, bulge_seq='A'):
+    i = len(target_seq) // 2
+    
+    if favor_cutting:
+        switch_domain = Domain('switch', reverse_complement(target_seq))
+        switch_domain.mutate(i, bulge_seq)
+        on_domain = Domain('on', reverse_complement(switch_domain.seq))
+
+    else:
+        on_domain = Domain('on', target_seq)
+        on_domain.mutate(i, bulge_seq)
+        switch_domain = Domain('switch', reverse_complement(target_seq))
+
+    return switch_domain, on_domain, Domain('off', target_seq)
 
 
 def wt_sgrna(target=None):
@@ -970,6 +1151,9 @@ def wt_sgrna(target=None):
     sgrna += Domain('nexus', 'AAGGCUAGUCCGU')
     sgrna += Domain('hairpins', 'UAUCAACUUGAAAAAGUGGCACCGAGUCGGUGC')
     sgrna += Domain('tail', 'UUUUUU')
+
+    sgrna['stem'].expected_fold = '((((((..((((....))))....))))))'
+    sgrna['hairpins'].expected_fold = '.....((((....)))).((((((...))))))'
 
     sgrna['stem'].style = 'green'
     sgrna['nexus'].style = 'red'
@@ -1811,9 +1995,6 @@ def test_domain_class():
     domain.attachment_sites = range(len(domain))
     assert domain.attachment_sites == [0, 1, 2, 3]
 
-    with pytest.raises(AssertionError):
-        domain.seq = 'AAAA'
-
     domain.mutable = True
     domain.constraints = None
 
@@ -2065,6 +2246,36 @@ def test_complements():
     assert complement('ACUG') == 'UGAC'
     assert reverse_complement('ACUG') == 'CAGU'
 
+def test_find_middlemost():
+    import pytest
+
+    # Test a few simple cases.
+    assert find_middlemost('G', '(G)') == 0
+    assert find_middlemost('AG', '(G)') == 1
+    assert find_middlemost('AGA', '(G)') == 1
+
+    # Make sure the middlemost group is found, not the middlemost start.
+    assert find_middlemost('GGGAGGGA', 'GGG(A)') == 3
+
+    # If there is a tie, the leftmost match will be returned.
+    assert find_middlemost('AGGA', '([G])') == 1
+    assert find_middlemost('AGGAA', '([G])') == 2
+    assert find_middlemost('AAGGA', '([G])') == 2
+
+    # If multiple groups exist, use whichever one matches.
+    assert find_middlemost('GGGGG', '(A)|(G)') == 2
+
+    # Find overlapping patterns.
+    assert find_middlemost('GGGGG', 'G(G)') == 2
+
+    # Raise a ValueError if the pattern isn't found.
+    with pytest.raises(ValueError):
+        find_middlemost('GGGGGG', '(A)')
+    
+    # Test some "real life" cases.
+    assert find_middlemost('AGGGA', '([GU])') == 2
+    assert find_middlemost('ACGACGU', '[AU](.)[CG]') == 4
+
 def test_t7_promoter():
     import pytest
 
@@ -2113,6 +2324,33 @@ def test_circle_insert():
     assert circle_insert('theo', 'AUGC', '3') == 'GCAUAUACCAGCCGAAAGGCCCUUGGCAGAUGC'
     assert circle_insert('theo', 'AUGC', '5') == 'AUGCAUACCAGCCGAAAGGCCCUUGGCAGGCAU'
     assert circle_insert('theo', 'AUGC', '3', num_aptamers=2) == 'GCAUAUACCAGCCAUACCAGCCGAAAGGCCCUUGGCAGGGCCCUUGGCAGAUGC'
+
+def test_wobble_switch():
+    assert wobble_switch('AAGCC', True) == ('GGUUU', 'AAACC', 'AAGCC')
+    assert wobble_switch('AAUCC', True) == ('GGGUU', 'AACCC', 'AAUCC')
+    assert wobble_switch('GGCUU', False) == ('AAGCC', 'GGUUU', 'GGCUU')
+    assert wobble_switch('GGAUU', False) == ('AAUCC', 'GGGUU', 'GGAUU')
+
+def test_mismatch_switch():
+    # Test all the different nucleotides to mismatch with.
+    assert mismatch_switch('GGAAA', True) == ('UUCCC', 'GGGAA', 'GGAAA')
+    assert mismatch_switch('GGCAA', True) == ('UUCCC', 'GGGAA', 'GGCAA')
+    assert mismatch_switch('GGGAA', True) == ('UUACC', 'GGUAA', 'GGGAA')
+    assert mismatch_switch('GGUAA', True) == ('UUCCC', 'GGGAA', 'GGUAA')
+    assert mismatch_switch('GGAAA', False) == ('UUUCC', 'GGCAA', 'GGAAA')
+    assert mismatch_switch('GGCAA', False) == ('UUGCC', 'GGAAA', 'GGCAA')
+    assert mismatch_switch('GGGAA', False) == ('UUCCC', 'GGCAA', 'GGGAA')
+    assert mismatch_switch('GGUAA', False) == ('UUACC', 'GGCAA', 'GGUAA')
+
+    # Test all the different AU/GC contexts.
+    assert mismatch_switch('AACCC', True) == ('GGCUU', 'AAGCC', 'AACCC')
+    assert mismatch_switch('AACGG', True) == ('CCCUU', 'AAGGG', 'AACGG')
+    assert mismatch_switch('CCCAA', True) == ('UUCGG', 'CCGAA', 'CCCAA')
+    assert mismatch_switch('CCCUU', True) == ('AACGG', 'CCGUU', 'CCCUU')
+    assert mismatch_switch('GGCAA', True) == ('UUCCC', 'GGGAA', 'GGCAA')
+    assert mismatch_switch('GGCUU', True) == ('AACCC', 'GGGUU', 'GGCUU')
+    assert mismatch_switch('UUCCC', True) == ('GGCAA', 'UUGCC', 'UUCCC')
+    assert mismatch_switch('UUCGG', True) == ('CCCAA', 'UUGGG', 'UUCGG')
 
 def test_wt_sgrna():
     assert from_name('wt') == 'GUUUUAGAGCUAGAAAUAGCAAGUUAAAAUAAGGCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
