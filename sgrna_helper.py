@@ -1121,12 +1121,12 @@ def bulge_switch(target_seq, favor_cutting, bulge_seq='A'):
     
     if favor_cutting:
         switch_domain = Domain('switch', reverse_complement(target_seq))
-        switch_domain.mutate(i, bulge_seq)
+        switch_domain.insert(i, bulge_seq)
         on_domain = Domain('on', reverse_complement(switch_domain.seq))
 
     else:
         on_domain = Domain('on', target_seq)
-        on_domain.mutate(i, bulge_seq)
+        on_domain.insert(i, bulge_seq)
         switch_domain = Domain('switch', reverse_complement(target_seq))
 
     return switch_domain, on_domain, Domain('off', target_seq)
@@ -2351,6 +2351,12 @@ def test_mismatch_switch():
     assert mismatch_switch('GGCUU', True) == ('AACCC', 'GGGUU', 'GGCUU')
     assert mismatch_switch('UUCCC', True) == ('GGCAA', 'UUGCC', 'UUCCC')
     assert mismatch_switch('UUCGG', True) == ('CCCAA', 'UUGGG', 'UUCGG')
+
+def test_bulge_switch():
+    assert bulge_switch('GGAA', True) == ('UUACC', 'GGUAA', 'GGAA')
+    assert bulge_switch('GGAA', True, 'G') == ('UUGCC', 'GGCAA', 'GGAA')
+    assert bulge_switch('GGAA', True, 'AA') == ('UUAACC', 'GGUUAA', 'GGAA')
+    assert bulge_switch('UUCC', False) == ('GGAA', 'UUACC', 'UUCC')
 
 def test_wt_sgrna():
     assert from_name('wt') == 'GUUUUAGAGCUAGAAAUAGCAAGUUAAAAUAAGGCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
