@@ -19,49 +19,49 @@ import copy
 import gc
 import subprocess
 
-fast_run = False
+fast_run = True
 channel_name = 'PE-Texas Red-A'
 colors = [(0,0,1,0.3), (0,1,0,0.3), (1,0,0,0.3)]
 well_types = ['Pos', 'Neg']
 
-two_pm_dir = '/home/kyleb/data/cas9/151106/kyleb/151106-2pm_001/96 Well - Flat bottom'
-four_pm_dir = '/kortemmelab/data/kyleb/cas9/151106/kyleb/151106-4pm_001/96 Well - Flat bottom'
-dir_to_load = four_pm_dir
+two_pm_dir = '/kortemmelab/data/kyleb/cas9/151106-3.0/151106-2pm_001/96 Well - Flat bottom'
+# four_pm_dir = '/kortemmelab/data/kyleb/cas9/151106/kyleb/151106-4pm_001/96 Well - Flat bottom'
+dir_to_load = two_pm_dir
 
-plate_1 = Plate([
-    PlateInfo('Control-Pos', None, ['E1']),
-    PlateInfo('Control-Neg', None, ['E2']),
-    PlateInfo('design-4-Pos', None, ['E3']),
-    PlateInfo('design-4-Neg', None, ['E4']),
-    PlateInfo('design-7-Pos', None, ['E5']),
-    PlateInfo('design-7-Neg', None, ['E6']),
-], sample_dir = four_pm_dir,
-    name = 'replicate_1',
-)
+# plate_1 = Plate([
+#     PlateInfo('Control-Pos', None, ['E1']),
+#     PlateInfo('Control-Neg', None, ['E2']),
+#     PlateInfo('design-4-Pos', None, ['E3']),
+#     PlateInfo('design-4-Neg', None, ['E4']),
+#     PlateInfo('design-7-Pos', None, ['E5']),
+#     PlateInfo('design-7-Neg', None, ['E6']),
+# ], sample_dir = four_pm_dir,
+#     name = 'replicate_1',
+# )
 
-plate_2 = Plate([
-    PlateInfo('Control-Pos', None, ['F1']),
-    PlateInfo('Control-Neg', None, ['F2']),
-    PlateInfo('design-4-Pos', None, ['F3']),
-    PlateInfo('design-4-Neg', None, ['F4']),
-    PlateInfo('design-7-Pos', None, ['F5']),
-    PlateInfo('design-7-Neg', None, ['F6']),
-], sample_dir = four_pm_dir,
-    name = 'replicate_2',
-)
+# plate_2 = Plate([
+#     PlateInfo('Control-Pos', None, ['F1']),
+#     PlateInfo('Control-Neg', None, ['F2']),
+#     PlateInfo('design-4-Pos', None, ['F3']),
+#     PlateInfo('design-4-Neg', None, ['F4']),
+#     PlateInfo('design-7-Pos', None, ['F5']),
+#     PlateInfo('design-7-Neg', None, ['F6']),
+# ], sample_dir = four_pm_dir,
+#     name = 'replicate_2',
+# )
 
-plate_3 = Plate([
-    PlateInfo('Control-Pos', None, ['G1']),
-    PlateInfo('Control-Neg', None, ['G2']),
-    PlateInfo('design-4-Pos', None, ['G3']),
-    PlateInfo('design-4-Neg', None, ['G4']),
-    PlateInfo('design-7-Pos', None, ['G5']),
-    PlateInfo('design-7-Neg', None, ['G6']),
-], sample_dir = four_pm_dir,
-    name = 'replicate_3',
-)
+# plate_3 = Plate([
+#     PlateInfo('Control-Pos', None, ['G1']),
+#     PlateInfo('Control-Neg', None, ['G2']),
+#     PlateInfo('design-4-Pos', None, ['G3']),
+#     PlateInfo('design-4-Neg', None, ['G4']),
+#     PlateInfo('design-7-Pos', None, ['G5']),
+#     PlateInfo('design-7-Neg', None, ['G6']),
+# ], sample_dir = four_pm_dir,
+#     name = 'replicate_3',
+# )
 
-four_pm_plates = [plate_1]#, plate_2, plate_3]
+# four_pm_plates = [plate_1]#, plate_2, plate_3]
 
 twopm_plate_1 = Plate([
     PlateInfo('Control-Pos', None, ['A1']),
@@ -96,7 +96,7 @@ twopm_plate_3 = Plate([
     name = 'replicate_3',
 )
 
-two_pm_plates = [twopm_plate_1]#, twopm_plate_2, twopm_plate_3]
+two_pm_plates = [twopm_plate_1, twopm_plate_2, twopm_plate_3]
 
 def main():
     outer_fig_dir = os.path.join('script_output', os.path.basename(__file__).split('.')[0])
