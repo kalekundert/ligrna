@@ -94,6 +94,40 @@ elif [ "$round" = 5 ]; then
         cl                  \
         ch/4                \
 
+elif [ "$round" = 6 ]; then
+    # Estimated price: $2581
+    ./show_seqs.py "$@"     \
+        sb/2/bo             \
+        sb/3                \
+        sb/3/mo             \
+        sb/3/bo             \
+        sb/4                \
+        sb/4/wo             \
+        sb/4/mo             \
+        sb/4/bo             \
+        sb/5/mo             \
+        sb/6                \
+        sb/6/mo             \
+        slx/wo              \
+        slx/mx              \
+        sh/4                \
+        sh/4/wx             \
+        sh/4/mx             \
+        sh/4/bx             \
+        sh/5/mx             \
+        sh/5/bxg            \
+        sh/6                \
+        sh/7/wx             \
+        cb/wo               \
+        cb/mo               \
+        cb/bo               \
+        cl/wo               \
+        ch/5                \
+        ch/5/wo             \
+        ch/6                \
+        ch/6/wo             \
+
+
 
 else
     echo "Error: round '$round' not yet defined."

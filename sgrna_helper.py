@@ -719,7 +719,7 @@ def parse_name(name):
     return sub_names
 
 def make_name(factory, *args):
-    return factory + '(' + ','.join(str(x) for x in args) + ')'
+    return factory + '(' + ','.join(str(x) for x in args if str(x)) + ')'
 
 def molecular_weight(name, polymer='rna'):
     return from_name(name).mass(polymer)
@@ -1005,13 +1005,11 @@ def mismatch_switch(target_seq, favor_cutting):
 
     if favor_cutting:
         switch_domain = Domain('switch', reverse_complement(target_seq))
-        print(I, mutations[target_seq[i]], target_seq, i, I)
         switch_domain.mutate(I, mutations[target_seq[i]])
         on_domain = Domain('on', reverse_complement(switch_domain.seq))
 
     else:
         on_domain = Domain('on', target_seq)
-        print(i, mutations[complement(target_seq[i])])
         on_domain.mutate(i, mutations[complement(target_seq[i])])
         switch_domain = Domain('switch', reverse_complement(target_seq))
 
@@ -1617,7 +1615,7 @@ def serpentine_bulge(N, tuning_strategy='', A=1, target='aavs'):
         raise ValueError("sb(N): N must be 2 or greater")
 
     sgrna = wt_sgrna(target)
-    sgrna.name = make_name('sb', N)
+    sgrna.name = make_name('sb', N, tuning_strategy)
     sgrna.attach(
             serpentine_insert(
                 'theo',
@@ -1669,7 +1667,7 @@ def serpentine_lower_stem(tuning_strategy='', A=1, target='aavs'):
         want the sgRNA without any spacer sequence at all.
     """
     sgrna = wt_sgrna(target)
-    sgrna.name = make_name('sl')
+    sgrna.name = make_name('sl', tuning_strategy)
     sgrna.attach(
             serpentine_insert(
                 'theo',
@@ -1713,7 +1711,7 @@ def serpentine_lower_stem_around_nexus(tuning_strategy='', A=1, target='aavs'):
         want the sgRNA without any spacer sequence at all.
     """
     sgrna = wt_sgrna(target)
-    sgrna.name = make_name('slx')
+    sgrna.name = make_name('slx', tuning_strategy)
     sgrna.attach(
             serpentine_insert(
                 'theo',
@@ -1765,7 +1763,7 @@ def serpentine_hairpin(N, tuning_strategy='', A=1, target='aavs'):
         raise ValueError("sh(N): N must be between 4 and 14")
 
     sgrna = wt_sgrna(target)
-    sgrna.name = make_name('sh', N)
+    sgrna.name = make_name('sh', N, tuning_strategy)
     sgrna.attach(
             serpentine_insert(
                 'theo',
@@ -1811,7 +1809,7 @@ def circle_bulge(tuning_strategy='', A=1, target='aavs'):
         want the sgRNA without any spacer sequence at all.
     """
     sgrna = wt_sgrna(target)
-    sgrna.name = make_name('cb')
+    sgrna.name = make_name('cb', tuning_strategy)
     sgrna.attach(
             circle_insert(
                 'theo', 'AAGU', '3',
@@ -1861,7 +1859,7 @@ def circle_lower_stem(tuning_strategy='', A=1, target='aavs'):
         want the sgRNA without any spacer sequence at all.
     """
     sgrna = wt_sgrna(target)
-    sgrna.name = make_name('cl')
+    sgrna.name = make_name('cl', tuning_strategy)
     sgrna.attach(
             circle_insert(
                 'theo', 'AAGGCU', '3',
@@ -1913,7 +1911,7 @@ def circle_hairpin(N, tuning_strategy='', A=1, target='aavs'):
         want the sgRNA without any spacer sequence at all.
     """
     sgrna = wt_sgrna(target)
-    sgrna.name = make_name('ch', N)
+    sgrna.name = make_name('ch', N, tuning_strategy)
     sgrna.attach(
             circle_insert(
                 'theo',

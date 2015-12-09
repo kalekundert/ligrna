@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # encoding: utf-8
 
 """\
@@ -99,11 +99,8 @@ kwargs['target'] = None if args['--no-spacer'] else (args['--spacer'] or None)
 kwargs['ligand'] = args['--aptamer']
 
 for name in args['<names>']:
-    try:
-        design = sgrna_helper.from_name(name, **kwargs)
-        designs.append(design)
-    except ValueError as error:
-        print(error)
+    design = sgrna_helper.from_name(name, **kwargs)
+    designs.append(design)
 
 if args['--batch']:
     args['--t7'] = True
