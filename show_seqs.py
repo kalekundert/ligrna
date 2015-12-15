@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# encoding: utf-8
 
 """\
 Display sequences relevant to the sgRNA sensor project.
@@ -83,6 +84,10 @@ Options:
         
 """
 
+from __future__ import division
+from __future__ import print_function
+from __future__ import unicode_literals
+
 import sgrna_helper
 import docopt
 
@@ -94,11 +99,8 @@ kwargs['target'] = None if args['--no-spacer'] else (args['--spacer'] or None)
 kwargs['ligand'] = args['--aptamer']
 
 for name in args['<names>']:
-    try:
-        design = sgrna_helper.from_name(name, **kwargs)
-        designs.append(design)
-    except ValueError as error:
-        print(error)
+    design = sgrna_helper.from_name(name, **kwargs)
+    designs.append(design)
 
 if args['--batch']:
     args['--t7'] = True
