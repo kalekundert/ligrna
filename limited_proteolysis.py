@@ -62,6 +62,11 @@ for reagent in rxn:
 ## Describe how to run the limited proteolysis assay
 
 protocol = dirty_water.Protocol()
+
+protocol += """\
+Thaw the sgRNA by incubating at 95°C for 3 min 
+then at 4°C for 1 min."""
+
 protocol += """\
 Setup the limited proteolysis reaction{s}:
 
@@ -93,3 +98,5 @@ Load all of each reaction onto a 4-20% TGX PAGE
 gel and run at 200V for 40 min."""
 
 print(protocol)
+
+# vim: tw=50
