@@ -86,8 +86,8 @@ temperature."""
 else:
     protocol += """\
 Aliquot each reaction into {num_timepoints} 10 μL reactions.  
-Incubate the reactions for {timepoints_str} min
-respectively."""
+Incubate the reactions at room temperature for 
+{timepoints_str} min respectively."""
 
 protocol += """\
 When each reaction finishes, quench it by adding 
