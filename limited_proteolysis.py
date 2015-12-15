@@ -54,6 +54,7 @@ rxn['sgRNA'].conc = float(args['--sgrna-excess']) * rxn['Cas9'].conc
 timepoints = [int(x) for x in args['--timepoints'].split(',')]
 timepoints_str = oxford_comma(timepoints)
 num_timepoints = len(timepoints)
+s = 's' if rxn.num_reactions != 1 else ''
 
 for reagent in rxn:
     reagent.std_volume *= num_timepoints
@@ -62,7 +63,7 @@ for reagent in rxn:
 
 protocol = dirty_water.Protocol()
 protocol += """\
-Setup the limited proteolysis reactions:
+Setup the limited proteolysis reaction{s}:
 
 {rxn}
 
