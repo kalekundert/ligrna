@@ -71,20 +71,20 @@ def process_sample(sgrna, initial_ng_uL, args):
         -p, --print-nM
     """)
 
-    print('{:>6.2f} μL {} ng/uL sgRNA'.format(sgrna_to_add, initial_ng_uL))
+    print('{:>6.2f} μL {} ng/uL {}'.format(sgrna_to_add, initial_ng_uL, sgrna.function_name))
     print('{:>6.2f} μL nuclease-free water'.format(water_to_add))
     print(30 * '-')
-    print('{:>6.2f} μL {:.1f} nM sgRNA'.format(sgrna_to_add + water_to_add, target_nM))
+    print('{:>6.2f} μL {:.1f} nM {}'.format(sgrna_to_add + water_to_add, target_nM, sgrna.function_name))
 
 
 # Figure out if name is filename or sgRNA name
 if args['<tsv>']:
-    df = pd.read_csv(args['<tsv>'], sep='\t')
+    df = pd.read_csv(args['<tsv>'], sep='\t', encoding='latin_1')
     for row in df.iterrows():
         sgrna = sgrna_helper.from_name( row[1]['Sample ID'].lower() )
         print(sgrna.name)
         print(30 * '-')
-        initial_ng_uL = float(row[1]['Nucleic Acid Conc.'])
+        initial_ng_uL = float(row[1]['Nucleic Acid'])
         process_sample(sgrna, initial_ng_uL, args)
         print()
 
