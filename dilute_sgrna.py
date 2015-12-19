@@ -82,8 +82,6 @@ if args['<tsv>']:
     df = pd.read_csv(args['<tsv>'], sep='\t', encoding='latin_1')
     for row in df.iterrows():
         sgrna = sgrna_helper.from_name( row[1]['Sample ID'].lower() )
-        print(sgrna.name)
-        print(30 * '-')
         initial_ng_uL = float(row[1]['Nucleic Acid'])
         process_sample(sgrna, initial_ng_uL, args)
         print()
