@@ -1,14 +1,14 @@
 #!/usr/bin/env python3
 
 """
-Calculate how to dilute sgRNA to particular concentration (300 nM by default).
+Calculate how to dilute sgRNA to particular concentration.
 
 Usage:
     sgrna_to_300nM.py <name> <ng_uL> [options]
     sgrna_to_300nM.py <tsv> [options]
 
 Options:
-    -c --target-conc <nM>  [default: 300]
+    -c --target-conc <nM>  [default: 1500]
         The desired final concentration.
 
     -v --target-volume <uL>
