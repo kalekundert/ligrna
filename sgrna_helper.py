@@ -746,7 +746,7 @@ def complement(sequence):
 def reverse_complement(sequence):
     return reverse(complement(sequence))
 
-def find_middlemost(seq, pattern):
+def find_middlemost(seq, pattern, num_matches=1):
     """
     Find all occurrences of the given pattern in the given sequence and return 
     the index of the middlemost one.  The pattern must include at least one 
@@ -756,24 +756,27 @@ def find_middlemost(seq, pattern):
     import regex as re
     matches = [x for x in re.finditer(pattern, seq, overlapped=True)]
 
-    if not matches:
-        raise ValueError("'{}' not found in '{}'".format(pattern, seq))
+    if len(matches) < num_matches:
+        raise ValueError("'{}' found fewer that {} time(s) in '{}'".format(
+            pattern, num_matches, seq))
 
-    seq_len = len(seq)
-    min_dist = seq_len
+    # Find every index matched by the pattern.  If the pattern has multiple 
+    # capturing groups, iterate to find the one that matches.
 
+    indices = []
     for match in matches:
-        index, group = -1, 0
-        while index < 0:
+        i, group = -1, 0
+        while i < 0:
             group += 1
-            index = match.start(group)
+            i = match.start(group)
+        indices.append(i)
 
-        dist = abs(index - (seq_len-1) / 2)
-        if dist < min_dist:
-            best_index = index
-            min_dist = dist
+    # Sort the list of indices by how close they are to the middle of the given 
+    # sequence.
 
-    return best_index
+    dist_to_middle = lambda i: abs(i - (len(seq)-1) / 2)
+    indices.sort(key=dist_to_middle)
+    return [(i, len(seq) - i - 1) for i in indices[:num_matches]]
 
 
 def t7_promoter(source='briner'):
@@ -982,42 +985,40 @@ def complementary_switch(target_seq):
     off_domain = Domain('off', target_seq)
     return switch_domain, on_domain, off_domain
 
-def wobble_switch(target_seq, favor_cutting):
+def wobble_switch(target_seq, favor_cutting, num_mutations=1):
     # Find all the positions where a wobble base pair could be made, i.e. all 
     # the positions in the "off" sequence that are either G or U.
 
     if favor_cutting:
-        i = find_middlemost(target_seq, '([GU])')
-        I = len(target_seq) - i - 1
-        mutation = {'G':'U','U':'G'}[target_seq[i]] 
-
         switch_domain = Domain('switch', reverse_complement(target_seq))
-        switch_domain.mutate(I, mutation)
+        for i, I in find_middlemost(target_seq, '([GU])', num_mutations):
+            mutation = {'G':'U','U':'G'}[target_seq[i]] 
+            switch_domain.mutate(I, mutation)
         on_domain = Domain('on', reverse_complement(switch_domain.seq))
 
     else:
-        i = find_middlemost(target_seq, '([AC])')
-        mutation = {'C':'U','A':'G'}[target_seq[i]] 
-
         on_domain = Domain('on', target_seq)
-        on_domain.mutate(i, mutation)
+        for i, I in find_middlemost(target_seq, '([AC])', num_mutations):
+            mutation = {'C':'U','A':'G'}[target_seq[i]] 
+            on_domain.mutate(i, mutation)
         switch_domain = Domain('switch', reverse_complement(target_seq))
 
     return switch_domain, on_domain, Domain('off', target_seq)
 
 def mismatch_switch(target_seq, favor_cutting):
-    i = find_middlemost(target_seq, '[AU](.)[GC]|[GC](.)[AU]')
-    I = len(target_seq) - i - 1
+    middlemost = find_middlemost(target_seq, '[AU](.)[GC]|[GC](.)[AU]')
     mutations = {'A':'C','C':'C','G':'A','U':'C'}
 
     if favor_cutting:
         switch_domain = Domain('switch', reverse_complement(target_seq))
-        switch_domain.mutate(I, mutations[target_seq[i]])
+        for i, I in middlemost:
+            switch_domain.mutate(I, mutations[target_seq[i]])
         on_domain = Domain('on', reverse_complement(switch_domain.seq))
 
     else:
         on_domain = Domain('on', target_seq)
-        on_domain.mutate(i, mutations[complement(target_seq[i])])
+        for i, I in middlemost:
+            on_domain.mutate(i, mutations[complement(target_seq[i])])
         switch_domain = Domain('switch', reverse_complement(target_seq))
 
     return switch_domain, on_domain, Domain('off', target_seq)
@@ -1065,10 +1066,12 @@ def tunable_switch(target_seq, tuning_strategy=''):
         x: More cutting, weaken the off state.
         o: Less cutting, weaken the on state.
     
-    The third letter is only applicable to the 'bx' strategy:
+    The meaning of the third letter depends on the chosen strategy (i.e. the 
+    first letter):
 
-        g: Make the bulge a G instead on an A.  This should lead to a slightly 
-           stronger activating effect.
+        w: [0-9]+: Make the specified number of wobble mutations.
+        b: g: Make the bulge a G instead on an A.  This should lead to a 
+           slightly stronger activating effect.
     """
 
     if not tuning_strategy:
@@ -1078,13 +1081,12 @@ def tunable_switch(target_seq, tuning_strategy=''):
         raise ValueError("Tuning strategy must be one of 'wmb', not '{}'.".format(tuning_strategy[0]))
     if tuning_strategy[1] not in 'xo':
         raise ValueError("Desired tuning effect must be one of 'xo', not '{}'".format(tuning_strategy[1]))
-    if tuning_strategy != 'bxg' and len(tuning_strategy) > 2:
-        raise ValueError("Too many characters in tuning strategy, expected 2: '{}'".format(tuning_strategy))
 
     favor_cutting = True if tuning_strategy[1] == 'x' else False
 
     if tuning_strategy[0] == 'w':
-        return wobble_switch(target_seq, favor_cutting)
+        num_mutations = int(tuning_strategy[2:] or 1)
+        return wobble_switch(target_seq, favor_cutting, num_mutations)
     if tuning_strategy[0] == 'm':
         return mismatch_switch(target_seq, favor_cutting)
     if tuning_strategy[0] == 'b':
@@ -2321,31 +2323,37 @@ def test_find_middlemost():
     import pytest
 
     # Test a few simple cases.
-    assert find_middlemost('G', '(G)') == 0
-    assert find_middlemost('AG', '(G)') == 1
-    assert find_middlemost('AGA', '(G)') == 1
+    assert find_middlemost('G', '(G)') == [(0,0)]
+    assert find_middlemost('AG', '(G)') == [(1,0)]
+    assert find_middlemost('AGA', '(G)') == [(1,1)]
 
     # Make sure the middlemost group is found, not the middlemost start.
-    assert find_middlemost('GGGAGGGA', 'GGG(A)') == 3
+    assert find_middlemost('GGGAGGGA', 'GGG(A)') == [(3,4)]
 
     # If there is a tie, the leftmost match will be returned.
-    assert find_middlemost('AGGA', '([G])') == 1
-    assert find_middlemost('AGGAA', '([G])') == 2
-    assert find_middlemost('AAGGA', '([G])') == 2
+    assert find_middlemost('AGGA', '([G])') == [(1,2)]
+    assert find_middlemost('AGGAA', '([G])') == [(2,2)]
+    assert find_middlemost('AAGGA', '([G])') == [(2,2)]
 
     # If multiple groups exist, use whichever one matches.
-    assert find_middlemost('GGGGG', '(A)|(G)') == 2
+    assert find_middlemost('GGGGG', '(A)|(G)') == [(2,2)]
+
+    # If multiple matches are requested, make sure they are all found.
+    assert find_middlemost('GGGGG', '(G)', 2) == [(2,2), (1,3)]
+    assert find_middlemost('GGGGG', '(G)', 3) == [(2,2), (1,3), (3,1)]
 
     # Find overlapping patterns.
-    assert find_middlemost('GGGGG', 'G(G)') == 2
+    assert find_middlemost('GGGGG', 'G(G)') == [(2,2)]
 
     # Raise a ValueError if the pattern isn't found.
     with pytest.raises(ValueError):
         find_middlemost('GGGGGG', '(A)')
+    with pytest.raises(ValueError):
+        find_middlemost('GGAGGG', '(A)', 2)
     
     # Test some "real life" cases.
-    assert find_middlemost('AGGGA', '([GU])') == 2
-    assert find_middlemost('ACGACGU', '[AU](.)[CG]') == 4
+    assert find_middlemost('AGGGA', '([GU])') == [(2,2)]
+    assert find_middlemost('ACGACGU', '[AU](.)[CG]') == [(4,2)]
 
 def test_t7_promoter():
     import pytest
@@ -2389,6 +2397,10 @@ def test_wobble_switch():
     assert wobble_switch('AAUCC', True) == ('GGGUU', 'AACCC', 'AAUCC')
     assert wobble_switch('GGCUU', False) == ('AAGCC', 'GGUUU', 'GGCUU')
     assert wobble_switch('GGAUU', False) == ('AAUCC', 'GGGUU', 'GGAUU')
+    assert wobble_switch('AAGGCC', True, 2) == ('GGUUUU', 'AAAACC', 'AAGGCC')
+    assert wobble_switch('AAUUCC', True, 2) == ('GGGGUU', 'AACCCC', 'AAUUCC')
+    assert wobble_switch('GGCCUU', False, 2) == ('AAGGCC', 'GGUUUU', 'GGCCUU')
+    assert wobble_switch('GGAAUU', False, 2) == ('AAUUCC', 'GGGGUU', 'GGAAUU')
 
 def test_mismatch_switch():
     # Test all the different nucleotides to mismatch with.
