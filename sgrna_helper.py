@@ -161,7 +161,7 @@ class Construct (Sequence):
 
     @property
     def function_name(self):
-        factory, arguments = parse_name(self.name)
+        factory, arguments = parse_name(self.name)[0]
         return '{}({})'.format(factory, ','.join(str(x) for x in arguments))
 
     @property
@@ -557,6 +557,13 @@ class Domain (Sequence):
         self.construct = None
         self.style = style
         self.mutable = mutable
+
+    def __hash__(self):
+        from six.moves.builtins import id
+        return hash(id(self))
+
+    def __eq__(self, other):
+        return self.seq == other
 
     def __repr__(self):
         return 'Domain("{}", "{}")'.format(self.name, self.seq)
@@ -1694,10 +1701,10 @@ def serpentine_lower_stem_around_nexus(tuning_strategy='', A=1, target='aavs'):
     will be fixed at 6 base pairs because the lower stem cannot be lengthened 
     or shortened.  A schematic of this design is shown below:
 
-       ┌────────┐┌──┐┌────┐┌────┐┌───────┐┌──┐┌─────────┐┌──────┐ 
-    5'─┤extend''├┤GA├┤theo├┤AAGU├┤extend'├┤AA├┤  nexus  ├┤extend├─3'
-       └────────┘└──┘└────┘└────┘└───────┘└──┘└─────────┘└──────┘ 
-        GUUAUC    GA  ...   AAGU  GAUAAC   AA  GGCUAGUCC  GUUAUC
+       ┌──────┐┌──┐┌────┐┌────┐┌──────┐┌──┐┌─────────┐┌──────┐ 
+    5'─┤  on  ├┤GA├┤theo├┤AAGU├┤switch├┤AA├┤  nexus  ├┤ off  ├─3'
+       └──────┘└──┘└────┘└────┘└──────┘└──┘└─────────┘└──────┘ 
+        GUUAUC  GA  ...   AAGU  GAUAAC  AA  GGCUAGUCC  GUUAUC
     
     Parameters
     ----------
@@ -1820,6 +1827,64 @@ def circle_bulge(tuning_strategy='', A=1, target='aavs'):
     )
     return sgrna
 
+def circle_bulge_combo(tuning_strategy, combo_strategy, combo_arg=None, A=1, ligand='theo', target='aavs'):
+    """
+    Combine the circle bulge design with orthogonal designs.  The idea is to 
+    increase fold activation, possibly at the expense of affinity, by requiring 
+    two switches to turn on.  Only a select set of orthogonal designs, known to 
+    be functional on their own, can be combined with 'cb'.  This set includes 
+    most of the 'slx' and 'sh' families of designs.
+
+    Parameters
+    ----------
+    tuning_strategy: str
+        A string specifying which mutation(s) to make in the 'cb' switch.
+
+    combo_strategy: str
+        A string specifying which design to integrate into 'cb'. Either 'slx' 
+        or 'sh'.
+        
+    combo_arg:
+        Arguments to the orthogonal design.  What's expected depends on the 
+        value of 'combo_strategy'.
+    """
+    sgrna = circle_bulge(tuning_strategy)
+    sgrna.name = make_name('cb', tuning_strategy, combo_strategy, combo_arg)
+
+    # Serpentine the lower stem around the nexus.  This code isn't done by 
+    # making an attachment, like all the other designs are, because its 
+    # attachment would overlap with circle bulge.  Instead, the on and switch 
+    # domains are directly mutated into the existing stem domain.
+
+    if combo_strategy == 'slx':
+        L = len(sgrna['stem'])
+        switch_domain, on_domain, off_domain = tunable_switch(
+                'GUUAUC', combo_arg or 'wo')
+        sgrna['stem'].replace(0, 6, on_domain.seq)
+        sgrna['stem'].replace(L-6, L, switch_domain.seq)
+
+    # Serpentine the first hairpin.  This code is copied verbatim from the sh() 
+    # function.
+
+    elif combo_strategy == 'sh':
+        if combo_arg is None:
+            raise ValueError("The 'sh' combo strategy requires an argument.")
+        sgrna.attach(
+                serpentine_insert(
+                    ligand,
+                    wt_sgrna().seq[44-combo_arg:44], '5',
+                    '',
+                    turn_seq='AUCA', # ANYA
+                    num_aptamers=A,
+                ),
+                'hairpins', 1,
+                'hairpins', 17,
+        )
+    else:
+        raise ValueError("unsupported strategy: '{}'".format(strategy))
+
+    return sgrna
+
 def circle_lower_stem(tuning_strategy='', A=1, target='aavs'):
     """
     Sequester the 5' half of the nexus in base pairs with the 5' half of the 
@@ -1939,6 +2004,7 @@ sl = serpentine_lower_stem
 slx = serpentine_lower_stem_around_nexus
 sh = serpentine_hairpin
 cb = circle_bulge
+cbc = circle_bulge_combo
 cl = circle_lower_stem
 ch = circle_hairpin
 
@@ -2509,6 +2575,11 @@ def test_serpentine_hairpin():
 
 def test_circle_bulge():
     assert from_name('cb') == 'GGGGCCACTAGGGACAGGATGUUUUAACUUAUACCAGCCGAAAGGCCCUUGGCAGAAGUAAGUUAAAAUAAGGCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
+
+def test_circle_bulge_combo():
+    assert from_name('cbc/wo/slx/wo').seq == 'GGGGCCACTAGGGACAGGATGUUGUCACUUAUACCAGCCGAAAGGCCCUUGGCAGAGGUAAGUGAUAACAAGGCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
+    assert from_name('cbc/wo/sh/5') == 'GGGGCCACTAGGGACAGGATGUUUUAACUUAUACCAGCCGAAAGGCCCUUGGCAGAGGUAAGUUAAAAUAAGGCUAGUCCGUUAUCAAACGGAUACCAGCCGAAAGGCCCUUGGCAGCCGUUGGCACCGAGUCGGUGCUUUUUU'
+    assert from_name('cbc/wo/sh/7') == 'GGGGCCACTAGGGACAGGATGUUUUAACUUAUACCAGCCGAAAGGCCCUUGGCAGAGGUAAGUUAAAAUAAGGCUAGUCCGUUAUCAAACGGACAUACCAGCCGAAAGGCCCUUGGCAGGUCCGUUGGCACCGAGUCGGUGCUUUUUU'
 
 def test_circle_lower_stem():
     assert from_name('cl') == 'GGGGCCACTAGGGACAGGATAGCCUUGAAUACCAGCCGAAAGGCCCUUGGCAGAAGUAAGGCUAAGGCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
