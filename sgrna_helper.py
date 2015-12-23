@@ -681,49 +681,52 @@ class Domain (Sequence):
 
 
 def from_name(name, **kwargs):
-    from inspect import getargspec
-
-    construct = Construct()
-    names = []
-    docs = []
-
-    for factory, args in parse_name(name):
-        if factory not in globals():
-            raise ValueError("No designs named '{}'.".format(factory))
-
-        factory = globals()[factory]
-        argspec = getargspec(factory)
-        known_kwargs = {k:v for k,v in kwargs.items() if k in argspec.args}
-        fragment = factory(*args, **known_kwargs)
-        names.append(fragment.name)
-        docs.append(factory.__doc__)
-        construct += fragment
-
-    construct.name = '+'.join(x for x in names if x)
-    construct.doc = ''.join(docs)
-    return construct
-
-def parse_name(name):
-    import re
-
-    def cast_if_necessary(x):
-        try: return int(x)
-        except: return x
-
+    import re, inspect
 
     name = name.strip()
-    sub_names = []
-
     if not name:
         raise ValueError("Can't parse empty name.")
 
-    for sub_name in name.split('+'):
-        tokens = re.findall('[a-zA-Z0-9]+', sub_name)
-        factory = tokens[0]
-        arguments = [cast_if_necessary(x) for x in tokens[1:]]
-        sub_names.append((factory, arguments))
+    tokens = re.findall('[a-zA-Z0-9]+', name)
 
-    return sub_names
+    # If the first token is a name recognized by the aptamer() function, then 
+    # it specifies the aptamer to use.  Otherwise the theophylline aptamer is 
+    # assumed.
+
+    try:
+        aptamer(tokens[0])
+    except ValueError:
+        ligand = 'theo'
+    else:
+        ligand = tokens.pop(0)
+
+    if 'ligand' not in kwargs:
+        kwargs['ligand'] = ligand
+
+    # The first token after the (optional) aptamer specifies the factory 
+    # function to use and must exist in the global namespace. 
+
+    try:
+        factory = globals()[tokens[0]]
+    except KeyError:
+        raise ValueError("No designs named '{}'.".format(tokens[0]))
+
+    # All further tokens are arguments.  Arguments that look like integers need 
+    # to be casted to integers.
+
+    def cast_if_necessary(x):  # (no fold)
+        try: return int(x)
+        except: return x
+
+    args = [cast_if_necessary(x) for x in tokens[1:]]
+
+    # Use keyword arguments passed into this function if the factory knows how 
+    # to handle them.  Silently ignore the arguments otherwise.
+
+    argspec = inspect.getargspec(factory)
+    known_kwargs = {k:v for k,v in kwargs.items() if k in argspec.args}
+
+    return factory(*args, **known_kwargs)
 
 def make_name(factory, *args):
     return factory + '(' + ','.join(str(x) for x in args if str(x)) + ')'
@@ -916,6 +919,20 @@ def aptamer(ligand, piece='whole'):
         name = 'theo aptamer'
         sequence_pieces   = 'AUACCAGCC', 'GAAA', 'GGCCCUUGGCAG'
         constraint_pieces = '.(.((((((', '....', ')))...))).).'
+
+    elif ligand in ('3mx', '3-methylxanthine'):
+        # Soukup, Emilsson, Breaker. Altering molecular recognition of RNA 
+        # aptamers by allosteric selection. J. Mol. Biol. (2000) 298, 623-632.
+        sequence_pieces   = 'AUACCAGCC', 'GAAA', 'GGCCAUUGGCAG'
+        constraint_pieces = '.(.((((((', '....', ')))...))).).'
+
+    elif ligand in ('tet', 'tetracycline'):
+        # Weigand, Suess. Tetracycline aptamer-controlled regulation of pre- 
+        # mRNA splicing in yeast. Nucl. Acids Res. (2007) 35 (12): 4179-4185.
+        name = 'tet aptamer'
+        sequence_pieces   = 'GGCCUAAAACAUACCAGAU', 'GAAA', 'GUCUGGAGAGGUGAAGAAUACGACCACCUAGGCC'
+        constraint_pieces = '(((((........((((((', '....', '))))))..(((((...........))))))))))'
+
     else:
         raise ValueError("no aptamer for '{}'".format(ligand))
 
@@ -1786,7 +1803,7 @@ def serpentine_hairpin(N, tuning_strategy='', A=1, target='aavs'):
     )
     return sgrna
 
-def circle_bulge(tuning_strategy='', A=1, target='aavs'):
+def circle_bulge(tuning_strategy='', A=1, target='aavs', ligand='theo'):
     """
     Extend the lower stem hairpin through the bulge when the small molecule is 
     absent.  This design is based off the fact that "straightening" the bulge 
@@ -1821,7 +1838,7 @@ def circle_bulge(tuning_strategy='', A=1, target='aavs'):
     sgrna.name = make_name('cb', tuning_strategy)
     sgrna.attach(
             circle_insert(
-                'theo', 'AAGU', '3',
+                ligand, 'AAGU', '3',
                 tuning_strategy, num_aptamers=A,
             ),
             'stem', 6,
@@ -2314,6 +2331,11 @@ def test_from_name():
 
     for construct in equivalent_constructs:
         assert construct.seq == equivalent_constructs[0].seq
+
+    assert from_name('cb') == cb()
+    assert from_name('cb/wo') == cb('wo')
+    assert from_name('theo/cb') == cb()
+    assert from_name('tet/cb') == cb(ligand='tet')
 
 def test_complements():
     assert complement('ACUG') == 'UGAC'
