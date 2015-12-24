@@ -1542,7 +1542,7 @@ def replace_hairpins(N, ligand='theo', target='aavs'):
     )
     return design
 
-def induce_dimerization(half, N, ligand='theo', target='aavs'):
+def induce_dimerization(half, N, target='aavs', ligand='theo'):
     """
     Split the guide RNA into its two naturally occurring halves, and use the 
     aptamer to bring those halves together in the presence of the ligand.  The 
@@ -1600,7 +1600,7 @@ def induce_dimerization(half, N, ligand='theo', target='aavs'):
 
     return design
 
-def serpentine_bulge(N, tuning_strategy='', A=1, target='aavs'):
+def serpentine_bulge(N, tuning_strategy='', A=1, ligand='theo', target='aavs'):
     """
     Sequester the bulge in a non-productive hairpin when the ligand isn't 
     present.  The bulge is an interesting target because it doesn't have to be 
@@ -1644,7 +1644,7 @@ def serpentine_bulge(N, tuning_strategy='', A=1, target='aavs'):
     sgrna.name = make_name('sb', N, tuning_strategy)
     sgrna.attach(
             serpentine_insert(
-                'theo',
+                ligand,
                 wt_sgrna()['stem'][22:22+N], '3',
                 tuning_strategy, num_aptamers=A,
             ),
@@ -1655,7 +1655,7 @@ def serpentine_bulge(N, tuning_strategy='', A=1, target='aavs'):
 
     return sgrna
 
-def serpentine_lower_stem(tuning_strategy='', A=1, target='aavs'):
+def serpentine_lower_stem(tuning_strategy='', A=1, ligand='theo', target='aavs'):
     """
     Sequester the nexus in base pairs with the lower stem in the absence of the 
     ligand.  This design is based off two ideas:
@@ -1696,7 +1696,7 @@ def serpentine_lower_stem(tuning_strategy='', A=1, target='aavs'):
     sgrna.name = make_name('sl', tuning_strategy)
     sgrna.attach(
             serpentine_insert(
-                'theo',
+                ligand,
                 'GGCU', '3',
                 tuning_strategy,
                 num_aptamers=A,
@@ -1709,7 +1709,7 @@ def serpentine_lower_stem(tuning_strategy='', A=1, target='aavs'):
     sgrna['switch'].prepend('AAGU')
     return sgrna
 
-def serpentine_lower_stem_around_nexus(tuning_strategy='', A=1, target='aavs'):
+def serpentine_lower_stem_around_nexus(tuning_strategy='', A=1, ligand='theo', target='aavs'):
     """
     Use the lower stem to extend the nexus stem in the absence of the aptamer 
     ligand.  This design is based of the idea that the sgRNA is very sensitive 
@@ -1740,7 +1740,7 @@ def serpentine_lower_stem_around_nexus(tuning_strategy='', A=1, target='aavs'):
     sgrna.name = make_name('slx', tuning_strategy)
     sgrna.attach(
             serpentine_insert(
-                'theo',
+                ligand,
                 'GUUAUC', '3',
                 tuning_strategy,
                 turn_seq='',
@@ -1753,7 +1753,7 @@ def serpentine_lower_stem_around_nexus(tuning_strategy='', A=1, target='aavs'):
     sgrna['switch'].prepend('AAGU')
     return sgrna
 
-def serpentine_hairpin(N, tuning_strategy='', A=1, target='aavs'):
+def serpentine_hairpin(N, tuning_strategy='', A=1, ligand='theo', target='aavs'):
     """
     Sequester the 3' end of the nexus in base pairs with the 5' strand of the 
     first hairpin in the absence of aptamer ligand.  This design is based on 
@@ -1792,7 +1792,7 @@ def serpentine_hairpin(N, tuning_strategy='', A=1, target='aavs'):
     sgrna.name = make_name('sh', N, tuning_strategy)
     sgrna.attach(
             serpentine_insert(
-                'theo',
+                ligand,
                 wt_sgrna().seq[44-N:44], '5',
                 tuning_strategy,
                 turn_seq='AUCA', # ANYA
@@ -1803,7 +1803,7 @@ def serpentine_hairpin(N, tuning_strategy='', A=1, target='aavs'):
     )
     return sgrna
 
-def circle_bulge(tuning_strategy='', A=1, target='aavs', ligand='theo'):
+def circle_bulge(tuning_strategy='', A=1, ligand='theo', target='aavs'):
     """
     Extend the lower stem hairpin through the bulge when the small molecule is 
     absent.  This design is based off the fact that "straightening" the bulge 
@@ -1904,7 +1904,7 @@ def circle_bulge_combo(tuning_strategy, combo_strategy, combo_arg=None, A=1, lig
 
     return sgrna
 
-def circle_lower_stem(tuning_strategy='', A=1, target='aavs'):
+def circle_lower_stem(tuning_strategy='', A=1, ligand='theo', target='aavs'):
     """
     Sequester the 5' half of the nexus in base pairs with the 5' half of the 
     lower stem in the absence of aptamer ligand.  This strategy is based on  
@@ -1946,7 +1946,7 @@ def circle_lower_stem(tuning_strategy='', A=1, target='aavs'):
     sgrna.name = make_name('cl', tuning_strategy)
     sgrna.attach(
             circle_insert(
-                'theo', 'AAGGCU', '3',
+                ligand, 'AAGGCU', '3',
                 tuning_strategy, num_aptamers=A,
             ),
             'stem', 0,
@@ -1956,7 +1956,7 @@ def circle_lower_stem(tuning_strategy='', A=1, target='aavs'):
     sgrna['on'].prepend('AAGU')
     return sgrna
 
-def circle_hairpin(N, tuning_strategy='', A=1, target='aavs'):
+def circle_hairpin(N, tuning_strategy='', A=1, ligand='theo', target='aavs'):
     """
     Move the nexus closer to the hairpins in the absence of the aptamer's 
     ligand.  This design is supported by the fact that inserting one residue 
@@ -1998,7 +1998,7 @@ def circle_hairpin(N, tuning_strategy='', A=1, target='aavs'):
     sgrna.name = make_name('ch', N, tuning_strategy)
     sgrna.attach(
             circle_insert(
-                'theo',
+                ligand,
                 wt_sgrna().seq[48-N:48], '5',
                 tuning_strategy,
                 num_aptamers=A),
