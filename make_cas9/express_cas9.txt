@@ -1,0 +1,47 @@
+Express Cas9
+============
+Adapted from Jinek, Chylinski, Fonfara, Hauer, 
+Doudna, Charpentier. A Programmable Dual-RNA-Guided 
+DNA Endonuclease in Adaptive Bacterial Immunity.  
+Science (2012).
+
+Day 1:
+
+1.  Transform pMJ806 (from addgene) into Rosetta2 
+    (DE3) pLysS cells for expression.  Select with 25 
+    μg/mL Kan (Cas9) and 34 μg/mL Chlor (Rosetta2).
+
+Day 2:
+
+2.  Make a 50 mL overnight culture. Use 2xYT + Kan + 
+    Chlor (i.e. the same antibiotic selection as the 
+    transformation) and grow at 37°C.
+
+Day 3:
+
+3.  Inoculate 1L 2xYT + Kan + Chlor with 10 mL 
+    overnight culture.
+
+4.  Grow the 1L culture at 37°C and 225 rpm until its 
+    OD=0.6 (approximately 2 hr).
+    
+5.  Lower the shaker temperature to 18°C.
+
+6.  Take a 1 mL aliquot of uninduced cells.  Put the 
+    aliquot in a culture tube taped to the 1L beaker, 
+    so it continues to grow like the induced cells.
+
+7.  Induce expression of Cas9 by adding 200 μL 1M 
+    IPTG to each 1L of culture.
+
+8.  Grow overnight (16-24 hr).
+
+Day 4:
+
+9.  Harvest cells by spinning at 2500 rpm (on the 
+    Beckmann 9.1 rotor) for 20 min at 4°C.
+
+10. Flash-freeze the cell pellet in liquid N₂ and 
+    store at -80°C until ready for purification.
+
+vim: tw=53
