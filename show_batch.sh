@@ -127,7 +127,23 @@ elif [ "$round" = 6 ]; then
         ch/6                \
         ch/6/wo             \
 
+elif [ "$round" = 7 ]; then
+    ./show_seqs.py "$@"     \
+        sb/6/wo             \
+        slx/mo              \
+        slx/bo              \
+        sh/5/wx             \
+        cb/wo2              \
+        cl/mo               \
+        cl/bo               \
 
+#elif [ "$round" = 8 ]; then
+#        cb/wo/2             \
+#        cbc/wo/slx/wo       \
+#        cbc/wo/sh/5         \
+#        cbc/wo/sh/7         \
+#        tet/cb/wo           \
+#        3mx/cb/wo           \
 
 else
     echo "Error: round '$round' not yet defined."
