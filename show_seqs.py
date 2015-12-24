@@ -51,9 +51,6 @@ Options:
         Specify that the spacer sequence should be left out.  This is just 
         shorthand for "-s ''".
 
-    -a, --aptamer NAME      [default: theo]
-        Specify the aptamer that should be inserted into the sgRNA.
-
     -i, --slice RANGE
         Specify a subset of the design to display.  If only one number is 
         given, it is taken as the start position.  If two numbers are given, 
@@ -67,6 +64,9 @@ Options:
         Prepare sequences for batch processing.  Use a more simple character 
         set for the names, automatically append the T7 sequence, and don't 
         display the "5'-" and "-3'" labels.
+
+    -l, --length
+        Show how long a design is, counting only the RNA, not the T7 promoter.
         
     -r, --rnafold
         Run each design through RNAfold and display the resulting secondary 
@@ -96,7 +96,6 @@ designs = []
 
 kwargs = {}
 kwargs['target'] = None if args['--no-spacer'] else (args['--spacer'] or None)
-kwargs['ligand'] = args['--aptamer']
 
 for name in args['<names>']:
     design = sgrna_helper.from_name(name, **kwargs)
@@ -166,6 +165,9 @@ for design in designs:
     elif args['--batch']:
         print(header_template.format(design.underscore_name), end='\t')
         design.show(labels=False, **format_args)
+    elif args['--length']:
+        print(header_template.format(design.name), end='  ')
+        print(len(design))
     elif args['--rnafold']:
         rnafold(design)
         if args['--constraints']:
