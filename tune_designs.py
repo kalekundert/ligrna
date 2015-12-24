@@ -2,6 +2,7 @@
 # encoding: utf-8
 
 from __future__ import division
+from __future__ import print_function
 
 import RNA, re
 import numpy as np
@@ -90,140 +91,6 @@ def replace(seq, i, j, insert):
     return seq[:i] + insert + seq[j:]
 
 
-def yield_mutants(off):
-    for mutant in yield_all_mutants(off):
-        if mutant.ends_paired:
-            yield mutant
-
-def yield_all_mutants(off):
-    N = len(off)
-    ideal_effector = rc(off)
-    ideal_on = off
-
-    # Return the original sequence
-
-    yield Mutant(ideal_effector, ideal_on, off)
-
-    # Add a mismatch to the off state by mutating a base pair in the "on" and 
-    # "effector" sequences.
-
-    for i in range(N):
-        for nuc in rna_bases:
-            if nuc != ideal_effector[i]:
-                effector = mutate(ideal_effector, i, nuc)
-                strategy = 'mismatch', ''.join(sorted((nuc, off[N-i-1])))
-                yield Mutant(effector, rc(effector), off, strategy)
-
-    # Add a mismatch to the "on" state by mutating the "on" sequence.
-
-    for i in range(N):
-        for nuc in rna_bases:
-            if nuc != ideal_on[i]:
-                on = mutate(ideal_on, i, nuc)
-                strategy = 'mutate'
-                strategy = 'mismatch', ''.join(sorted((nuc, ideal_effector[N-i-1])))
-                yield Mutant(ideal_effector, on, off, strategy)
-
-    # Add a bulge to the "off" state by inserting a base pair into the "on" and 
-    # "effector" sequences.
-
-    for i in range(1, N):
-        for nuc in rna_bases:
-            effector = insert(ideal_effector, i, nuc)
-            strategy = 'insert',
-            yield Mutant(effector, rc(effector), off, strategy)
-
-    # Add a bulge to the "off" state the removing a base pair from the "on" and 
-    # "effector" sequences.
-
-    for i in range(N):
-        effector = remove(ideal_effector, i)
-        strategy = 'delete',
-        yield Mutant(effector, rc(effector), off, strategy)
-
-    # Add a bulge to the "on" state by inserting a nucleotide into the "on" 
-    # sequence.
-
-    for i in range(1, N):
-        for nuc in rna_bases:
-            on = insert(ideal_on, i, nuc)
-            strategy = 'insert',
-            yield Mutant(ideal_effector, on, off, strategy)
-
-    # Add a bulge to the "on" state by removing a nucleotide from the "on" 
-    # sequence.
-
-    for i in range(N):
-        on = remove(ideal_on, i)
-        strategy = 'delete',
-        yield Mutant(ideal_effector, on, off, strategy)
-
-def plot_mutants(generator):
-    mutants = []
-    indices = []
-    energies = []
-    colors = []
-    areas = []
-
-    def pick_style(mutant):
-        import tango
-        radius = 5 if mutant.ends_paired else 2
-
-        if mutant.strategy is None:
-            return radius, tango.black
-        if 'insert' in mutant.strategy:
-            return radius, tango.grey[2]
-        if 'delete' in mutant.strategy:
-            return radius, tango.white
-
-        if 'GU' in mutant.strategy:
-            color = tango.blue[0]
-
-        elif 'AC' in mutant.strategy:
-            color = tango.green[0]
-        elif 'AG' in mutant.strategy:
-            color = tango.green[0]
-        elif 'GG' in mutant.strategy:
-            color = tango.green[0]
-        elif 'UU' in mutant.strategy:
-            color = tango.green[0]
-
-        elif 'CC' in mutant.strategy:
-            color = tango.red[0]
-        elif 'CU' in mutant.strategy:
-            color = tango.red[0]
-
-        else:
-            color = tango.orange[0]
-            radius = 10
-
-        return radius, color
-
-    def print_selection(event):
-        i = event.ind[0]
-        mutant = mutants[i]
-        print mutant.on, "(on)"
-        print ''.join(reversed(mutant.effector)), "(effector)"
-        print mutant.off, "(off)"
-        print 'ΔG =', mutant.dg
-        print mutant.on_duplex.structure
-        print mutant.off_duplex.structure
-        print
-
-
-    for i, mutant in enumerate(generator):
-        mutants.append(mutant)
-        indices.append(i)
-        energies.append(mutant.dg)
-        radius, color = pick_style(mutant)
-        colors.append(color)
-        areas.append(2*pi*radius)
-
-    scatter(indices, energies, s=areas, c=colors, picker=True)
-
-    gcf().canvas.mpl_connect('pick_event', print_selection)
-
-
 gu_pattern = re.compile('[GU]')
 au_au_pattern = re.compile('[AU].[AU]')
 au_gc_pattern = re.compile('[AU].[GC]|[GC].[AU]')
@@ -303,6 +170,37 @@ def wobble(off, effect='x', location='center'):
         effector = rc(off)
 
     return Mutant(effector, on, off)
+
+def wobble_all(off, effect='x'):
+    # Find all the positions where a wobble base pair could be made, i.e. all 
+    # the positions in the "off" sequence that are either G or U.
+
+    if effect == 'x':
+        effector = c(off)
+
+        for i, bp in enumerate(off):
+            if bp == 'G':
+                effector = mutate(effector, i, 'U')
+            if bp == 'U':
+                effector = mutate(effector, i, 'G')
+
+        on = rc(effector)
+
+    elif effect == 'o':
+        on = off
+
+        for i, bp in enumerate(off):
+            if bp == 'A':
+                on = mutate(on, i, 'G')
+            if bp == 'C':
+                on = mutate(on, i, 'U')
+
+        effector = rc(off)
+
+    else:
+        raise ValueError("Unknown effect: '{}'".format(effect))
+
+    return Mutant(effector, on, off)
     
 def mismatch(off, pattern, mutations, effect='x', location='center'):
     import re
@@ -359,19 +257,15 @@ def mismatch_center(off, effect='x'):
 
     return Mutant(effector, on, off)
 
-def bulge_on(off, insert_len=1):
-    on = insert(off, len(off) // 2, insert_len * 'A')
-    effector = rc(off)
-    return Mutant(effector, on, off)
+def bulge(off, effect='x', nuc='A'):
+    if effect == 'x':
+        effector = insert(rc(off), len(off) // 2, nuc)
+        on = rc(effector)
 
-def bulge_eff_au(off):
-    effector = insert(rc(off), len(off) // 2, 'A')
-    on = rc(effector)
-    return Mutant(effector, on, off)
+    if effect == 'o':
+        on = insert(off, len(off) // 2, nuc)
+        effector = rc(off)
 
-def bulge_eff_gc(off):
-    effector = insert(rc(off), len(off) // 2, 'G')
-    on = rc(effector)
     return Mutant(effector, on, off)
 
 
@@ -398,7 +292,7 @@ def pick_location(location, choices, N):
 def test_mutants(mutant_factory, **factory_kwargs):
     for label, seq in yield_design_seqs():
         try:
-            print mutant_factory(seq, **factory_kwargs)
+            print(mutant_factory(seq, **factory_kwargs))
         except RnaDesignError:
             pass
 
@@ -410,7 +304,7 @@ def yield_random_seqs():
     """
     import itertools
 
-    for N in [4]:
+    for N in [4,5,6]:
         for seq in itertools.product('ACGU', repeat=N):
             yield ''.join(seq)
 
@@ -437,8 +331,8 @@ def plot_mutants(i, color, mutant_factory, **factory_kwargs):
             return 0
 
     def print_selection(event):
-        print event
-        print design_labels[event.ind[0]]
+        print(event)
+        print(design_labels[event.ind[0]])
 
 
     random_style = {
@@ -547,15 +441,24 @@ class RnaDesignError (Exception):
 fig, ax = plt.subplots()
 p = MutantPlotter()
 p.plot_all_args(wobble)
+p.plot_mutants(wobble_all, effect='o')
+p.plot_mutants(wobble_all, effect='x')
+p.next_color()
 p.plot_mutants(mismatch_center, effect='x')
 p.plot_mutants(mismatch_center, effect='o')
 p.next_color()
 p.plot_all_args(mismatch_gc_gc)
 p.plot_all_args(mismatch_au_gc)
 p.plot_all_args(mismatch_au_au)
-p.plot_mutants(bulge_eff_au)
-p.plot_mutants(bulge_eff_gc)
-p.plot_mutants(bulge_on)
+p.plot_mutants(bulge, effect='x', nuc='A')
+p.plot_mutants(bulge, effect='x', nuc='U')
+p.plot_mutants(bulge, effect='o', nuc='A')
+p.plot_mutants(bulge, effect='o', nuc='U')
+p.next_color()
+p.plot_mutants(bulge, effect='x', nuc='C')
+p.plot_mutants(bulge, effect='x', nuc='G')
+p.plot_mutants(bulge, effect='o', nuc='C')
+p.plot_mutants(bulge, effect='o', nuc='G')
 p.next_color()
 
 ax2 = ax.twiny()
@@ -581,4 +484,4 @@ ax2.xaxis.grid(True)
 fig.subplots_adjust(left=0.06, right=0.60)
 fig.set_size_inches(11, 8.5)
 fig.savefig('tune_designs.pdf')
-#show()
+show()
