@@ -2,7 +2,7 @@
 
 import matplotlib
 matplotlib.use('Agg')
-from klab.fcm.fcm import Plate, PlateInfo, make_gating_fig
+from klab.fcm.fcm import Plate, PlateInfo, make_individual_gating_fig
 import klab.fcm.fcm as fcm
 import os
 import numpy as np
@@ -19,7 +19,7 @@ import copy
 import gc
 import subprocess
 
-fast_run = True
+fast_run = False
 channel_name = 'PE-Texas Red-A'
 colors = [(0,0,1,0.3), (0,1,0,0.3), (1,0,0,0.3)]
 
@@ -80,7 +80,7 @@ def main():
     fig_dir = os.path.join(outer_fig_dir, gate_name)
     if not os.path.isdir(fig_dir):
         os.makedirs(fig_dir)
-    gated_plates = make_gating_fig(all_plates, gate_val, gate_name, fig_dir, fast_run=True, plot_one_sample=True)
+    gated_plates = [make_individual_gating_fig(p, gate_val, gate_name, fig_dir, fast_run=fast_run, florescence_channel = channel_name, title = os.path.basename(__file__)) for p in all_plates]
 
     for exp in gated_plates:
         cas9_names = set()
@@ -189,11 +189,11 @@ def main():
                     ax.plot(bins, pdf_fitted, color=(color[0], color[1], color[2], 1.0), linewidth=2)
 
             ax.legend()
+        # plate_fig.tight_layout()
         plate_fig.savefig(os.path.join(fig_dir, 'plate-%s.pdf' % exp.name))
         plate_fig.clf()
         plt.close(plate_fig)
         del plate_fig
-        # plate_fig.tight_layout()
 
 if __name__ == '__main__':
     if len(sys.argv) == 1:
