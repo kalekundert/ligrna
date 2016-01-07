@@ -5,7 +5,7 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 
-import collections, contextlib, random
+import collections, contextlib, random, re
 import nonstdlib, six
 
 class Sequence (object):
@@ -161,18 +161,18 @@ class Construct (Sequence):
 
     @property
     def function_name(self):
-        factory, arguments = parse_name(self.name)[0]
-        return '{}({})'.format(factory, ','.join(str(x) for x in arguments))
+        tokens = re.findall('[a-zA-Z0-9]+', self.name)
+        return '{}({})'.format(tokens[0], ','.join(tokens[1:]))
 
     @property
     def underscore_name(self):
-        import re
-        return re.sub('[^a-zA-Z0-9]+', '_', self.name).strip('_')
+        tokens = re.findall('[a-zA-Z0-9]+', self.name)
+        return '_'.join(tokens)
 
     @property
     def slash_name(self):
-        import re
-        return re.sub('[^a-zA-Z0-9]+', '/', self.name).strip('/')
+        tokens = re.findall('[a-zA-Z0-9]+', self.name)
+        return '/'.join(tokens)
 
     @property
     def seq(self):
