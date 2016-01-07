@@ -73,7 +73,7 @@ def process_sample(sgrna, initial_ng_uL, args):
 
     print('{:>6.2f} μL {} ng/uL {}'.format(sgrna_to_add, initial_ng_uL, sgrna.function_name))
     print('{:>6.2f} μL nuclease-free water'.format(water_to_add))
-    print(30 * '-')
+    print(30 * '─')
     print('{:>6.2f} μL {:.1f} nM {}'.format(sgrna_to_add + water_to_add, target_nM, sgrna.function_name))
 
 
