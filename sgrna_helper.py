@@ -838,7 +838,7 @@ def spacer(name='aavs'):
         sequence = 'GGGTGGGGGGAGTTTGCTCC'
     elif name in ('k1', 'klein1'):
         sequence = 'GGGCACGGGCAGCTTGCCCG'
-    elif name == ('k2', 'klein2'):
+    elif name in ('k2', 'klein2'):
         sequence = 'GTCGCCCTCGAACTTCACCT'
     else:
         raise ValueError("Unknown spacer: '{}'".format(name))
