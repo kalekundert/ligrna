@@ -15,7 +15,7 @@ Options:
         The working concentration of Cas9 (in nM)
         How much Cas9 to use (in μL).
 
-    -C --cas9-stock-conc MICROMOLAR     [default: 20.0]
+    -C --cas9-stock-conc MICROMOLAR     [default: 1.0]
         The stock Cas9 concentration (in μM).
 
     -d --dna MICROLITERS        [default: 3.0]
