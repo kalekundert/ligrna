@@ -831,14 +831,14 @@ def spacer(name='aavs'):
         The sequence to target.
     """
     if name == 'rfp':
-        sequence = 'GGAACUUUCAGUUUAGCGGUCU'
+        sequence = 'GGAACTTTCAGTTTAGCGGTCT'
     elif name == 'aavs':
         sequence = 'GGGGCCACTAGGGACAGGAT'
     elif name == 'vegfa':
         sequence = 'GGGTGGGGGGAGTTTGCTCC'
-    elif name == 'klein1':
+    elif name in ('k1', 'klein1'):
         sequence = 'GGGCACGGGCAGCTTGCCCG'
-    elif name == 'klein2':
+    elif name in ('k2', 'klein2'):
         sequence = 'GTCGCCCTCGAACTTCACCT'
     else:
         raise ValueError("Unknown spacer: '{}'".format(name))
