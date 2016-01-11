@@ -2,7 +2,7 @@
 
 import matplotlib
 matplotlib.use('Agg')
-from klab.fcm.fcm import Plate, PlateInfo
+from klab.fcm.fcm import Plate, PlateInfo, make_individual_gating_fig
 import klab.fcm.fcm as fcm
 import os
 import numpy as np
@@ -83,7 +83,7 @@ exp_tep_concs = [
 def main():
     outer_fig_dir = os.path.join('script_output', os.path.basename(__file__).split('.')[0])
 
-    if fast_run:
+    if True:
         plot_gate_value('poly_0.6', 0.6, outer_fig_dir)
     else:
         func_args = []
@@ -125,56 +125,13 @@ def plot_gate_value(gate_name=None, gate_val=None, outer_fig_dir=None):
     fig_dir = os.path.join(outer_fig_dir, gate_name)
     if not os.path.isdir(fig_dir):
         os.makedirs(fig_dir)
-    gating_fig = plt.figure(figsize=(len(all_plates)*9, 11), dpi=600)
-    gating_axes = []
+
+    gated_plates = [make_individual_gating_fig(p, gate_val, gate_name, fig_dir, fast_run = fast_run, florescence_channel = channel_name, title = os.path.basename(__file__)) for p in all_plates]
+        
     mean_diffs = {}
-    for plate_num, exp in enumerate(all_plates):
+    for plate_num, exp in enumerate(gated_plates):
         blank_samples = [] # list(exp.well_set('Control-Blank'))
         nonblank_samples = list(exp.all_position_set)
-        if len(gating_axes) >= 1:
-            ax = gating_fig.add_subplot(1, len(all_plates), plate_num+1, sharey=gating_axes[0])
-        else:
-            ax = gating_fig.add_subplot(1, len(all_plates), plate_num+1)
-        gating_axes.append(ax)
-        ax.set_title(exp.name)
-
-        if gate_name.startswith('fsc'):
-            gate = ThresholdGate(gate_val, 'FSC-A', region='above')
-        elif gate_name.startswith('poly'):
-            all_exp_data_fsc = []
-            all_exp_data_ssc = []
-            for i, nonblank_sample in enumerate(nonblank_samples):
-                if not fast_run:
-                    exp.samples[nonblank_sample].plot(['FSC-A', 'SSC-A'], kind='scatter', color=np.random.rand(3,1), s=1, alpha=0.1, ax=ax)
-                all_exp_data_fsc.append( exp.samples[nonblank_sample].data['FSC-A'] )
-                all_exp_data_ssc.append( exp.samples[nonblank_sample].data['SSC-A'] )
-
-            gate_m, gate_b = fcm.find_perpendicular_gating_line( np.concatenate(all_exp_data_fsc), np.concatenate(all_exp_data_ssc), gate_val)
-
-            fsc_ssc_axis_limits = (-50000, 100000)
-
-            x_max = np.amax(np.concatenate(all_exp_data_fsc))
-            x_min = np.amin(np.concatenate(all_exp_data_fsc))
-            y_max = np.amax(np.concatenate(all_exp_data_ssc))
-            y_min = np.amin(np.concatenate(all_exp_data_ssc))
-            ax.set_ylim(fsc_ssc_axis_limits)
-            ax.set_xlim(fsc_ssc_axis_limits)
-            fudge = 1.0
-            polygon_xs = [x_min-fudge, x_min-fudge, (y_min-gate_b)/float(gate_m), x_max+fudge, x_max+fudge]
-            polygon_ys = [y_max+fudge, gate_m*x_min+gate_b, y_min-fudge, y_min-fudge, y_max+fudge]
-            gate = PolyGate(np.array([[x,y] for x, y in zip(polygon_xs, polygon_ys)]), ['FSC-A', 'SSC-A'], region='in', name='polygate')
-
-        for i, blank_sample in enumerate(blank_samples):
-            if i == 0:
-                exp.samples[blank_sample].plot(['FSC-A', 'SSC-A'], kind='scatter', color='red', s=2, alpha=1.0/float(len(blank_samples)), gates=[gate], label='Blank media', ax=ax)
-            else:
-                if not fast_run:
-                    exp.samples[blank_sample].plot(['FSC-A', 'SSC-A'], kind='scatter', color='red', s=2, alpha=1.0/float(len(blank_samples)), gates=[gate], ax=ax)
-        exp.gate(gate)
-
-        ax.grid(True)
-        if len(blank_samples) > 0:
-            ax.legend()
 
         tep_wells = {}
         for tep_conc, tep_conc_name in exp_tep_concs:
@@ -286,10 +243,6 @@ def plot_gate_value(gate_name=None, gate_val=None, outer_fig_dir=None):
         plt.close(plate_fig)
         del plate_fig
         # plate_fig.tight_layout()
-    gating_fig.savefig(os.path.join(fig_dir, 'gates.png'))
-    gating_fig.clf()
-    plt.close(gating_fig)
-    del gating_fig
 
     # Prepare mean diffs figure
     mean_cis = copy.deepcopy(mean_diffs)
@@ -395,7 +348,7 @@ def plot_gate_value(gate_name=None, gate_val=None, outer_fig_dir=None):
     pts_proxy = matplotlib.lines.Line2D([], [], linewidth=0, marker='+', markersize=5.0, color='black')
     legend_info.append( (stars_proxy, 'Sig. results') )
     legend_info.append( (pts_proxy, 'Replicates') )
-    diffs_fig.suptitle('2015/10/15 - Mean biological replicate fold signal over TEP 0.0 conc. (IPTG 1mm) (mean of replicate means of gated distributions)', y=1.04)
+    diffs_fig.suptitle('2015/10/30 - Mean biological replicate fold signal over TEP 0.0 conc. (IPTG 1mm) (mean of replicate means of gated distributions)', y=1.04)
     diffs_fig.tight_layout()
     diffs_fig.legend([t[0] for t in legend_info], [t[1] for t in legend_info], loc = 'lower center', ncol=4)
     # diffs_fig.tight_layout()

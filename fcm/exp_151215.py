@@ -131,7 +131,6 @@ def plot_gate_value(gate_name=None, gate_val=None, outer_fig_dir=None):
     if not os.path.isdir(fig_dir):
         os.makedirs(fig_dir)
 
-    gating_axes = []
     mean_diffs = {}
 
     gated_plates = [make_individual_gating_fig(p, gate_val, gate_name, fig_dir, fast_run = fast_run, florescence_channel = channel_name, title = os.path.basename(__file__)) for p in all_plates]

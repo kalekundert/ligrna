@@ -3,8 +3,8 @@
 import matplotlib
 matplotlib.use('Agg')
 import multiprocessing as mp
-from fcm import Plate, PlateInfo
-import fcm
+from klab.fcm.fcm import Plate, PlateInfo, make_individual_gating_fig
+import klab.fcm.fcm as fcm
 import os
 import numpy as np
 import scipy
@@ -96,86 +96,16 @@ def plot_gate_value(gate_name=None, gate_val=None, outer_fig_dir=None):
     fig_dir = os.path.join(outer_fig_dir, gate_name)
     if not os.path.isdir(fig_dir):
         os.makedirs(fig_dir)
-    gating_fig = plt.figure(figsize=(len(all_plates)*9, 11), dpi=600)
-    gating_axes = []
-    mean_diffs = {}
-    for plate_num, exp in enumerate(all_plates):
-        blank_samples = []
-        nonblank_samples = list(exp.all_position_set)
-        if len(gating_axes) >= 1:
-            ax = gating_fig.add_subplot(1, len(all_plates), plate_num+1, sharey=gating_axes[0])
-        else:
-            ax = gating_fig.add_subplot(1, len(all_plates), plate_num+1)
-        gating_axes.append(ax)
-        ax.set_title(exp.name)
 
-        if gate_name.startswith('fsc'):
-            gate = ThresholdGate(gate_val, 'FSC-A', region='above')
-        elif gate_name.startswith('poly'):
-            all_exp_data_fsc = []
-            all_exp_data_ssc = []
-            for i, nonblank_sample in enumerate(nonblank_samples):
-                if not fast_run and i != 0:
-                    exp.samples[nonblank_sample].plot(['FSC-A', 'SSC-A'], kind='scatter', color=np.random.rand(3,1), s=1, alpha=0.1, ax=ax)
-                all_exp_data_fsc.append( exp.samples[nonblank_sample].data['FSC-A'] )
-                all_exp_data_ssc.append( exp.samples[nonblank_sample].data['SSC-A'] )
-
-            gate_m, gate_b = fcm.find_perpendicular_gating_line( np.concatenate(all_exp_data_fsc), np.concatenate(all_exp_data_ssc), gate_val)
-
-            fsc_ssc_axis_limits = (-50000, 100000)
-
-            x_max = np.amax(np.concatenate(all_exp_data_fsc))
-            x_min = np.amin(np.concatenate(all_exp_data_fsc))
-            y_max = np.amax(np.concatenate(all_exp_data_ssc))
-            y_min = np.amin(np.concatenate(all_exp_data_ssc))
-            ax.set_ylim(fsc_ssc_axis_limits)
-            ax.set_xlim(fsc_ssc_axis_limits)
-            fudge = 1.0
-            polygon_xs = [x_min-fudge, x_min-fudge, (y_min-gate_b)/float(gate_m), x_max+fudge, x_max+fudge]
-            polygon_ys = [y_max+fudge, gate_m*x_min+gate_b, y_min-fudge, y_min-fudge, y_max+fudge]
-            gate = PolyGate(np.array([[x,y] for x, y in zip(polygon_xs, polygon_ys)]), ['FSC-A', 'SSC-A'], region='in', name='polygate')
-
-            exp.samples[nonblank_samples[0]].plot(['FSC-A', 'SSC-A'], kind='scatter', color=np.random.rand(3,1), s=1, alpha=0.1, gates=[gate], ax=ax)
-        exp.gate(gate)
-
-        # show all channel medians
-        tep_conc = 0.0
-        atc_conc = 1.0e-6
-        iptg_conc = 1.0e-3
-        atc_wells = exp.well_set('ATC_conc', atc_conc)
-        iptg_wells = exp.well_set('IPTG_conc', iptg_conc)
-        tep_wells = exp.well_set('TEP_conc', tep_conc)
-        pos_wells = list(exp.well_set('Control-Pos'))
-        neg_wells = list(exp.well_set('Control-Neg'))
-        assert( len(pos_wells) == len(neg_wells) )
-        for replicate_count in xrange(len(pos_wells)):
-            pos_well = pos_wells[replicate_count]
-            neg_well = neg_wells[replicate_count]
-            for all_channel_name in exp.samples[pos_well].data:
-                print '%.1f' % (exp.samples[neg_well].data[all_channel_name].mean() / exp.samples[pos_well].data[all_channel_name].mean()), plate_num, replicate_count, all_channel_name, '%.1f' % exp.samples[pos_well].data[all_channel_name].mean(), '%.1f' % exp.samples[neg_well].data[all_channel_name].mean()
-            print
-    #     continue
-    # sys.exit(0)
-    # for c in 'thisisafakeforloop':
+    gated_plates = [make_individual_gating_fig(p, gate_val, gate_name, fig_dir, fast_run = fast_run, florescence_channel = channel_name, title = os.path.basename(__file__)) for p in all_plates]
         
-        ax.grid(True)
-        if len(blank_samples) > 0:
-            ax.legend()
-
-
-    gating_fig.savefig(os.path.join(fig_dir, 'gates.png'))
-    gating_fig.clf()
-    plt.close(gating_fig)
-    del gating_fig
-    print 'Gating figure saved'
-
     plot_rows = 2
     plot_cols = 3
-    plate_fig = plt.figure(figsize=(22.0*3.0/3.0, 17.0/3.0), dpi=300)
+    plate_fig = plt.figure(figsize=(16.0, 11.0), dpi=300)
     plot_num = 1
     plate_fig.suptitle('Controls in 3mL liquid culture', fontsize=12)
     for plot_row in xrange(plot_rows):
-        exp = all_plates[plot_row]
+        exp = gated_plates[plot_row]
         plot_row += 1
         for replicate_count in xrange(1, plot_cols+1):
             if replicate_count == 1:
@@ -203,7 +133,7 @@ def plot_gate_value(gate_name=None, gate_val=None, outer_fig_dir=None):
                 elif sample_type == 'neg':
                     exp_well = exp.get_by_well('A%d' % replicate_count)
 
-                exp_mean = exp_well.data[channel_name].median()
+                exp_mean = exp_well.data[channel_name].mean()
 
                 # Fast way to make code work and not bootstrap
                 if True:
@@ -223,7 +153,7 @@ def plot_gate_value(gate_name=None, gate_val=None, outer_fig_dir=None):
                 sample_max = np.max(sample_data)
                 sample_min = np.min(sample_data)
                 nbins = max(3, int(20 * float((sample_max - sample_min) / 2000)))
-                hist_output[sample_type] = exp_well.plot(channel_name, bins=40, fc=color, lw=1, ax=ax, autolabel=False, stacked=True, label='%s - median %.0f' % (sample_type, exp_mean) )
+                hist_output[sample_type] = exp_well.plot(channel_name, bins=40, fc=color, lw=1, ax=ax, autolabel=False, stacked=True, label='%s - mean %.0f' % (sample_type, exp_mean) )
 
             ylim = ax.get_ylim()
             xlim = ax.get_xlim()

@@ -3,8 +3,8 @@
 import matplotlib
 matplotlib.use('Agg')
 import multiprocessing as mp
-from fcm import Plate, PlateInfo
-import fcm
+from klab.fcm.fcm import Plate, PlateInfo
+import klab.fcm.fcm as fcm
 import os
 import numpy as np
 import scipy
