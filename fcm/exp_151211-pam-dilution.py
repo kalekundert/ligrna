@@ -23,43 +23,46 @@ fast_run = False
 channel_name = 'PE-Texas Red-A'
 colors = [(0,0,1,0.3), (0,1,0,0.3), (1,0,0,0.3)]
 
-master_sample_dir = '/kortemmelab/data/kyleb/cas9/151209-pam/151209-6hour_pam/96 Well - Flat bottom'
+master_sample_dir = '/kortemmelab/data/kyleb/cas9/151211_pam/dilution'
 
 plate_1 = Plate([
-    PlateInfo('cas9-design123', None, ['A1-A3']),
-    PlateInfo('cas9-design477', None, ['A4-A6']),
-    PlateInfo('cas9-design286', None, ['A7-A9']),
-    PlateInfo('cas9-wt', None, ['A10-A12']),
+    PlateInfo('cas9-design33v2', None, ['A1-A2']),
+    PlateInfo('cas9-design580', None, ['A3-A4']),
+    PlateInfo('cas9-design182', None, ['A5-A6']),
+    PlateInfo('cas9-design223', None, ['A9-A10']),
+    PlateInfo('cas9-wt', None, ['D1-D2']),
 
-    PlateInfo('sgRNA-NAA', None, ['A1', 'A4', 'A7', 'A10']),
-    PlateInfo('sgRNA-NGG', None, ['A2', 'A5', 'A8', 'A11']),
-    PlateInfo('sgRNA-empty', None, ['A3', 'A6', 'A9', 'A12']),
+    PlateInfo('sgRNA-NAA', None, ['A2', 'A4', 'A6', 'A10']),
+    PlateInfo('sgRNA-NGG', None, ['D2']),
+    PlateInfo('sgRNA-empty', None, ['A1', 'A3', 'A5', 'A9', 'D1']),
 ], sample_dir = master_sample_dir,
     name = 'replicate_1',
 )
 
 plate_2 = Plate([
-    PlateInfo('cas9-design123', None, ['B1-B3']),
-    PlateInfo('cas9-design477', None, ['B4-B6']),
-    PlateInfo('cas9-design286', None, ['B7-B9']),
-    PlateInfo('cas9-wt', None, ['B10-B12']),
+    PlateInfo('cas9-design33v2', None, ['B1-B2']),
+    PlateInfo('cas9-design580', None, ['B3-B4']),
+    PlateInfo('cas9-design182', None, ['B5-B6']),
+    PlateInfo('cas9-design223', None, ['B9-B10']),
+    PlateInfo('cas9-wt', None, ['E1-E2']),
 
-    PlateInfo('sgRNA-NAA', None, ['B1', 'B4', 'B7', 'B10']),
-    PlateInfo('sgRNA-NGG', None, ['B2', 'B5', 'B8', 'B11']),
-    PlateInfo('sgRNA-empty', None, ['B3', 'B6', 'B9', 'B12']),
+    PlateInfo('sgRNA-NAA', None, ['B2', 'B4', 'B6', 'B10']),
+    PlateInfo('sgRNA-NGG', None, ['E2']),
+    PlateInfo('sgRNA-empty', None, ['B1', 'B3', 'B5', 'B9', 'E1']),
 ], sample_dir = master_sample_dir,
     name = 'replicate_2',
 )
 
 plate_3 = Plate([
-    PlateInfo('cas9-design123', None, ['C1-C3']),
-    PlateInfo('cas9-design477', None, ['C4-C6']),
-    PlateInfo('cas9-design286', None, ['C7-C9']),
-    PlateInfo('cas9-wt', None, ['C10-C12']),
+    PlateInfo('cas9-design33v2', None, ['C1-C2']),
+    PlateInfo('cas9-design580', None, ['C3-C4']),
+    PlateInfo('cas9-design182', None, ['C5-C6']),
+    PlateInfo('cas9-design223', None, ['C9-C10']),
+    PlateInfo('cas9-wt', None, ['F1-F2']),
 
-    PlateInfo('sgRNA-NAA', None, ['C1', 'C4', 'C7', 'C10']),
-    PlateInfo('sgRNA-NGG', None, ['C2', 'C5', 'C8', 'C11']),
-    PlateInfo('sgRNA-empty', None, ['C3', 'C6', 'C9', 'C12']),
+    PlateInfo('sgRNA-NAA', None, ['C2', 'C4', 'C6', 'C10']),
+    PlateInfo('sgRNA-NGG', None, ['F2']),
+    PlateInfo('sgRNA-empty', None, ['C1', 'C3', 'C5', 'C9', 'F1']),
 ], sample_dir = master_sample_dir,
     name = 'replicate_3',
 )
@@ -140,7 +143,7 @@ def main():
                         well_mean_low, well_mean_high = (well_mean, well_mean)
 
                 well_means[(cas9_name, sgrna_name)] = (well_mean, well_mean_low, well_mean_high)
-                hist_output[(cas9_name, sgrna_name)] = well.plot(channel_name, bins=500, fc=color, lw=1, ax=ax, autolabel=False, stacked=True, label='%s %d' % (sgrna_name, int(well_mean)) )
+                hist_output[(cas9_name, sgrna_name)] = well.plot(channel_name, bins=500, fc=color, lw=1, ax=ax, autolabel=False, stacked=True, label='%s %d' % (sgrna_name, well_mean) )
                 print exp.name, cas9_name + '-' + sgrna_name, len(channel_data), channel_data
                 # Find 99th percentile limits
                 this_xmax = np.max(channel_data)
@@ -149,7 +152,7 @@ def main():
                 this_xmin = np.min(channel_data)
                 if this_xmin > xmin:
                     xmin = this_xmin
-            ax.set_xlim( (xmin, min(10000, xmax) ) )
+            ax.set_xlim( (xmin, min(2000, xmax) ) )
 
             ylim = ax.get_ylim()
             xlim = ax.get_xlim()
