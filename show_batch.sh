@@ -111,7 +111,6 @@ elif [ "$round" = 6 ]; then
         slx/wo              \
         slx/mx              \
         sh/4                \
-        sh/4/wx             \
         sh/4/mx             \
         sh/4/bx             \
         sh/5/mx             \
@@ -132,6 +131,7 @@ elif [ "$round" = 7 ]; then
         sb/6/wo             \
         slx/mo              \
         slx/bo              \
+        sh/4/wx             \
         sh/5/wx             \
         cb/wo2              \
         cl/mo               \
