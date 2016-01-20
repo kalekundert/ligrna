@@ -61,10 +61,10 @@ num_sgrnas = num_reactions // 2
 cas9_rxn = dirty_water.Reaction('''\
 Reagent    Conc  Each Rxn  Master Mix
 =======  ======  ========  ==========
-Water             10.1 μL         yes
-Buffer      10x    3.0 μL         yes
+water             10.1 μL         yes
+buffer      10x    3.0 μL         yes
 Cas9       1 μM    0.9 μL         yes
-Ligand    30 mM   10.0 μL
+ligand    30 mM   10.0 μL
 sgRNA    300 nM    3.0 μL
 DNA       30 nM    3.0 μL
 ''')
@@ -73,7 +73,7 @@ cas9_rxn.num_reactions = eval(args['<reactions>'])
 cas9_rxn.extra_master_mix = args['--extra']
 cas9_rxn['Cas9'].stock_conc = args['--cas9-stock-conc']
 cas9_rxn['Cas9'].conc *= float(args['--cas9-conc'])
-cas9_rxn['Ligand'].conc *= float(args['--ligand-conc'])
+cas9_rxn['ligand'].conc *= float(args['--ligand-conc'])
 cas9_rxn['sgRNA'].conc *= float(args['--sgrna-conc'])
 cas9_rxn['DNA'].conc *= float(args['--dna-conc'])
 
@@ -182,7 +182,7 @@ Setup {num_reactions} Cas9 reactions:
 
 {cas9_rxn}
 
-- Add {cas9_rxn[Ligand].volume_str} water or ligand to each reaction.
+- Add {cas9_rxn[ligand].volume_str} water or ligand to each reaction.
 
 - Add {cas9_rxn[sgRNA].volume_str} sgRNA to each reaction.
 
