@@ -137,7 +137,7 @@ def main():
 
                 # Add pos/neg signal fold diff to mean diffs
                 # Fast way to make code work and not bootstrap
-                if fast_run:
+                if True:
                     well_mean_low, well_mean_high = (well_mean, well_mean)
                 else:
                     # Slow bootstrapping

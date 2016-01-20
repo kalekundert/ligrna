@@ -23,48 +23,67 @@ fast_run = False
 channel_name = 'PE-Texas Red-A'
 colors = [(0,0,1,0.3), (0,1,0,0.3), (1,0,0,0.3)]
 
-master_sample_dir = '/kortemmelab/data/kyleb/cas9/151209-pam/151209-6hour_pam/96 Well - Flat bottom'
+master_sample_dir = '/kortemmelab/data/kyleb/cas9/151218_PAM_8hr_wdilution/96 Well - Flat bottom_001'
 
 plate_1 = Plate([
-    PlateInfo('cas9-design123', None, ['A1-A3']),
-    PlateInfo('cas9-design477', None, ['A4-A6']),
-    PlateInfo('cas9-design286', None, ['A7-A9']),
-    PlateInfo('cas9-wt', None, ['A10-A12']),
+    PlateInfo('cas9-design33', None, ['A1-A2']),
+    PlateInfo('cas9-design982', None, ['A3-A4']),
+    PlateInfo('cas9-design355', None, ['A5-A6']),
+    PlateInfo('cas9-design411v2', None, ['A7-A8']),
+    PlateInfo('cas9-design454', None, ['A9-A10']),
+    PlateInfo('cas9-design411', None, ['A11-A12']),
+    PlateInfo('cas9-design244', None, ['C1-C2']),
+    PlateInfo('cas9-design244v2', None, ['C3-C4']),
+    PlateInfo('cas9-wt', None, ['C5-C6']),
 
-    PlateInfo('sgRNA-NAA', None, ['A1', 'A4', 'A7', 'A10']),
-    PlateInfo('sgRNA-NGG', None, ['A2', 'A5', 'A8', 'A11']),
-    PlateInfo('sgRNA-empty', None, ['A3', 'A6', 'A9', 'A12']),
+    PlateInfo('dilute-cas9-design33', None, ['E1-E2']),
+    PlateInfo('dilute-cas9-design982', None, ['E3-E4']),
+    PlateInfo('dilute-cas9-design355', None, ['E5-E6']),
+    PlateInfo('dilute-cas9-design411v2', None, ['E7-E8']),
+    PlateInfo('dilute-cas9-design454', None, ['E9-E10']),
+    PlateInfo('dilute-cas9-design411', None, ['E11-E12']),
+    PlateInfo('dilute-cas9-design244', None, ['G1-G2']),
+    PlateInfo('dilute-cas9-design244v2', None, ['G3-G4']),
+    PlateInfo('dilute-cas9-wt', None, ['G5-G6']),
+
+    
+    PlateInfo('sgRNA-NAA', None, ['A1', 'E1', 'A3', 'E3', 'A5', 'E5', 'A7', 'E7', 'A9', 'E9', 'A11', 'E11', 'C1', 'G1', 'C3', 'G3']),
+    PlateInfo('sgRNA-NGG', None, ['C5', 'G5']),
+    PlateInfo('sgRNA-empty', None, ['A2', 'E2', 'A4', 'E4', 'A6', 'E6', 'A8', 'E8', 'A10', 'E10', 'A12', 'E12', 'C2', 'G2', 'C4', 'G4', 'C6', 'G6']),
 ], sample_dir = master_sample_dir,
     name = 'replicate_1',
 )
 
 plate_2 = Plate([
-    PlateInfo('cas9-design123', None, ['B1-B3']),
-    PlateInfo('cas9-design477', None, ['B4-B6']),
-    PlateInfo('cas9-design286', None, ['B7-B9']),
-    PlateInfo('cas9-wt', None, ['B10-B12']),
+    PlateInfo('cas9-design33', None, ['B1-B2']),
+    PlateInfo('cas9-design982', None, ['B3-B4']),
+    PlateInfo('cas9-design355', None, ['B5-B6']),
+    PlateInfo('cas9-design411v2', None, ['B7-B8']),
+    PlateInfo('cas9-design454', None, ['B9-B10']),
+    PlateInfo('cas9-design411', None, ['B11-B12']),
+    PlateInfo('cas9-design244', None, ['D1-D2']),
+    PlateInfo('cas9-design244v2', None, ['D3-D4']),
+    PlateInfo('cas9-wt', None, ['D5-D6']),
 
-    PlateInfo('sgRNA-NAA', None, ['B1', 'B4', 'B7', 'B10']),
-    PlateInfo('sgRNA-NGG', None, ['B2', 'B5', 'B8', 'B11']),
-    PlateInfo('sgRNA-empty', None, ['B3', 'B6', 'B9', 'B12']),
+    PlateInfo('dilute-cas9-design33', None, ['F1-F2']),
+    PlateInfo('dilute-cas9-design982', None, ['F3-F4']),
+    PlateInfo('dilute-cas9-design355', None, ['F5-F6']),
+    PlateInfo('dilute-cas9-design411v2', None, ['F7-F8']),
+    PlateInfo('dilute-cas9-design454', None, ['F9-F10']),
+    PlateInfo('dilute-cas9-design411', None, ['F11-F12']),
+    PlateInfo('dilute-cas9-design244', None, ['H1-H2']),
+    PlateInfo('dilute-cas9-design244v2', None, ['H3-H4']),
+    PlateInfo('dilute-cas9-wt', None, ['H5-H6']),
+
+    
+    PlateInfo('sgRNA-NAA', None, ['B1', 'F1', 'B3', 'F3', 'B5', 'F5', 'B7', 'F7', 'B9', 'F9', 'B11', 'F11', 'D1', 'H1', 'D3', 'H3']),
+    PlateInfo('sgRNA-NGG', None, ['D5', 'H5']),
+    PlateInfo('sgRNA-empty', None, ['B2', 'F2', 'B4', 'F4', 'B6', 'F6', 'B8', 'F8', 'B10', 'F10', 'B12', 'F12', 'D2', 'H2', 'D4', 'H4', 'D6', 'H6']),
 ], sample_dir = master_sample_dir,
     name = 'replicate_2',
 )
 
-plate_3 = Plate([
-    PlateInfo('cas9-design123', None, ['C1-C3']),
-    PlateInfo('cas9-design477', None, ['C4-C6']),
-    PlateInfo('cas9-design286', None, ['C7-C9']),
-    PlateInfo('cas9-wt', None, ['C10-C12']),
-
-    PlateInfo('sgRNA-NAA', None, ['C1', 'C4', 'C7', 'C10']),
-    PlateInfo('sgRNA-NGG', None, ['C2', 'C5', 'C8', 'C11']),
-    PlateInfo('sgRNA-empty', None, ['C3', 'C6', 'C9', 'C12']),
-], sample_dir = master_sample_dir,
-    name = 'replicate_3',
-)
-
-all_plates = [plate_1, plate_2, plate_3]
+all_plates = [plate_1, plate_2]
 
 def main():
     outer_fig_dir = os.path.join('script_output', os.path.basename(__file__).split('.')[0])
@@ -73,20 +92,20 @@ def main():
     fig_dir = os.path.join(outer_fig_dir, gate_name)
     if not os.path.isdir(fig_dir):
         os.makedirs(fig_dir)
-    gated_plates = [make_individual_gating_fig(p, gate_val, gate_name, fig_dir, fast_run = fast_run, florescence_channel = channel_name, title = os.path.basename(__file__)) for p in all_plates]
+    gated_plates = [make_individual_gating_fig(p, gate_val, gate_name, fig_dir, fast_run = fast_run, florescence_channel = channel_name, tight_layout = False, title = os.path.basename(__file__)) for p in all_plates]
 
     for exp in gated_plates:
         cas9_names = set()
         sgrna_names = set()
         for p in exp.experimental_parameters:
-            if p.startswith('cas9-'):
+            if 'cas9-' in p:
                 cas9_names.add(p)
             elif p.startswith('sgRNA-'):
               sgrna_names.add(p)
         cas9_names = sorted( x for x in cas9_names )
         sgrna_names = sorted( x for x in sgrna_names )
 
-        plots_per_row = 4
+        plots_per_row = 9
         plot_cols = min(plots_per_row, len(cas9_names))
         plot_rows = len(cas9_names) / plots_per_row + 1
         current_plot_col = 1
@@ -149,7 +168,10 @@ def main():
                 this_xmin = np.min(channel_data)
                 if this_xmin > xmin:
                     xmin = this_xmin
-            ax.set_xlim( (xmin, min(10000, xmax) ) )
+            if 'dilute' in cas9_name:
+                ax.set_xlim( (xmin, min(2000, xmax) ) )
+            else:
+                ax.set_xlim( (xmin, min(10000, xmax) ) )
 
             ylim = ax.get_ylim()
             xlim = ax.get_xlim()

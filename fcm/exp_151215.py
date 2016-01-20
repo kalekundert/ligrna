@@ -24,52 +24,56 @@ use_multiprocessing = True
 if use_multiprocessing:
     import multiprocessing as mp
 channel_name = 'PE-Texas Red-A'
+global_colors = [(0,0,1,0.3), (0,1,0,0.3), (1,0,0,0.3), (1,0,1,0.3), (0,0,0,0.3)]
 
 plate_1 = Plate([
-    PlateInfo('TEP_conc', 0.0, ['A1', 'A4', 'A7', 'A10']),
-    PlateInfo('TEP_conc', 1.0e-3, ['B1', 'B4', 'B7', 'B10']), # 1 mM
+    PlateInfo('TEP_conc', 0.0, ['A4-E4',]),
+    PlateInfo('TEP_conc', 1.0e-3, ['A1-E1']), # 1 mM
 
-    PlateInfo('IPTG_conc', 1.0e-3, ['A1', 'B1', 'A4', 'B4', 'A7', 'B7', 'A10', 'B10']), # 1 mM
+    PlateInfo('IPTG_conc', 1.0e-3, ['A1-E1', 'A4-E4']), # 1 mM
 
-    PlateInfo('ATC_conc', 1.0e-6, ['A1', 'B1', 'A4', 'B4', 'A7', 'B7', 'A10', 'B10']), # 1uM
+    PlateInfo('ATC_conc', 1.0e-6, ['A1-E1', 'A4-E4']), # 1uM
 
-    PlateInfo('Control-Pos', None, ['A1', 'B1']),
-    PlateInfo('Control-Neg', None, ['A4', 'B4']),
-    PlateInfo('NX-0', None, ['A7', 'B7']),
-    PlateInfo('US-0,0', None, ['A10', 'B10']),
-], sample_dir = '/kortemmelab/data/kyleb/cas9/151030/kyleb/151030-4,3a,45pm_001/96 Well - Flat bottom',
+    PlateInfo('Control-positive', None, ['D1', 'D4']),
+    PlateInfo('Control-sgRNA-null', None, ['E1', 'E4']),
+    PlateInfo('sgRNA-cb', None, ['C1', 'C4']),
+    PlateInfo('sgRNA-sh7', None, ['A1', 'A4']),
+    PlateInfo('sgRNA-sh5', None, ['B1', 'B4']),
+], sample_dir = '/kortemmelab/data/kyleb/cas9/151215-tep/96 Well - Flat bottom',
     name = 'replicate_1',
 )
 
 plate_2 = Plate([
-    PlateInfo('TEP_conc', 0.0, ['A2', 'A5', 'A8', 'A11']),
-    PlateInfo('TEP_conc', 1.0e-3, ['B2', 'B5', 'B8', 'B11']), # 1 mM
+    PlateInfo('TEP_conc', 0.0, ['A5-E5',]),
+    PlateInfo('TEP_conc', 1.0e-3, ['A2-E2']), # 1 mM
 
-    PlateInfo('IPTG_conc', 1.0e-3, ['A2', 'B2', 'A5', 'B5', 'A8', 'B8', 'A11', 'B11']), # 1 mM
+    PlateInfo('IPTG_conc', 1.0e-3, ['A2-E2', 'A5-E5']), # 1 mM
 
-    PlateInfo('ATC_conc', 1.0e-6, ['A2', 'B2', 'A5', 'B5', 'A8', 'B8', 'A11', 'B11']), # 1uM
+    PlateInfo('ATC_conc', 1.0e-6, ['A2-E2', 'A5-E5']), # 1uM
 
-    PlateInfo('Control-Pos', None, ['A2', 'B2']),
-    PlateInfo('Control-Neg', None, ['A5', 'B5']),
-    PlateInfo('NX-0', None, ['A8', 'B8']),
-    PlateInfo('US-0,0', None, ['A11', 'B11']),
-], sample_dir = '/kortemmelab/data/kyleb/cas9/151030/kyleb/151030-4,3a,45pm_001/96 Well - Flat bottom',
+    PlateInfo('Control-positive', None, ['D2', 'D5']),
+    PlateInfo('Control-sgRNA-null', None, ['E2', 'E5']),
+    PlateInfo('sgRNA-cb', None, ['C2', 'C5']),
+    PlateInfo('sgRNA-sh7', None, ['A2', 'A5']),
+    PlateInfo('sgRNA-sh5', None, ['B2', 'B5']),
+], sample_dir = '/kortemmelab/data/kyleb/cas9/151215-tep/96 Well - Flat bottom',
     name = 'replicate_2',
 )
 
 plate_3 = Plate([
-    PlateInfo('TEP_conc', 0.0, ['A3', 'A6', 'A9', 'A12']),
-    PlateInfo('TEP_conc', 1.0e-3, ['B3', 'B6', 'B9', 'B12']), # 1 mM
+    PlateInfo('TEP_conc', 0.0, ['A6-E6',]),
+    PlateInfo('TEP_conc', 1.0e-3, ['A3-E3']), # 1 mM
 
-    PlateInfo('IPTG_conc', 1.0e-3, ['A3', 'B3', 'A6', 'B6', 'A9', 'B9', 'A12', 'B12']), # 1 mM
+    PlateInfo('IPTG_conc', 1.0e-3, ['A3-E3', 'A6-E6']), # 1 mM
 
-    PlateInfo('ATC_conc', 1.0e-6, ['A3', 'B3', 'A6', 'B6', 'A9', 'B9', 'A12', 'B12']), # 1uM
+    PlateInfo('ATC_conc', 1.0e-6, ['A3-E3', 'A6-E6']), # 1uM
 
-    PlateInfo('Control-Pos', None, ['A3', 'B3']),
-    PlateInfo('Control-Neg', None, ['A6', 'B6']),
-    PlateInfo('NX-0', None, ['A9', 'B9']),
-    PlateInfo('US-0,0', None, ['A12', 'B12']),
-], sample_dir = '/kortemmelab/data/kyleb/cas9/151030/kyleb/151030-4,3a,45pm_001/96 Well - Flat bottom',
+    PlateInfo('Control-positive', None, ['A3', 'D6']),
+    PlateInfo('Control-sgRNA-null', None, ['E3', 'E6']),
+    PlateInfo('sgRNA-cb', None, ['C3', 'C6']),
+    PlateInfo('sgRNA-sh7', None, ['A3', 'A6']),
+    PlateInfo('sgRNA-sh5', None, ['B3', 'B6']),
+], sample_dir = '/kortemmelab/data/kyleb/cas9/151215-tep/96 Well - Flat bottom',
     name = 'replicate_3',
 )
 
@@ -78,12 +82,13 @@ all_plates = [plate_1, plate_2, plate_3]
 exp_tep_concs = [
     (0.0, '0'),
     (1.0e-3, '1mM'),
+    (4.59e-3, '4.6mM'),
 ]
 
 def main():
     outer_fig_dir = os.path.join('script_output', os.path.basename(__file__).split('.')[0])
 
-    if True:
+    if True: # fast_run
         plot_gate_value('poly_0.6', 0.6, outer_fig_dir)
     else:
         func_args = []
@@ -126,13 +131,11 @@ def plot_gate_value(gate_name=None, gate_val=None, outer_fig_dir=None):
     if not os.path.isdir(fig_dir):
         os.makedirs(fig_dir)
 
-    gated_plates = [make_individual_gating_fig(p, gate_val, gate_name, fig_dir, fast_run = fast_run, florescence_channel = channel_name, title = os.path.basename(__file__)) for p in all_plates]
-        
     mean_diffs = {}
-    for plate_num, exp in enumerate(gated_plates):
-        blank_samples = [] # list(exp.well_set('Control-Blank'))
-        nonblank_samples = list(exp.all_position_set)
 
+    gated_plates = [make_individual_gating_fig(p, gate_val, gate_name, fig_dir, fast_run = fast_run, florescence_channel = channel_name, title = os.path.basename(__file__)) for p in all_plates]
+    
+    for plate_num, exp in enumerate(gated_plates):
         tep_wells = {}
         for tep_conc, tep_conc_name in exp_tep_concs:
             tep_wells[tep_conc] = exp.well_set('TEP_conc', tep_conc)
@@ -164,36 +167,43 @@ def plot_gate_value(gate_name=None, gate_val=None, outer_fig_dir=None):
                         ax.set_ylabel('ATC Conc. %s\nIPTG Conc. %.0e' % (atc_conc, iptg_conc), size=18)
                     plot_num += 1
                     exp_wells = exp.well_set(name).intersection(atc_wells).intersection(iptg_wells)
+                    print len(exp_wells)
                     exp_tep_wells = {}
                     for tep_conc, tep_conc_name in exp_tep_concs:
                         exp_tep_wells[tep_conc] = list(tep_wells[tep_conc].intersection(exp_wells))
-                        assert( len(exp_tep_wells[tep_conc]) == 1 )
-                        exp_tep_wells[tep_conc] = exp_tep_wells[tep_conc][0]
+                        if len(exp_tep_wells[tep_conc]) == 1:
+                            exp_tep_wells[tep_conc] = exp_tep_wells[tep_conc][0]
+                        else:
+                            del exp_tep_wells[tep_conc]
                     tep_means = {}
                     hist_output = {}
                     count = 0
-                    colors = [(0,0,1,0.3), (0,1,0,0.3), (1,0,0,0.3)]
                     xmax = float('inf')
                     xmin = float('-inf')
                     for tep_conc, tep_conc_name in exp_tep_concs:
-                        color = colors[count % len(colors)]
+                        if tep_conc not in exp_tep_wells:
+                            continue
+                        color = global_colors[count % len(global_colors)]
                         tep_mean = exp.samples[exp_tep_wells[tep_conc]].data[channel_name].mean()
                         channel_data = exp.samples[exp_tep_wells[tep_conc]].data[channel_name].as_matrix()
-
+                        if len(channel_data) == 0:
+                            continue
                         # Add pos/neg signal fold diff to mean diffs
                         # Fast way to make code work and not bootstrap
-                        if True:
+                        if fast_run:
                             tep_mean_low, tep_mean_high = (tep_mean, tep_mean)
                         else:
                             # Slow bootstrapping
                             try:
-                                tep_mean_low, tep_mean_high = bootstrap.ci(channel_data, statfunction=np.average, method='pi')
+                                tep_mean_low, tep_mean_high = bootstrap.ci(channel_data, statfunction=np.average, method='pi', n_samples=1000)
+                                print 'bootstrap done'
                             except Exception:
                                 tep_mean_low, tep_mean_high = (tep_mean, tep_mean)
 
                         tep_means[tep_conc] = (tep_mean, tep_mean_low, tep_mean_high)
-                        hist_output[tep_conc] = exp.samples[exp_tep_wells[tep_conc]].plot(channel_name, bins=120, fc=color, lw=1, ax=ax, autolabel=False, stacked=True, label='%s TEP - %.0f (%.0f-%.0f)' % (tep_conc_name, tep_mean, tep_mean_low, tep_mean_high) )
+                        hist_output[tep_conc] = exp.samples[exp_tep_wells[tep_conc]].plot(channel_name, bins=300, fc=color, lw=1, ax=ax, autolabel=False, stacked=True, label='%s TEP - %.0f (%.0f-%.0f)' % (tep_conc_name, tep_mean, tep_mean_low, tep_mean_high) )
                         # Find 99th percentile limits
+                        print exp, exp.name, atc_conc, iptg_conc, name, tep_conc, channel_data
                         this_xmax = np.max(channel_data)
                         if this_xmax < xmax:
                             xmax = this_xmax
@@ -201,6 +211,11 @@ def plot_gate_value(gate_name=None, gate_val=None, outer_fig_dir=None):
                         if this_xmin > xmin:
                             xmin = this_xmin
                         count += 1
+                    # Hardcoded limits
+                    # if 'Pos' in name:
+                    #     ax.set_xlim( (xmin, 5000) )
+                    # else:
+                    #     ax.set_xlim( (xmin, 20000) )
                     ax.set_xlim( (xmin, xmax) )
 
                     # blank_sample.plot(channel_name, bins=100, alpha=0.1, color='black', label='blank media', ax=ax)
@@ -208,6 +223,8 @@ def plot_gate_value(gate_name=None, gate_val=None, outer_fig_dir=None):
                     xlim = ax.get_xlim()
                     count = 0
                     for tep_conc, tep_conc_name in exp_tep_concs:
+                        if tep_conc not in tep_means or 0.0 not in tep_means:
+                            continue
                         if tep_conc != 0.0 and iptg_conc == 1.0e-3:
                             if name not in mean_diffs:
                                 mean_diffs[name] = {}
@@ -218,10 +235,10 @@ def plot_gate_value(gate_name=None, gate_val=None, outer_fig_dir=None):
 
                             assert( exp.name not in mean_diffs[name][atc_conc][tep_conc] )
                             mean_diffs[name][atc_conc][tep_conc][exp.name] = tep_means[tep_conc][0] / tep_means[0.0][0]
-                        color = colors[count % len(colors)]
+                        color = global_colors[count % len(global_colors)]
                         n, bins, patches = hist_output[tep_conc]
                         ax.plot((tep_means[tep_conc][0], tep_means[tep_conc][0]), (ylim[0], ylim[1]), color=(color[0], color[1], color[2], 1.0), linestyle='-', linewidth=2)
-                        if tep_means[tep_conc][0] != tep_means[tep_conc][1] and tep_means[tep_conc][0] != tep_means[tep_conc][2]:
+                        if not fast_run:
                             ax.plot((tep_means[tep_conc][1], tep_means[tep_conc][1]), (ylim[0], ylim[1]), color=(color[0], color[1], color[2], 1.0), linestyle='--', linewidth=1)
                             ax.plot((tep_means[tep_conc][2], tep_means[tep_conc][2]), (ylim[0], ylim[1]), color=(color[0], color[1], color[2], 1.0), linestyle='--', linewidth=1)
 
@@ -265,8 +282,9 @@ def plot_gate_value(gate_name=None, gate_val=None, outer_fig_dir=None):
 
     diffs_fig = plt.figure()
     axes = []
-    colors = [(0,1,0,0.3), (1,0,0,0.3)]
+    colors = global_colors
     legend_info = []
+    tep_conc_to_color = {}
     for name_count, name in enumerate(sorted(mean_cis)):
         if len(axes) == 0:
             ax = diffs_fig.add_subplot(1, len(mean_cis), name_count+1)
@@ -292,11 +310,17 @@ def plot_gate_value(gate_name=None, gate_val=None, outer_fig_dir=None):
                 mean_cis[name][atc_conc][tep_conc][0]-mean_cis[name][atc_conc][tep_conc][1]
                 for atc_conc in atc_concs
             ]
-            rects = ax.bar(ind + width*tep_conc_count + width/2.0, data, width, color=colors[tep_conc_count % len(colors)])
+            if tep_conc in tep_conc_to_color:
+                color = tep_conc_to_color[tep_conc]
+            else:
+                for color in colors:
+                    if color not in tep_conc_to_color.values():
+                        tep_conc_to_color[tep_conc] = color
+                        break
+            rects = ax.bar(ind + width*tep_conc_count + width/2.0, data, width, color=color)
             bar_centers = [r.get_x()+r.get_width()/2.0 for r in rects]
             for i, center in enumerate(bar_centers):
                 group_centers[i].append(center)
-            color = colors[tep_conc_count % len(colors)]
             ax.errorbar(bar_centers, data, yerr=yerr,
                         # zorder = 4,
                         linewidth = 1, capthick = 1,
@@ -311,7 +335,7 @@ def plot_gate_value(gate_name=None, gate_val=None, outer_fig_dir=None):
                     x_pts.append(bar_centers[i])
                     y_pts.append(y_pt)
             rep_line = ax.plot(x_pts, y_pts, linewidth=0, marker='+', markersize=5.0, color='black')
-            if name_count == 0:
+            if name_count + 1 == len(mean_cis):
                 legend_info.append( (rects, 'TEP %.1E' % tep_conc) )
 
             # Plot stars for significant values
@@ -348,10 +372,10 @@ def plot_gate_value(gate_name=None, gate_val=None, outer_fig_dir=None):
     pts_proxy = matplotlib.lines.Line2D([], [], linewidth=0, marker='+', markersize=5.0, color='black')
     legend_info.append( (stars_proxy, 'Sig. results') )
     legend_info.append( (pts_proxy, 'Replicates') )
-    diffs_fig.suptitle('2015/10/30 - Mean biological replicate fold signal over TEP 0.0 conc. (IPTG 1mm) (mean of replicate means of gated distributions)', y=1.04)
-    diffs_fig.tight_layout()
-    diffs_fig.legend([t[0] for t in legend_info], [t[1] for t in legend_info], loc = 'lower center', ncol=4)
+    diffs_fig.suptitle('2015/12/16 - Mean biological replicate fold signal over TEP 0.0 conc. (mean of replicate means of gated distributions)', y=1.04)
     # diffs_fig.tight_layout()
+    diffs_fig.legend([t[0] for t in legend_info], [t[1] for t in legend_info], loc = 'lower center', ncol=6)
+    diffs_fig.tight_layout()
     diffs_fig.set_size_inches(11.0*len(mean_cis)/3.0, 6.0)
     diffs_fig.savefig(os.path.join(fig_dir, 'diffs.pdf'), dpi=300,  bbox_inches='tight', pad_inches=0.6)
     diffs_fig.clf()
