@@ -8,149 +8,127 @@ Usage:
     ./cas9_master_mix.py <reactions> [options]
 
 Options:
-    -s --sgrna MICROLITERS      [default: 3.0]
-        How much sgRNA to use (in μL).
-
-    -c --cas9-rxn-conc NANOMOLAR        [default: 30.0]
-        The working concentration of Cas9 (in nM)
-        How much Cas9 to use (in μL).
-
-    -C --cas9-stock-conc MICROMOLAR     [default: 1.0]
-        The stock Cas9 concentration (in μM).
-
-    -d --dna MICROLITERS        [default: 3.0]
-        How much target DNA to use (in μL).
-
-    -t --theo MICROLITERS       [default: 10.0]
-        How much theophylline to use (in μL).
-
-    -x --extra PERCENT          [default: 10]
+    -x --extra <percent>                [default: 10]
         How much extra master mix to create.
 
     -r --robot
         Display the protocol for having the Eppendorf liquid handling robot
         setup and carry out the Cas9 reaction.
 
+    -D --short-dna
+        Use the 500 bp target DNA instead of the 4 kb target DNA.
+
+    -B --big-rxns
+        Make each reaction 30 μL rather than 15 μL, as recommended by NEB.
+
     -f --fresh-theo
         Include a step for preparing fresh theophylline, if you've run out of
         frozen stocks.
 
-    -D --short-dna
-        Use the 500 bp target DNA instead of the 4 kb target DNA.
+    -C --cas9-stock-conc <μM>           [default: 1.0]
+        The stock Cas9 concentration (in μM).
+
+    -c --cas9-conc <fold>               [default: 1.0]
+        The working concentration of Cas9 will be the standard amount times 
+        this argument.
+
+    -l --ligand-conc <fold>             [default: 1.0]
+        The working concentration of ligand will be the standard amount times 
+        this argument.
+
+    -s --sgrna-conc <fold>              [default: 1.0]
+        The working concentration of sgRNA will be the standard amount times 
+        this argument.
+
+    -d --dna-conc <fold>                [default: 1.0]
+        The working concentration of DNA will be the standard amount times 
+        this argument.
+
 """
 
 import docopt
-import math
-
-steps = []
+import dirty_water
 
 ## Parse the command line arguments.
 
 args = docopt.docopt(__doc__)
 using_robot = args['--robot']
 num_reactions = eval(args['<reactions>'])
-num_scaled_reactions = num_reactions * (1 + float(args['--extra'] or 0) / 100)
 num_sgrnas = num_reactions // 2
 
 ## Calculate how much of each reagent will be needed.
 
-sgrna = float(args['--sgrna'])
-cas9_stock_conc = float(args['--cas9-stock-conc'])
-cas9_rxn_conc = float(args['--cas9-rxn-conc'])
-cas9 = 30 * cas9_rxn_conc / cas9_stock_conc / 1000
-dna = float(args['--dna'])
-theo = float(args['--theo'])
-water = 27 - sgrna - cas9 - dna - theo
-cas9_mm = 30 - theo - sgrna - dna
+cas9_rxn = dirty_water.Reaction('''\
+Reagent    Conc  Each Rxn  Master Mix
+=======  ======  ========  ==========
+Water             10.1 μL         yes
+Buffer      10x    3.0 μL         yes
+Cas9       1 μM    0.9 μL         yes
+Ligand    30 mM   10.0 μL
+sgRNA    300 nM    3.0 μL
+DNA       30 nM    3.0 μL
+''')
 
-def scale(*reagents):   # (no fold)
-    volume_per_reaction = sum(amount for amount, x in reagents)
+cas9_rxn.num_reactions = eval(args['<reactions>'])
+cas9_rxn.extra_master_mix = args['--extra']
+cas9_rxn['Cas9'].stock_conc = args['--cas9-stock-conc']
+cas9_rxn['Cas9'].conc *= float(args['--cas9-conc'])
+cas9_rxn['Ligand'].conc *= float(args['--ligand-conc'])
+cas9_rxn['sgRNA'].conc *= float(args['--sgrna-conc'])
+cas9_rxn['DNA'].conc *= float(args['--dna-conc'])
 
-    if using_robot:
-        scaled_volume = num_reactions * volume_per_reaction + 14
-    else:
-        scaled_volume = num_scaled_reactions * volume_per_reaction
+kag_rxn = dirty_water.Reaction('''\
+Reagent       Conc  Each Rxn  Master Mix
+============  ====  ========  ==========
+Orange G        6x   5.64 μL         yes
+RNase A       200x   0.18 μL         yes
+Proteinase K  200x   0.18 μL         yes
+''')
 
-    scaled_reagents = [
-            (ref * scaled_volume / volume_per_reaction, name)
-            for ref, name in reagents]
+kag_rxn.num_reactions = num_reactions
+kag_rxn.show_each_rxn = False
+kag_rxn.show_totals = False
+kag_rxn.extra_master_mix = args['--extra']
 
-    return scaled_reagents, scaled_volume
-
-cas9_reagents, cas9_volume = scale(
-        (water, "nuclease-free water"),
-        (3.0, "10x reaction buffer"),
-        (cas9, "{:g} μM Cas9".format(cas9_stock_conc)),
-)
-kag_reagents, kag_volume = scale(
-        #(0.337, "Proteinase K (Denville)"),
-        #(3.371, "Buffer P1 with RNase A (Qiagen)"),
-        #(6.292, "Orange G loading buffer"),
-        (1.20 * 5.64, "Orange G loading buffer"),
-        (1.20 * 0.18, "200x RNase A (Sigma)"),
-        (1.20 * 0.18, "200x Proteinase K (Denville)"),
-)
-
-def cas9_master_mix():  # (no fold)
-    return '\n'.join([
-        "Cas9 Master Mix for {} reactions".format(num_reactions),
-        35 * '='] + [
-        row.format(amount, reagent) for amount, reagent in cas9_reagents] + [
-        35 * '-',
-        row.format(cas9_volume, "total master mix"),
-    ])
-
-def kag_master_mix():   # (no fold)
-    return '\n'.join([
-        "6x KAG Master Mix for {} reactions".format(num_reactions),
-        35 * '='] + [
-        row.format(amount, reagent) for amount, reagent in kag_reagents] + [
-        35 * '-',
-        row.format(kag_volume, "total master mix"),
-    ])
-
-max_volume = sum(x for x, y in cas9_reagents + kag_reagents) 
-max_digits = int(math.ceil(math.log10(max_volume)))
-row = '{{:{}.2f}} μL  {{}}'.format(max_digits + 3)
+if not args['--big-rxns'] and not args['--short-dna']:
+    cas9_rxn.volume /= 2
+    kag_rxn.volume /= 2
 
 ## Setup the reagents.
 
-if args['--fresh-theo']:
-    steps.append("""\
-Prepare solutions with and without theophylline.  
-Treat both solutions in exactly the same way, just 
-don't add theophylline to one:
+protocol = dirty_water.Protocol()
 
-30 mM Theophylline
-===================================
- x≈5 mg  theophylline
-185x μL  nuclease-free water
+if args['--fresh-theo']:
+    protocol += """\
+Prepare a 30 mM solution of theophylline:
+
+Reagent        Amount
+─────────────────────
+theophylline   x≈5 mg
+water         185x μL
 
 Vortex and incubate at 37°C to dissolve.  Use 
-immediately or store at -20°C.
-""")
+immediately or store at -20°C."""
 
-steps.append("""\
+protocol += """\
 Thaw the water, theophylline, 10x Cas9 buffer, 
 and target DNA on the 37°C heat block.  Thaw the 
 sgRNAs at room temperature, then refold them by
-incubating at 95°C for 2 min.
-""")
+incubating at 95°C for 2 min."""
 
 ## Setup the Cas9 reactions (using the robot).
 
 if using_robot:
     # Prepare the Cas9 master mix.
 
-    steps.append("""\
+    protocol += """\
 Prepare the Cas9 master mix:
 
-{}
-""".format(cas9_master_mix()))
-    
+{cas9_rxn}"""
+
     # Put everything into the robot.
 
-    steps.append("""\
+    protocol += """\
 Load the "kyleb/Cas9 Basic Controls" method and 
 setup the robot's worktable:
 
@@ -170,12 +148,11 @@ C1: Empty PCR tubes for each reaction in a 96-well
 C2: sgRNAs in a plastic 96-well rack with a 2 mm 
     cardboard support underneath.  There must be 
     at least 15 μL of each sgRNA.  Fill from the 
-    top left down, skipping every other column.
-""")
+    top left down, skipping every other column."""
 
     # Setup the Cas9 reactions.
 
-    steps.append("""\
+    protocol += """\
 Run the method.  The robot will setup all the 
 reactions.  Answer its questions as follows:
 
@@ -193,68 +170,43 @@ reagents.  The volumes of the Cas9 and KAG master
 mixes are included in this protocol.
 
 Watch to make sure that liquid is actually being 
-pipetted for each step.
-""".format(**locals()))
+pipetted for each step."""
 
 ## Setup the Cas9 reactions (by hand).
 
 else:
     # Setup the Cas9 reactions.
 
-    steps.append('\n'.join(["""\
-Setup {} Cas9 reactions.  Add theophylline, 
-sgRNA, and Cas9 master mix in that order to each 
-reaction (as appropriate).
-""".format(args['<reactions>']),
-cas9_master_mix(),
-'',
-'Each Cas9 Reaction',
-35 * '=',
-row.format(theo, "30 mM theophylline (or water)"),
-row.format(sgrna, "300 nM sgRNA (or water)"),
-row.format(cas9_mm, 'Cas9 mix (or 3 μL buffer + {:g} μL water)'.format(cas9_mm - 3)),
-35 * '-',
-row.format(dna, "30 nM target DNA (or water)"),
-'',
-]))
-    steps.append("""\
-Incubate at room temperature for 10 min.
-""")
-    steps.append("""\
-Add target DNA (as appropriate) to each reaction.
-""")
+    protocol += """\
+Setup {num_reactions} Cas9 reactions:
+
+{cas9_rxn}
+
+- Add {cas9_rxn[Ligand].volume_str} water or ligand to each reaction.
+
+- Add {cas9_rxn[sgRNA].volume_str} sgRNA to each reaction.
+
+- Add {cas9_rxn[master mix].volume_str} Cas9 master mix to each reaction.
+
+- Incubate at room temperature for 10 min.
+
+- Add {cas9_rxn[DNA].volume_str} DNA to each reaction."""
 
 ## Run the Cas9 reactions.
 
-steps.append("""\
-Incubate at 37°C for 1 hour (thermocycler).
-""")
+protocol += """\
+Incubate at 37°C for 1 hour (thermocycler)."""
 
 ## Quench the Cas9 reactions.
 
-steps.append("""\
-Prepare 6x KAG master mix just before the 
-reaction finishes:
+protocol += """\
+Add {kag_rxn.volume:.1f} μL 6x KAG master mix to each reaction:
+    
+{kag_rxn}"""
 
-{}
-""".format(kag_master_mix()))
-
-if using_robot:
-    steps.append("""\
-Put the KAG master mix in position B1-23 when the 
-robot asks for it, then finish running the method.
-The robot will add the mix to each reaction.
-""")
-
-else:
-    steps.append("""\
-Add 6 μL 6x KAG master mix to each reaction.  
-""")
-
-steps.append("""\
+protocol += """\
 Incubate the reactions at 37°C for 20 min, then at 
-55°C for 20 min, then hold at 12°C (thermocycler).
-""") 
+55°C for 20 min, then hold at 12°C (thermocycler)."""
 
 ## Analyze the products.
 
@@ -265,19 +217,12 @@ else:
     gel_load = 18
     gel_percent = 1
 
-steps.append("""\
+protocol += """\
 Load {} μL on a {}% agarose/TAE/GelRed gel and run 
-at 130V for 30 min.""".format(gel_load, gel_percent))
+at 130V for 45 min.""".format(gel_load, gel_percent)
 
 ## Print the protocol.
 
-from textwrap import indent
-
-for i, step in enumerate(steps, 1):
-    number = "{}. ".format(i)
-    padding = ' ' * len(number)
-    step = indent(number + step, ' ' * len(number)).lstrip()
-    print(step)
-
+print(protocol)
 
 # vim: tw=50
