@@ -8,6 +8,10 @@ Usage:
     ./limited_proteolysis.py <reactions> [options]
 
 Options:
+    -b --buffers
+        Print detailed descriptions of all the reagents and buffers used in
+        this protocol.
+
     -t --timepoints MINUTES          [default: 5,15,30]
         How many timepoints to take (in min).
 
@@ -63,12 +67,26 @@ for reagent in rxn:
 
 protocol = dirty_water.Protocol()
 
+if args['--buffers']:
+    protocol += """\
+Acquire the following buffers and reagents:
+
+Reagent  Description
+───────────────────────────────────────────
+water    Ambion (AM9938), nuclease-free
+buffer   200mM HEPES, 1M NaCl, 50mM MgCl₂,
+         1mM EDTA, pH 6.5 @ 25°C (10x)
+Cas9     AddGene pMJ806
+sgRNA    IDT gBlocks, transcribed using NEB
+         HiScribe (E2040S)
+trypsin  Roche (03708985001)"""
+
 protocol += """\
-Thaw the sgRNA by incubating at 95°C for 3 min 
+Refold the sgRNA by incubating at 95°C for 3 min 
 then at 4°C for 1 min."""
 
 protocol += """\
-Setup the limited proteolysis reaction{s}:
+Setup {rxn.num_reactions} limited proteolysis reaction{s}:
 
 {rxn}
 
