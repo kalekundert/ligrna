@@ -88,7 +88,7 @@ Proteinase K  200x   0.18 μL         yes
 kag_rxn.num_reactions = num_reactions
 kag_rxn.show_each_rxn = False
 kag_rxn.show_totals = False
-kag_rxn.extra_master_mix = args['--extra']
+kag_rxn.extra_master_mix = 2 * float(args['--extra'])
 
 if not args['--big-rxns'] and not args['--short-dna']:
     cas9_rxn.volume /= 2
