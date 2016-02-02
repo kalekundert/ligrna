@@ -8,14 +8,21 @@ else
     shift
 fi
 
-if [ "$round" -eq 1 ]; then
+if [ "$round" = 0 ] || [ "$round" = all ]; then
+    ./show_seqs.py "$@"     \
+        wt                  \
+        dead
+fi
+
+if [ "$round" = 1 ] || [ "$round" = all ]; then
     ./show_seqs.py "$@"     \
         us/0/0              \
         us/0/1              \
         us/0/2              \
-        us/0/3              \
+        us/0/3              
+fi
 
-elif [ "$round" = 2 ]; then
+if [ "$round" = 2 ] || [ "$round" = all ]; then
     ./show_seqs.py "$@"     \
         us/1/0              \
         us/1/1              \
@@ -40,9 +47,10 @@ elif [ "$round" = 2 ]; then
         nx/3                \
         hp/17               \
         hp/18               \
-        hp/33               \
+        hp/33               
+fi
 
-elif [ "$round" = 3 ]; then
+if [ "$round" = 3 ] || [ "$round" = all ]; then
     ./show_seqs.py "$@"     \
         id/5/0              \
         id/3/0              \
@@ -71,14 +79,16 @@ elif [ "$round" = 3 ]; then
         nxx/3/4             \
         nxx/3/4/10          \
         nxx/3/4/16          \
-        nxx/2/4/0/2         \
+        nxx/2/4/0/2         
+fi
 
-elif [ "$round" = 4 ]; then
+if [ "$round" = 4 ] || [ "$round" = all ]; then
     ./show_seqs.py "$@"     \
         us/0/0/0/2          \
-        us/0/0/0/3          \
+        us/0/0/0/3          
+fi
 
-elif [ "$round" = 5 ]; then
+if [ "$round" = 5 ] || [ "$round" = all ]; then
     # Estimated price: $1157
     ./show_seqs.py "$@"     \
         fh/1/0              \
@@ -92,9 +102,10 @@ elif [ "$round" = 5 ]; then
         sh/7                \
         cb                  \
         cl                  \
-        ch/4                \
+        ch/4                
+fi
 
-elif [ "$round" = 6 ]; then
+if [ "$round" = 6 ] || [ "$round" = all ]; then
     # Estimated price: $2581
     ./show_seqs.py "$@"     \
         sb/2/bo             \
@@ -124,9 +135,10 @@ elif [ "$round" = 6 ]; then
         ch/5                \
         ch/5/wo             \
         ch/6                \
-        ch/6/wo             \
+        ch/6/wo             
+fi
 
-elif [ "$round" = 7 ]; then
+if [ "$round" = 7 ] || [ "$round" = all ]; then
     ./show_seqs.py "$@"     \
         sb/6/wo             \
         slx/mo              \
@@ -135,16 +147,14 @@ elif [ "$round" = 7 ]; then
         sh/5/wx             \
         cb/wo2              \
         cl/mo               \
-        cl/bo               \
+        cl/bo               
+fi
 
-#elif [ "$round" = 8 ]; then
+#if [ "$round" = 8 ] || [ "$round" = all ]; then
 #        cb/wo/2             \
 #        cbc/wo/slx/wo       \
 #        cbc/wo/sh/5         \
 #        cbc/wo/sh/7         \
 #        tet/cb/wo           \
-#        3mx/cb/wo           \
-
-else
-    echo "Error: round '$round' not yet defined."
-fi
+#        3mx/cb/wo           
+#fi
