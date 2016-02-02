@@ -916,7 +916,6 @@ def aptamer(ligand, piece='whole'):
     # Get the right sequence for the requested aptamer.
 
     if ligand in ('th', 'theo', 'theophylline'):
-        name = 'theo aptamer'
         sequence_pieces   = 'AUACCAGCC', 'GAAA', 'GGCCCUUGGCAG'
         constraint_pieces = '.(.((((((', '....', ')))...))).).'
 
@@ -926,12 +925,22 @@ def aptamer(ligand, piece='whole'):
         sequence_pieces   = 'AUACCAGCC', 'GAAA', 'GGCCAUUGGCAG'
         constraint_pieces = '.(.((((((', '....', ')))...))).).'
 
-    elif ligand in ('tet', 'tetracycline'):
+    elif ligand in ('tc', 'tet', 'tetracycline'):
         # Weigand, Suess. Tetracycline aptamer-controlled regulation of pre- 
         # mRNA splicing in yeast. Nucl. Acids Res. (2007) 35 (12): 4179-4185.
-        name = 'tet aptamer'
-        sequence_pieces   = 'GGCCUAAAACAUACCAGAU', 'GAAA', 'GUCUGGAGAGGUGAAGAAUACGACCACCUAGGCC'
-        constraint_pieces = '(((((........((((((', '....', '))))))..(((((...........))))))))))'
+        #sequence_pieces   = 'GGCCUAAAACAUACCAGAU', 'GAAA', 'GUCUGGAGAGGUGAAGAAUACGACCACCUAGGCC'
+        #constraint_pieces = '(((((........((((((', '....', '))))))..(((((...........))))))))))'
+
+        # Win, Smolke. A modular and extensible RNA-based gene-regulatory 
+        # platform for engineering cellular function. PNAS (2007) 104 (36): 
+        # 14283-14288.
+        #
+        # Win & Smolke use a truncated tet aptamer to actually affect gene 
+        # expression in vivo.  The Weigand & Suess aptamer has a stem on the 
+        # end, which makes me skeptical that it would work for the purposes of 
+        # this project.  
+        sequence_pieces   = 'AAAACAUACCAGAU', 'UUCG', 'AUCUGGAGAAGGUGAAGAAUUCGACCACCU'
+        constraint_pieces = '........((((((', '....', '))))))...(((((...........)))))'
 
     else:
         raise ValueError("no aptamer for '{}'".format(ligand))
@@ -995,6 +1004,34 @@ def aptamer_insert(ligand, linker_len=0, splitter_len=0, repeat_factory=repeat,
     insert.append(repeat_factory("linker/3'", linker_len_3))
 
     return insert
+
+def hammerhead_l2(stem_len=5):
+    if not 0 <= stem_len <= 5:
+        raise ValueError("Stem III of the hammerhead ribozyme must be between 0 and 5 bp long.")
+    offset = 5 - stem_len
+    sequence_5 = (
+            'GCUGU'
+            'C'
+            'ACCGGA'
+            'UGUGCUU'
+            'UCCGGU'
+            'CUGAUGA'
+            'GUCC'
+            'GU'
+    )
+    sequence_3 = (
+            'GA'
+            'GGAC'
+            'GAA'
+            'ACAGC'
+    )
+    domains = (
+            Domain("hammerhead/5'", sequence_5[offset:]),
+            Domain("hammerhead/3'", sequence_3[:len(sequence_3)-offset]),
+    )
+    for domain in domains:
+        domain.style = 'yellow', 'bold'
+    return domains
 
 def complementary_switch(target_seq):
     switch_domain = Domain('switch', reverse_complement(target_seq))
@@ -1160,6 +1197,27 @@ def circle_insert(ligand, target_seq, target_end, tuning_strategy='',
     
     return Construct('circle', domains)
 
+def hammerhead_insert(ligand, mode, stem_len=5, num_aptamers=1):
+    hammerhead_5, hammerhead_3 = hammerhead_l2(stem_len)
+    domains = [hammerhead_5]
+
+    if mode == 'on':
+        domains += [
+                Domain('switch', 'GUCC'),
+                aptamer_insert(ligand, num_aptamers=num_aptamers),
+                Domain('on', 'GGACG'),
+                Domain('off', 'GGAC'),
+        ]
+    elif mode == 'off':
+        domains += [
+                Domain('switch', 'GUUGCUG'),
+                aptamer_insert(ligand, num_aptamers=num_aptamers),
+                Domain('off', 'CAGUGGAC'),
+        ]
+
+    domains += [hammerhead_3]
+    return Construct('hammerhead', domains)
+
 
 def wt_sgrna(target=None):
     """
@@ -1171,7 +1229,7 @@ def wt_sgrna(target=None):
     to restrict this based on the structural biology of Cas9 if you're planning 
     to make random attachments.
     """
-    sgrna = Construct('wt sgrna')
+    sgrna = Construct('wt')
 
     if target is not None:
         sgrna += spacer(target)
@@ -1202,7 +1260,7 @@ def dead_sgrna(target=None):
     from folding properly.  These mutations were described by Briner et al.
     """
     sgrna = wt_sgrna(target)
-    sgrna.name = 'dead sgrna'
+    sgrna.name = 'dead'
 
     sgrna['nexus'].mutable = True
     sgrna['nexus'].mutate(2, 'C')
@@ -2007,8 +2065,55 @@ def circle_hairpin(N, tuning_strategy='', A=1, ligand='theo', target='aavs'):
     )
     return sgrna
 
+def hammerhead_upper_stem(mode, A=1, ligand='theo', target='aavs'):
+    sgrna = wt_sgrna(target)
+    sgrna.name = make_name('hu', mode)
+    sgrna.attach(
+            hammerhead_insert(ligand, mode, num_aptamers=A),
+            'stem', 8,
+            'stem', 20,
+    )
+    return sgrna
+
+def hammerhead_nexus(mode, A=1, ligand='theo', target='aavs'):
+    sgrna = wt_sgrna(target)
+    sgrna.name = make_name('hx', mode)
+    sgrna.attach(
+            hammerhead_insert(ligand, mode, num_aptamers=A),
+            'nexus', 2,
+            'nexus', 11,
+    )
+    return sgrna
+
+def hammerhead_hairpin(mode, A=1, ligand='theo', target='aavs'):
+    sgrna = wt_sgrna(target)
+    sgrna.name = make_name('hh', mode)
+    sgrna.attach(
+            hammerhead_insert(ligand, mode, num_aptamers=A),
+            'hairpins', 5,
+            'hairpins', 17,
+    )
+    return sgrna
+
 
 ## Abbreviations
+
+# Strategy Abbreviations
+# ======================
+# f: fold
+# s: serpentine
+# c: circle
+# h: hammerhead
+# z: zipper (reserved)
+
+# Domain Abbreviations
+# ====================
+# u: upper stem
+# l: lower stem
+# b: bulge
+# x: nexus
+# h: hairpins
+
 wt = wt_sgrna
 dead = dead_sgrna
 fu = us = fold_upper_stem
@@ -2026,6 +2131,9 @@ cb = circle_bulge
 cbc = circle_bulge_combo
 cl = circle_lower_stem
 ch = circle_hairpin
+hu = hammerhead_upper_stem
+hx = hammerhead_nexus
+hh = hammerhead_hairpin
 
 t7 = t7_promoter
 th = theo = lambda: aptamer('theo')
@@ -2399,7 +2507,7 @@ def test_spacer():
     with pytest.raises(ValueError): spacer('not a spacer')
 
     assert spacer('aavs') == 'GGGGCCACTAGGGACAGGAT'
-    assert spacer('rfp') == 'GGAACUUUCAGUUUAGCGGUCU'
+    assert spacer('rfp') == 'GGAACTTTCAGTTTAGCGGTCT'
     assert spacer('vegfa') == 'GGGTGGGGGGAGTTTGCTCC'
 
 def test_repeat():
@@ -2482,6 +2590,10 @@ def test_circle_insert():
     assert circle_insert('theo', 'AUGC', '3') == 'GCAUAUACCAGCCGAAAGGCCCUUGGCAGAUGC'
     assert circle_insert('theo', 'AUGC', '5') == 'AUGCAUACCAGCCGAAAGGCCCUUGGCAGGCAU'
     assert circle_insert('theo', 'AUGC', '3', num_aptamers=2) == 'GCAUAUACCAGCCAUACCAGCCGAAAGGCCCUUGGCAGGGCCCUUGGCAGAUGC'
+
+def test_hammerhead_insert():
+    assert hammerhead_insert('theo', 'on').seq == ('GCUG' 'UC' 'ACCGGA' 'UGUGCUU' 'UCCGGU' 'CUGAUGA' 'GUCC' 'GU' 'GUCC' 'AUA' 'CCA' 'GCC' 'GAAA' 'GGC' 'CCU' 'UGG' 'CAG' 'GGACG' 'GGAC' 'GA' 'GGAC' 'GAAA' 'CAGC')
+    assert hammerhead_insert('theo', 'off').seq == ('GCUG' 'UC' 'ACCGGA' 'UGUGCUU' 'UCCGGU' 'CUGAUGA' 'GUCC' 'GU' 'GUUGCUG' 'AUA' 'CCA' 'GCC' 'GAAA' 'GGC' 'CCU' 'UGG' 'CAG' 'CAGUG' 'GAC' 'GA' 'GGAC' 'GAAA' 'CAGC')
 
 def test_wt_sgrna():
     assert from_name('wt') == 'GUUUUAGAGCUAGAAAUAGCAAGUUAAAAUAAGGCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU'
