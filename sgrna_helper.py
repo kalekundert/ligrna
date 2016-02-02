@@ -1309,10 +1309,6 @@ def fold_upper_stem(N, linker_len=0, splitter_len=0, num_aptamers=1, ligand='the
         args = N, linker_len, splitter_len
     else:
         args = N, linker_len
-    if target != 'aavs':
-        args = args + ('s='+target,)
-    if ligand != 'theo':
-        args = args + ('a='+ligand,)
 
     sgrna = wt_sgrna(target)
     sgrna.name = make_name('us', *args)
@@ -1358,10 +1354,6 @@ def fold_lower_stem(N, linker_len=0, splitter_len=0, ligand='theo', target='aavs
         args = N, linker_len, splitter_len
     else:
         args = N, linker_len
-    if target != 'aavs':
-        args = args + ('s='+target,)
-    if ligand != 'theo':
-        args = args + ('a='+ligand,)
 
     sgrna = wt_sgrna(target)
     sgrna.name = make_name('ls', *args)
@@ -1402,12 +1394,6 @@ def fold_nexus(linker_len=0, ligand='theo', target='aavs'):
         region stem.  The linker sequence will have a UUUCCC... pattern so that 
         the design doesn't have really long repeats or an out-of-whack GC%.
     """
-
-    args = (linker_len,)
-    if target != 'aavs':
-        args = args + ('s='+target,)
-    if ligand != 'theo':
-        args = args + ('a='+ligand,)
 
     sgrna = wt_sgrna(target)
     sgrna.name = make_name('nx', linker_len)
@@ -1476,10 +1462,6 @@ def fold_nexus_2(N, M, splitter_len=0, num_aptamers=1, ligand='theo', target='aa
         args = N, M, splitter_len
     else:
         args = N, M
-    if target != 'aavs':
-        args = args + ('s='+target,)
-    if ligand != 'theo':
-        args = args + ('a='+ligand,)
 
     # Create and return the construct using a helper function.
 
@@ -1580,14 +1562,8 @@ def replace_hairpins(N, ligand='theo', target='aavs'):
         The specified construct will be returned, with a hexa-uracil tail will 
         added to the end for the benefit of the T7 polymerase.
     """
-    args = (N,)
-    if target != 'aavs':
-        args = args + ('s='+target,)
-    if ligand != 'theo':
-        args = args + ('a='+ligand,)
-
     design = wt_sgrna(target)
-    design.name = make_name('hp', *args)
+    design.name = make_name('hp', N)
 
     domain_len = len(design['hairpins'])
     insertion_site = min(N, domain_len)
@@ -1628,20 +1604,15 @@ def induce_dimerization(half, N, target='aavs', ligand='theo'):
     if not 0 <= N <= 4:
         raise ValueError("Location for upper stem insertion must be between 0 and 4, not {}.".format(N))
 
-    args = half, N
-    if target != 'aavs':
-        args = args + ('s='+target,)
-    if ligand != 'theo':
-        args = args + ('a='+ligand,)
-
     # Construct and return the requested sequence.
 
     design = Construct()
-    design.name = make_name('id', *args)
+    design.name = make_name('id', half, N)
     wt = wt_sgrna(target)
 
     if half == '5':
-        design += wt['spacer']
+        try: design += wt['spacer']
+        except KeyError: pass
         design += wt['stem']
         design.attach(
                 aptamer(ligand, '5'),
