@@ -270,7 +270,6 @@ def bulge(off, effect='x', nuc='A'):
 
 
 def pick_location(location, choices, N):
-
     if location == 'center':
         D = rv = N
         for i in choices:
@@ -303,8 +302,8 @@ def yield_random_seqs():
     4**4 + 4**5 + 4**6 = 5376 sequences.
     """
     import itertools
-
-    for N in [4,5,6]:
+    lens = [4,5,6] if sys.argv[-1] != 'fast' else [4]
+    for N in lens:
         for seq in itertools.product('ACGU', repeat=N):
             yield ''.join(seq)
 
@@ -335,17 +334,23 @@ def plot_mutants(i, color, mutant_factory, **factory_kwargs):
         print(design_labels[event.ind[0]])
 
 
-    random_style = {
-            'color': color,
-            'marker': ',',
-            'linestyle': '',
-    }
-    random_energies = [
+    random_energies = np.array([
             get_mutant_dg(seq)
             for seq in yield_random_seqs()
-    ]
+    ])
+    random_energies = random_energies[random_energies.nonzero()]
     random_indices = linspace(i-0.4, i+0.4, len(random_energies))
-    plot(random_energies, random_indices, **random_style)
+
+    vp = violinplot(
+            [random_energies], [i],
+            vert=False,
+            showmeans=False,
+            showextrema=False,
+            showmedians=False,
+    )
+    for shape in vp['bodies']:
+        shape.set_facecolor(color)
+        shape.set_linewidth(0)
 
     design_style = {
             'color': color,
@@ -414,18 +419,23 @@ class MutantPlotter:
         import tango
         color_cycle = [
                 tango.red + tango.grey[::-1],
-                tango.green + tango.grey[::-1],
                 tango.orange + tango.grey[::-1],
+                tango.green + tango.grey[::-1],
                 tango.blue + tango.grey[::-1],
-                tango.brown + tango.grey[::-1],
                 tango.purple + tango.grey[::-1],
+                tango.brown + tango.grey[::-1],
         ]
-        color = color_cycle[self.color_i % len(color_cycle)][self.color_j]
+        color = color_cycle[self.color_i % len(color_cycle)][
+                0 if self.color_j % 2 == 0 else 2]
         self.color_j += 1
         return color
 
     def next_color(self):
         self.color_i += 1
+        self.color_j = 0
+
+    def prev_color(self):
+        self.color_i -= 1
         self.color_j = 0
 
 
@@ -441,6 +451,7 @@ class RnaDesignError (Exception):
 fig, ax = plt.subplots()
 p = MutantPlotter()
 p.plot_all_args(wobble)
+p.prev_color()
 p.plot_mutants(wobble_all, effect='o')
 p.plot_mutants(wobble_all, effect='x')
 p.next_color()
@@ -461,6 +472,13 @@ p.plot_mutants(bulge, effect='o', nuc='C')
 p.plot_mutants(bulge, effect='o', nuc='G')
 p.next_color()
 
+ax.yaxis.tick_right()
+ax.set_xlabel('$\mathregular{\Delta G}$ (kcal/mol)')
+ax.set_xlim(-10, 10)
+ax.set_ylim(p.i - 0.5, 1.5)
+ax.set_yticks(p.yticks)
+ax.set_yticklabels(p.yticklabels)
+
 ax2 = ax.twiny()
 g_ticks = ax.get_xticks()
 max_g = max(g_ticks)
@@ -470,18 +488,16 @@ k_exps = range(-max_k, max_k+1)
 k_labels = ['$\mathregular{10^{%d}}$' % k for k in k_exps]
 k_ticks = [kT * log(10**k) for k in k_exps]
 
-ax.yaxis.tick_right()
-ax.set_ylim(p.i - 0.5, 1.5)
-ax.set_yticks(p.yticks)
-ax.set_yticklabels(p.yticklabels)
-
-ax.set_xlabel('$\mathregular{\Delta G}$ (kcal/mol)')
 ax2.set_xlabel('$\mathregular{K_{eq}}$', labelpad=13)
 ax2.set_xticks(k_ticks)
-ax2.set_xticklabels(k_labels)
+ax2.set_xticklabels(k_labels, fontsize='small')
 ax2.xaxis.grid(True)
 
 fig.subplots_adjust(left=0.06, right=0.60)
 fig.set_size_inches(11, 8.5)
 fig.savefig('tune_designs.pdf')
-show()
+
+fig.subplots_adjust(left=0.04, right=0.62)
+fig.set_size_inches(11, 6.47)
+fig.savefig('tune_designs.png', dpi=300)
+#show()
