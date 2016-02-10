@@ -2,7 +2,7 @@
 
 """\
 Display a protocol for running the given number of in vitro transcription 
-reactions using the Epicentre T7-Flash Ampliscribe kit. 
+reactions.
 
 Usage:
     ./in_vitro_transcription.py <reactions> [options]
