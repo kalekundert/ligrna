@@ -1,0 +1,97 @@
+\documentclass[a4paper,12pt]{article}
+
+% TITLE PAGE CONTENT %%%%%%%%%%%%%%%%%%%%%%%%
+\newcommand{\protocol}{cas9 RFP transcription silencing}
+\newcommand{\labtitle}{Kortemme Lab}
+\newcommand{\authorname}{Kyle Barlow}
+% END TITLE PAGE CONTENT %%%%%%%%%%%%%%%%%%%%
+
+
+%Sans serif font
+\renewcommand{\familydefault}{\sfdefault}
+
+\usepackage{graphicx, float, array} % For images, tables & floats
+\usepackage{amsmath, amssymb} % For math
+\usepackage[margin=1in]{geometry} % Settings for margins
+\usepackage{fancyhdr, lastpage, extramarks, booktabs}
+
+\usepackage[pdftitle={\protocol}, pdfauthor={\authorname}]{hyperref}
+\hypersetup{colorlinks, citecolor=blue, filecolor=blue, linkcolor=black, urlcolor=blue}
+\usepackage{cite}
+
+%checkbox for protocol steps validation
+\newcommand{\checkbox}{$\square$\hspace{1mm}}
+\newcommand{\icb}{\item \checkbox}
+
+% Customize header and footer
+\setlength{\headheight}{15pt}
+\pagestyle{fancy}
+\lhead{\normalfont\bfseries\firstleftmark}
+\chead{}
+\rhead{\protocol}       % Use \title macro from above
+\lfoot{}
+\cfoot{}
+\rfoot{Page\ \thepage\ of\ \protect\pageref*{LastPage}}
+\renewcommand\headrulewidth{0.4pt}
+\renewcommand\footrulewidth{0.4pt}
+
+\newcolumntype{C}[1]{>{\centering}p{#1}} %for tables alignements
+
+\newcommand{\up}[1]{\textsuperscript{#1}}
+\setlength{\parindent}{0pt}
+\newcommand{\tab}{\hspace*{2em}}
+\setcounter{secnumdepth}{5}
+
+
+\begin{document}  % START THE DOCUMENT!
+
+
+% TITLE PAGE %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{titlepage}
+\begin{center}
+{\LARGE \textbf{Protocol : \protocol} \\ \vspace{4pt}}
+\rule[13pt]{\textwidth}{1pt} \\ \vspace{150pt}
+{\large By: \authorname \\ \vspace{10pt}
+{\large For : \textsc{\labtitle} \\ \vspace{10pt}}
+\today}
+\end{center}
+
+\end{titlepage}
+% END TITLE PAGE %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\newpage
+\thispagestyle{empty}           % Removes page number on this page
+\tableofcontents
+\clearpage                      % Moves us to next empty page
+
+\setcounter{page}{1}
+
+\section{Introduction}
+\subsection{Purpose}
+This assay aims to measure the strength of Cas9/sgRNA complex
+binding to a target site located within the RFP coding sequence.
+Stronger Cas9/sgRNA binding will result in a greater loss of
+RFP florescence signal.
+\subsection{Material}
+Any useful material
+\subsubsection{Equipment}
+Measurement devices
+\begin{itemize}
+\item TKAN - located in the Kortemme lab gel room
+\item Plate reader located on the second floor in the CAT
+\end{itemize}
+
+\subsubsection{User supplied}
+\begin{itemize}
+\item Ultra Pure Water
+\end{itemize}
+
+\section{Protocol}
+\subsection{Treatment 1}
+\begin{enumerate}
+  {\icb} Try to do this
+  {\icb} and then this
+\end{enumerate}
+
+\end{document} % DONE WITH DOCUMENT!
