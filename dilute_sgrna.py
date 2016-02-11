@@ -24,7 +24,6 @@ Options:
         Print the initial concentration in units of nM.
 """
 
-import sys; sys.path.append('../scripts')
 import docopt
 import nonstdlib
 import sgrna_sensor

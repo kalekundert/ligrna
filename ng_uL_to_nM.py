@@ -5,7 +5,6 @@ Usage: sgrna_to_300nM.py <name> <ng_uL>
 """
 
 if __name__ == '__main__':
-    import sys; sys.path.append('../scripts')
     import docopt
     import sgrna_sensor
 

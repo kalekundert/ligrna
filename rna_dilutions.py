@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 
-import sys; sys.path.append('../scripts')
 import sgrna_sensor
 
 def show(table, suffix=''):
