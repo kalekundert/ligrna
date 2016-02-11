@@ -39,9 +39,9 @@ __ https://github.com/kalekundert/sgrna_sensor_scripts/tree/master/sgrna_sensor
 Usage
 =====
 Some of the protocols are simple text (*.txt) files.  To view these, just open 
-them in any text editor.  For example::
+them in any text viewer.  For example::
 
-   $ gvim make_cas9/buffer_list.txt
+   $ less make_cas9/buffer_list.txt
 
 The rest of the protocols (i.e. most of them) are python scripts which can
 automatically calculate how much of each reagent you'll need and things like 
