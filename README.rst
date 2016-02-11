@@ -13,7 +13,7 @@ All of the scripts in this repository require ``python3``.  Different systems
 have different ways of installing ``python3``, so I won't talk about it any 
 more here, but usually it's not hard.
 
-Some of the scripts additionally require third-party packages::
+Some of the scripts additionally require third-party packages:
 
    - ``dirty_water``: Format protocols and calculate reagent tables.
    - ``docopt``: Parse command-line arguments.
