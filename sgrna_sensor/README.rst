@@ -51,6 +51,7 @@ otherwise use something like these commands to install ViennaRNA from source::
          --without-forester              \
          --without-doc-pdf               \
          --without-doc-html              \
+   $ make && make install
 
 Usage
 =====
