@@ -27,14 +27,13 @@ Except ``sgrna_sensor``, all of these dependencies can be installed from PyPI::
 
 The ``sgrna_sensor`` dependency has to be installed from source from the 
 ``sgrna_sensor_scripts`` repository that accompanies this one on GitHub.  
-Complete installation instructions can be found [there][1], but the process 
+Complete installation instructions can be found 
+[there](https://github.com/kalekundert/sgrna_sensor_scripts/tree/master/sgrna_sensor), but the process 
 basically involves cloning the scripts repository and running ``pip`` on the 
 downloaded source code::
 
    $ git clone git@github.com:kalekundert/sgrna_sensor_scripts scripts
    $ pip install ./scripts/sgrna_sensor
-
-[1]: https://github.com/kalekundert/sgrna_sensor_scripts/tree/master/sgrna_sensor
 
 Usage
 =====
