@@ -9,6 +9,10 @@ you encounter any errors or ambiguities.
 
 Installation
 ============
+Download the protocols using ``git``::
+
+   $ git clone git@github.com:kalekundert/sgrna_sensor_protocols.git
+   
 All of the scripts in this repository require ``python3``.  Different systems 
 have different ways of installing ``python3``, so I won't talk about it any 
 more here, but usually it's not hard.
