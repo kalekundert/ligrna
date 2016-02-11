@@ -20,14 +20,14 @@ Options:
 """
 
 import sys, docopt
-import pcr_helper, sgrna_helper
+import pcr_helper, sgrna_sensor
 
 args = docopt.docopt(__doc__)
 
 print('$ ' + ' '.join(sys.argv))
 print()
 
-design = sgrna_helper.from_name(args['<name>'])
+design = sgrna_sensor.from_name(args['<name>'])
 
 assembler = pcr_helper.PcrAssembly()
 assembler.max_num_primers = int(args['--max-num-primers'] or 0)

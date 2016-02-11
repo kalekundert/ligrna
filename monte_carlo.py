@@ -11,7 +11,7 @@ Options:
         Number of cycles to run simulation.
 """
 
-import sgrna_helper
+import sgrna_sensor
 import docopt
 
 def score(construct):
@@ -53,7 +53,7 @@ class MonteCarlo:
     def __init__(self, cycles):
         self.cycles = cycles
 
-        self.construct = sgrna_helper.wt_sgrna()
+        self.construct = sgrna_sensor.wt_sgrna()
         self.construct.name = 'MonteCarlo sgRNA'
         
     def run(self):

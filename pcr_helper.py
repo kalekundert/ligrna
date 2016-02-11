@@ -2,7 +2,7 @@
 
 import primer3
 import itertools
-from sgrna_helper import reverse_complement
+from sgrna_sensor import reverse_complement
 
 class Overlap:
 

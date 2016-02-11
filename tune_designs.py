@@ -9,9 +9,9 @@ import numpy as np
 import matplotlib.pyplot as plt
 from math import *
 from pylab import *
-from sgrna_helper import reverse as r
-from sgrna_helper import complement as c
-from sgrna_helper import reverse_complement as rc
+from sgrna_sensor import reverse as r
+from sgrna_sensor import complement as c
+from sgrna_sensor import reverse_complement as rc
 
 class Mutant (object):
 

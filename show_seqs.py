@@ -10,7 +10,7 @@ Usage:
 Arguments:
     <names>...
         The name of one or more sequences to show.  The name must correspond to 
-        a function in 'sgrna_helper.py', which will be called to generate the 
+        a function in 'sgrna_sensor.py', which will be called to generate the 
         sequence to show.  You can specify arguments to pass to that function.  
         Any non-alphanumeric characters (like spaces, dashes, or underscores) 
         in the name will be used to delimit arguments.  For example:
@@ -92,7 +92,7 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 
-import sgrna_helper
+import sgrna_sensor
 import docopt
 
 args = docopt.docopt(__doc__)
@@ -102,7 +102,7 @@ kwargs = {}
 kwargs['target'] = None if args['--no-spacer'] else (args['--spacer'] or None)
 
 for name in args['<names>']:
-    design = sgrna_helper.from_name(name, **kwargs)
+    design = sgrna_sensor.from_name(name, **kwargs)
     designs.append(design)
 
 if args['--batch']:
@@ -161,7 +161,7 @@ for design in designs:
         print("Sequence")
         print("--------")
     if args['--t7']:
-        design.prepend(sgrna_helper.t7_promoter())
+        design.prepend(sgrna_sensor.t7_promoter())
 
     if args['--pretty']:
         print(header_template.format(design.name), end='  ')

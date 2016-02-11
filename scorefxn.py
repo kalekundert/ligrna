@@ -10,7 +10,7 @@ Options:
 """
 
 import docopt, math
-import RNA, sgrna_helper
+import RNA, sgrna_sensor
 
 def mfe_tree_metric(design, ligand_bound=False):
     ref = design.expected_fold
@@ -85,7 +85,7 @@ def active_population(design, ligand_bound=False):
 def calculate_fold(name):
     print name
 
-    design = sgrna_helper.from_name(name, target=None)
+    design = sgrna_sensor.from_name(name, target=None)
     design.show()
     print design.expected_fold
 
@@ -126,7 +126,7 @@ if __name__ == '__main__':
     print args['--scorefxn']
 
     for name in args['<names>']:
-        design = sgrna_helper.from_name(name, target=None)
+        design = sgrna_sensor.from_name(name, target=None)
 
         x_off = scorefxn(design, False)
         #x_on = scorefxn(design, True)
