@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 import sys; sys.path.append('../scripts')
-import sgrna_helper
+import sgrna_sensor
 
 def show(table, suffix=''):
     for k in ('wt', 'dead', 'nx_0', 'nx_1', 'nx_2', 'nx_3'):
@@ -20,7 +20,7 @@ ng_uL = {
 #        'nx_2': 330.7,
 #}
 mw = { 
-        x: sgrna_helper.molecular_weight(x)
+        x: sgrna_sensor.molecular_weight(x)
         for x in ng_uL
 }
 nM = {

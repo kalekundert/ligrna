@@ -27,7 +27,7 @@ Options:
 import sys; sys.path.append('../scripts')
 import docopt
 import nonstdlib
-import sgrna_helper
+import sgrna_sensor
 import pandas as pd
 import os
 
@@ -81,13 +81,13 @@ def process_sample(sgrna, initial_ng_uL, args):
 if args['<tsv>']:
     df = pd.read_csv(args['<tsv>'], sep='\t', encoding='latin_1')
     for row in df.iterrows():
-        sgrna = sgrna_helper.from_name( row[1]['Sample ID'].lower() )
+        sgrna = sgrna_sensor.from_name( row[1]['Sample ID'].lower() )
         initial_ng_uL = float(row[1]['Nucleic Acid'])
         process_sample(sgrna, initial_ng_uL, args)
         print()
 
 elif args['<name>']:
-    sgrna = sgrna_helper.from_name(args['<name>'])
+    sgrna = sgrna_sensor.from_name(args['<name>'])
     initial_ng_uL = float(args['<ng_uL>'])
     process_sample(sgrna, initial_ng_uL, args)
 
