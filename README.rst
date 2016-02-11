@@ -19,8 +19,8 @@ be automatically installed along with the ``sgrna_sensor`` library.
 __ https://github.com/kalekundert/sgrna_sensor_protocols
 __ sgrna_sensor/
 
-Usage
-=====
+Displaying Sequences
+====================
 Use the ``./show_seqs.py`` script to look at sequences for specific designs.  
 for example, to see the sequence of the wildtype sgRNA::
 
