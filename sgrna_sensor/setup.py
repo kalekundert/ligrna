@@ -27,6 +27,10 @@ setup(
     ],
     include_package_data=True,
     install_requires=[
+        'docopt',
+        'matplotlib',
+        'numpy',
+        'pylab',
     ],
     license='MIT',
     zip_safe=False,
