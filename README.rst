@@ -15,11 +15,11 @@ more here, but usually it's not hard.
 
 Some of the scripts additionally require third-party packages:
 
-   - ``dirty_water``: Format protocols and calculate reagent tables.
-   - ``docopt``: Parse command-line arguments.
-   - ``nonstdlib``: General-purpose utilities.
-   - ``pandas``: Manipulate tabular data.
-   - ``sgrna_sensor``: Get the sequences of rationally designed sgRNAs.
+- ``dirty_water``: Format protocols and calculate reagent tables.
+- ``docopt``: Parse command-line arguments.
+- ``nonstdlib``: General-purpose utilities.
+- ``pandas``: Manipulate tabular data.
+- ``sgrna_sensor``: Get the sequences of rationally designed sgRNAs.
 
 Except ``sgrna_sensor``, all of these dependencies can be installed from PyPI::
 
@@ -27,13 +27,14 @@ Except ``sgrna_sensor``, all of these dependencies can be installed from PyPI::
 
 The ``sgrna_sensor`` dependency has to be installed from source from the 
 ``sgrna_sensor_scripts`` repository that accompanies this one on GitHub.  
-Complete installation instructions can be found 
-[there](https://github.com/kalekundert/sgrna_sensor_scripts/tree/master/sgrna_sensor), but the process 
+Complete installation instructions can be found there__, but the process 
 basically involves cloning the scripts repository and running ``pip`` on the 
 downloaded source code::
 
    $ git clone git@github.com:kalekundert/sgrna_sensor_scripts scripts
    $ pip install ./scripts/sgrna_sensor
+
+__ https://github.com/kalekundert/sgrna_sensor_scripts/tree/master/sgrna_sensor
 
 Usage
 =====
@@ -56,6 +57,6 @@ information::
    $ pip install wet_copy
    $ wet_copy './cas9_cleavage_assay.py 2'
 
-(It's possible that you'd have to configure ``lpr`` to get ``wet_copy`` to work 
-properly, but I think CUPS takes care of this on modern Linux and Mac systems.)
+It's possible that you'd have to configure ``lpr`` to get ``wet_copy`` to work 
+properly, but I think CUPS takes care of this on modern Linux and Mac systems.
 
