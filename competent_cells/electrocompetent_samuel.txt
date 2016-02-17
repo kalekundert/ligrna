@@ -1,0 +1,43 @@
+1. o/n streak from lab stock
+
+2. o/n growth of one colony in 10 ml SOB
+
+3. dilute 1ml into 1L SOB (x2) and grow to od600 of 
+   0.5
+
+4. ice 10'
+
+(in all following steps, cells are to be kept on ice 
+or at 4°C)
+
+5. spin in 4x 500ml conical tubes at 3500rcf
+
+6. resuspend each in 100ml ice cold H₂O into 2x 50ml 
+   tubes (8 tubes)
+
+7. spin 10' 3500rcf
+
+8. each up in 25ml ice cold H₂O, combine tubes (4 
+   tubes)
+
+9. spin 10' 3500rcf
+
+10. each up in 50ml ice cold 10% glycerol
+
+11. spin 10' 5000rcf
+
+12. each tube up in 1ml ice cold 10% glycerol (total 
+    4ml+)
+
+13. 100 μL into ~80 tubes
+
+14. freeze immediately in dry ice/etoh bath or LN2 
+    then to -70°C
+
+SOB
+2% w/v bacto-tryptone (20 g)
+0.5% w/v bacto-yeast extract (5 g)
+10 mM NaCl (0.584 g)
+2.5 mM KCl (0.186 g)
+   ddH2O to 1000 mL
+   adjust to 7.0 
