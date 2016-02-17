@@ -31,8 +31,8 @@ or at 4°C)
 
 13. 100 μL into ~80 tubes
 
-14. freeze immediately in dry ice/etoh bath or LN2 
-    then to -70°C
+14. freeze immediately in dry ice/EtOH bath or liquid 
+    N₂ then store at -70°C
 
 SOB
 2% w/v bacto-tryptone (20 g)
