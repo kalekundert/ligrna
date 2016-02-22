@@ -1,13 +1,9 @@
 #!/usr/bin/env python3
 
-# Areas: doesn't work when x-axis scale dramatically changes.  Have to set 
-# height of largest plot, then set areas equal to that.
-#
-# Fold repression: assumes 'view' is on a log axis.  Maybe don't even show that 
-# panel if we're looking at a non-std view.  But can also look at the std view 
-# on a linear axis, so need to be more general than that.
-
 """\
+Display flow cytometry data comparing the red and green fluorescence of cells 
+in different CRISPRi conditions.
+
 Usage:
     my_analysis.py <experiments> [<plots>] [options]
 
@@ -17,7 +13,7 @@ Arguments:
         compared with each other.
 
     <plots>
-        What kinds of plots to generate.
+        What kinds of plots to generate.  Not yet implemented.
 
 Options:
     -o --output <path>
@@ -27,17 +23,24 @@ Options:
         suffix.  By default, no output is generated and the plot is shown in 
         the GUI.
 
-    -v --view <channel>
+    -c --channel <channel>
         The channel to plot.  By default, this is deduced from the YAML file. 
         If an experiment has a 'channel' attribute, that channel is displayed.  
         Otherwise, if the experiment's name contains "sgGFP" or "sgRFP", the 
-        'FITC-A' or 'PE-Texas Red-A' channels are displayed, respectively.
+        'FITC-A' or 'PE-Texas Red-A' channels are displayed, respectively.  It 
+        is an error if no channel is specified and no channel can be deduced.
 
-    -i --internal-control <channel>
-        The channel to use weight the channel of interest.  By default this is 
-        PE-Texas Red-A when the FITC-A channel if of interest, and vice versa.  
-        You might specify FSC-A or SSC-A to normalize fluorescence by cell 
-        size, or "none" to not normalize at all.
+    -n --normalize-by <channel>
+        Normalize the channel of interest (see --channel) by the given channel.
+        For example, you might specify "FSC-A", "SSC-A", or "FSC-A + m * SSC-A" 
+        to normalize by cell size.  By default no normalization is done.
+
+    -N --normalize-by-internal-control
+        Normalize by FITC-A (GFP expression) if the channel of interest is 
+        PE-Texas Red-A (RFP expression) and vice versa.  This assumes that the 
+        fluorescent protein that isn't of interest is being constitutively 
+        expressed, and therefore can be used as an internal control for cell 
+        size and expression level.
 
     -z --size-gate <percentile>         [default: 40]
         Exclude the smallest cells from the analysis.  Size is defined as 
@@ -71,14 +74,15 @@ Options:
 
     -m --mode
         Use the modes of the cell distributions to calculate fold-changes in 
-        fluorescence.  By default the medians are used for this calculation.
+        signal.  By default the medians are used for this calculation.
 """
 
 import fcmcmp
-from pylab import *
+import numpy as np
+import matplotlib.pyplot as plt
+import warnings; warnings.simplefilter("error", FutureWarning)
 from pathlib import Path
 from pprint import pprint
-import warnings; warnings.simplefilter("error", FutureWarning)
 
 fluorescence_controls = {
         'FITC-A': 'PE-Texas Red-A',
@@ -87,10 +91,9 @@ fluorescence_controls = {
 
 class ResolveChannels(fcmcmp.ProcessingStep):
 
-    def __init__(self, view=None, internal_control=None, linear=False):
+    def __init__(self, view=None, normalize_by=None):
         self.view = view
-        self.internal_control = internal_control
-        self.linear = False
+        self.normalize_by = normalize_by
 
     def process_experiment(self, experiment):
         # If the user manually specified a channel to view, use it.
@@ -111,33 +114,24 @@ class ResolveChannels(fcmcmp.ProcessingStep):
         else:
             raise fcmcmp.UsageError("Don't know which channel to visualize.")
 
-        # By default, normalize known fluorescent channels but nothing else.
-        if self.internal_control is None:
-            if channel in fluorescence_controls:
-                control_channel = fluorescence_controls[channel]
-            else:
-                control_channel = None
+        # If normalization is requested but no particular channel is given, try 
+        # to find a default fluorescent control channel.
+        if self.normalize_by is True:
+            try: control_channel = fluorescence_controls[channel]
+            except KeyError: raise fcmcmp.UsageError("No internal control for '{}'".format(channel))
 
-        # If the user wants to see the raw data, show it.
-        elif self.internal_control == 'none':
+        # If no normalization is requested, don't set a control channel.
+        elif not self.normalize_by:
             control_channel = None
 
-        # If the user wants to manually normalize the data, let him/her.
+        # If the user manually specifies a channel to normalize with, use it.
         else:
             control_channel = self.internal_control
-
-        # Show fluorescent channels on a log scale, unless the user requests 
-        # otherwise.
-        if channel in fluorescence_controls and not self.linear:
-            scale = 'log'
-        else:
-            scale = 'linear'
 
         # Indicate in the experiment which channels are being viewed.  This 
         # information affects gating and the colors of the final plots.
         experiment['channel'] = channel
         experiment['control_channel'] = control_channel
-        experiment['scale'] = scale
 
 
 class SetupVisualization(fcmcmp.ProcessingStep):
@@ -148,13 +142,10 @@ class SetupVisualization(fcmcmp.ProcessingStep):
 
         # Save the actual data to plot in a column with a standard name.
 
-        well['view'] = well[channel]
-
-        if control_channel is not None:
-            well['view'] /= well[control_channel]
-
-        if experiment['scale'] == 'log':
-            well['view'] = log10(well['view'])
+        if control_channel is None:
+            well['view'] = well[channel]
+        else:
+            well['view'] = well[channel] / well[control_channel]
 
 
 class GateLowFluorescence(fcmcmp.GatingStep):
@@ -169,180 +160,260 @@ class GateLowFluorescence(fcmcmp.GatingStep):
 
 
 
-def plot_medians(experiment, histogram=False, pdf=False):
-    import numpy as np
-    import matplotlib.pyplot as plt
-
-    y_ticks = []
-    y_tick_labels = []
+def plot_everything(experiment, linear=False, histogram=False, pdf=False, mode=False):
+    # Make two subplots with a shared y-axis.
 
     fig, (ax1, ax2) = plt.subplots(1, 2,
             sharey=True, gridspec_kw=dict(
                 hspace=0.001,
                 width_ratios=(0.65, 0.35)))
 
-    if experiment[0]['channel'] in fluorescence_controls:
+    # Turn on grid lines, but put them behind everything else.
+
+    ax1.xaxis.grid(True); ax1.set_axisbelow(True)
+    ax2.xaxis.grid(True); ax2.set_axisbelow(True)
+
+    # Decide what the x-limits should be for the distributions plot.  This has 
+    # to be decided before the distributions themselves are calculated.
+
+    pick_xlim(ax1, experiments, linear=linear)
+
+    # Plot the data.
+
+    estimate_distributions(
+            experiments, ax1.get_xlim(),
+            linear=linear, histogram=histogram, mode=mode,
+    )
+    rescale_distributions(
+            experiments, desired_height=0.7, pdf=pdf,
+    )
+
+    for i, experiment in enumerate(reversed(experiments)):
+        plot_distributions(ax1, i, experiment)
+        plot_locations(ax1, i, experiment)
+        plot_fold_change(ax2, i, experiment,
+                linear=linear, bar_height=0.025 * len(experiments))
+
+    # Decide how the x- and y-axes should be labeled.  This comes after all the 
+    # data has been plotted, so that the final x- and y-limits are known.
+
+    pick_xticks(ax2)
+    pick_xlabels(ax1, ax2, experiments, linear=linear)
+    pick_yticks(ax1, experiments)
+
+    return fig
+
+def estimate_distributions(experiments, xlim, linear=False, histogram=False, mode=False):
+
+    class EstimatedDistribution:
+
+        def __init__(self, data):
+            if not linear:
+                data = np.log10(data)
+
+            x = np.linspace(*xlim, num=100)
+
+            if histogram:
+                y, bins = np.histogram(data, x, density=True)
+                x = (bins[:-1] + bins[1:]) / 2
+            else:
+                from scipy.stats import gaussian_kde
+                kernel = gaussian_kde(data)
+                y = kernel.evaluate(x)
+
+            self.x = x
+            self.y = y
+            self.area = np.trapz(y, x)
+            self.loc = np.median(data) if not mode else x[np.argmax(y)]
+            self.num_cells = len(data)
+            self.raw_data = data
+
+        def __repr__(self):
+            return 'EstimatedDistribution(median={:.2f})'.format(
+                    np.median(self.raw_data))
+
+
+    for experiment in experiments:
+        experiment['distributions'] = {
+                flavor: [
+                    EstimatedDistribution(x['view'])
+                    for x in experiment['wells'][flavor]
+                ]
+                for flavor in experiment['wells']
+        }
+
+def rescale_distributions(experiments, desired_height, pdf=False):
+    ref_dist = None
+    ref_height = 0
+
+    # Find the distribution with the tallest peak.
+
+    for experiment in experiments:
+        for flavor in experiment['distributions']:
+            for dist in experiment['distributions'][flavor]:
+                height = max(dist.y * dist.num_cells)
+                if height > ref_height:
+                    ref_height = height
+                    ref_dist = dist
+
+    # Scale each distribution relative to the one with the tallest peak.  If a 
+    # PDF is requested, give all the distributions the same area.  Otherwise 
+    # scale the areas by the number of cells represented by each distribution.
+
+    ref_height /= ref_dist.num_cells
+    ref_area = (desired_height / ref_height) * ref_dist.area
+    ref_num_cells = ref_dist.num_cells
+
+    for experiment in experiments:
+        for flavor in experiment['distributions']:
+            for dist in experiment['distributions'][flavor]:
+                dist.y *= ref_area / dist.area
+                if not pdf:
+                    dist.y *= dist.num_cells / ref_num_cells
+
+def plot_distributions(ax, i, experiment):
+    styles = {
+            'before': {
+                'color': 'black',
+                'dashes': [5,2],
+                'linewidth': 1,
+                'zorder': 1,
+            },
+            'after': {
+                'color': pick_color(experiment),
+                'linestyle': '-',
+                'linewidth': 1,
+                'zorder': 2,
+            },
+    }
+
+    # Plot each distribution.
+
+    for flavor in experiment['distributions']:
+        for dist in experiment['distributions'][flavor]:
+            ax.plot(dist.x, dist.y + i, **styles[flavor])
+
+def plot_locations(ax, i, experiment, y_offset=0.1):
+    styles = {
+            'before': {
+                'marker': '+',
+                'markeredgecolor': 'black',
+                'markerfacecolor': 'none',
+                'markeredgewidth': 1,
+                'linestyle': ' ',
+            },
+            'after': {
+                'marker': '+',
+                'markeredgecolor': pick_color(experiment),
+                'markerfacecolor': 'none',
+                'markeredgewidth': 1,
+                'linestyle': ' ',
+            },
+    }
+
+    # Mark the location of each distribution.
+
+    for flavor in experiment['distributions']:
+        for dist in experiment['distributions'][flavor]:
+            ax.plot(dist.loc, i - y_offset, **styles[flavor])
+
+def plot_fold_change(ax, i, experiment, linear=False, bar_height=0.1):
+        locations = {
+                flavor: np.array([
+                    dist.loc for dist in experiment['distributions'][flavor]])
+                for flavor in experiment['distributions']
+        }
+
+        if linear:
+            fold_repressions = locations['before'] / locations['after']
+        else:
+            fold_repressions = 10**(locations['before'] - locations['after'])
+
+        ax.barh(
+                i - bar_height/2,
+                fold_repressions.mean(),
+                bar_height,
+                color=pick_color(experiment),
+                edgecolor='none',
+                xerr=fold_repressions.std(),
+                ecolor=pick_color(experiment),
+        )
+
+def pick_xlim(ax, experiments, linear=False):
+    x_min = x_01 = np.inf
+    x_max = x_99 = -np.inf
+
+    for experiment in experiments:
+        for flavor in experiment['wells']:
+            for well in experiment['wells'][flavor]:
+                x_min = min(x_min, np.min(well['view']))
+                x_max = max(x_max, np.max(well['view']))
+                x_01 = min(x_01, np.percentile(well['view'],  1))
+                x_99 = max(x_99, np.percentile(well['view'], 99))
+
+    if linear:
+        x_min = 0
+        x_max = x_99
+    else:
+        x_min = np.log10(x_min)
+        x_max = np.log10(x_max)
+
+    ax.set_xlim(x_min, x_max)
+
+def pick_xlabels(ax1, ax2, experiments, linear=False):
+    if experiments[0]['channel'] in fluorescence_controls:
         x1_label = 'fluorescence'
         x2_label = 'fold repression'
     else:
         x1_label = 'size'
         x2_label = 'fold change'
     
-    if experiment[0]['control_channel'] is not None:
+    if experiments[0]['control_channel'] is not None:
         x1_label = 'normalized {}'.format(x1_label)
 
-    if experiment[0]['scale'] == 'log':
+    if not linear:
         x1_label = 'log({})'.format(x1_label)
 
     ax1.set_xlabel(x1_label)
     ax2.set_xlabel(x2_label)
 
-    pick_xlim(ax1, experiments)
+def pick_xticks(ax, max_ticks=6):
+    x_min, x_max = ax.get_xlim()
+    x_ticks = ax.get_xticks()
 
-    ax1.xaxis.grid(True)
-    ax2.xaxis.grid(True)
+    while len(x_ticks) > max_ticks:
+        dx = abs(2 * x_ticks[1] - x_ticks[0])
+        x_ticks = [x_min]
+        while x_ticks[-1] < x_max:
+            x_ticks.append(x_ticks[-1] + dx)
 
-    ax1.set_axisbelow(True)
-    ax2.set_axisbelow(True)
+    ax.set_xlim(x_ticks[0], x_ticks[-1])
+    ax.set_xticks(x_ticks)
 
-    plot_distributions(ax1, experiments, histogram=histogram, pdf=pdf)
+def pick_yticks(ax, experiments):
+    y_ticks = []
+    y_tick_labels = []
 
-    for i, experiment in enumerate(reversed(experiments), 1):
+    for i, experiment in enumerate(reversed(experiments)):
         y_ticks.append(i)
         y_tick_labels.append(experiment['label'].replace('//', '\n'))
-        color = '#4e9a06' if experiment['channel'] == 'FITC-A' else '#cc0000'
-        black = 'black'
 
-        # Plot medians
+    ax.set_yticks(y_ticks)
+    ax.set_yticklabels(y_tick_labels)
 
-        before_medians = np.array([
-                well['view'].median()
-                for well in experiment['wells']['before']
-        ])
-        before_indices = [i-0.1 for j in range(len(before_medians))]
-        before_style = {
-                'marker': '+',
-                'markeredgecolor': black,
-                'markerfacecolor': 'none',
-                'markeredgewidth': 1,
-                'linestyle': ' ',
-        }
-        after_medians = np.array([
-                well['view'].median()
-                for well in experiment['wells']['after']
-        ])
-        after_indices = [i-0.1 for j in range(len(after_medians))]
-        after_style = {
-                'marker': '+',
-                'markeredgecolor': color,
-                'markerfacecolor': 'none',
-                'markeredgewidth': 1,
-                'linestyle': ' ',
-        }
-
-        ax1.plot(before_medians, before_indices, **before_style)
-        ax1.plot(after_medians, after_indices, **after_style)
-
-        # Plot fold-repression.
-
-        if experiment['scale'] == 'log':
-            fold_repressions = 10**(before_medians - after_medians)
-        else:
-            fold_repressions = before_medians / after_medians
-
-        fold_repression_style = {
-                'color': color,
-                'edgecolor': 'none',
-                'xerr': fold_repressions.std(),
-                'ecolor': color,
-        }
-
-        h = 0.1
-        ax2.barh(i-h/2, fold_repressions.mean(), h, **fold_repression_style)
-
-    ax1.set_ylim(0.7, len(experiments) + 0.8)
-    ax1.set_yticks(y_ticks)
-    ax1.set_yticklabels(y_tick_labels)
-
-    x, X = ax2.set_xlim()
-    xticks = ax2.get_xticks()
-    while len(xticks) > 6:
-        dx = abs(2 * xticks[1] - xticks[0])
-        xticks = [x]
-        while xticks[-1] < X:
-            xticks.append(xticks[-1] + dx)
-    ax2.set_xlim(xticks[0], xticks[-1])
-    ax2.set_xticks(xticks)
-        
-
-def pick_xlim(ax, experiments, cutoff=1):
-    x_min = inf
-    x_max = -inf
-
-    for experiment in experiments:
-        for flavor in experiment['wells']:
-            for well in experiment['wells'][flavor]:
-                x_min = min(x_min, min(well['view']))
-                x_max = max(x_max, max(well['view']))
-
-    ax.set_xlim(x_min, x_max)
-
-def plot_distributions(ax, experiments, histogram=False, pdf=False):
-    # The largest area any distribution can have.  The purpose of this 
-    # parameter is to make the graph look nice and to prevent distributions 
-    # from overlapping with each other.
-
-    max_area = 0.10
-
-    # Figure out the most cells that were measured in any well.  This 
-    # information will be used to scale all the distributions, unless the user 
-    # requested a PDF.
-
-    
-
-    max_num_cells = 0
-    for experiment in experiments:
-        for flavor in experiment['wells']:
-            for well in experiment['wells'][flavor]:
-                max_num_cells = max(max_num_cells, len(well))
-
-    for i, experiment in enumerate(reversed(experiments), 1):
-        color = '#4e9a06' if experiment['channel'] == 'FITC-A' else '#cc0000'
-        black = 'black'
-
-        # Plot cell distributions.
-
-        def plot_distribution(d, **style):
-            m, M = ax.get_xlim()
-
-            if histogram:
-                y, bins = np.histogram(d, linspace(m,M,100))
-                x = (bins[:-1] + bins[1:]) / 2
-            else:
-                from scipy.stats import gaussian_kde
-                k = gaussian_kde(d)
-                x = linspace(m,M,100)
-                y = k.evaluate(x)
-
-            a = np.trapz(y, x)
-            k = max_area / a * (1 if pdf else len(d) / max_num_cells)
-            ax.plot(x, k*y+i, **style)
-
-        before_style = {
-                'color': black,
-                'dashes': [5,2],
-                'linewidth': 1,
-        }
-        after_style = {
-                'color': color,
-                'linestyle': '-',
-                'linewidth': 1,
-        }
-
-        for well in experiment['wells']['before']:
-            plot_distribution(well['view'], **before_style)
-        for well in experiment['wells']['after']:
-            plot_distribution(well['view'], **after_style)
+def pick_color(experiment):
+    """
+    Pick a color for the given experiment.  Data from the FITC-A channel are 
+    colored green, data from the PE-Texas Red-A channel are colored red, and 
+    data from the other channels (presumably FSC-A and SSC-A) are colored 
+    brown.  The specific hex values come from the Tango color scheme.
+    """
+    if experiment['channel'] == 'FITC-A':
+        return '#4e9a06'
+    elif experiment['channel'] == 'PE-Texas Red-A':
+        return '#cc0000'
+    else:
+        return '#c17d11'
 
 
 if __name__ == '__main__':
@@ -351,26 +422,44 @@ if __name__ == '__main__':
     experiments = fcmcmp.load_experiments(args['<experiments>'])
 
     resolve_channels = ResolveChannels()
-    resolve_channels.view = args['--view']
-    resolve_channels.internal_control = args['--internal-control']
-    resolve_channels.linear = args['--linear']
+    resolve_channels.view = args['--channel']
+    resolve_channels.normalize_by = args['--normalize-by'] or \
+            args['--normalize-by-internal-control']
     gate_nonpositive_events = fcmcmp.GateNonPositiveEvents()
     gate_nonpositive_events.channels = 'FITC-A', 'PE-Texas Red-A'
     gate_small_cells = fcmcmp.GateSmallCells()
+    gate_small_cells.save_size_col = True
     gate_small_cells.threshold = int(args['--size-gate'])
     gate_low_fluorescence = GateLowFluorescence()
     gate_low_fluorescence.threshold = float(args['--expression-gate'])
     setup_visualization = SetupVisualization()
     fcmcmp.run_all_processing_steps(experiments)
 
-    plot_medians(
+    # We have to decide whether or not to fork before plotting anything, 
+    # otherwise X11 will complain, and we only want to fork if we'll end up 
+    # showing the GUI.  So first we calculate the output path, then we either 
+    # fork or don't, then we plot everything, then we either display the GUI or 
+    # save the figure to a file.
+
+    output_path = args['--output']
+    if output_path:
+        output_path = output_path.replace(
+                '$', Path(args['<experiments>']).stem)
+
+    import os, sys
+    if not output_path and os.fork():
+        sys.exit()
+
+    fig = plot_everything(
             experiments,
+            linear=args['--linear'],
             histogram=args['--histogram'],
             pdf=args['--pdf'],
+            mode=args['--mode'],
     )
-    if args['--output']:
-        savefig(args['--output'].replace(
-                '$', Path(args['<experiments>']).stem))
-    else:
-        show()
 
+    if output_path:
+        plt.savefig(output_path)
+    else:
+        fig.canvas.set_window_title(' '.join(sys.argv))
+        plt.show()
