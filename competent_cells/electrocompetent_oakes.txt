@@ -1,0 +1,27 @@
+1. Begin with the desired strain grown as single colonies on appropriate 
+   plates. For example, we use plasmid 44251: pgRNA-bacteria (addgene) with the 
+   RFP guide from Qi et al. (2013) transformed and grown on carbenicillin 
+   plates (100µg/mL) overnight at 37°C to single colonies.
+
+2. Pick a single colony and inoculate into 5mL SOC (BD Difco 244310: Super 
+   Optimal Broth + 20 mL 20 % glucose per L) plus carbenicillin. Grow overnight 
+   at 37°C.
+
+3. Inoculate 1 L of SOC + carbenicillin with the 5 mL overnight culture. Grow 
+   at 37°C for 2–4 hours to an OD 600 between 0.55 and 0.65.
+
+4. Rapidly cool the culture in an ice bath by swirling. Keep cells at during 
+   all subsequent steps.
+
+5. Centrifuge cells at 4000g for 10 min. Wash the cell culture with 500 mL 
+   ice-cold water by gentle resuspension. Centrifuge at 4000g for 10 min. 
+   Repeat wash step twice.
+
+6. Wash cells with 500mL of ice cold 10% glycerol. Repeat twice.
+
+7. Perform a final spin and discard the supernatant. Resuspend the pellet in 
+   2.75 mL of 10% glycerol and aliquot into cold microcentrifuge tubes, 80 µL 
+   each. Flash freeze.
+
+8. Transforming cells: Thaw on ice, add library plasmid to 75 µL cells and 
+   vortex.
