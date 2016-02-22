@@ -182,10 +182,10 @@ def plot_everything(experiment, linear=False, histogram=False, pdf=False, mode=F
 
     estimate_distributions(
             experiments, ax1.get_xlim(),
-            linear=linear, histogram=histogram, mode=mode,
+            linear=linear, histogram=histogram, mode=mode, pdf=pdf,
     )
     rescale_distributions(
-            experiments, desired_height=0.7, pdf=pdf,
+            experiments, desired_height=0.7,
     )
 
     for i, experiment in enumerate(reversed(experiments)):
@@ -203,7 +203,7 @@ def plot_everything(experiment, linear=False, histogram=False, pdf=False, mode=F
 
     return fig
 
-def estimate_distributions(experiments, xlim, linear=False, histogram=False, mode=False):
+def estimate_distributions(experiments, xlim, linear=False, histogram=False, pdf=False, mode=False):
 
     class EstimatedDistribution:
 
@@ -221,11 +221,18 @@ def estimate_distributions(experiments, xlim, linear=False, histogram=False, mod
                 kernel = gaussian_kde(data)
                 y = kernel.evaluate(x)
 
+            area = np.trapz(y, x)
+            num_cells = len(data)
+
+            y /= area
+            if not pdf:
+                y *= num_cells
+
             self.x = x
             self.y = y
-            self.area = np.trapz(y, x)
+            self.area = area
+            self.num_cells = num_cells
             self.loc = np.median(data) if not mode else x[np.argmax(y)]
-            self.num_cells = len(data)
             self.raw_data = data
 
         def __repr__(self):
@@ -242,34 +249,24 @@ def estimate_distributions(experiments, xlim, linear=False, histogram=False, mod
                 for flavor in experiment['wells']
         }
 
-def rescale_distributions(experiments, desired_height, pdf=False):
-    ref_dist = None
-    ref_height = 0
+def rescale_distributions(experiments, desired_height):
+    max_height = 0
 
     # Find the distribution with the tallest peak.
 
     for experiment in experiments:
         for flavor in experiment['distributions']:
             for dist in experiment['distributions'][flavor]:
-                height = max(dist.y * dist.num_cells)
-                if height > ref_height:
-                    ref_height = height
-                    ref_dist = dist
+                max_height = max(max_height, np.max(dist.y))
 
-    # Scale each distribution relative to the one with the tallest peak.  If a 
-    # PDF is requested, give all the distributions the same area.  Otherwise 
-    # scale the areas by the number of cells represented by each distribution.
+    # Scale each distribution relative to the one with the tallest peak.
 
-    ref_height /= ref_dist.num_cells
-    ref_area = (desired_height / ref_height) * ref_dist.area
-    ref_num_cells = ref_dist.num_cells
+    scale_factor = desired_height / max_height
 
     for experiment in experiments:
         for flavor in experiment['distributions']:
             for dist in experiment['distributions'][flavor]:
-                dist.y *= ref_area / dist.area
-                if not pdf:
-                    dist.y *= dist.num_cells / ref_num_cells
+                dist.y *= scale_factor
 
 def plot_distributions(ax, i, experiment):
     styles = {
