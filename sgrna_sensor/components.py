@@ -52,7 +52,9 @@ def spacer(name='aavs'):
         The sequence to target.
     """
     if name == 'rfp':
-        sequence = 'GGAACTTTCAGTTTAGCGGTCT'
+        sequence = 'AACTTTCAGTTTAGCGGTCT'
+    elif name == 'gfp':
+        sequence = 'CATCTAATTCAACAAGAATT'
     elif name == 'aavs':
         sequence = 'GGGGCCACTAGGGACAGGAT'
     elif name == 'vegfa':

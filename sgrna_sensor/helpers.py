@@ -1,9 +1,7 @@
 #!/usr/bin/env python3
 
-def make_name(factory, *args):
-    return factory + '(' + ','.join(str(x) for x in args if str(x)) + ')'
-
 def molecular_weight(name, polymer='rna'):
+    from . import from_name
     return from_name(name).mass(polymer)
 
 def reverse(sequence):

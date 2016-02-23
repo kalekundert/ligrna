@@ -22,9 +22,12 @@ def test_spacer():
     with pytest.raises(ValueError):
         spacer('not a spacer')
 
+    assert spacer('rfp') == 'AACTTTCAGTTTAGCGGTCT'
+    assert spacer('gfp') == 'CATCTAATTCAACAAGAATT'
     assert spacer('aavs') == 'GGGGCCACTAGGGACAGGAT'
-    assert spacer('rfp') == 'GGAACTTTCAGTTTAGCGGTCT'
     assert spacer('vegfa') == 'GGGTGGGGGGAGTTTGCTCC'
+    assert spacer('k1') == spacer('klein1') == 'GGGCACGGGCAGCTTGCCCG'
+    assert spacer('k2') == spacer('klein2') == 'GTCGCCCTCGAACTTCACCT'
 
 def test_repeat():
     assert repeat('dummy', 1) == 'U'

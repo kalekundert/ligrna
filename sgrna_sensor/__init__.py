@@ -16,9 +16,23 @@ def from_name(name, **kwargs):
 
     tokens = re.findall('[a-zA-Z0-9]+', name)
 
-    # If the first token is a name recognized by the aptamer() function, then 
-    # it specifies the aptamer to use.  Otherwise the theophylline aptamer is 
-    # assumed.
+    # If the first token matches the name of one of the known targeting 
+    # sequences, use that sequence to build the design.  If the next token 
+    # (which would be the first if no targeting sequence was found and the 
+    # second otherwise) matches the name of one of the known ligand, use that 
+    # ligand's aptamer to build the design.
+    #
+    # Both these fields are optional.  The default targeting sequence is "aavs" 
+    # and the default ligand is "theo".
+
+    try:
+        spacer(tokens[0])
+    except ValueError:
+        target = 'aavs'
+    else:
+        target = tokens.pop(0)
+    if 'target' not in kwargs:
+        kwargs['target'] = target
 
     try:
         aptamer(tokens[0])
@@ -26,7 +40,6 @@ def from_name(name, **kwargs):
         ligand = 'theo'
     else:
         ligand = tokens.pop(0)
-
     if 'ligand' not in kwargs:
         kwargs['ligand'] = ligand
 
@@ -51,7 +64,10 @@ def from_name(name, **kwargs):
     # to handle them.  Silently ignore the arguments otherwise.
 
     argspec = inspect.getargspec(factory)
+    print(argspec)
     known_kwargs = {k:v for k,v in kwargs.items() if k in argspec.args}
-
     return factory(*args, **known_kwargs)
+
+def molecular_weight(name, polymer='rna'):
+    return from_name(name).mass(polymer)
 
