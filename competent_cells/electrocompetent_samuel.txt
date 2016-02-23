@@ -1,43 +1,73 @@
-1. o/n streak from lab stock
+Day 1
+=====
+1. Streak the cells on a fresh plate.
 
-2. o/n growth of one colony in 10 ml SOB
+Day 2
+=====
+1. Make 1L SOB:
 
-3. dilute 1ml into 1L SOB (x2) and grow to od600 of 
-   0.5
+   - 20 g 2% w/v bacto-tryptone
+   - 5 g 0.5% w/v bacto-yeast extract
+   - 584 mg NaCl
+   - 186 mg KCl
+   - ddH₂O to 1L
+   - pH 7.0
 
-4. ice 10'
+2. Pick a colony and grow overnight in 10 mL SOB at 
+   37°C with shaking.
 
-(in all following steps, cells are to be kept on ice 
-or at 4°C)
+3. Place the following items at 4°C overnight:
 
-5. spin in 4x 500ml conical tubes at 3500rcf
+   - >600 mL milliQ water
+   - >204 mL 10% glycerol
+   - 8 50 mL falcon tubes
+   - 1 bag 50 mL pipets
+   - 1 box 1000 μL pipet tips
+   - 1 box 200 μL pipet tips
+   - 60 labeled 0.6 mL tubes
+   - tube rack
 
-6. resuspend each in 100ml ice cold H₂O into 2x 50ml 
-   tubes (8 tubes)
+4. Reserve a shaker.
 
-7. spin 10' 3500rcf
+Day 3
+=====
+1. Inoculate 1L SOB with 1 mL overnight culture.  
 
-8. each up in 25ml ice cold H₂O, combine tubes (4 
-   tubes)
+2. Grow at 37°C with shaking at 225 rpm to an OD600 
+   of 0.4 (~4h).
 
-9. spin 10' 3500rcf
+3. Distribute the cells between 4 250 mL centrifuge 
+   tubes and balance them.
 
-10. each up in 50ml ice cold 10% glycerol
+4. Place the cells in an ice bath for 10 min to 
+   quickly bring them to 4°C.
 
-11. spin 10' 5000rcf
+For the rest of the prep, keep the cells at 4°C.
 
-12. each tube up in 1ml ice cold 10% glycerol (total 
-    4ml+)
+5. Spin the cells at 3500g for 10 min.
 
-13. 100 μL into ~80 tubes
+6. Rinse and resuspend each pellet in 100 mL 
+   pre-chilled water, then distribute the cells 
+   between 8 pre-chilled 50 mL falcon tubes.
 
-14. freeze immediately in dry ice/EtOH bath or liquid 
-    N₂ then store at -70°C
+7. Spin the cells at 3500g for 10 min.
 
-SOB
-2% w/v bacto-tryptone (20 g)
-0.5% w/v bacto-yeast extract (5 g)
-10 mM NaCl (0.584 g)
-2.5 mM KCl (0.186 g)
-   ddH2O to 1000 mL
-   adjust to 7.0 
+8. Resuspend each pellet in 25 mL pre-chilled water, 
+   then consolidate the cells into 4 tubes.
+
+9. Spin the cells at 3500g for 10 min.
+
+10. Resuspend each pellet in 50 mL pre-chilled 10% 
+    glycerol.
+
+11. Spin the cells at 3500g for 10 min.
+
+12. Resuspend each pellet in 1 mL pre-chilled 10% 
+    glycerol.  The total volume will be ~6 mL.
+
+13. Aliquot 100 μL of the competent cells into ~60 
+    tubes.
+
+14. Freeze immediately in N₂ (l) and store at -80°C.
+
+vim: set tw=53
