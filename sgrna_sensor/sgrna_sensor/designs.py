@@ -6,11 +6,11 @@ from .helpers import *
 
 ## Strategy Abbreviations
 # f: fold
+# z: zipper
 # s: serpentine
 # c: circle
 # h: hammerhead
 # n: directed evolution
-# z: zipper (reserved)
 
 ## Domain Abbreviations
 # u: upper stem
@@ -239,7 +239,7 @@ def fold_nexus(linker_len=0, ligand='theo', target='aavs'):
     )
     return sgrna
     
-@design('fxx', 'nxx')
+@design('fxv', 'nxx')
 def fold_nexus_2(N, M, splitter_len=0, num_aptamers=1, ligand='theo', target='aavs'):
     """
     Insert the aptamer into the nexus region of the sgRNA.
@@ -407,7 +407,7 @@ def replace_hairpins(N, ligand='theo', target='aavs'):
     )
     return design
 
-@design('id')
+@design('zu', 'id')
 def induce_dimerization(half, N, target='aavs', ligand='theo'):
     """
     Split the guide RNA into its two naturally occurring halves, and use the 

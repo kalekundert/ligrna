@@ -10,25 +10,37 @@ Usage:
 Arguments:
     <names>...
         The name of one or more sequences to show.  The name must correspond to 
-        a function in 'sgrna_sensor.py', which will be called to generate the 
-        sequence to show.  You can specify arguments to pass to that function.  
+        one of the functions in 'sgrna_sensor/design.py', which will be called 
+        to generate a sequence.  Typically names consist of two letters.  The 
+        first indicates the design strategy and the second indicates the 
+        affected domain:
+
+        Strategy Abbreviations      Domain Abbreviations  
+        ======================      ====================  
+        f: fold                     u: upper stem         
+        z: zipper                   l: lower stem
+        s: serpentine               b: bulge              
+        c: circle                   x: nexus              
+        h: hammerhead               h: hairpins           
+        n: directed evolution      
+
+        In some cases these two letters might be followed by a 'v', to indicate 
+        a variant of an existing design approach.  Typically, the variant would 
+        take a more flexible set of arguments than the original design.
+
+        You can specify arguments to pass to the specified design function.
         Any non-alphanumeric characters (like spaces, dashes, or underscores) 
         in the name will be used to delimit arguments.  For example:
         
         Name        Meaning
         =========   ===========================================================
-        wt          The wildtype sgRNA sequence targeting AAVS (the default).
-        wt_rfp      The wildtype sgRNA sequence targeting RFP.
-        dead        An inactive sgRNA sequence only 2 mutations away from WT.
-        t7          The T7 promoter sequence.
-        theo        The theophylline aptamer sequence.
-        aavs        The AAVS target sequence.
-        us_0_0      The upper stem insertion design with parameters N=0, l=0.
-        us-0-0      Same as above.
-        us(0,0)     Same as above.
-        ls_6_2      The lower stem insertion design with parameters N=6, l=2.
-        nx_3        The nexus insertion design with parameters l=3.
-        hp_18       The hairpin replacement design with parameters N=18.
+        wt          The wildtype sgRNA targeting AAVS (the default).
+        rfp/wt      The wildtype sgRNA targeting RFP.
+        dead        An inactive sgRNA only 2 mutations away from WT.
+        cb          The "circle bulge" design.
+        tet/cb      The "circle bulge" design with the tetracycline aptamer.
+        cb/wo       The "circle bulge" design with the "wo" tuning strategy.
+        cb(wo)      Another way to spell "cb/wo"
 
 Options:
     -v, --verbose
