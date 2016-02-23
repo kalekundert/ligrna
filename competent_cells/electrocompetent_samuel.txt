@@ -32,6 +32,7 @@ Day 2
 Day 3
 =====
 1. Inoculate 1L SOB with 1 mL overnight culture.  
+   Keep 1 mL to use as a blank.
 
 2. Grow at 37°C with shaking at 225 rpm to an OD600 
    of 0.4 (~4h).
