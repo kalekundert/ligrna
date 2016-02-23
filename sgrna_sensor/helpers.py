@@ -1,9 +1,5 @@
 #!/usr/bin/env python3
 
-def molecular_weight(name, polymer='rna'):
-    from . import from_name
-    return from_name(name).mass(polymer)
-
 def reverse(sequence):
     return sequence[::-1]
 
