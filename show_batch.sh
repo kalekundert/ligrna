@@ -10,6 +10,16 @@ fi
 
 seqs=()
 
+if [ "$round" = best ]; then
+    seqs+=(
+        us/0/0
+        nx/0
+        sh/5
+        sh/7
+        cb
+        cb/wo
+    )
+
 if [ "$round" = 0 ] || [ "$round" = all ]; then
     seqs+=(
         wt
