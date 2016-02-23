@@ -22,9 +22,9 @@ password::
 
 The rational design library can predict RNA secondary structure if the python 
 wrappers to the ViennaRNA package are installed.  I assumed that I had to 
-compile ViennaRNA from source to get the python bindings, but in retrospect I 
-could be wrong.  So many try installing the binaries, otherwise use something 
-like these commands to install from source::
+compile ViennaRNA from source to get the python bindings, but in retrospect 
+that might not have been necessary.  So maybe try installing the binaries, 
+otherwise use something like these commands to install ViennaRNA from source::
 
    # Download the ViennaRNA source:
    $ curl 'http://www.tbi.univie.ac.at/RNA/download/package=viennarna-src-tbi&flavor=sourcecode&dist=2_2_x&arch=src&version=2.2.0' -o ViennaRNA-2.2.0.tgz
@@ -51,6 +51,7 @@ like these commands to install from source::
          --without-forester              \
          --without-doc-pdf               \
          --without-doc-html              \
+   $ make && make install
 
 Usage
 =====
