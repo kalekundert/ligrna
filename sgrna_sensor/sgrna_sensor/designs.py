@@ -2,10 +2,56 @@
 
 from .sequence import *
 from .components import *
+from .helpers import *
 
+## Strategy Abbreviations
+# f: fold
+# s: serpentine
+# c: circle
+# h: hammerhead
+# n: directed evolution
+# z: zipper (reserved)
+
+## Domain Abbreviations
+# u: upper stem
+# l: lower stem
+# b: bulge
+# x: nexus
+# h: hairpins
+
+
+def design(abbreviation, *legacy_abbreviations):
+
+    def finalize_design(factory, *args, **kwargs):
+        import inspect
+        argspec = inspect.getargspec(factory)
+        realargs = [
+                str(arg) for arg, default in zip(args, argspec.defaults)
+                if arg != default
+        ]
+
+        construct = factory(*args, **kwargs)
+        construct.name = '{}({})'.format(
+                abbreviation, ','.join(x for x in realargs if x))
+        construct.doc = factory.__doc__
+
+        return construct
+
+    def decorator(factory):
+        import decorator
+        design = decorator.decorate(factory, finalize_design)
+        for name in (abbreviation,) + legacy_abbreviations:
+            globals()[name] = design
+        return design
+
+
+    return decorator
+
+
+@design('wt')
 def wt_sgrna(target=None):
     """
-    Return the wildtype sgRNA sequence, without a spacer.
+    Return the wildtype sgRNA sequence.
 
     The construct is composed of 3 domains: stem, nexus, and hairpins.  The 
     stem domain encompasses the lower stem, the bulge, and the upper stem.  
@@ -36,6 +82,7 @@ def wt_sgrna(target=None):
 
     return sgrna
 
+@design('dead')
 def dead_sgrna(target=None):
     """
     Return the sequence for the negative control sgRNA.
@@ -53,6 +100,7 @@ def dead_sgrna(target=None):
 
     return sgrna
 
+@design('fu', 'us')
 def fold_upper_stem(N, linker_len=0, splitter_len=0, num_aptamers=1, ligand='theo', target='aavs'):
     """
     Insert the aptamer into the upper stem region of the sgRNA.
@@ -95,7 +143,6 @@ def fold_upper_stem(N, linker_len=0, splitter_len=0, num_aptamers=1, ligand='the
         args = N, linker_len
 
     sgrna = wt_sgrna(target)
-    sgrna.name = make_name('us', *args)
     sgrna.attach(
             aptamer_insert(
                 ligand,
@@ -108,6 +155,7 @@ def fold_upper_stem(N, linker_len=0, splitter_len=0, num_aptamers=1, ligand='the
     )
     return sgrna
 
+@design('fl', 'ls')
 def fold_lower_stem(N, linker_len=0, splitter_len=0, ligand='theo', target='aavs'):
     """
     Insert the aptamer into the lower stem region of the sgRNA.
@@ -140,7 +188,6 @@ def fold_lower_stem(N, linker_len=0, splitter_len=0, ligand='theo', target='aavs
         args = N, linker_len
 
     sgrna = wt_sgrna(target)
-    sgrna.name = make_name('ls', *args)
     sgrna.attach(
             aptamer_insert(
                 ligand,
@@ -152,6 +199,7 @@ def fold_lower_stem(N, linker_len=0, splitter_len=0, ligand='theo', target='aavs
     )
     return sgrna
 
+@design('fx', 'nx')
 def fold_nexus(linker_len=0, ligand='theo', target='aavs'):
     """
     Insert the aptamer into the nexus region of the sgRNA.
@@ -180,7 +228,6 @@ def fold_nexus(linker_len=0, ligand='theo', target='aavs'):
     """
 
     sgrna = wt_sgrna(target)
-    sgrna.name = make_name('nx', linker_len)
     sgrna.attach(
             aptamer_insert(
                 ligand,
@@ -192,6 +239,7 @@ def fold_nexus(linker_len=0, ligand='theo', target='aavs'):
     )
     return sgrna
     
+@design('fxx', 'nxx')
 def fold_nexus_2(N, M, splitter_len=0, num_aptamers=1, ligand='theo', target='aavs'):
     """
     Insert the aptamer into the nexus region of the sgRNA.
@@ -250,7 +298,6 @@ def fold_nexus_2(N, M, splitter_len=0, num_aptamers=1, ligand='theo', target='aa
     # Create and return the construct using a helper function.
 
     sgrna = wt_sgrna(target)
-    sgrna.name = make_name('nxx', *args)
     sgrna.attach(
             aptamer_insert(
                 ligand,
@@ -262,6 +309,7 @@ def fold_nexus_2(N, M, splitter_len=0, num_aptamers=1, ligand='theo', target='aa
     )
     return sgrna
 
+@design('fh')
 def fold_hairpin(H, N, A=1, ligand='theo', target='aavs'):
     """
     Replace either of the hairpins with the aptamer.  Briner et al. showed that 
@@ -315,7 +363,6 @@ def fold_hairpin(H, N, A=1, ligand='theo', target='aavs'):
         raise ValueError("fh(H,N): N must be between 0 and {}".format(max_N))
 
     sgrna = wt_sgrna(target)
-    sgrna.name = make_name('fh', H, N)
     sgrna.attach(
             aptamer_insert(ligand, num_aptamers=A),
             'hairpins',  5 + N if H == 1 else 18 + N,
@@ -323,6 +370,7 @@ def fold_hairpin(H, N, A=1, ligand='theo', target='aavs'):
     )
     return sgrna
 
+@design('hp')
 def replace_hairpins(N, ligand='theo', target='aavs'):
     """
     Remove a portion of the 3' terminal hairpins and replace it with the 
@@ -347,7 +395,6 @@ def replace_hairpins(N, ligand='theo', target='aavs'):
         added to the end for the benefit of the T7 polymerase.
     """
     design = wt_sgrna(target)
-    design.name = make_name('hp', N)
 
     domain_len = len(design['hairpins'])
     insertion_site = min(N, domain_len)
@@ -360,6 +407,7 @@ def replace_hairpins(N, ligand='theo', target='aavs'):
     )
     return design
 
+@design('id')
 def induce_dimerization(half, N, target='aavs', ligand='theo'):
     """
     Split the guide RNA into its two naturally occurring halves, and use the 
@@ -391,7 +439,6 @@ def induce_dimerization(half, N, target='aavs', ligand='theo'):
     # Construct and return the requested sequence.
 
     design = Construct()
-    design.name = make_name('id', half, N)
     wt = wt_sgrna(target)
 
     if half == '5':
@@ -413,6 +460,7 @@ def induce_dimerization(half, N, target='aavs', ligand='theo'):
 
     return design
 
+@design('sb')
 def serpentine_bulge(N, tuning_strategy='', A=1, ligand='theo', target='aavs'):
     """
     Sequester the bulge in a non-productive hairpin when the ligand isn't 
@@ -454,7 +502,6 @@ def serpentine_bulge(N, tuning_strategy='', A=1, ligand='theo', target='aavs'):
         raise ValueError("sb(N): N must be 2 or greater")
 
     sgrna = wt_sgrna(target)
-    sgrna.name = make_name('sb', N, tuning_strategy)
     sgrna.attach(
             serpentine_insert(
                 ligand,
@@ -468,6 +515,7 @@ def serpentine_bulge(N, tuning_strategy='', A=1, ligand='theo', target='aavs'):
 
     return sgrna
 
+@design('sl')
 def serpentine_lower_stem(tuning_strategy='', A=1, ligand='theo', target='aavs'):
     """
     Sequester the nexus in base pairs with the lower stem in the absence of the 
@@ -506,7 +554,6 @@ def serpentine_lower_stem(tuning_strategy='', A=1, ligand='theo', target='aavs')
         want the sgRNA without any spacer sequence at all.
     """
     sgrna = wt_sgrna(target)
-    sgrna.name = make_name('sl', tuning_strategy)
     sgrna.attach(
             serpentine_insert(
                 ligand,
@@ -522,6 +569,7 @@ def serpentine_lower_stem(tuning_strategy='', A=1, ligand='theo', target='aavs')
     sgrna['switch'].prepend('AAGU')
     return sgrna
 
+@design('slx')
 def serpentine_lower_stem_around_nexus(tuning_strategy='', A=1, ligand='theo', target='aavs'):
     """
     Use the lower stem to extend the nexus stem in the absence of the aptamer 
@@ -550,7 +598,6 @@ def serpentine_lower_stem_around_nexus(tuning_strategy='', A=1, ligand='theo', t
         want the sgRNA without any spacer sequence at all.
     """
     sgrna = wt_sgrna(target)
-    sgrna.name = make_name('slx', tuning_strategy)
     sgrna.attach(
             serpentine_insert(
                 ligand,
@@ -566,6 +613,7 @@ def serpentine_lower_stem_around_nexus(tuning_strategy='', A=1, ligand='theo', t
     sgrna['switch'].prepend('AAGU')
     return sgrna
 
+@design('sh')
 def serpentine_hairpin(N, tuning_strategy='', A=1, ligand='theo', target='aavs'):
     """
     Sequester the 3' end of the nexus in base pairs with the 5' strand of the 
@@ -602,7 +650,6 @@ def serpentine_hairpin(N, tuning_strategy='', A=1, ligand='theo', target='aavs')
         raise ValueError("sh(N): N must be between 4 and 14")
 
     sgrna = wt_sgrna(target)
-    sgrna.name = make_name('sh', N, tuning_strategy)
     sgrna.attach(
             serpentine_insert(
                 ligand,
@@ -616,6 +663,7 @@ def serpentine_hairpin(N, tuning_strategy='', A=1, ligand='theo', target='aavs')
     )
     return sgrna
 
+@design('cb')
 def circle_bulge(tuning_strategy='', A=1, ligand='theo', target='aavs'):
     """
     Extend the lower stem hairpin through the bulge when the small molecule is 
@@ -648,7 +696,6 @@ def circle_bulge(tuning_strategy='', A=1, ligand='theo', target='aavs'):
         want the sgRNA without any spacer sequence at all.
     """
     sgrna = wt_sgrna(target)
-    sgrna.name = make_name('cb', tuning_strategy)
     sgrna.attach(
             circle_insert(
                 ligand, 'AAGU', '3',
@@ -659,6 +706,7 @@ def circle_bulge(tuning_strategy='', A=1, ligand='theo', target='aavs'):
     )
     return sgrna
 
+@design('cbc')
 def circle_bulge_combo(tuning_strategy, combo_strategy, combo_arg=None, A=1, ligand='theo', target='aavs'):
     """
     Combine the circle bulge design with orthogonal designs.  The idea is to 
@@ -681,7 +729,6 @@ def circle_bulge_combo(tuning_strategy, combo_strategy, combo_arg=None, A=1, lig
         value of 'combo_strategy'.
     """
     sgrna = circle_bulge(tuning_strategy)
-    sgrna.name = make_name('cb', tuning_strategy, combo_strategy, combo_arg)
 
     # Serpentine the lower stem around the nexus.  This code isn't done by 
     # making an attachment, like all the other designs are, because its 
@@ -717,6 +764,7 @@ def circle_bulge_combo(tuning_strategy, combo_strategy, combo_arg=None, A=1, lig
 
     return sgrna
 
+@design('cl')
 def circle_lower_stem(tuning_strategy='', A=1, ligand='theo', target='aavs'):
     """
     Sequester the 5' half of the nexus in base pairs with the 5' half of the 
@@ -756,7 +804,6 @@ def circle_lower_stem(tuning_strategy='', A=1, ligand='theo', target='aavs'):
         want the sgRNA without any spacer sequence at all.
     """
     sgrna = wt_sgrna(target)
-    sgrna.name = make_name('cl', tuning_strategy)
     sgrna.attach(
             circle_insert(
                 ligand, 'AAGGCU', '3',
@@ -769,6 +816,7 @@ def circle_lower_stem(tuning_strategy='', A=1, ligand='theo', target='aavs'):
     sgrna['on'].prepend('AAGU')
     return sgrna
 
+@design('ch')
 def circle_hairpin(N, tuning_strategy='', A=1, ligand='theo', target='aavs'):
     """
     Move the nexus closer to the hairpins in the absence of the aptamer's 
@@ -808,7 +856,6 @@ def circle_hairpin(N, tuning_strategy='', A=1, ligand='theo', target='aavs'):
         want the sgRNA without any spacer sequence at all.
     """
     sgrna = wt_sgrna(target)
-    sgrna.name = make_name('ch', N, tuning_strategy)
     sgrna.attach(
             circle_insert(
                 ligand,
@@ -820,9 +867,9 @@ def circle_hairpin(N, tuning_strategy='', A=1, ligand='theo', target='aavs'):
     )
     return sgrna
 
+@design('hu')
 def hammerhead_upper_stem(mode, A=1, ligand='theo', target='aavs'):
     sgrna = wt_sgrna(target)
-    sgrna.name = make_name('hu', mode)
     sgrna.attach(
             hammerhead_insert(ligand, mode, num_aptamers=A),
             'stem', 8,
@@ -830,9 +877,9 @@ def hammerhead_upper_stem(mode, A=1, ligand='theo', target='aavs'):
     )
     return sgrna
 
+@design('hx')
 def hammerhead_nexus(mode, A=1, ligand='theo', target='aavs'):
     sgrna = wt_sgrna(target)
-    sgrna.name = make_name('hx', mode)
     sgrna.attach(
             hammerhead_insert(ligand, mode, num_aptamers=A),
             'nexus', 2,
@@ -840,9 +887,9 @@ def hammerhead_nexus(mode, A=1, ligand='theo', target='aavs'):
     )
     return sgrna
 
+@design('hh')
 def hammerhead_hairpin(mode, A=1, ligand='theo', target='aavs'):
     sgrna = wt_sgrna(target)
-    sgrna.name = make_name('hh', mode)
     sgrna.attach(
             hammerhead_insert(ligand, mode, num_aptamers=A),
             'hairpins', 5,
@@ -850,46 +897,4 @@ def hammerhead_hairpin(mode, A=1, ligand='theo', target='aavs'):
     )
     return sgrna
 
-
-## Abbreviations
-
-# Strategy Abbreviations
-# ======================
-# f: fold
-# s: serpentine
-# c: circle
-# h: hammerhead
-# z: zipper (reserved)
-
-# Domain Abbreviations
-# ====================
-# u: upper stem
-# l: lower stem
-# b: bulge
-# x: nexus
-# h: hairpins
-
-wt = wt_sgrna
-dead = dead_sgrna
-fu = us = fold_upper_stem
-fl = ls = fold_lower_stem
-fx = nx = fold_nexus
-fxx = nxx = fold_nexus_2
-fh = fold_hairpin
-hp = replace_hairpins
-id = induce_dimerization
-sb = serpentine_bulge
-sl = serpentine_lower_stem
-slx = serpentine_lower_stem_around_nexus
-sh = serpentine_hairpin
-cb = circle_bulge
-cbc = circle_bulge_combo
-cl = circle_lower_stem
-ch = circle_hairpin
-hu = hammerhead_upper_stem
-hx = hammerhead_nexus
-hh = hammerhead_hairpin
-
-t7 = t7_promoter
-th = theo = lambda: aptamer('theo')
 

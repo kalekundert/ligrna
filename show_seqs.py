@@ -43,7 +43,7 @@ Options:
         Append the T7 promoter sequence to the design.  This options 
         automatically enables the '--dna' option.
 
-    -s, --spacer TARGET     [default: aavs]
+    -s, --spacer TARGET
         Specify the sequence that the sgRNA should target.  If an empty string 
         is given, no spacer sequence will be included.
 
@@ -99,7 +99,10 @@ args = docopt.docopt(__doc__)
 designs = []
 
 kwargs = {}
-kwargs['target'] = None if args['--no-spacer'] else (args['--spacer'] or None)
+if args['--spacer']:
+    kwargs['target'] = args['--spacer']
+if args['--no-spacer']:
+    kwargs['target'] = None
 
 for name in args['<names>']:
     design = sgrna_sensor.from_name(name, **kwargs)
@@ -151,7 +154,7 @@ def rnafold(design, constraints=False):
 for design in designs:
     if args['--verbose']:
         from textwrap import dedent
-        header = "Description of {}".format(design.name)
+        header = "{}".format(design.name)
         no_doc_message = "No description available for this design."
         print()
         print(header)
