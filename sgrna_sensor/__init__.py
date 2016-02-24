@@ -64,7 +64,6 @@ def from_name(name, **kwargs):
     # to handle them.  Silently ignore the arguments otherwise.
 
     argspec = inspect.getargspec(factory)
-    print(argspec)
     known_kwargs = {k:v for k,v in kwargs.items() if k in argspec.args}
     return factory(*args, **known_kwargs)
 
