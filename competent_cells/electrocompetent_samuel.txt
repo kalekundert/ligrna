@@ -4,7 +4,7 @@ Day 1
 
 Day 2
 =====
-1. Make 1L SOB in a 2L culture flask:
+1. Make 1L SOB:
 
    - 20 g 2% w/v bacto-tryptone
    - 5 g 0.5% w/v bacto-yeast extract
@@ -12,7 +12,6 @@ Day 2
    - 186 mg KCl
    - ddH₂O to 1L
    - pH 7.0
-   - Autoclave
 
 2. Pick a colony and grow overnight in 10 mL SOB at 
    37°C with shaking.
