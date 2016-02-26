@@ -417,4 +417,12 @@ def hammerhead_insert(ligand, mode, stem_len=5, num_aptamers=1):
     domains += [hammerhead_3]
     return Construct('hammerhead', domains)
 
+def random_insert(ligand, linker_len_5, linker_len_3, num_aptamers=1):
+    return aptamer_insert(
+            ligand,
+            linker_len=(linker_len_5, linker_len_3),
+            repeat_factory=lambda name, len: Domain(name, 'N' * len),
+            num_aptamers=num_aptamers,
+    )
+
 
