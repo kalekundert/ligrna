@@ -25,12 +25,17 @@ def design(abbreviation, *legacy_abbreviations):
     def finalize_design(factory, *args, **kwargs):
         import inspect
         argspec = inspect.getargspec(factory)
-        realargs = [
-                str(arg) for arg, default in zip(args, argspec.defaults)
-                if arg != default
-        ]
+        realargs = []
+
+        for i, arg in enumerate(args):
+            defaults_i = i - len(argspec.args) + len(argspec.defaults)
+            if defaults_i < 0 or arg != argspec.defaults[defaults_i]:
+                realargs.append(str(arg))
 
         construct = factory(*args, **kwargs)
+
+        assert construct is not None, 'Forgot to return a construct from {}'.format(factory.__name__)
+
         construct.name = '{}({})'.format(
                 abbreviation, ','.join(x for x in realargs if x))
         construct.doc = factory.__doc__
@@ -897,4 +902,33 @@ def hammerhead_hairpin(mode, A=1, ligand='theo', target='aavs'):
     )
     return sgrna
 
+@design('ru')
+def random_upper_stem(N, M, A=1, ligand='theo', target='aavs'):
+    sgrna = wt_sgrna(target)
+    sgrna.attach(
+            random_insert(ligand, N, M),
+            'stem', 6,
+            'stem', 24,
+    )
+    return sgrna
+
+@design('rx')
+def random_nexus(N, M, A=1, ligand='theo', target='aavs'):
+    sgrna = wt_sgrna(target)
+    sgrna.attach(
+            random_insert(ligand, N, M),
+            'nexus', 2,
+            'nexus', 11,
+    )
+    return sgrna
+
+@design('rh')
+def random_hairpin(N, M, A=1, ligand='theo', target='aavs'):
+    sgrna = wt_sgrna(target)
+    sgrna.attach(
+            random_insert(ligand, N, M),
+            'hairpins', 5,
+            'hairpins', 17,
+    )
+    return sgrna
 

@@ -112,3 +112,11 @@ def test_hammerhead_insert():
     assert hammerhead_insert('theo', 'on').seq == ('GCUG' 'UC' 'ACCGGA' 'UGUGCUU' 'UCCGGU' 'CUGAUGA' 'GUCC' 'GU' 'GUCC' 'AUA' 'CCA' 'GCC' 'GAAA' 'GGC' 'CCU' 'UGG' 'CAG' 'GGACG' 'GGAC' 'GA' 'GGAC' 'GAAA' 'CAGC')
     assert hammerhead_insert('theo', 'off').seq == ('GCUG' 'UC' 'ACCGGA' 'UGUGCUU' 'UCCGGU' 'CUGAUGA' 'GUCC' 'GU' 'GUUGCUG' 'AUA' 'CCA' 'GCC' 'GAAA' 'GGC' 'CCU' 'UGG' 'CAG' 'CAGUG' 'GAC' 'GA' 'GGAC' 'GAAA' 'CAGC')
 
+def test_random_insert():
+    assert random_insert('theo', 0, 0).seq == 'AUACCAGCCGAAAGGCCCUUGGCAG'
+    assert random_insert('theo', 1, 0).seq == 'NAUACCAGCCGAAAGGCCCUUGGCAG'
+    assert random_insert('theo', 0, 1).seq == 'AUACCAGCCGAAAGGCCCUUGGCAGN'
+    assert random_insert('theo', 1, 1).seq == 'NAUACCAGCCGAAAGGCCCUUGGCAGN'
+    assert random_insert('theo', 10, 0).seq == 'NNNNNNNNNNAUACCAGCCGAAAGGCCCUUGGCAG'
+    assert random_insert('theo', 0, 10).seq == 'AUACCAGCCGAAAGGCCCUUGGCAGNNNNNNNNNN'
+    assert random_insert('theo', 10, 10).seq == 'NNNNNNNNNNAUACCAGCCGAAAGGCCCUUGGCAGNNNNNNNNNN'
