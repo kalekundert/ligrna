@@ -902,8 +902,8 @@ def hammerhead_hairpin(mode, A=1, ligand='theo', target='aavs'):
     )
     return sgrna
 
-@design('ru')
-def random_upper_stem(N, M, A=1, ligand='theo', target='aavs'):
+@design('rb')
+def random_bulge(N, M, A=1, ligand='theo', target='aavs'):
     sgrna = wt_sgrna(target)
     sgrna.attach(
             random_insert(ligand, N, M),
