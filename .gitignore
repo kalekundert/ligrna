@@ -1,4 +1,1 @@
-htmlcov
-.coverage
-script_output
-dot.ps
+*.pdf
