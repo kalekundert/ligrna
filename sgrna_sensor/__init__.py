@@ -21,27 +21,22 @@ def from_name(name, **kwargs):
     # (which would be the first if no targeting sequence was found and the 
     # second otherwise) matches the name of one of the known ligand, use that 
     # ligand's aptamer to build the design.
-    #
-    # Both these fields are optional.  The default targeting sequence is "aavs" 
-    # and the default ligand is "theo".
 
     try:
         spacer(tokens[0])
     except ValueError:
-        target = 'aavs'
+        pass
     else:
-        target = tokens.pop(0)
-    if 'target' not in kwargs:
-        kwargs['target'] = target
+        if 'target' not in kwargs:
+            kwargs['target'] = tokens.pop(0)
 
     try:
         aptamer(tokens[0])
     except ValueError:
-        ligand = 'theo'
+        pass
     else:
-        ligand = tokens.pop(0)
-    if 'ligand' not in kwargs:
-        kwargs['ligand'] = ligand
+        if 'ligand' not in kwargs:
+            kwargs['ligand'] = tokens.pop(0)
 
     # The first token after the (optional) aptamer specifies the factory 
     # function to use and must exist in the global namespace. 
