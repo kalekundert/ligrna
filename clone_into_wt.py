@@ -97,7 +97,7 @@ def design_cloning_primers(name, spacer, tm=60, verbose=False):
     primer_5 = reverse(complement(overlap_5 + overhang_5))
     primer_3 = overhang_3 + overlap_3
 
-    name = '{}_{}'.format(spacer, design.underscore_name).upper()
+    name = design.underscore_name.upper()
     name_5 = name + '_FOR'
     name_3 = name + '_REV'
 
