@@ -25,19 +25,21 @@ def design(abbreviation, *legacy_abbreviations):
     def finalize_design(factory, *args, **kwargs):
         import inspect
         argspec = inspect.getargspec(factory)
-        realargs = []
 
-        for i, arg in enumerate(args):
+        prefix_args = []
+        suffix_args = []
+
+        for i, value in enumerate(args):
             defaults_i = i - len(argspec.args) + len(argspec.defaults)
-            if defaults_i < 0 or arg != argspec.defaults[defaults_i]:
-                realargs.append(str(arg))
+            if defaults_i < 0 or value != argspec.defaults[defaults_i]:
+                if argspec.args[i] in ('target', 'ligand'):
+                    prefix_args.append(str(value))
+                else:
+                    suffix_args.append(str(value))
 
         construct = factory(*args, **kwargs)
-
         assert construct is not None, 'Forgot to return a construct from {}'.format(factory.__name__)
-
-        construct.name = '{}({})'.format(
-                abbreviation, ','.join(x for x in realargs if x))
+        construct.name = '/'.join(prefix_args + [abbreviation] + suffix_args)
         construct.doc = factory.__doc__
 
         return construct

@@ -159,11 +159,6 @@ class Construct (Sequence):
         return self
 
     @property
-    def function_name(self):
-        tokens = re.findall('[a-zA-Z0-9]+', self.name)
-        return '{}({})'.format(tokens[0], ','.join(tokens[1:]))
-
-    @property
     def underscore_name(self):
         tokens = re.findall('[a-zA-Z0-9]+', self.name)
         return '_'.join(tokens)
