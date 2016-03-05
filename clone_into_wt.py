@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-"""
+"""\
 Pick inverse PCR primers that can be used to clone a rationally designed sgRNA 
 into a plasmid already harboring the wildtype sgRNA.
 
@@ -98,8 +98,8 @@ def design_cloning_primers(name, spacer, tm=60, verbose=False):
     primer_3 = overhang_3 + overlap_3
 
     name = design.underscore_name.upper()
-    name_5 = name + '_FOR'
-    name_3 = name + '_REV'
+    name_5 = name + '_REV'
+    name_3 = name + '_FOR'
 
     return {name_5: primer_5, name_3: primer_3}
 
