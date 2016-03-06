@@ -68,7 +68,7 @@ Options:
         of cells that were counted from that well.
 
     -l --linear
-        Display the fluorescent channels on a linear scale instead of the 
+        Display the fluorescence channels on a linear scale instead of the 
         default logarithmic scale.  The scatter channels are always displayed 
         on a linear scale.
 
@@ -76,6 +76,47 @@ Options:
         Use the modes of the cell distributions to calculate fold-changes in 
         signal.  By default the medians are used for this calculation.
 """
+
+## Data I want to see
+# - The number of events, after each gate.  This would let me understand wells 
+#   that seem to have very few events.  Did the well simply not generate many 
+#   events?  Did a particular gate filter  a large number of events?  The 
+#   current presentation shows when a well has fewer events than its peers, but 
+#   it doesn't help explain why.
+#
+#   Implementing this would be challenging in the context of this script, 
+#   because the gates actually delete the offending rows.  Maybe this would be 
+#   something to change.  After all, you could imagine making a gate that you 
+#   want to focus on.  I could have my GateSteps add boolean columns indicating 
+#   which rows pass or don't pass the gate.  Then I could provide convenience 
+#   functions to delete rows that either are or are not part of particular 
+#   gates.
+#
+# - Fluorescence vs time.  This would let me see if there are any weird effects 
+#   from neighboring wells that I should be suspicious of.
+#
+# - Scatter plots.  For this, I probably would want to focus on a specific 
+#   experiment.  I probably shouldn't assume that there'll be the same number 
+#   of "before" and "after" wells, although I can't think of any personal use 
+#   case where there wouldn't be, and combining the plots does make them rather 
+#   significantly easier to interpret.  Maybe practicality should beat purity 
+#   here.  That said, I'm having a hard time finding a good way to render 
+#   overlapping scatter plots.  I was liking the white-contour idea, but that 
+#   won't work for overlapped plots.  
+#
+#   Focusing on a single experiments pretty much means that I'll need to 
+#   specify an extra argument, which isn't really supported by the current 
+#   command-line setup.  I can either split things up into separate scripts or 
+#   broaden the CLI.  The downside of separate scripts is that I'll have to 
+#   copy-and-paste a lot of the common arguments, which especially sucks since 
+#   I've written such nice descriptions.  It might also make it harder to make 
+#   a PDF report.  Broadening the CLI seems a little monolithic, and it'll 
+#   probably make the most common use case require a little more typing.  It is 
+#   nice to be able to use one script while really hacking on another...
+#
+#   I'll definitely need to choose a consistent set of levels for the whole 
+#   figure, too.
+
 
 import fcmcmp
 import numpy as np
@@ -143,9 +184,9 @@ class SetupVisualization(fcmcmp.ProcessingStep):
         # Save the actual data to plot in a column with a standard name.
 
         if control_channel is None:
-            well['view'] = well[channel]
+            well.data['view'] = well.data[channel]
         else:
-            well['view'] = well[channel] / well[control_channel]
+            well.data['view'] = well.data[channel] / well.data[control_channel]
 
 
 class GateLowFluorescence(fcmcmp.GatingStep):
@@ -156,7 +197,7 @@ class GateLowFluorescence(fcmcmp.GatingStep):
     def gate(self, experiment, well):
         channel = fluorescence_controls.get(experiment['channel'])
         if channel is not None:
-            return well[channel] < self.threshold
+            return well.data[channel] < self.threshold
 
 
 
@@ -243,8 +284,8 @@ def estimate_distributions(experiments, xlim, linear=False, histogram=False, pdf
     for experiment in experiments:
         experiment['distributions'] = {
                 flavor: [
-                    EstimatedDistribution(x['view'])
-                    for x in experiment['wells'][flavor]
+                    EstimatedDistribution(well.data['view'])
+                    for well in experiment['wells'][flavor]
                 ]
                 for flavor in experiment['wells']
         }
@@ -343,10 +384,10 @@ def pick_xlim(ax, experiments, linear=False):
     for experiment in experiments:
         for flavor in experiment['wells']:
             for well in experiment['wells'][flavor]:
-                x_min = min(x_min, np.min(well['view']))
-                x_max = max(x_max, np.max(well['view']))
-                x_01 = min(x_01, np.percentile(well['view'],  1))
-                x_99 = max(x_99, np.percentile(well['view'], 99))
+                x_min = min(x_min, np.min(well.data['view']))
+                x_max = max(x_max, np.max(well.data['view']))
+                x_01 = min(x_01, np.percentile(well.data['view'],  1))
+                x_99 = max(x_99, np.percentile(well.data['view'], 99))
 
     if linear:
         x_min = 0
@@ -378,14 +419,14 @@ def pick_xticks(ax, max_ticks=6):
     x_min, x_max = ax.get_xlim()
     x_ticks = ax.get_xticks()
 
-    while len(x_ticks) > max_ticks:
-        dx = abs(2 * x_ticks[1] - x_ticks[0])
-        x_ticks = [x_min]
-        while x_ticks[-1] < x_max:
-            x_ticks.append(x_ticks[-1] + dx)
+    #while len(x_ticks) > max_ticks:
+    #    dx = abs(2 * x_ticks[1] - x_ticks[0])
+    #    x_ticks = [x_min]
+    #    while x_ticks[-1] < x_max:
+    #        x_ticks.append(x_ticks[-1] + dx)
 
-    ax.set_xlim(x_ticks[0], x_ticks[-1])
-    ax.set_xticks(x_ticks)
+    #ax.set_xlim(x_ticks[0], x_ticks[-1])
+    #ax.set_xticks(x_ticks)
 
 def pick_yticks(ax, experiments):
     y_ticks = []
@@ -456,7 +497,7 @@ if __name__ == '__main__':
     )
 
     if output_path:
-        plt.savefig(output_path)
+        plt.savefig(output_path, dpi=300)
     else:
         fig.canvas.set_window_title(' '.join(sys.argv))
         plt.show()
