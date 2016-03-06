@@ -11,7 +11,7 @@ Usage:
 # - Show gated cells.
 
 
-import os, collections, fcmcmp, docopt
+import sys, os, collections, fcmcmp, docopt
 import numpy as np, matplotlib.pyplot as plt
 import warnings; warnings.simplefilter("error", FutureWarning)
 from pprint import pprint
@@ -123,11 +123,14 @@ class ScatterPlot:
         Label each plot with the name of the experiment, the condition, and the 
         replicate number.
         """
+        self.figure.canvas.set_window_title(' '.join(sys.argv))
         self.figure.suptitle(self.experiment['label'], size=14)
 
         for row in range(self.num_rows):
             for col in range(self.num_cols):
-                title = '{} #{}'.format(self._get_condition(row), col + 1)
+                well = self._get_well(row, col)
+                condition = self._get_condition(row)
+                title = '{} ({})'.format(well.label, condition)
                 self.axes[row, col].set_title(title, size=12)
 
     def _create_histograms(self):
@@ -138,8 +141,8 @@ class ScatterPlot:
 
             for well in self.experiment['wells'][condition]:
                 z, x_bins, y_bins = np.histogram2d(
-                        well[self.x_channel],
-                        well[self.y_channel],
+                        well.data[self.x_channel],
+                        well.data[self.y_channel],
                         bins=np.linspace(
                             self.min_coord, self.max_coord,
                             self.histogram_bins),
@@ -179,8 +182,8 @@ class ScatterPlot:
         well = self._get_well(row, col)
 
         axis.plot(
-                well[self.x_channel],
-                well[self.y_channel], 
+                well.data[self.x_channel],
+                well.data[self.y_channel],
                 marker=',',
                 linestyle='',
                 zorder=1,
