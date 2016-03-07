@@ -84,18 +84,20 @@ def pick_tango_color(experiment):
         return red[1]
     elif experiment['label'].startswith('sgGFP'):
         return green[2]
+    elif experiment['label'] in ('wt', 'dead', 'null'):
+        return grey[4]
     elif experiment['label'].startswith('us('):
         return blue[1]
     elif experiment['label'].startswith('nx('):
         return red[1]
-    elif experiment['label'].startswith('nx('):
-        return green[1]
     elif experiment['label'].startswith('cb('):
-        return orange[1]
+        return green[1]
     elif experiment['label'].startswith('sh('):
+        return orange[1]
+    elif experiment['label'].startswith('rb('):
         return purple[1]
     else:
-        return brown[1]
+        return brown[2]
 
 def pick_channel(experiment):
     pass

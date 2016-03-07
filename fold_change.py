@@ -122,9 +122,8 @@ Options:
 #   figure, too.
 
 
-import fcmcmp
-import numpy as np
-import matplotlib.pyplot as plt
+import fcmcmp, analysis_helpers
+import numpy as np, matplotlib.pyplot as plt
 import warnings; warnings.simplefilter("error", FutureWarning)
 from pathlib import Path
 from pprint import pprint
@@ -322,7 +321,7 @@ def plot_distributions(ax, i, experiment):
                 'zorder': 1,
             },
             'after': {
-                'color': pick_color(experiment),
+                'color': analysis_helpers.pick_color(experiment),
                 'linestyle': '-',
                 'linewidth': 1,
                 'zorder': 2,
@@ -343,13 +342,15 @@ def plot_locations(ax, i, experiment, y_offset=0.1):
                 'markerfacecolor': 'none',
                 'markeredgewidth': 1,
                 'linestyle': ' ',
+                'zorder': 1,
             },
             'after': {
                 'marker': '+',
-                'markeredgecolor': pick_color(experiment),
+                'markeredgecolor': analysis_helpers.pick_color(experiment),
                 'markerfacecolor': 'none',
                 'markeredgewidth': 1,
                 'linestyle': ' ',
+                'zorder': 2,
             },
     }
 
@@ -375,10 +376,10 @@ def plot_fold_change(ax, i, experiment, linear=False, bar_height=0.1):
                 i - bar_height/2,
                 fold_repressions.mean(),
                 bar_height,
-                color=pick_color(experiment),
+                color=analysis_helpers.pick_color(experiment),
                 edgecolor='none',
                 xerr=fold_repressions.std(),
-                ecolor=pick_color(experiment),
+                ecolor=analysis_helpers.pick_color(experiment),
         )
 
 def pick_xlim(ax, experiments, linear=False):
@@ -442,20 +443,6 @@ def pick_yticks(ax, experiments):
 
     ax.set_yticks(y_ticks)
     ax.set_yticklabels(y_tick_labels)
-
-def pick_color(experiment):
-    """
-    Pick a color for the given experiment.  Data from the FITC-A channel are 
-    colored green, data from the PE-Texas Red-A channel are colored red, and 
-    data from the other channels (presumably FSC-A and SSC-A) are colored 
-    brown.  The specific hex values come from the Tango color scheme.
-    """
-    if experiment['channel'] == 'FITC-A':
-        return '#4e9a06'
-    elif experiment['channel'] == 'PE-Texas Red-A':
-        return '#cc0000'
-    else:
-        return '#c17d11'
 
 
 if __name__ == '__main__':
