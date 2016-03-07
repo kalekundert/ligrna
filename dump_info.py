@@ -4,14 +4,18 @@
 Print a basic statistical description of all the wells in a given experiment.
 
 Usage:
-    dump_info.py <yml_path>
+    dump_info.py <yml_path> [<experiment>]
 """
 
 import fcmcmp, docopt
 from pprint import pprint
 
 args = docopt.docopt(__doc__)
-experiments = fcmcmp.load_experiments(args['<yml_path>'])
+
+if args['<experiment>']:
+    experiments = [fcmcmp.load_experiment(args['<yml_path>'], args['<experiment>'])]
+else:
+    experiments = fcmcmp.load_experiments(args['<yml_path>'])
 
 for experiment, condition, well in fcmcmp.yield_wells(experiments):
     print('Experiment:')
