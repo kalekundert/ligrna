@@ -24,11 +24,11 @@ Options:
         the GUI.
 
     -c --channel <channel>
-        The channel to plot.  By default, this is deduced from the YAML file. 
+        The channel to plot.  By default, this is deduced from the YAML file.  
         If an experiment has a 'channel' attribute, that channel is displayed.  
-        Otherwise, if the experiment's name contains "sgGFP" or "sgRFP", the 
-        'FITC-A' or 'PE-Texas Red-A' channels are displayed, respectively.  It 
-        is an error if no channel is specified and no channel can be deduced.
+        Otherwise, a default channel may be chosen based on the name of the 
+        experiment.  It is an error if no channel is specified and no channel 
+        can be deduced.
 
     -n --normalize-by <channel>
         Normalize the channel of interest (see --channel) by the given channel.
@@ -41,6 +41,10 @@ Options:
         fluorescent protein that isn't of interest is being constitutively 
         expressed, and therefore can be used as an internal control for cell 
         size and expression level.
+
+    -t --time-gate <secs>               [default: 2]
+        Exclude the first cells recorded from each well, which often seem to be 
+        contaminated with cells from the previous well.
 
     -z --size-gate <percentile>         [default: 40]
         Exclude the smallest cells from the analysis.  Size is defined as 
@@ -468,6 +472,8 @@ if __name__ == '__main__':
     gate_small_cells = fcmcmp.GateSmallCells()
     gate_small_cells.save_size_col = True
     gate_small_cells.threshold = int(args['--size-gate'])
+    gate_early_events = fcmcmp.GateEarlyEvents()
+    gate_early_events.throwaway_secs = int(args['--time-gate'])
     gate_low_fluorescence = GateLowFluorescence()
     gate_low_fluorescence.threshold = float(args['--expression-gate'])
     setup_visualization = SetupVisualization()
