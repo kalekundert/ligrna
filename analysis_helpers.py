@@ -1,6 +1,9 @@
 #!/usr/bin/env python3
 
 import contextlib, fcmcmp
+import numpy as np, matplotlib.pyplot as plt
+import warnings; warnings.simplefilter("error", FutureWarning)
+from pprint import pprint
 
 fluorescence_controls = {
         'FITC-A': 'PE-Texas Red-A',
@@ -48,6 +51,92 @@ class SharedProcessingSteps:
             log_transformation = fcmcmp.LogTransformation()
             log_transformation.channels = 'FITC-A', 'PE-Texas Red-A'
             log_transformation(experiments)
+
+
+
+class ExperimentPlot:
+    """
+    Create a grid of shared axes, with one axis for each well in a single 
+    experiment.  Provide a few helper functions relating to that grid, such as 
+    setting the titles and converting row and column indices into wells and 
+    conditions.
+    """
+
+    def __init__(self, experiment):
+        # Settings configured by the user.
+        self.experiment = experiment
+
+        # Internally used plot attributes.
+        self.figure = None
+        self.axes = None
+        self.num_rows = None
+        self.num_cols = None
+
+    def plot(self):
+        raise NotImplementedError
+
+    def _create_axes(self):
+        """
+        Work out how many wells need to be shown.
+        
+        There will be two rows and as many columns as necessary to show all the 
+        wells.  The first row is for the "before" wells and the second row is 
+        for the "after" ones.
+        """
+        num_before = len(self.experiment['wells']['before'])
+        num_after = len(self.experiment['wells']['after'])
+
+        self.num_rows = 2
+        self.num_cols = max(num_before, num_after)
+
+        # The 'squeeze=False' argument guarantees that the returned axes are 
+        # always a 2D array, even if one of the dimensions happens to be 1.
+
+        self.figure, self.axes = plt.subplots(
+                self.num_rows, self.num_cols,
+                sharex=True, sharey=True, squeeze=False,
+        )
+        
+
+    def _set_titles(self):
+        """
+        Label each plot with the name of the experiment, the condition, and the 
+        replicate number.
+        """
+        self.figure.suptitle(self.experiment['label'], size=14)
+
+        for row in range(self.num_rows):
+            for col in range(self.num_cols):
+                well = self._get_well(row, col)
+                condition = self._get_condition(row)
+                title = '{} ({})'.format(well.label, condition)
+                self.axes[row, col].set_title(title, size=12)
+
+    def _get_rows_cols(self):
+        for row in range(self.num_rows):
+            for col in range(self.num_cols):
+                yield row, col
+
+    def _plot_channel_vs_time(self, row, col):
+        axis = self.axes[row, col]
+        well = self._get_well(row, col)
+        channel = analysis_helpers.pick_channel(experiment, self.channel)
+        color = analysis_helpers.pick_color(self.experiment)
+
+        axis.plot(
+                well.data['Time'],
+                well.data[channel],
+                marker=',',
+                linestyle='',
+                color=color,
+                rasterized=self.rasterize_points,
+        )
+
+    def _get_condition(self, row):
+        return ('before', 'after')[row]
+
+    def _get_well(self, row, col):
+        return self.experiment['wells'][self._get_condition(row)][col]
 
 
 
@@ -99,8 +188,8 @@ def pick_tango_color(experiment):
     else:
         return brown[2]
 
-def pick_channel(experiment):
-    pass
+def pick_channel(experiment, users_choice=None):
+    return users_choice or experiment.get('channel', 'PE-Texas Red-A')
 
 @contextlib.contextmanager
 def plot_or_savefig(output_path=None, substitution_path=None):
