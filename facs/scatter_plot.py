@@ -9,6 +9,14 @@ to look at the scatter plots if you want a less processed view of your data.
 Usage:
     scatter_plot.py <yml_path> <experiment> [options]
 
+Arguments:
+    <yml_path>
+        Path to a YAML file specifying which wells and which plates should be 
+        compared with each other.
+
+    <experiment>
+        The label name of one of the experiments in the given YAML file.
+
 Options:
     -o --output <path>
         If an output path is specified, the resulting plot is written to that 
@@ -64,7 +72,7 @@ Options:
         zooming back out.  This parameter tells the algorithm how much to zoom 
         in, but I've found that it doesn't have much effect on the results.
 
-    --always-vector
+    --force-vector
         If the scatter plots would be exported to a vector file format like PDF 
         or SVG (either via the command-line or the GUI), force ``matplotlib`` 
         to represent each individual point as a vector object.  By default, 
@@ -75,15 +83,15 @@ Options:
 
 import collections, docopt, fcmcmp, analysis_helpers
 import numpy as np, matplotlib.pyplot as plt
-import warnings; warnings.simplefilter("error", FutureWarning)
 from pprint import pprint
 
-class ScatterPlot:
+class ScatterPlot(analysis_helpers.ExperimentPlot):
     Histogram = collections.namedtuple('Histogram', 'x y z')
 
     def __init__(self, experiment):
+        super().__init__(experiment)
+
         # Settings configured by the user.
-        self.experiment = experiment
         self.show_sizes = None
         self.histogram_bins = None
         self.smooth_contours = None
@@ -94,10 +102,6 @@ class ScatterPlot:
 
         # Internally used plot attributes.
         self.histograms = None
-        self.figure = None
-        self.axes = None
-        self.num_rows = None
-        self.num_cols = None
         self.x_channel = None
         self.y_channel = None
         self.min_coord = None
@@ -106,9 +110,9 @@ class ScatterPlot:
 
     def plot(self):
         self._create_axes()
+        self._set_titles()
         self._set_channels()
         self._set_limits()
-        self._set_titles()
 
         self._create_histograms()
         self._set_levels()
@@ -119,29 +123,6 @@ class ScatterPlot:
                 self._plot_contours(row, col)
 
         return self.figure
-
-    def _create_axes(self):
-        """
-        Work out how many wells need to be shown.
-        
-        There will be two rows and as many columns as necessary to show all the 
-        wells.  The first row is for the "before" wells and the second row is 
-        for the "after" ones.
-        """
-        num_before = len(self.experiment['wells']['before'])
-        num_after = len(self.experiment['wells']['after'])
-
-        self.num_rows = 2
-        self.num_cols = max(num_before, num_after)
-
-        # The 'squeeze=False' argument guarantees that the returned axes are 
-        # always a 2D array, even if one of the dimensions happens to be 1.
-
-        self.figure, self.axes = plt.subplots(
-                self.num_rows, self.num_cols,
-                sharex=True, sharey=True, squeeze=False,
-        )
-        
 
     def _set_channels(self):
         """
@@ -175,20 +156,6 @@ class ScatterPlot:
 
         self.axes[0,0].set_xlim(self.min_coord, self.max_coord)
         self.axes[0,0].set_ylim(self.min_coord, self.max_coord)
-
-    def _set_titles(self):
-        """
-        Label each plot with the name of the experiment, the condition, and the 
-        replicate number.
-        """
-        self.figure.suptitle(self.experiment['label'], size=14)
-
-        for row in range(self.num_rows):
-            for col in range(self.num_cols):
-                well = self._get_well(row, col)
-                condition = self._get_condition(row)
-                title = '{} ({})'.format(well.label, condition)
-                self.axes[row, col].set_title(title, size=12)
 
     def _create_histograms(self):
         self.histograms = {x: [] for x in experiment['wells']}
@@ -261,12 +228,6 @@ class ScatterPlot:
                 zorder=2,
         )
 
-    def _get_condition(self, row):
-        return ('before', 'after')[row]
-
-    def _get_well(self, row, col):
-        return self.experiment['wells'][self._get_condition(row)][col]
-
     def _get_histogram(self, row, col):
         return self.histograms[self._get_condition(row)][col]
 
@@ -274,8 +235,7 @@ class ScatterPlot:
 
 if __name__ == '__main__':
     args = docopt.docopt(__doc__)
-    experiment = fcmcmp.load_experiment(
-            args['<yml_path>'], args['<experiment>'])
+    experiment = fcmcmp.load_experiment(args['<yml_path>'], args['<experiment>'])
 
     shared_steps = analysis_helpers.SharedProcessingSteps()
     shared_steps.early_event_threshold = float(args['--time-gate'])
@@ -290,8 +250,7 @@ if __name__ == '__main__':
     analysis.zoom_level = float(args['--zoom-level'])
     analysis.contour_steps = int(args['--contour-steps'])
     analysis.cell_alpha = float(args['--cell-alpha'])
-    analysis.rasterize_cells = not args['--always-vector']
+    analysis.rasterize_cells = not args['--force-vector']
 
-    with analysis_helpers.plot_or_savefig(
-            args['--output'], args['<yml_path>']):
+    with analysis_helpers.plot_or_savefig(args['--output'], args['<yml_path>']):
         analysis.plot()
