@@ -112,6 +112,12 @@ class ExperimentPlot:
                 title = '{} ({})'.format(well.label, condition)
                 self.axes[row, col].set_title(title, size=12)
 
+    def _set_labels(self, x_label, y_label):
+        for ax in self.axes[-1,:]:
+            ax.set_xlabel(x_label)
+        for ax in self.axes[:,0]:
+            ax.set_ylabel(y_label)
+
     def _get_rows_cols(self):
         for row in range(self.num_rows):
             for col in range(self.num_cols):
@@ -188,8 +194,59 @@ def pick_tango_color(experiment):
     else:
         return brown[2]
 
+def pick_style(experiment, condition):
+    styles = {
+            'before': {
+                'color': 'black',
+                'dashes': [5,2],
+                'linewidth': 1,
+                'zorder': 1,
+            },
+            'after': {
+                'color': pick_color(experiment),
+                'linestyle': '-',
+                'linewidth': 1,
+                'zorder': 2,
+            },
+    }
+    return styles[condition]
+
 def pick_channel(experiment, users_choice=None):
-    return users_choice or experiment.get('channel', 'PE-Texas Red-A')
+    """
+    Pick a channel for the given experiment.
+
+    The channel can either be set directly by the user (typically via the 
+    command line) or can be inferred from the name of the experiment.  If 
+    nothing else is specified, it will default to the "PE-Texas Red-A" channel.
+    """
+    # If the user manually specified a channel to view, use it.
+    if users_choice:
+        return users_choice
+
+    # If a particular channel is associated with this experiment, use it.
+    if 'channel' in experiment:
+        return experiment['channel']
+
+    # If a channel can be inferred from the name of the experiment, use it. 
+    if 'sgGFP' in experiment['label']:
+        return 'FITC-A'
+    if 'sgRFP' in experiment['label']:
+        return 'PE-Texas Red-A'
+
+    # Default to the red channel, if nothing else is specified.
+    return 'PE-Texas Red-A'
+
+def get_duration(experiments):
+    min_time = float('inf')
+    max_time = -float('inf')
+
+    for experiment in experiments:
+        for condition in experiment['wells']:
+            for well in experiment['wells'][condition]:
+                min_time = min(min_time, min(well.data['Time'] / 100))
+                max_time = max(max_time, max(well.data['Time'] / 100))
+
+    return min_time, max_time
 
 @contextlib.contextmanager
 def plot_or_savefig(output_path=None, substitution_path=None):
