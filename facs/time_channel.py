@@ -29,6 +29,10 @@ Options:
         experiment.  It is an error if no channel is specified and no channel 
         can be deduced.
 
+    -a --alpha <value>                  [default: 0.2]
+        The transparency level of the points representing cells in the scatter 
+        plot.  Values must be between 0 and 1.
+
     --force-vector
         If the scatter plots would be exported to a vector file format like PDF 
         or SVG (either via the command-line or the GUI), force ``matplotlib`` 
@@ -49,26 +53,25 @@ class TimeChannel(analysis_helpers.ExperimentPlot):
 
         # Settings configured by the user.
         self.channel = None
-        self.rasterize_points = None
+        self.alpha = None
+        self.force_vector = None
 
     def plot(self):
         self._create_axes()
         self._set_titles()
+        self._set_labels()
 
         for row, col in self._get_rows_cols():
             self._plot_channel_vs_time(row, col)
 
         self._set_limits()
 
-    def _set_limits(self):
-        min_time = float('inf')
-        max_time = -float('inf')
+    def _set_labels(self):
+        super()._set_labels('Time (sec)', analysis_helpers.pick_channel(
+                    self.experiment, self.channel))
 
-        for condition in self.experiment['wells']:
-            for well in self.experiment['wells'][condition]:
-                min_time = min(min_time, min(well.data['Time']))
-                max_time = max(max_time, max(well.data['Time']))
-        
+    def _set_limits(self):
+        min_time, max_time = analysis_helpers.get_duration([self.experiment])
         self.axes[0,0].set_xlim(min_time, max_time)
 
     def _plot_channel_vs_time(self, row, col):
@@ -78,12 +81,13 @@ class TimeChannel(analysis_helpers.ExperimentPlot):
         color = analysis_helpers.pick_color(self.experiment)
 
         axis.plot(
-                well.data['Time'],
+                well.data['Time'] / 100,
                 well.data[channel],
                 marker=',',
                 linestyle='',
                 color=color,
-                rasterized=self.rasterize_points,
+                alpha=self.alpha,
+                rasterized=not self.force_vector,
         )
 
 
@@ -98,7 +102,8 @@ if __name__ == '__main__':
 
     analysis = TimeChannel(experiment)
     analysis.channel = args['--channel']
-    analysis.rasterize_points = args['--force-vector']
+    analysis.alpha = float(args['--alpha'])
+    analysis.force_vector = args['--force-vector']
 
     with analysis_helpers.plot_or_savefig(args['--output'], args['<yml_path>']):
         analysis.plot()

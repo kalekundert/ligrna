@@ -137,10 +137,7 @@ class ScatterPlot(analysis_helpers.ExperimentPlot):
 
         # Label the axes with the chosen channel names.
 
-        for ax in self.axes[-1,:]:
-            ax.set_xlabel(self.x_channel)
-        for ax in self.axes[:,0]:
-            ax.set_ylabel(self.y_channel)
+        self._set_labels(self.x_channel, self.y_channel)
 
     def _set_limits(self):
         """
