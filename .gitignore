@@ -3,3 +3,4 @@ rfp-assay.pdf
 *.log
 *.out
 *.toc
+.*.sw*
