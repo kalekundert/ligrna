@@ -59,14 +59,14 @@ num_sgrnas = num_reactions // 2
 ## Calculate how much of each reagent will be needed.
 
 cas9_rxn = dirty_water.Reaction('''\
-Reagent    Conc  Each Rxn  Master Mix
-=======  ======  ========  ==========
-water             10.1 μL         yes
-buffer      10x    3.0 μL         yes
-Cas9       1 μM    0.9 μL         yes
-ligand    30 mM   10.0 μL
-sgRNA    300 nM    3.0 μL
-DNA       30 nM    3.0 μL
+Reagent     Conc  Each Rxn  Master Mix
+=======  =======  ========  ==========
+water              10.1 μL         yes
+buffer       10x    3.0 μL         yes
+Cas9        1 μM    0.9 μL         yes
+ligand     30 mM   10.0 μL
+sgRNA    1500 nM    3.0 μL
+DNA        30 nM    3.0 μL
 ''')
 
 cas9_rxn.num_reactions = eval(args['<reactions>'])
