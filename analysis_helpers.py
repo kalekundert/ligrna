@@ -10,6 +10,106 @@ fluorescence_controls = {
         'PE-Texas Red-A': 'FITC-A', 
 }
 
+
+class AnalyzedWell (fcmcmp.Well):
+
+    def __init__(self, experiment, well, channel=None, normalize_by=None, 
+            log_toggle=False, histogram=False, pdf=False, mode=False):
+
+        super().__init__(well.label, well.meta, well.data)
+
+        self.experiment = experiment
+        self.channel_override = channel
+        self.normalize_by = normalize_by
+        self.log_toggle = log_toggle
+        self.calc_histogram = histogram
+        self.calc_pdf = pdf
+        self.calc_mode = mode
+
+        self.measurements = None
+        self.log_scale = None
+        self.channel = None
+        self.control_channel = None
+        self.x = self.y = None
+        self.loc = None
+
+        self._find_measurements()
+
+    def estimate_distribution(self, axes_or_xlim):
+        if isinstance(axes_or_xlim, plt.Axes):
+            xlim = axes_or_xlim.get_xlim()
+        else:
+            xlim = axes_or_xlim
+
+        self._find_distribution(xlim)
+
+    def _find_measurements(self):
+        # Pick the channel to display based on what the user asked for, or the 
+        # properties of the experiment if nothing was asked for.
+        self.channel = pick_channel(self.experiment, self.channel_override)
+
+        # If normalization is requested but no particular channel is given, try 
+        # to find a default fluorescent control channel.
+        if self.normalize_by is True:
+            try: self.control_channel = fluorescence_controls[self.channel]
+            except KeyError: raise fcmcmp.UsageError("No internal control for '{}'".format(channel))
+
+        # If no normalization is requested, don't set a control channel.
+        elif not self.normalize_by:
+            self.control_channel = None
+
+        # If the user manually specifies a channel to normalize with, use it.
+        else:
+            self.control_channel = self.normalize_by
+
+        # Decide whether or not the data should be presented on a log-axis. 
+        self.log_scale = self.channel in fluorescence_controls
+        if self.log_toggle:
+            self.log_scale = not self.log_scale
+
+        # Save the measurements, from the appropriate channel, with the 
+        # appropriate normalization, and on the appropriate scale.
+        self.linear_measurements = self.data[self.channel]
+        if self.control_channel is not None:
+            self.linear_measurements /= self.data[self.control_channel]
+
+        self.measurements = self.linear_measurements
+        if self.log_scale:
+            self.measurements = np.log10(self.linear_measurements)
+
+    def _find_distribution(self, xlim):
+        # Create the x-axis based on the user-specified limits.  The limits 
+        # can't be picked automatically because it's important that they be the 
+        # same for every plot.
+        self.x = np.linspace(*xlim, num=100)
+
+        # Estimate the distribution underlying the measurements.  By default 
+        # use a Gaussian kernel density estimate (KDE), or use a histogram if 
+        # the user requests it.  A Gaussian KDE gives smoother results, depends 
+        # on fewer tunable parameters, and handles the log-scaling better, but 
+        # can be significantly slower for large data sets.
+        if self.calc_histogram:
+            self.y, bins = np.histogram(self.measurements, self.x)
+            self.x = (bins[:-1] + bins[1:]) / 2
+        else:
+            from scipy.stats import gaussian_kde
+            kernel = gaussian_kde(self.measurements)
+            self.y = kernel.evaluate(self.x)
+
+        # Scale the distribution to make it's area meaningful.  By default, the 
+        # area will be proportional to the amount of data.  If the user wants 
+        # the data presented as a PDF, the area is set to unity.
+        self.y /= np.trapz(self.y, self.x)
+        if not self.calc_pdf:
+            self.y *= len(self.measurements)
+
+        # Calculate the median or the mode of the data, as requested.
+        if self.calc_mode:
+            self.loc = self.measurements[np.argmax(self.y)]
+        else:
+            self.loc = np.median(self.measurements)
+
+
 class GateLowFluorescence(fcmcmp.GatingStep):
 
     def __init__(self, threshold=1e3):
@@ -27,7 +127,6 @@ class SharedProcessingSteps:
         self.early_event_gate = None
         self.small_cell_gate = None
         self.low_fluorescence_gate = None
-        self.log_transformation = True
 
     def process(self, experiments):
         gate_nonpositive_events = fcmcmp.GateNonPositiveEvents()
@@ -46,12 +145,6 @@ class SharedProcessingSteps:
         gate_low_fluorescence = GateLowFluorescence()
         gate_low_fluorescence.threshold = self.low_fluorescence_threshold
         gate_low_fluorescence(experiments)
-
-        if self.log_transformation:
-            log_transformation = fcmcmp.LogTransformation()
-            log_transformation.channels = 'FITC-A', 'PE-Texas Red-A'
-            log_transformation(experiments)
-
 
 
 class ExperimentPlot:
@@ -126,8 +219,8 @@ class ExperimentPlot:
     def _plot_channel_vs_time(self, row, col):
         axis = self.axes[row, col]
         well = self._get_well(row, col)
-        channel = analysis_helpers.pick_channel(experiment, self.channel)
-        color = analysis_helpers.pick_color(self.experiment)
+        channel = pick_channel(experiment, self.channel)
+        color = pick_color(self.experiment)
 
         axis.plot(
                 well.data['Time'],
