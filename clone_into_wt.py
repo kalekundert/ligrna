@@ -8,11 +8,16 @@ Usage:
     clone_into_wt.py <designs>... [options]
 
 Options:
-    -s, --spacer <name>     [default: rfp]
+    -s, --spacer <name>     [default: gfp]
         The spacer sequence of the wildtype plasmid.  For some designs, this 
         doesn't matter because the primers won't overlap the spacer.  But for 
         other designs, particularly upper stem designs, different primers are 
         needed for each spacer.
+
+    -c, --cut <index>
+        Manually specify where the index where the insert should be split, 
+        relative to the insert itself.  By default, the cut site is chosen to 
+        make the primers the same length.  
 
     -t, --tm <celsius>      [default: 60]
         The desired melting temperature for the primers.
@@ -22,7 +27,7 @@ Options:
         
 """
 
-def design_cloning_primers(name, spacer, tm=60, verbose=False):
+def design_cloning_primers(name, spacer, cut=None, tm=60, verbose=False):
     import sgrna_sensor, itertools
 
     wt = sgrna_sensor.from_name('wt', target=spacer)
@@ -80,11 +85,12 @@ def design_cloning_primers(name, spacer, tm=60, verbose=False):
 
     # Design the part of the primers that will contain the aptamer insert.
 
-    dlen = len(overlap_5) - len(overlap_3)
-    half = (len(insert) - dlen) // 2
+    if cut is None:
+        dlen = len(overlap_5) - len(overlap_3)
+        cut = (len(insert) - dlen) // 2
 
-    overhang_5 = insert[:half].lower()
-    overhang_3 = insert[half:].lower()
+    overhang_5 = insert[:cut].lower()
+    overhang_3 = insert[cut:].lower()
 
     if verbose:
         print("5' overhang:", overlap_5)
@@ -130,13 +136,37 @@ def reverse(sequence):
 def complement(sequence):
     complements = {
             'a': 't',
+            't': 'a',
             'c': 'g',
             'g': 'c',
-            't': 'a',
+            'r': 'y',
+            'y': 'r',
+            's': 'w',
+            'w': 's',
+            'k': 'm',
+            'm': 'k',
+            'b': 'v',
+            'v': 'b',
+            'd': 'h',
+            'h': 'd',
+            'n': 'n',
+
             'A': 'T',
+            'T': 'A',
             'C': 'G',
             'G': 'C',
-            'T': 'A',
+            'N': 'N',
+            'R': 'Y',
+            'Y': 'R',
+            'S': 'W',
+            'W': 'S',
+            'K': 'M',
+            'M': 'K',
+            'B': 'V',
+            'V': 'B',
+            'D': 'H',
+            'H': 'D',
+            'N': 'N',
     }
     return ''.join(complements[x] for x in sequence)
 
@@ -144,14 +174,14 @@ def complement(sequence):
 if __name__ == '__main__':
     import docopt
     args = docopt.docopt(__doc__)
+    cut = int(args['--cut'])
     tm = float(args['--tm'])
     spacer = args['--spacer']
     primers = {}
 
     for design in args['<designs>']:
-        primers.update(
-                design_cloning_primers(
-                    design, spacer, tm=tm, verbose=args['--verbose']))
+        primers.update(design_cloning_primers(design, spacer,
+            cut=cut, tm=tm, verbose=args['--verbose']))
 
     print_cloning_primers(primers)
 
