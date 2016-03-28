@@ -415,7 +415,7 @@ def replace_hairpins(N, ligand='theo', target='aavs'):
     return design
 
 @design('zu', 'id')
-def induce_dimerization(half, N, target='aavs', ligand='theo'):
+def zipper_upper_stem(half, N, target='aavs', ligand='theo'):
     """
     Split the guide RNA into its two naturally occurring halves, and use the 
     aptamer to bring those halves together in the presence of the ligand.  The 

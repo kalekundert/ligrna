@@ -11,8 +11,8 @@ Arguments:
     <names>...
         The name of one or more sequences to show.  The name must correspond to 
         one of the functions in 'sgrna_sensor/design.py', which will be called 
-        to generate a sequence.  Typically names consist of two letters.  The 
-        first indicates the design strategy and the second indicates the 
+        to generate a sequence.  Typically names consist of two letters, where 
+        the first indicates the design strategy and the second indicates the 
         affected domain:
 
         Strategy Abbreviations      Domain Abbreviations  
@@ -22,7 +22,7 @@ Arguments:
         s: serpentine               b: bulge              
         c: circle                   x: nexus              
         h: hammerhead               h: hairpins           
-        n: directed evolution      
+        r: random
 
         In some cases these two letters might be followed by a 'v', to indicate 
         a variant of an existing design approach.  Typically, the variant would 
