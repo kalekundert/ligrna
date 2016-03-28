@@ -170,6 +170,12 @@ class FoldChange:
         ]
         self.reference_well = next(iter(self.analyzed_wells[0].values()))[0]
 
+    def _yield_analyzed_wells(self):
+        for experiment in self.analyzed_wells:
+            for condition in experiment:
+                for well in experiment[condition]:
+                    yield well.experiment, condition, well
+
     def _pick_xlim(self):
         """
         Decide what the x-limits should be for the distributions plot.  This 
@@ -178,13 +184,11 @@ class FoldChange:
         x_min = x_01 = np.inf
         x_max = x_99 = -np.inf
 
-        for experiment in self.analyzed_wells:
-            for condition in experiment:
-                for well in experiment[condition]:
-                    x_min = min(x_min, np.min(well.measurements))
-                    x_max = max(x_max, np.max(well.measurements))
-                    x_01 = min(x_01, np.percentile(well.measurements,  1))
-                    x_99 = max(x_99, np.percentile(well.measurements, 99))
+        for _, _, well in self._yield_analyzed_wells():
+            x_min = min(x_min, np.min(well.measurements))
+            x_max = max(x_max, np.max(well.measurements))
+            x_01 = min(x_01, np.percentile(well.measurements,  1))
+            x_99 = max(x_99, np.percentile(well.measurements, 99))
 
         self.axes[0].set_xlim(x_min, x_max)
 
@@ -193,10 +197,8 @@ class FoldChange:
         Once the x-limits have been picked, estimate the distribution of cells 
         along the channel of interest for each well.
         """
-        for experiment in self.analyzed_wells:
-            for condition in experiment:
-                for well in experiment[condition]:
-                    well.estimate_distribution(self.axes[0])
+        for _, _, well in self._yield_analyzed_wells():
+            well.estimate_distribution(self.axes[0])
 
     def _rescale_distributions(self):
         """
@@ -207,19 +209,15 @@ class FoldChange:
 
         # Find the distribution with the tallest peak.
 
-        for experiment in self.analyzed_wells:
-            for condition in experiment:
-                for well in experiment[condition]:
-                    max_height = max(max_height, np.max(well.y))
+        for _, _, well in self._yield_analyzed_wells():
+            max_height = max(max_height, np.max(well.y))
 
         # Scale each distribution relative to the one with the tallest peak.
 
         scale_factor = self.max_dist_height / max_height
 
-        for experiment in self.analyzed_wells:
-            for condition in experiment:
-                for well in experiment[condition]:
-                    well.y *= scale_factor
+        for _, _, well in self._yield_analyzed_wells():
+            well.y *= scale_factor
 
     def _plot_distribution(self, i, well, condition):
         """
