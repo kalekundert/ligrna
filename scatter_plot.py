@@ -149,7 +149,7 @@ class ScatterPlot(analysis_helpers.ExperimentPlot):
         be square.
         """
         self.min_coord = 0
-        self.max_coord = 6 if not self.show_sizes else 50000
+        self.max_coord = 6 if not self.show_sizes else 100000
 
         self.axes[0,0].set_xlim(self.min_coord, self.max_coord)
         self.axes[0,0].set_ylim(self.min_coord, self.max_coord)
