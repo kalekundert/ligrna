@@ -154,7 +154,7 @@ def pick_color(experiment):
     """
     # I made this a wrapper function so that I could easily change the color 
     # scheme, if I want to, down the road.
-    return pick_tango_color(experiment)
+    return pick_ucsf_color(experiment)
 
 def pick_tango_color(experiment):
     """
@@ -193,6 +193,46 @@ def pick_tango_color(experiment):
         return purple[1]
     else:
         return brown[2]
+
+def pick_ucsf_color(experiment):
+    """
+    Pick a color from the official UCSF color scheme for the given experiment.
+
+    The UCSF color scheme is based on primary teal and dark blue colors and is 
+    accented by a variety of bright -- but still somewhat subdued -- colors.  
+    The scheme includes tints of every color, but not shades.
+    """
+
+    navy = ['#002049', '#506380', '#9ba6b6', '#e6e9ed']
+    teal = ['#18a3ac', '#5dbfc5', '#a3dade', '#e8f6f7'] 
+    olive = ['#90bd31', '#b1d16f', '#d3e4ad', '#f4f8ea'] 
+    blue = ['#178ccb', '#5dafdb', '#a2d1ea', '#e8f4fa'] 
+    orange = ['#f48024', '#f7a665', '#fbcca7', '#fef2e9'] 
+    purple = ['#716fb2', '#9c9ac9', '#c6c5e0', '#f1f1f7'] 
+    red = ['#ec1848', '#f25d7f', '#f7a3b6', '#fde8ed'] 
+    yellow = ['#ffdd00', '#ffe74d', '#fff199', '#fffce6'] 
+    black = ['#000000', '#4d4d4d', '#999999', '#ffffff'] 
+    dark_grey = ['#b4b9bf', '#cbced2', '#e1e3e6', '#f8f8f9']
+    light_grey = ['#d1d3d3', '#dfe0e0', '#ededee', '#fafbfb'] 
+
+    if experiment['label'].startswith('sgRFP'):
+        return red[0]
+    elif experiment['label'].startswith('sgGFP'):
+        return olive[0]
+    elif experiment['label'] in ('wt', 'dead', 'null'):
+        return dark_grey[0]
+    elif experiment['label'].startswith('us('):
+        return blue[0]
+    elif experiment['label'].startswith('nx('):
+        return red[0]
+    elif experiment['label'].startswith('cb('):
+        return olive[0]
+    elif experiment['label'].startswith('sh('):
+        return orange[0]
+    elif experiment['label'].startswith('rb('):
+        return purple[0]
+    else:
+        return navy[0]
 
 def pick_style(experiment, condition):
     styles = {
