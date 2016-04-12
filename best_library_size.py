@@ -60,7 +60,6 @@ Options:
 
 from pylab import *
 from pprint import pprint
-from matplotlib.colors import LogNorm
 import warnings; warnings.simplefilter('ignore')
 import pylab; pylab.rcParams['font.family'] = 'DejaVu Sans'
 
@@ -162,6 +161,7 @@ class BestLibrarySize:
         self.axes[1,0].yaxis.set_ticklabels([])
 
     def _setup_best_library_size(self):
+        from matplotlib.colors import LogNorm
         x = self._library_size_axis()
         mu = self._two_decades_around(self.quality_peak)
         sig = self._two_decades_around(self.quality_trough)
