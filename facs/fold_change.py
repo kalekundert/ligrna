@@ -33,10 +33,10 @@ Options:
 
     -N --normalize-by-internal-control
         Normalize by FITC-A (GFP expression) if the channel of interest is 
-        PE-Texas Red-A (RFP expression) and vice versa.  This assumes that the 
-        fluorescent protein that isn't of interest is being constitutively 
-        expressed, and therefore can be used as an internal control for cell 
-        size and expression level.
+        PE-Texas Red-A or DsRed-A (RFP expression) and vice versa.  This 
+        assumes that the fluorescent protein that isn't of interest is being 
+        constitutively expressed, and therefore can be used as an internal 
+        control for cell size and expression level.
 
     -t --time-gate <secs>               [default: 2]
         Exclude the first cells recorded from each well, which often seem to be 
