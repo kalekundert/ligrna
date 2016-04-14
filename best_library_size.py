@@ -32,8 +32,8 @@ Options:
 
     -n, --sampling-capacity <expr>          [default: 6e7]
         The number of library members you have the capacity to sample.  This is 
-        ≈6×10⁷ for my FACS experiments, assuming that sorting at 10,000 evt/sec 
-        gives reasonable accuracy and that ≈60% of the cells survive sorting.
+        ≈6×10⁷ for my FACS experiments, assuming that I sort for 2.5 hours at 
+        10,000 evt/sec and that ≈60% of the cells survive sorting.
     
     -q, --quality-peak <expr>               [default: 4**10]
         The library size for which you think the greatest fraction of members 
@@ -61,7 +61,6 @@ Options:
 from pylab import *
 from pprint import pprint
 import warnings; warnings.simplefilter('ignore')
-import pylab; pylab.rcParams['font.family'] = 'DejaVu Sans'
 
 def prob_working(x, mu, sig):
     """
@@ -230,10 +229,13 @@ class BestLibrarySize:
             start = _log(self.library_sizes[0])
             stop = _log(self.library_sizes[1])
         else:
-            start = _log(self.quality_peak / 100)
-            stop = _log(self.quality_peak * 100)
+            range = abs(_log(self.quality_peak / self.quality_trough))
+            start = _log(self.quality_peak) - range
+            stop = _log(self.quality_peak) + range
 
-        return logspace(floor(start), ceil(stop), num, base=self.log_base)
+        start = floor(max(start, 0))
+        stop = ceil(stop)
+        return logspace(start, stop, num, base=self.log_base)
 
     def _two_decades_around(self, x):
         _log = lambda x: log(x) / log(self.log_base)
