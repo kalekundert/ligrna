@@ -133,7 +133,7 @@ class ScatterPlot(analysis_helpers.ExperimentPlot):
             self.y_channel = 'SSC-A'
         else:
             self.x_channel = 'FITC-A'
-            self.y_channel = 'PE-Texas Red-A'
+            self.y_channel = 'Red-A'
 
         # Label the axes with the chosen channel names.
 

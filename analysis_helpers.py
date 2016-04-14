@@ -6,8 +6,13 @@ import warnings; warnings.simplefilter("error", FutureWarning)
 from pprint import pprint
 
 fluorescence_controls = {
-        'FITC-A': 'PE-Texas Red-A',
-        'PE-Texas Red-A': 'FITC-A', 
+        'FITC-A': 'Red-A',
+        'Red-A': 'FITC-A', 
+}
+red_channels = {
+        'PE-Texas Red-A': 'Red-A',
+        'DsRed-A': 'Red-A',
+        'mCherry-A': 'Red-A',
 }
 
 
@@ -121,6 +126,18 @@ class GateLowFluorescence(fcmcmp.GatingStep):
             return well.data[channel] < self.threshold
 
 
+class RenameRedChannel(fcmcmp.ProcessingStep):
+    """
+    I use different red channels on different cytometers.  In particular, I use 
+    the "PE-Texas Red" channel on the BD LSRII and the "DsRed" channel on the 
+    BD FACSAriaII.  To allow my scripts to work on data from either machine, I 
+    rename the red channel to "Red".
+    """
+
+    def process_well(self, experiment, well):
+        well.data.rename(columns=red_channels, inplace=True)
+
+
 class SharedProcessingSteps:
 
     def __init__(self):
@@ -129,12 +146,15 @@ class SharedProcessingSteps:
         self.low_fluorescence_gate = None
 
     def process(self, experiments):
+        rename_red_channel = RenameRedChannel()
+        rename_red_channel(experiments)
+
         gate_nonpositive_events = fcmcmp.GateNonPositiveEvents()
-        gate_nonpositive_events.channels = 'FITC-A', 'PE-Texas Red-A'
+        gate_nonpositive_events.channels = 'FITC-A', 'Red-A'
         gate_nonpositive_events(experiments)
 
         gate_early_events = fcmcmp.GateEarlyEvents()
-        gate_early_events.throwaway_secs = 100 * self.early_event_threshold
+        gate_early_events.throwaway_secs = self.early_event_threshold
         gate_early_events(experiments)
 
         gate_small_cells = fcmcmp.GateSmallCells()
@@ -350,7 +370,7 @@ def pick_channel(experiment, users_choice=None):
 
     The channel can either be set directly by the user (typically via the 
     command line) or can be inferred from the name of the experiment.  If 
-    nothing else is specified, it will default to the "PE-Texas Red-A" channel.
+    nothing else is specified, it will default to the "Red-A" channel.
     """
     # If the user manually specified a channel to view, use it.
     if users_choice:
@@ -358,16 +378,17 @@ def pick_channel(experiment, users_choice=None):
 
     # If a particular channel is associated with this experiment, use it.
     if 'channel' in experiment:
-        return experiment['channel']
+        channel = experiment['channel']
+        return red_channels.get(channel, channel)
 
     # If a channel can be inferred from the name of the experiment, use it. 
     if 'sgGFP' in experiment['label']:
         return 'FITC-A'
     if 'sgRFP' in experiment['label']:
-        return 'PE-Texas Red-A'
+        return 'Red-A'
 
     # Default to the red channel, if nothing else is specified.
-    return 'PE-Texas Red-A'
+    return 'Red-A'
 
 def get_duration(experiments):
     min_time = float('inf')

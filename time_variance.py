@@ -96,8 +96,11 @@ if __name__ == '__main__':
     args = docopt.docopt(__doc__)
     experiment = fcmcmp.load_experiment(args['<yml_path>'], args['<experiment>'])
 
+    rename_red_channel = analysis_helpers.RenameRedChannel()
+    rename_red_channel([experiment])
+
     log_transformation = fcmcmp.LogTransformation()
-    log_transformation.channels = 'FITC-A', 'PE-Texas Red-A'
+    log_transformation.channels = 'FITC-A', 'Red-A'
     log_transformation([experiment])
 
     analysis = TimeChannel(experiment)
