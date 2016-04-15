@@ -9,11 +9,6 @@ fluorescence_controls = {
         'FITC-A': 'Red-A',
         'Red-A': 'FITC-A', 
 }
-red_channels = {
-        'PE-Texas Red-A': 'Red-A',
-        'DsRed-A': 'Red-A',
-        'mCherry-A': 'Red-A',
-}
 
 
 class AnalyzedWell (fcmcmp.Well):
@@ -135,7 +130,22 @@ class RenameRedChannel(fcmcmp.ProcessingStep):
     """
 
     def process_well(self, experiment, well):
-        well.data.rename(columns=red_channels, inplace=True)
+        if well.meta['$CYT'] == 'FACSAriaII':
+            red_channel = 'DsRed-A'
+        elif well.meta['$CYT'] == 'LSRII':
+            red_channel = 'PE-Texas Red-A'
+        else:
+            raise ValueError("Unknown cytometer: {}".format(well.meta['$CYT']))
+
+        well.data.rename(columns={red_channel: 'Red-A'}, inplace=True)
+
+
+class GateEarlyEvents(fcmcmp.GateEarlyEvents):
+
+    def gate(self, experiment, well):
+        if self.throwaway_secs < 0:
+            self.throwaway_secs = 2 if well.meta['$CYT'] == 'LSRII' else 0
+        return super().gate(experiment, well)
 
 
 class SharedProcessingSteps:
@@ -153,7 +163,7 @@ class SharedProcessingSteps:
         gate_nonpositive_events.channels = 'FITC-A', 'Red-A'
         gate_nonpositive_events(experiments)
 
-        gate_early_events = fcmcmp.GateEarlyEvents()
+        gate_early_events = GateEarlyEvents()
         gate_early_events.throwaway_secs = self.early_event_threshold
         gate_early_events(experiments)
 
@@ -267,7 +277,7 @@ def pick_color(experiment):
     """
     # I made this a wrapper function so that I could easily change the color 
     # scheme, if I want to, down the road.
-    return pick_ucsf_color(experiment)
+    return pick_tango_color(experiment)
 
 def pick_tango_color(experiment):
     """
@@ -379,7 +389,10 @@ def pick_channel(experiment, users_choice=None):
     # If a particular channel is associated with this experiment, use it.
     if 'channel' in experiment:
         channel = experiment['channel']
-        return red_channels.get(channel, channel)
+        if channel in ('PE-Texas Red-A', 'DsRed-A'):
+            return 'Red-A'
+        else:
+            return channel
 
     # If a channel can be inferred from the name of the experiment, use it. 
     if 'sgGFP' in experiment['label']:
