@@ -38,9 +38,12 @@ Options:
         constitutively expressed, and therefore can be used as an internal 
         control for cell size and expression level.
 
-    -t --time-gate <secs>               [default: 2]
-        Exclude the first cells recorded from each well, which often seem to be 
-        contaminated with cells from the previous well.
+    -t --time-gate <secs>               [default: -1]
+        Exclude the first cells recorded from each well if you suspect that 
+        they may be contaminated with cells from the previous well.  In most 
+        cases, the default (indicated by a negative value) is to keep all the 
+        data.  However, if the data was collected on the LSRII, the default is 
+        to throw out the first 2 secs.
 
     -z --size-gate <percentile>         [default: 40]
         Exclude the smallest cells from the analysis.  Size is defined as 
@@ -315,6 +318,7 @@ class FoldChange:
                 x_ticks.append(x_ticks[-1] + dx)
 
         #x_ticks = [0, 0.5, 1.0, 1.5, 2.0]
+        x_ticks = list(range(7))
         self.axes[1].set_xlim(x_ticks[0], x_ticks[-1])
         self.axes[1].set_xticks(x_ticks)
 

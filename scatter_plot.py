@@ -30,9 +30,13 @@ Options:
         the particles passing the detector) rather than red fluorescence vs. 
         green fluorescence plots.
 
-    -t --time-gate <secs>               [default: 2]
-        Exclude the first cells recorded from each well, which often seem to be 
-        contaminated with cells from the previous well.
+    -t --time-gate <secs>               [default: -1]
+        Exclude the first cells recorded from each well if you suspect that 
+        they may be contaminated with cells from the previous well.  In most 
+        cases, the default (indicated by a negative value) is to keep all the 
+        data.  However, if the data was collected on the LSRII, the default is 
+        to throw out the first 2 secs.
+
 
     -z --size-gate <percentile>         [default: 40]
         Exclude the smallest cells from the analysis.  Size is defined as 

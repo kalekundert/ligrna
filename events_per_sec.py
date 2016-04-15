@@ -52,7 +52,7 @@ class EventsPerSec:
         data = fcmcmp.yield_unique_wells(self.experiments, self.keyword)
 
         for experiment, condition, well in data:
-            times = well.data['Time'] / 100
+            times = well.data['Time'] * float(well.meta['$TIMESTEP'])
             bins = np.linspace(min_time, max_time, self.histogram_bins)
             events_per_bin, bin_edges = np.histogram(times, bins)
             secs_per_bin = bin_edges[1] - bin_edges[0]
