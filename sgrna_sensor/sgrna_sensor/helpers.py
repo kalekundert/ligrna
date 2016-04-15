@@ -3,7 +3,7 @@
 def reverse(sequence):
     return sequence[::-1]
 
-def complement(sequence):
+def rna_complement(sequence):
     complements = {
             'A': 'U',
             'C': 'G',
@@ -12,8 +12,24 @@ def complement(sequence):
     }
     return ''.join(complements[x] for x in sequence)
 
-def reverse_complement(sequence):
-    return reverse(complement(sequence))
+complement = rna_complement
+
+def rna_reverse_complement(sequence):
+    return reverse(rna_complement(sequence))
+
+reverse_complement = rna_reverse_complement
+
+def dna_complement(sequence):
+    complements = {
+            'A': 'T',
+            'C': 'G',
+            'G': 'C',
+            'T': 'A',
+    }
+    return ''.join(complements[x] for x in sequence)
+
+def dna_reverse_complement(sequence):
+    return reverse(dna_complement(sequence))
 
 def find_middlemost(seq, pattern, num_matches=1):
     """

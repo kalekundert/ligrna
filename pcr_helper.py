@@ -1,8 +1,7 @@
 #!/usr/bin/env python3
 
-import primer3
-import itertools
-from sgrna_sensor import reverse_complement
+import primer3, itertools
+from sgrna_sensor import dna_reverse_complement
 
 class Overlap:
 
@@ -14,7 +13,6 @@ class Overlap:
         index in greater than the end index, the primer will be taken to be the 
         reverse complement of the associated sequence.
         """
-
         assert start != end
 
         self._construct = construct
@@ -24,7 +22,7 @@ class Overlap:
         if start < end:
             self._sequence = construct.dna[start:end]
         else:
-            self._sequence = reverse_complement(construct.dna[end:start])
+            self._sequence = dna_reverse_complement(construct.dna[end:start])
 
         self._melting_temp = primer3.calcTm(
                 self._sequence, tm_method='breslauer')
@@ -63,7 +61,7 @@ class Overlap:
 
     @property
     def reverse_complement(self):
-        return reverse_complement(self._sequence)
+        return dna_reverse_complement(self._sequence)
 
     @property
     def melting_temp(self):
@@ -77,13 +75,12 @@ class Overlap:
     def gc_content(self):
         return self._gc_content
 
-    def show(self, style=None, color='auto'):
+    def show(self, color='auto'):
         self.construct.show(
-                style=style,
                 start=min(self.start, self.end),
                 end=max(self.end, self.start),
                 dna=True,
-                rev_com=(self.start > self.end),
+                #rev_com=(self.start > self.end),
                 color=color,
         )
 

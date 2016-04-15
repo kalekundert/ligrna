@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# encoding: utf-8
 
 from .sequence import *
 from .components import *

@@ -4,7 +4,7 @@
 from __future__ import division
 from __future__ import print_function
 
-import RNA, re
+import sys, re, RNA
 import numpy as np
 import matplotlib.pyplot as plt
 from math import *
@@ -339,9 +339,9 @@ def plot_mutants(i, color, mutant_factory, **factory_kwargs):
             for seq in yield_random_seqs()
     ])
     random_energies = random_energies[random_energies.nonzero()]
-    random_indices = linspace(i-0.4, i+0.4, len(random_energies))
+    random_indices = np.linspace(i-0.4, i+0.4, len(random_energies))
 
-    vp = violinplot(
+    vp = plt.violinplot(
             [random_energies], [i],
             vert=False,
             showmeans=False,
@@ -365,10 +365,10 @@ def plot_mutants(i, color, mutant_factory, **factory_kwargs):
             label
             for label, seq in yield_design_seqs()
     ]
-    design_indices = linspace(i-0.4, i+0.4, len(design_energies))
-    plot(design_energies, design_indices, **design_style)
+    design_indices = np.linspace(i-0.4, i+0.4, len(design_energies))
+    plt.plot(design_energies, design_indices, **design_style)
 
-    gcf().canvas.mpl_connect('pick_event', print_selection)
+    plt.gcf().canvas.mpl_connect('pick_event', print_selection)
 
 
 class MutantPlotter:
@@ -499,5 +499,5 @@ fig.savefig('tune_designs.pdf')
 
 fig.subplots_adjust(left=0.04, right=0.62)
 fig.set_size_inches(11, 6.47)
-fig.savefig('tune_designs.png', dpi=300)
-#show()
+#fig.savefig('tune_designs.png', dpi=300)
+plt.show()

@@ -1,6 +1,9 @@
 #!/usr/bin/env python2
 
 """\
+Play around with some different ways of computationally distinguishing good 
+designs from bad ones.
+
 Usage:
     scorefxn.py [options] <names>...
 

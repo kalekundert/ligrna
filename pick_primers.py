@@ -1,6 +1,17 @@
 #!/usr/bin/env python3
 
 """\
+Automatically design primers that can be used to construct the given sgRNA 
+design by overlap extension PCR.  There are a number of parameters controlling 
+how ideal the primers have to be, and you can play with them to get more or 
+fewer results.
+
+I ended up not using this script in favor of ordering my designs as gBlocks 
+gene fragments from IDT.  The PCR assembly takes as long as it takes IDT to 
+deliver gBlocks, and the gBlocks are much higher purity.  The gBlocks are also 
+not that much more expensive at $90 per design.  Most of the primers are ~$30, 
+and then you have to add reagents and my time.
+
 Usage:
     pick_primers.py <name> [options]
 
