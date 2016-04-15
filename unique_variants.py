@@ -56,6 +56,9 @@ def sort_time(num_items, fraction_wanted, event_rate=10000, survival_rate=0.6):
     # although the efficiency also fluctuates by ~10% depending on how common 
     # the cells you're sorting for are.
 
+    if event_rate < 0:
+        raise ValueError('The event rate must be positive, not {}.'.format(event_rate))
+
     event_rates_to_efficiencies = {
         47668: 0.08, # 20160331_optimize_sorting_speed
         26166: 0.42,
