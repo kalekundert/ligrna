@@ -318,7 +318,6 @@ class FoldChange:
                 x_ticks.append(x_ticks[-1] + dx)
 
         #x_ticks = [0, 0.5, 1.0, 1.5, 2.0]
-        x_ticks = list(range(7))
         self.axes[1].set_xlim(x_ticks[0], x_ticks[-1])
         self.axes[1].set_xticks(x_ticks)
 
