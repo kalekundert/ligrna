@@ -272,6 +272,13 @@ def pick_color(experiment):
     # scheme, if I want to, down the road.
     return pick_ucsf_color(experiment)
 
+
+upper_stem = re.compile('(us|.u.?)\(')
+lower_stem = re.compile('(ls|.l.?)\(')
+bulge = re.compile('.b.?\(')
+nexus = re.compile('(nx|.x.?)\(')
+hairpin = re.compile('.h.?\(')
+
 def pick_tango_color(experiment):
     """
     Pick a color from the Tango color scheme for the given experiment.
@@ -297,16 +304,16 @@ def pick_tango_color(experiment):
         return green[2]
     elif experiment['label'] in ('wt', 'dead', 'null'):
         return grey[4]
-    elif experiment['label'].startswith('us('):
-        return blue[1]
-    elif experiment['label'].startswith('nx('):
-        return red[1]
-    elif experiment['label'].startswith('cb('):
-        return green[1]
-    elif experiment['label'].startswith('sh('):
-        return orange[1]
-    elif experiment['label'].startswith('rb('):
+    elif lower_stem.match(experiment['label']):
         return purple[1]
+    elif upper_stem.match(experiment['label']):
+        return blue[1]
+    elif bulge.match(experiment['label']):
+        return green[1]
+    elif nexus.match(experiment['label']):
+        return red[1]
+    elif hairpin.match(experiment['label']):
+        return orange[1]
     else:
         return brown[2]
 
@@ -337,16 +344,16 @@ def pick_ucsf_color(experiment):
         return olive[0]
     elif experiment['label'] in ('wt', 'dead', 'null'):
         return dark_grey[0]
-    elif experiment['label'].startswith('us('):
-        return blue[0]
-    elif experiment['label'].startswith('nx('):
-        return red[0]
-    elif experiment['label'].startswith('cb('):
-        return olive[0]
-    elif experiment['label'].startswith('sh('):
-        return orange[0]
-    elif experiment['label'].startswith('rb('):
+    elif lower_stem.match(experiment['label']):
         return purple[0]
+    elif upper_stem.match(experiment['label']):
+        return blue[0]
+    elif bulge.match(experiment['label']):
+        return olive[0]
+    elif nexus.match(experiment['label']):
+        return red[0]
+    elif hairpin.match(experiment['label']):
+        return orange[0]
     else:
         return navy[0]
 
