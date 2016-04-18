@@ -258,6 +258,12 @@ class FoldChange:
                 **location_styles[condition])
 
     def _plot_fold_change(self, i, analyzed_wells):
+        # I really don't think this function is comparing distributions or 
+        # calculating error bars in the right way.  I think it might be best to 
+        # do some sort of resampling technique.  That would allow me to 
+        # incorporate knowledge of the underlying distributions into the 
+        # standard deviation.
+
         # Calculate fold changes between the before and after distributions, 
         # accounting for the fact that the distributions may be in either 
         # linear or log space.
@@ -272,6 +278,11 @@ class FoldChange:
         else:
             fold_changes = locations['before'] / locations['after']
 
+        # We don't care which direction the fold change is in, so invert the 
+        # fold change if it's less than 1 (e.g.  for a backward design).
+        fold_change = fold_changes.mean()
+        if fold_change < 1.0: fold_change **= -1
+
         # Plot the fold-change with standard-error error-bars.  I use plot() 
         # and not barh() to draw the bar plots because I don't want the width 
         # of the bars to change with the y-axis (either as more bars are added 
@@ -280,13 +291,13 @@ class FoldChange:
         color = analysis_helpers.pick_color(experiment)
 
         self.axes[1].plot(
-                [0, fold_changes.mean()], [i, i],
+                [0, fold_change], [i, i],
                 color=color,
                 linewidth=self.fold_change_bar_width,
                 solid_capstyle='butt',
         )
         self.axes[1].errorbar(
-                fold_changes.mean(), i,
+                fold_change, i,
                 xerr=fold_changes.std(),
                 ecolor=color,
                 capsize=self.fold_change_bar_width / 2,
