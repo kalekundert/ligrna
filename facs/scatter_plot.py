@@ -37,7 +37,6 @@ Options:
         data.  However, if the data was collected on the LSRII, the default is 
         to throw out the first 2 secs.
 
-
     -z --size-gate <percentile>         [default: 40]
         Exclude the smallest cells from the analysis.  Size is defined as 
         ``FSC + m * SSC``, where ``m`` is the slope of the linear regression 
@@ -50,13 +49,13 @@ Options:
         cells that weren't expressing much fluorescent protein, for whatever 
         reason.  Note that this gate is in absolute units, not log units.
 
-    -n --contour-steps <num>            [default: 7]
+    -n --contour-steps <num>            [default: 4]
         How many contour levels should be shown for the highest peak of all the 
         wells being plotted.  Showing more contours allows more peaks to be 
         seen, but showing too many makes it hard to distinguish the individual 
         levels.
 
-    -a --cell-alpha <value>             [default: 0.2]
+    -a --cell-alpha <value>             [default: 0.5]
         The transparency level of the points representing cells in the scatter 
         plot.  Values must be between 0 and 1.
 
@@ -113,7 +112,7 @@ class ScatterPlot(analysis_helpers.ExperimentPlot):
         self.contour_levels = None
 
     def plot(self):
-        self._create_axes()
+        self._create_axes(square=True)
         self._set_titles()
         self._set_channels()
         self._set_limits()
@@ -152,11 +151,19 @@ class ScatterPlot(analysis_helpers.ExperimentPlot):
         compare plots from different experiments.  It also forces the axes to 
         be square.
         """
-        self.min_coord = 0
-        self.max_coord = 6 if not self.show_sizes else 100000
+        self.min_coord = 1
+        self.max_coord = 5 if not self.show_sizes else 100000
 
         self.axes[0,0].set_xlim(self.min_coord, self.max_coord)
         self.axes[0,0].set_ylim(self.min_coord, self.max_coord)
+
+        # Only put ticks on integer values.  Fractional ticks (like 3.5) are 
+        # harder to interpret (because these are log units) and tend to clutter 
+        # up the axis.
+        if not self.show_sizes:
+            from matplotlib.ticker import MultipleLocator
+            self.axes[0,0].xaxis.set_major_locator(MultipleLocator())
+            self.axes[0,0].yaxis.set_major_locator(MultipleLocator())
 
     def _create_histograms(self):
         self.histograms = {x: [] for x in experiment['wells']}
@@ -243,6 +250,10 @@ if __name__ == '__main__':
     shared_steps.small_cell_threshold = float(args['--size-gate'])
     shared_steps.low_fluorescence_threshold = float(args['--expression-gate'])
     shared_steps.process([experiment])
+
+    log_transformation = fcmcmp.LogTransformation()
+    log_transformation.channels = ['FITC-A', 'Red-A']
+    log_transformation([experiment])
 
     analysis = ScatterPlot(experiment)
     analysis.show_sizes = args['--size-channels']
