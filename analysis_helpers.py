@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-import contextlib, fcmcmp
+import re, contextlib, fcmcmp
 import numpy as np, matplotlib.pyplot as plt
 import warnings; warnings.simplefilter("error", FutureWarning)
 from pprint import pprint
@@ -198,7 +198,7 @@ class ExperimentPlot:
     def plot(self):
         raise NotImplementedError
 
-    def _create_axes(self):
+    def _create_axes(self, square=False):
         """
         Work out how many wells need to be shown.
         
@@ -220,6 +220,14 @@ class ExperimentPlot:
                 sharex=True, sharey=True, squeeze=False,
         )
         
+        # Make the axes square if the user asked for it.  What this really 
+        # means is that pixels on the x-axis and the y-axis will have the same 
+        # size in axis units.  This relationship is maintained even as the user 
+        # zooms in and out.
+
+        if square:
+            for ax in self.axes.flat:
+                ax.set(adjustable='box-forced', aspect='equal')
 
     def _set_titles(self):
         """
@@ -277,7 +285,7 @@ def pick_color(experiment):
     """
     # I made this a wrapper function so that I could easily change the color 
     # scheme, if I want to, down the road.
-    return pick_tango_color(experiment)
+    return pick_ucsf_color(experiment)
 
 def pick_tango_color(experiment):
     """
