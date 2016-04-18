@@ -319,18 +319,12 @@ class FoldChange:
         self.axes[1].set_xlabel('fold change')
 
     def _pick_xticks(self):
-        x_min, x_max = self.axes[1].get_xlim()
-        x_ticks = self.axes[1].get_xticks()
-
-        while len(x_ticks) > self.max_fold_change_ticks:
-            dx = abs(2 * x_ticks[1] - x_ticks[0])
-            x_ticks = [x_min]
-            while x_ticks[-1] < x_max:
-                x_ticks.append(x_ticks[-1] + dx)
-
-        #x_ticks = [0, 0.5, 1.0, 1.5, 2.0]
-        self.axes[1].set_xlim(x_ticks[0], x_ticks[-1])
-        self.axes[1].set_xticks(x_ticks)
+        from matplotlib.ticker import MaxNLocator
+        locator = MaxNLocator(
+                nbins=self.max_fold_change_ticks-1,
+                steps=[1, 2, 5, 10, 50, 100],
+        )
+        self.axes[1].xaxis.set_major_locator(locator)
 
     def _pick_ylim(self):
         margin = 0.3
