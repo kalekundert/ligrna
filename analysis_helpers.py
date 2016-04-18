@@ -254,21 +254,6 @@ class ExperimentPlot:
             for col in range(self.num_cols):
                 yield row, col
 
-    def _plot_channel_vs_time(self, row, col):
-        axis = self.axes[row, col]
-        well = self._get_well(row, col)
-        channel = pick_channel(experiment, self.channel)
-        color = pick_color(self.experiment)
-
-        axis.plot(
-                well.data['Time'],
-                well.data[channel],
-                marker=',',
-                linestyle='',
-                color=color,
-                rasterized=self.rasterize_points,
-        )
-
     def _get_condition(self, row):
         return ('before', 'after')[row]
 
