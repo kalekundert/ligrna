@@ -19,6 +19,11 @@ Options:
         suffix.  By default, no output is generated and the plot is shown in 
         the GUI.
 
+    -s --subset <start:end>
+        Only show experiments with indices inside the given range.  Indices are 
+        interpreted as slices in python.  This option is meant to help when 
+        viewing data from really high-throughput experiments.
+
     -c --channel <channel>
         The channel to plot.  By default, this is deduced from the YAML file.  
         If an experiment has a 'channel' attribute, that channel is displayed.  
@@ -349,6 +354,10 @@ if __name__ == '__main__':
     import docopt
     args = docopt.docopt(__doc__)
     experiments = fcmcmp.load_experiments(args['<yml_path>'])
+
+    if args['--subset']:
+        start, end = (int(x) for x in args['--subset'].split(':'))
+        experiments = experiments[start:end]
 
     shared_steps = analysis_helpers.SharedProcessingSteps()
     shared_steps.early_event_threshold = float(args['--time-gate'])
