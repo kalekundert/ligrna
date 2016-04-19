@@ -917,6 +917,40 @@ def random_bulge(N, M, A=1, ligand='theo', target='aavs'):
 
 @design('rx')
 def random_nexus(N, M, A=1, ligand='theo', target='aavs'):
+    """
+    Flank the aptamer with a random sequence on either side and insert it into 
+    the nexus.
+
+    The insertion replaces the wildtype sequence from the 'GG' of the critical 
+    2bp stem to the 'CC' of that same stem.  This stem is fairly sensitive to 
+    mutation, but it isn't totally immutable.  Not all base-paired sequences 
+    are functional (e.g. 'GG...CC' works but 'CC...GG' doesn't) but I estimate 
+    from the data in the Briner paper that about half are, at least to some 
+    extent.  There are 256 4bp sequences, of which 16 are perfectly based 
+    paired.  If half of those 16 are actually functional, then I expect only 
+    8/256 = 3% of the sequences in this library to be functional.
+
+    I'm not too worried about this library having a lot of nonfunctional 
+    members, for two reasons.  First, I don't anticipate this being a very big 
+    library.  This library only needs to recapitulate a 2bp stem, while the 
+    bulge and hairpin libraries need to recapitulate a 4bp stem.  It'll be 
+    easier to fully cover a small library, so I don't need to worry about 
+    nonfunctional members diluting functional ones.  Second, the first step in 
+    the screen is for functional members, so I should get rid of the chaff 
+    quickly.
+
+    Parameters
+    ----------
+    N: int
+        The number of random base pairs to put 5' of the aptamer.  I anticipate 
+        N being between 2 and 5, enough to recapitulate the stem and to add 
+        some possible interactions above it.
+        
+    M: int
+        The number of random base pairs to put 3' of the aptamer.  I anticipate 
+        N being between 2 and 5, enough to recapitulate the stem and to add 
+        some possible interactions above it.
+    """
     sgrna = wt_sgrna(target)
     sgrna.attach(
             random_insert(ligand, N, M),
@@ -927,11 +961,45 @@ def random_nexus(N, M, A=1, ligand='theo', target='aavs'):
 
 @design('rh')
 def random_hairpin(N, M, A=1, ligand='theo', target='aavs'):
+    """
+    Flank the aptamer with a random sequence on either side and insert it into 
+    the first hairpin.
+
+    The insertion replaces the first hairpin and the 4 nucleotides 5' of it, 
+    which are AUCA in the wildtype sgRNA.  Those 4 upstream residues are 
+    interesting for a number of reasons.  First of all, the data from the 
+    Briner paper show that sequence changes in this region have a moderate 
+    effect on sgRNA function that lengthening this region can ameliorate the 
+    effects of truncating the hairpin.  I think the ability of this upstream 
+    region to have a moderate effect on sgRNA makes it a good candidate for 
+    randomization.
+
+    Beyond that, the wildtype sequence is "AUCA", which is an "ANYA" tetraloop.
+    I don't think that this sequence actually folds into a tetraloop in the 
+    wildtype sgRNA, but the sh() family of designs is supposed to use the 
+    tetraloop to make base pairs between the nexus and the hairpin in the off 
+    state.  Some of the sh() designs were functional, so allowing the tetraloop 
+    to optimize seems like a promising direction.
+
+    Parameters
+    ----------
+    N: int
+        The number of random base pairs to put 5' of the aptamer.  I anticipate 
+        N being between 6 and 8, where 8 is the wildtype length.
+        
+    M: int
+        The number of random base pairs to put 5' of the aptamer.  I anticipate 
+        N being between 4 and 6, where 4 is the wildtype length.
+    """
     sgrna = wt_sgrna(target)
     sgrna.attach(
             random_insert(ligand, N, M),
-            'hairpins', 5,
+            'hairpins', 1,
             'hairpins', 17,
     )
     return sgrna
+
+def random_bulge_forward(i, target='aavs'):
+    pass
+
 
