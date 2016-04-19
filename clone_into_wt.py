@@ -174,7 +174,7 @@ def complement(sequence):
 if __name__ == '__main__':
     import docopt
     args = docopt.docopt(__doc__)
-    cut = int(args['--cut'])
+    cut = args['--cut'] and int(args['--cut'])
     tm = float(args['--tm'])
     spacer = args['--spacer']
     primers = {}
