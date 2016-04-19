@@ -19,6 +19,7 @@ if [ "$round" = best ]; then
         cb
         cb/wo
     )
+fi
 
 if [ "$round" = 0 ] || [ "$round" = all ]; then
     seqs+=(
@@ -176,5 +177,48 @@ fi
 #        tet/cb/wo
 #        3mx/cb/wo           
 #fi
+
+if [ "$round" = rb ] || [ "$round" = all ]; then
+    seqs+=(
+        rb/4/8
+        rb/4/7
+        rb/4/6
+        rb/5/7
+        rb/5/6
+        rb/6/6
+    )
+fi
+
+if [ "$round" = rx ] || [ "$round" = all ]; then
+    seqs+=(
+        rx/2/2
+        rx/2/3
+        rx/2/4
+        rx/2/5
+        rx/3/2
+        rx/3/3
+        rx/3/4
+        rx/3/5
+        rx/4/2
+        rx/4/3
+        rx/4/4
+        rx/4/5
+        rx/5/2
+        rx/5/3
+        rx/5/4
+        rx/5/5
+    )
+fi
+
+if [ "$round" = rh ] || [ "$round" = all ]; then
+    seqs+=(
+        rb/6/4
+        rb/6/5
+        rb/6/6
+        rb/7/4
+        rb/7/5
+        rb/8/4
+    )
+fi
 
 ./show_seqs.py "$@" $seqs
