@@ -127,6 +127,7 @@ if args['--t7']:
 
 format_args = {  # (no fold)
         'color': args['--color'],
+        'rna': True,    # Overridden if 'dna' is True.
         'dna': args['--dna'] or args['--fasta'],
         'pad': False,
 }
@@ -167,14 +168,14 @@ for design in designs:
     if args['--verbose']:
         from textwrap import dedent
         header = "{}".format(design.name)
-        no_doc_message = "No description available for this design."
         print()
         print(header)
         print('=' * len(header))
-        print(dedent(design.doc or no_doc_message).strip())
-        print()
-        print("Sequence")
-        print("--------")
+        if design.doc:
+            print(dedent(design.doc).strip())
+            print()
+            print("Sequence")
+            print("--------")
     if args['--t7']:
         design.prepend(sgrna_sensor.t7_promoter())
 
