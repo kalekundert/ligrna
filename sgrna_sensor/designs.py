@@ -999,7 +999,30 @@ def random_hairpin(N, M, A=1, ligand='theo', target='aavs'):
     )
     return sgrna
 
+@design('rbf')
 def random_bulge_forward(i, target='aavs'):
-    pass
+    if i == 6:
+        linkers = 'AAGG', 'CTTTAGC'     # rb/4/7
+    elif i == 8:
+        linkers = 'CCCGA', 'TCTTCGC'    # rb/5/7
+    elif i == 13:
+        linkers = 'ATCG', 'CGGCTT'      # rb/4/6
+    elif i == 19:
+        linkers = 'CCCGA', 'TCTTCGC'    # rb/5/7
+    else:
+        raise ValueError("no sequence for rbf({}).".format(i))
+
+    sequenced_insert = aptamer('theo')
+    sequenced_insert.prepend(Domain("linker/5'", linkers[0]))
+    sequenced_insert.append(Domain("linker/3'", linkers[1]))
+
+    sgrna = wt_sgrna(target)
+    sgrna.attach(
+            sequenced_insert,
+            'stem', 6,
+            'stem', 24,
+    )
+    return sgrna
+
 
 
