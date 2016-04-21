@@ -86,3 +86,5 @@ ENV/
 
 # Data and script outputs
 *.pdf
+*.less
+*.html
