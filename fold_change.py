@@ -43,14 +43,12 @@ Options:
         constitutively expressed, and therefore can be used as an internal 
         control for cell size and expression level.
 
-    -t --time-gate <secs>               [default: -1]
+    -t --time-gate <secs>               [default: 0]
         Exclude the first cells recorded from each well if you suspect that 
-        they may be contaminated with cells from the previous well.  In most 
-        cases, the default (indicated by a negative value) is to keep all the 
-        data.  However, if the data was collected on the LSRII, the default is 
-        to throw out the first 2 secs.
+        they may be contaminated with cells from the previous well.  The 
+        default is to keep all the data.
 
-    -z --size-gate <percentile>         [default: 40]
+    -z --size-gate <percentile>         [default: 0]
         Exclude the smallest cells from the analysis.  Size is defined as 
         ``FSC + m * SSC``, where ``m`` is the slope of the linear regression 
         relating the two scatter channels.  The given percentile specifies how 
