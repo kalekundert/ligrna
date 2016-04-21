@@ -140,14 +140,6 @@ class RenameRedChannel(fcmcmp.ProcessingStep):
         well.data.rename(columns={red_channel: 'Red-A'}, inplace=True)
 
 
-class GateEarlyEvents(fcmcmp.GateEarlyEvents):
-
-    def gate(self, experiment, well):
-        if self.throwaway_secs < 0:
-            self.throwaway_secs = 2 if well.meta['$CYT'] == 'LSRII' else 0
-        return super().gate(experiment, well)
-
-
 class SharedProcessingSteps:
 
     def __init__(self):
@@ -163,7 +155,7 @@ class SharedProcessingSteps:
         gate_nonpositive_events.channels = 'FITC-A', 'Red-A'
         gate_nonpositive_events(experiments)
 
-        gate_early_events = GateEarlyEvents()
+        gate_early_events = fcmcmp.GateEarlyEvents()
         gate_early_events.throwaway_secs = self.early_event_threshold
         gate_early_events(experiments)
 
