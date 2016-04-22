@@ -19,7 +19,7 @@ protocol = dirty_water.Protocol()
 num = int(eval(args['<num_libraries>']))
 s = 's' if num > 1 else ''
 
-## PCR cloning
+## Inverse PCR
 
 ta = (args['--annealing-temp'] or '__') + '°C'
 pcr_rxn = dirty_water.Reaction('''\
