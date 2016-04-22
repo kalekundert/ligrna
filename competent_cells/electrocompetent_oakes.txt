@@ -6,7 +6,7 @@
    overnight at 37°C to single colonies.
 
 2. Pick a single colony and inoculate into 5mL SOC 
-   (BD Difco 244310: Super Optimal Broth + 20 mL 20 % 
+   (BD Difco 244310: Super Optimal Broth + 20 mL 20% 
    glucose per L) plus carbenicillin. Grow overnight 
    at 37°C.
 
