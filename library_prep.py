@@ -16,7 +16,7 @@ import dirty_water
 
 args = docopt.docopt(__doc__)
 protocol = dirty_water.Protocol()
-num = int(args['<num_libraries>'])
+num = int(eval(args['<num_libraries>']))
 s = 's' if num > 1 else ''
 
 ## PCR cloning
