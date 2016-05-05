@@ -4,24 +4,24 @@ Day 1
 
 Day 2
 =====
-1. Grow the cells overnight in 5 mL LB at 37°C with 
+1. Grow the cells overnight in 20 mL LB at 37°C with 
    shaking.
 
 2. Place the following items at 4°C overnight:
 
-   - >151 mL 10% glycerol
-   - 1 50 mL falcon tube
+   - >301 mL 10% glycerol
+   - 2 50 mL falcon tube
    - 1 bag 50 mL pipets
    - 1 box 1000 μL pipet tips
    - 1 box 200 μL pipet tips
-   - 25 labeled 0.6 mL tubes
+   - 30 labeled 0.6 mL tubes
    - tube rack
 
 3. Reserve a shaker.
 
 Day 3
 =====
-1. Inoculate 1L LB with 5 mL overnight culture.
+1. Inoculate 2L LB with 10 mL overnight culture.
 
 2. Grow at 37°C with shaking at 300 rpm to an OD600 
    of 0.15 (~2h).
@@ -33,9 +33,9 @@ For the rest of the prep, keep the cells at 4°C.
 
 4. Spin the cells at 3500g for 10 min.
 
-5. Rinse and resuspend each pellet in 50 mL pre- 
-   chilled 10% glycerol, then transfer the cells to a 
-   30 mL centrifuge tube
+5. Rinse and resuspend each pellet in 100 mL pre- 
+   chilled 10% glycerol, then transfer the cells into 
+   two 50 mL falcon tubes.
 
 6. Spin the cells at 3500g for 10 min.
 
@@ -43,13 +43,13 @@ For the rest of the prep, keep the cells at 4°C.
 
 8. Repeat steps 6 & 7 a third time.
 
-9. Resuspend the pellet in enough pre-chilled 10% 
-   glycerol to bring its volume to 1350 μL.
+9. Resuspend the cells in enough pre-chilled 10% 
+   glycerol to bring their volume to 2700 μL.
 
-10. Make ~15 90 μL aliquots of competent cells.
+10. Make ~30 90 μL aliquots of competent cells.
 
-    This corresponds to 5×10⁹ cells/aliquot, because 
-    at an OD of 0.15 there are 1.2×10¹¹ cells/L.
+    This corresponds to 5×10⁹ cells/aliquot, assuming 
+    there are 5×10⁸ cells/mL at an OD600 of 1.0.
 
 11. Freeze immediately in N₂ (l) and store at -80°C.
 
