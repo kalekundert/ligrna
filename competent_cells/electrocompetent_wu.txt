@@ -43,18 +43,15 @@ For the rest of the prep, keep the cells at 4°C.
 
 8. Repeat steps 6 & 7 a third time.
 
-9. Resuspend the pellet in 1 mL pre-chilled 10% 
-   glycerol.
-    
-10. Measure the volume of cells, then add more 
-    pre-chilled 10% glycerol to bring them to a 
-    concentration of 5×10⁹ cells/70 μL, assuming that 
-    there are 1.2×10¹¹ cells/L at an OD600 of 0.15.
+9. Resuspend the pellet in enough pre-chilled 10% 
+   glycerol to bring its volume to 1350 μL.
 
-11. Aliquot 70 μL of the competent cells into ~24 
-    tubes.
+10. Make ~15 90 μL aliquots of competent cells.
 
-12. Freeze immediately in N₂ (l) and store at -80°C.
+    This corresponds to 5×10⁹ cells/aliquot, because 
+    at an OD of 0.15 there are 1.2×10¹¹ cells/L.
+
+11. Freeze immediately in N₂ (l) and store at -80°C.
 
 Reference
 =========
