@@ -4,8 +4,7 @@ Day 1
 
 Day 2
 =====
-1. Grow the cells overnight in 20 mL LB at 37°C with 
-   shaking.
+1. Pick a colony and grow it overnight in 20 mL LB.
 
 2. Place the following items at 4°C overnight:
 
@@ -24,7 +23,8 @@ Day 2
 
 Day 3
 =====
-1. Inoculate 2L LB with 10 mL overnight culture.
+1. Inoculate two 1L LB cultures with 5 mL overnight 
+   culture each.
 
 2. Grow at 37°C with shaking at 300 rpm to an OD600 
    of 0.15 (~2h).
@@ -36,7 +36,7 @@ For the rest of the prep, keep the cells at 4°C.
 
 4. Spin the cells at 3500g for 10 min.
 
-5. Rinse and resuspend each pellet in 100 mL pre- 
+5. Rinse and resuspend each pellet in 50 mL pre- 
    chilled 10% glycerol, then transfer the cells into 
    two 50 mL falcon tubes.
 
