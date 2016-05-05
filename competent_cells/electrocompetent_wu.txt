@@ -9,13 +9,16 @@ Day 2
 
 2. Place the following items at 4°C overnight:
 
-   - >301 mL 10% glycerol
-   - 2 50 mL falcon tube
+   - 400 mL 10% glycerol:
+      - 50 mL 80% glycerol
+      - 350 mL milliQ water
+      - sterile filtered
+   - 2 50 mL falcon tubes
    - 1 bag 50 mL pipets
    - 1 box 1000 μL pipet tips
    - 1 box 200 μL pipet tips
-   - 30 labeled 0.6 mL tubes
-   - tube rack
+   - 30 0.6 mL tubes (autoclaved)
+   - 1 tube rack
 
 3. Reserve a shaker.
 
