@@ -915,6 +915,153 @@ def random_bulge(N, M, A=1, ligand='theo', target='aavs'):
     )
     return sgrna
 
+@design('rbf')
+def random_bulge_forward(i, target='aavs'):
+    """
+    rbf(6):
+        The 5' link can base pair with the aptamer and the 3' linker can base 
+        pair with the nexus.  The lower stem is never predicted to form and the 
+        3' linker is always predicted to base pair with the nexus.
+
+    rbf(8):
+        Predicted to work.  The linkers have weak complementarity with each 
+        other.  The lower stem is predicted to be unfolded without theo (by MEA 
+        but not MFE) and correctly folded with theo (by MEA and MFE).
+
+    rbf(13):
+        The 3' linker has complementarity with the nexus and the aptamer.  The 
+        5' linker doesn't seem to have complementarity with anything.  The 
+        whole sgRNA is predicted to change folds upon theo binding, but not 
+        predicted to work in either state.
+
+    rbf(26):
+        Predicted to fold differently with and without theo, but not predicted 
+        to adopt the functional fold in either state.  The linkers don't seem 
+        to have any complementarity.
+
+    rbf(39):
+        The whole sgRNA is predicted to be dramatically misfolded without theo 
+        (the upper stem, aptamer, and random linkers are forming a big stem 
+        with the nexus and the first hairpin, with the lower stem acting as a 
+        hepta-loop).  The upper and lower stems are predicted to be unfolded 
+        with theo.  The linkers don't seem to have any complementarity.
+
+    rbf(40):
+        The 5' linker has complementarity with the aptamer, and the 3' linker 
+        has complementarity with the nexus.  The nexus is predicted to be 
+        misfolded with or without theo, but I suspect that isn't the case in 
+        real life.
+
+    rbf(47):
+        The 3' linker has complementarity with the aptamer and the nexus.  It's 
+        predicted to be base-paired to the aptamer with theo and to the nexus 
+        without theo.  Neither state is predicted to be functional.
+
+    rbf(50):
+        The aptamer is predicted to be correctly folded with or without theo.
+        The linkers both have complementarity with the nexus and are predicted 
+        to base pair with it unconditionally.
+
+    rbf(51):
+        Predicted to work.  The 5' linker can base pair with the nexus and the 
+        3' linker can base pair with the aptamer.  The lower stem is predicted 
+        to form upon theo binding, although there's not really a bulge.
+
+    rbf(53):
+        Predicted to work.  Without theo, the 5' half of the sgRNA up through 
+        the aptamer is predicted to form a big stem with everything else up to 
+        the hairpin, with the 3' linker acting as a hexa-loop.  With theo, the 
+        lower stem is predicted to form correctly, although the bulge is not 
+        really present.  The linkers have some complementarity.
+
+    rbf(56):
+        The 3' linker has complementarity with the nexus.  The 5' linker 
+        doesn't really have complementarity with anything.  The lower stem is 
+        never predicted to fold.
+    """
+    linkers = {
+            6: ('AAGG', 'CTTTAGC'),     # rb/4/7
+            8: ('CCCGA', 'TCTTCGC'),    # rb/5/7
+            13: ('ATCG', 'CGGCTT'),     # rb/4/6
+            26: ('TAGG', 'CTGCTCGC'),   # rb/4/8, ends with TCGC like rbf(8)
+            39: ('ACCTG', 'CTGTAGA'),   # rb/5/7
+            40: ('CCGAG', 'CCAGTCT'),   # rb/5/7
+            47: ('CCCG', 'CGAGAGCT'),   # rb/4/8
+            50: ('CGCGG', 'CCTAGG'),    # rb/5/6
+            51: ('GCTGA', 'TCGGGCT'),   # rb/5/7
+            53: ('CGTG', 'CTTATGC'),    # rb/4/7
+            56: ('TCGC', 'GCCTGC'),     # rb/4/6
+    }
+    aliases = {
+        19: 8,
+    }
+    if i in aliases:
+        raise ValueError("rbf({}) is the same as rbf({})".format(i, aliases[i]))
+    if i not in linkers:
+        raise ValueError("no sequence for rbf({})".format(i))
+
+    sequenced_insert = aptamer('theo')
+    sequenced_insert.prepend(Domain("linker/5'", linkers[i][0]))
+    sequenced_insert.append(Domain("linker/3'", linkers[i][1]))
+
+    sgrna = wt_sgrna(target)
+    sgrna.attach(
+            sequenced_insert,
+            'stem', 6,
+            'stem', 24,
+    )
+    return sgrna
+
+@design('rbb')
+def random_bulge_backward(i, target='aavs'):
+    """
+    rbb(4):
+      Linkers are complementary to each other, but are predicted to be fully 
+      base paired with or without theo.
+    
+    rbb(15):
+      Linkers are complementary to each other, but are predicted to be fully 
+      base paired with or without theo.
+      
+    rbb(21):
+      Linkers are complementary to each other, but are predicted to be fully 
+      base paired with or without theo.
+      
+    rbb(27):
+      Predicted to work.  The 5' linker sequence has some complementarity 
+      with the aptamer.  When it base pairs with the aptamer, it forms a 
+      bulge that apparently allows the aptamer to function.  When 
+      theophylline is present, the 5' linker instead base pairs with the 3' 
+      linker to form a stem that prevents Cas9 binding.  I think this linker- 
+      linker interaction is a little weaker, because it has a CU mismatch in 
+      the middle of an otherwise complementary region.
+    """
+    linkers = {
+            4: ('AAGCTG', 'CGGCGC'),    # rb/6/6
+            15: ('CCCTA', 'TGGGGT'),    # rb/5/6
+            21: ('AAGCTG', 'CGGCGC'),   # rb/6/6
+            27: ('GCGCTG', 'CGTCGC'),   # rb/6/6
+    }
+    aliases = {
+            42: 27,
+    }
+    if i in aliases:
+        raise ValueError("rbb({}) is the same as rbb({})".format(i, aliases[i]))
+    if i not in linkers:
+        raise ValueError("no sequence for rbb({})".format(i))
+
+    sequenced_insert = aptamer('theo')
+    sequenced_insert.prepend(Domain("linker/5'", linkers[i][0]))
+    sequenced_insert.append(Domain("linker/3'", linkers[i][1]))
+
+    sgrna = wt_sgrna(target)
+    sgrna.attach(
+            sequenced_insert,
+            'stem', 6,
+            'stem', 24,
+    )
+    return sgrna
+
 @design('rx')
 def random_nexus(N, M, A=1, ligand='theo', target='aavs'):
     """
@@ -996,31 +1143,6 @@ def random_hairpin(N, M, A=1, ligand='theo', target='aavs'):
             random_insert(ligand, N, M),
             'hairpins', 1,
             'hairpins', 17,
-    )
-    return sgrna
-
-@design('rbf')
-def random_bulge_forward(i, target='aavs'):
-    if i == 6:
-        linkers = 'AAGG', 'CTTTAGC'     # rb/4/7
-    elif i == 8:
-        linkers = 'CCCGA', 'TCTTCGC'    # rb/5/7
-    elif i == 13:
-        linkers = 'ATCG', 'CGGCTT'      # rb/4/6
-    elif i == 19:
-        linkers = 'CCCGA', 'TCTTCGC'    # rb/5/7
-    else:
-        raise ValueError("no sequence for rbf({}).".format(i))
-
-    sequenced_insert = aptamer('theo')
-    sequenced_insert.prepend(Domain("linker/5'", linkers[0]))
-    sequenced_insert.append(Domain("linker/3'", linkers[1]))
-
-    sgrna = wt_sgrna(target)
-    sgrna.attach(
-            sequenced_insert,
-            'stem', 6,
-            'stem', 24,
     )
     return sgrna
 
