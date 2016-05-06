@@ -8,10 +8,8 @@ Day 2
 
 2. Place the following items at 4°C overnight:
 
-   - 400 mL 10% glycerol:
-      - 50 mL 80% glycerol
-      - 350 mL milliQ water
-      - sterile filtered
+   - 400 mL 10% glycerol (50 mL 80% glycerol, 350 mL 
+     milliQ water, sterile filtered)
    - 2 50 mL falcon tubes
    - 1 bag 50 mL pipets
    - 1 box 1000 μL pipet tips
