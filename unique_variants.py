@@ -20,6 +20,11 @@ Arguments:
         The number of individuals you picked from the library.
 
 Options:
+    -i --int
+        Report the number of unique library members as full-precision integers.  
+        By default, these numbers are rounded and reported using scientific 
+        notation.
+
     -e --event-rate <evt_sec>
         Report how long it would take to screen '--fraction-wanted' of the 
         entire library on the BD FACSAria II with the given event rate.  The 
@@ -38,6 +43,7 @@ Options:
         optimize conditions to increase cell viability.
 """
 
+import re, numpy as np
 from pprint import pprint
 inf = float('inf')
 
@@ -47,14 +53,15 @@ def fraction_picked(num_items, num_picked):
 def unique_items(num_items, num_picked):
     return num_items * fraction_picked(num_items, num_picked)
 
-def sort_time(num_items, fraction_wanted, event_rate=10000, survival_rate=0.6):
-    import numpy as np
+def sort_efficiency(event_rate):
+    """
+    Predict the efficiency of the sort, meaning the number of cells that are 
+    actually charged and sorted divided by the number of events that are 
+    just detected.  I've observed that the linear correlation between event 
+    rate and sorting efficiency is pretty good, although the efficiency also 
+    fluctuates by ~10% depending on how common the desired cells are.
+    """
     import scipy.stats
-
-    # Predict how efficient the sorting will be.  I've observed that the linear 
-    # correlation between event rate and sorting efficiency is pretty good, 
-    # although the efficiency also fluctuates by ~10% depending on how common 
-    # the cells you're sorting for are.
 
     if event_rate < 0:
         raise ValueError('The event rate must be positive, not {}.'.format(event_rate))
@@ -83,22 +90,44 @@ def sort_time(num_items, fraction_wanted, event_rate=10000, survival_rate=0.6):
     event_rates = np.array(list(event_rates_to_efficiencies.keys()))
     efficiencies = np.array(list(event_rates_to_efficiencies.values()))
     m, b, _, _, _ = scipy.stats.linregress(event_rates, efficiencies)
-    efficiency = m * event_rate + b
+    return m * event_rate + b
 
-    # Calculate how long it will take to collect the given fraction of the 
-    # library, accounting for the fact that some cells will be double-counted 
-    # and some cells won't survive sorting.
-
+def sort_time(num_items, fraction_wanted, event_rate=10000, survival_rate=0.6):
+    """
+    Calculate how long it will take to collect the given fraction of the 
+    library, accounting for the fact that some cells will be double-counted 
+    and some cells won't survive sorting.
+    """
     counting = np.log(1 - fraction_wanted) / np.log((num_items - 1) / num_items)
-    inv_min = survival_rate * efficiency * event_rate * 60
-    sort_time = int(counting / inv_min)
-    return '{}h{:02d}'.format(sort_time // 60, sort_time % 60)
+    return int(counting / items_sorted(1, event_rate, survival_rate))
+
+def items_sorted(sort_time, event_rate=10000, survival_rate=0.6):
+    """
+    Return the number of cells that can be sorted in the given amount of time, 
+    accounting for the fact that not all cells survive sorting and that the 
+    sorter will decline to sort cells in certain (usually crowded) conditions.
+    """
+    true_event_rate = event_rate * sort_efficiency(event_rate) * survival_rate
+    return 60 * cast_to_minutes(sort_time) * true_event_rate
 
 def cast_to_number(x):
     try:
         return int(x)
     except:
         return eval(x)
+
+def cast_to_minutes(x):
+    if isinstance(x, int):
+        return x
+
+    parsed_time = re.match('(\d+)h(\d+)?', x)
+    if not parsed_time:
+        raise ValueError("can't interpret '{}' as a time.".format(x))
+
+    hours = parsed_time.group(1)
+    minutes = parsed_time.group(2) or 0
+
+    return 60 * int(hours) + int(minutes)
 
 def percent(x, precision=2):
     return '{1:.{0}f}%'.format(precision, 100 * step.fraction_picked)
@@ -120,8 +149,48 @@ def scientific_notation(x, precision=2):
     superscript_exponent = str(exponent).translate(superscripts)
     return '{1:.{0}f}×10{2}'.format(precision, mantissa, superscript_exponent)
 
+def hours_and_minutes(x):
+    return '{}h{:02d}'.format(x // 60, x % 60)
 
-class PickStep:
+
+class Step:
+
+    @property
+    def unique_items(self):
+        raise NotImplementedError
+
+    @property
+    def fraction_picked(self):
+        raise NotImplementedError
+
+    @property
+    def previous_step(self):
+        raise NotImplementedError
+
+
+class UniqueStep(Step):
+
+    def __init__(self, unique_items, previous_step=None):
+        self._unique_items = unique_items
+        self._previous_step = previous_step
+
+    @property
+    def unique_items(self):
+        return cast_to_number(self._unique_items)
+
+    @property
+    def fraction_picked(self):
+        if self.previous_step is None:
+            return 1
+        else:
+            return self.unique_items / self.previous_step.unique_items
+
+    @property
+    def previous_step(self):
+        return self._previous_step
+
+
+class PickStep(Step):
 
     def __init__(self, num_items, num_picked, name=None):
         self.name = None
@@ -203,7 +272,7 @@ class SortStep(PickStep):
 
 
 def steps_from_yaml(path):
-    import yaml
+    import os, yaml
 
     with open(path) as file:
         records = yaml.load(file)
@@ -211,21 +280,51 @@ def steps_from_yaml(path):
     steps = []
 
     for record in records:
-        num_items = steps[-1] if steps else None
+        previous_step = steps[-1] if steps else None
 
-        if 'picked' in record:
+        if 'unique' in record:
+            unique_items = record['unique']
+            step = UniqueStep(unique_items, previous_step)
+
+        elif 'picked' in record:
             num_picked = record['picked']
-            step = PickStep(num_items, num_picked)
+            step = PickStep(previous_step, num_picked)
+
         elif 'sorted' in record:
-            num_picked, num_sampled = record['sorted'].split(' of ')
-            step = SortStep(num_items, num_picked, num_sampled) 
+            count_syntax = re.match('(.*) of (.*)', record['sorted'])
+            percent_syntax = re.match('(.*)% for (.*) at (.*) evt/sec', record['sorted'])
+
+            if count_syntax:
+                num_picked, num_sampled = count_syntax.groups()
+
+            elif percent_syntax:
+                percent_kept = cast_to_number(percent_syntax.group(1)) / 100
+                sort_time = cast_to_minutes(percent_syntax.group(2))
+                event_rate = cast_to_number(percent_syntax.group(3))
+                num_sampled = items_sorted(sort_time, event_rate)
+                num_picked = percent_kept * num_sampled
+
+            else:
+                raise SyntaxError("can't understand '{}'.".format(record['sorted']))
+                
+            step = SortStep(previous_step, num_picked, num_sampled) 
+
+        elif 'from' in record:
+            import_path = os.path.join(os.path.dirname(path), record['from'])
+            for step in steps_from_yaml(import_path):
+                if step.name != record['step']:
+                    steps.append(step)
+                else:
+                    break
+
         else:
-            raise SyntaxError("Every step must specify either 'picked' or 'sorted'.")
+            raise SyntaxError("Every step must specify 'unique', 'picked', 'sorted', or 'from'.")
 
         step.name = record.get('step', '')
         steps.append(step)
 
     return steps
+
 
 if __name__ == '__main__':
     import docopt, yaml, tabulate
@@ -248,16 +347,20 @@ if __name__ == '__main__':
         if any(x.name for x in steps):
             row.append(step.name)
 
-        row.append(scientific_notation(step.unique_items))
+        if args['--int']:
+            row.append(int(step.unique_items))
+        else:
+            row.append(scientific_notation(step.unique_items))
+
         row.append(percent(step.fraction_picked))
 
         if args['--event-rate']:
-            row.append(sort_time(
+            row.append(hours_and_minutes(sort_time(
                 step.unique_items,
                 eval(args['--fraction-wanted']) / 100,
                 eval(args['--event-rate']),
                 eval(args['--survival-rate']) / 100,
-            ))
+            )))
 
     print(tabulate.tabulate(table, tablefmt='plain'))
 
