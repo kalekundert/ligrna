@@ -14,7 +14,7 @@ Day 2
    - 1 bag 50 mL pipets
    - 1 box 1000 μL pipet tips
    - 1 box 200 μL pipet tips
-   - 30 0.6 mL tubes (autoclaved)
+   - 50 0.6 mL tubes (autoclaved)
    - 1 tube rack
 
 3. Reserve a shaker.
@@ -25,7 +25,7 @@ Day 3
    culture each.
 
 2. Grow at 37°C with shaking at 300 rpm to an OD600 
-   of 0.15 (~2h).
+   of 0.25 (~2h).
 
 3. Place the cells in an ice bath for 10 min to 
    quickly bring them to 4°C.
@@ -45,14 +45,14 @@ For the rest of the prep, keep the cells at 4°C.
 8. Repeat steps 6 & 7 a third time.
 
 9. Resuspend the cells in enough pre-chilled 10% 
-   glycerol to bring their volume to 2700 μL.
+   glycerol to bring their volume to 4500 μL.
 
-10. Make ~30 90 μL aliquots of competent cells.
+10. Make 50 90 μL aliquots of competent cells.
 
     This corresponds to 5×10⁹ cells/aliquot, assuming 
     there are 5×10⁸ cells/mL at an OD600 of 1.0.
 
-11. Freeze immediately in N₂ (l) and store at -80°C.
+11. Freeze immediately in N₂ (ℓ) and store at -80°C.
 
 Reference
 =========
