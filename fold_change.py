@@ -19,6 +19,10 @@ Options:
         suffix.  By default, no output is generated and the plot is shown in 
         the GUI.
 
+    -O --output-size <width,height>
+        Specify what the width and height of the resulting figure should be, in 
+        inches.  The two numbers must be separated by a comma.
+
     -s --subset <start:end>
         Only show experiments with indices inside the given range.  Indices are 
         interpreted as slices in python.  This option is meant to help when 
@@ -100,6 +104,7 @@ class FoldChange:
         self.histogram = None
         self.pdf = None
         self.mode = None
+        self.output_size = None
 
         # Internally used plot attributes.
         self.figure = None
@@ -138,6 +143,7 @@ class FoldChange:
         self.figure, self.axes = plt.subplots(
                 1, 2,
                 sharey=True,
+                figsize=self.output_size,
                 gridspec_kw=dict(
                     hspace=0.001,
                     width_ratios=(0.65, 0.35),
@@ -339,8 +345,6 @@ class FoldChange:
 
         self.axes[1].xaxis.set_major_locator(FoldChangeLocator())
 
-
-
     def _pick_ylim(self):
         margin = 0.3
         y_min = 0 - self.location_depth - margin
@@ -382,6 +386,8 @@ if __name__ == '__main__':
     analysis.histogram = args['--histogram']
     analysis.pdf = args['--pdf']
     analysis.mode = args['--mode']
+    if args['--output-size']:
+        analysis.output_size = map(int, args['--output-size'].split(','))
 
     with analysis_helpers.plot_or_savefig(args['--output'], args['<yml_path>']):
         analysis.plot()
