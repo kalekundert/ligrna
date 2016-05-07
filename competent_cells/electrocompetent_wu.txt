@@ -40,9 +40,9 @@ For the rest of the prep, keep the cells at 4°C.
 
 6. Spin the cells at 3500g for 10 min.
 
-7. Repeat steps 6 & 7 a second time.
+7. Repeat steps 5 & 6 a second time.
 
-8. Repeat steps 6 & 7 a third time.
+8. Repeat steps 5 & 6 a third time.
 
 9. Resuspend the cells in enough pre-chilled 10% 
    glycerol to bring their volume to 4500 μL.
