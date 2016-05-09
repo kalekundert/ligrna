@@ -6,28 +6,29 @@ Day 2
 =====
 1. Make 1L SOB:
 
-   - 20 g 2% w/v bacto-tryptone
-   - 5 g 0.5% w/v bacto-yeast extract
-   - 584 mg NaCl
-   - 186 mg KCl
-   - ddH₂O to 1L
-   - pH 7.0
+   - 20g bacto-tryptone (2% w/v final)
+   - 5g bacto-yeast extract (0.5% w/v final)
+   - 2 mL 5M NaCl (10 mM final)
+   - 833.3 μL 3M KCl (2.5 mM final)
+   - milliQ water to 1L
+   - pH to 7.0 with NaOH
 
-2. Pick a colony and grow overnight in 10 mL SOB at 
-   37°C with shaking.
+2. Reserve a shaker.
 
 3. Place the following items at 4°C overnight:
 
-   - >600 mL milliQ water
-   - >204 mL 10% glycerol
+   - 800 mL milliQ water
+   - 240 mL 10% glycerol (30 mL 80% glycerol, milliQ 
+     water to 240 mL, sterile filter)
    - 8 50 mL falcon tubes
    - 1 bag 50 mL pipets
    - 1 box 1000 μL pipet tips
    - 1 box 200 μL pipet tips
-   - 60 labeled 0.6 mL tubes
+   - 60 0.6 mL tubes (autoclaved)
    - tube rack
 
-4. Reserve a shaker.
+4. Pick a colony and grow overnight in 10 mL SOB at 
+   37°C with shaking.
 
 Day 3
 =====
@@ -71,4 +72,4 @@ For the rest of the prep, keep the cells at 4°C.
 
 14. Freeze immediately in N₂ (l) and store at -80°C.
 
-vim: set tw=53
+vim: tw=53
