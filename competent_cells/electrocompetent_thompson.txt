@@ -12,6 +12,7 @@ Day 2
    - 833.3 μL 3M KCl (2.5 mM final)
    - milliQ water to 1L
    - pH to 7.0 with NaOH
+   - autoclave 30 min, 121°C (cycle #5)
 
 2. Reserve a shaker.
 
