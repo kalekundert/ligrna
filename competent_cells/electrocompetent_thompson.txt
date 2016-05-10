@@ -1,9 +1,5 @@
 Day 1
 =====
-1. Streak the cells on a fresh plate.
-
-Day 2
-=====
 1. Make 1L SOB:
 
    - 20g bacto-tryptone (2% w/v final)
@@ -31,7 +27,7 @@ Day 2
 4. Pick a colony and grow overnight in 10 mL SOB at 
    37°C with shaking.
 
-Day 3
+Day 2
 =====
 1. Inoculate 1L SOB with 1 mL overnight culture.  
    Keep 1 mL to use as a blank.
@@ -71,6 +67,6 @@ For the rest of the prep, keep the cells at 4°C.
 13. Aliquot 100 μL of the competent cells into ~60 
     tubes.
 
-14. Freeze immediately in N₂ (l) and store at -80°C.
+14. Freeze immediately in N₂ (ℓ) and store at -80°C.
 
 vim: tw=53
