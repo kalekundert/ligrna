@@ -14,11 +14,11 @@ Day 1
 
 3. Place the following items at 4°C overnight:
 
-   - 800 mL milliQ water
+   - 700 mL milliQ water
    - 240 mL 10% glycerol (30 mL 80% glycerol, milliQ 
      water to 240 mL, sterile filter)
    - 8 50 mL falcon tubes
-   - 1 bag 50 mL pipets
+   - >3 50 mL pipets
    - 1 box 1000 μL pipet tips
    - 1 box 200 μL pipet tips
    - 60 0.6 mL tubes (autoclaved)
