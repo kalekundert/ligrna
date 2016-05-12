@@ -43,11 +43,10 @@ Options:
         to be a good library size because most communication modules I've seen 
         in the literature are about this length.
 
-    -Q, --quality-trough <expr>             [default: 4**16]
-        The library size for which you think working members will be rare, 
-        relative to '--quality-peak'.  This can be either smaller or larger 
-        than '--quality-peak'.  The default is 4**16, which corresponds to 
-        randomizing an 8bp stem.  I don't have anything to back this up, but 
+    -Q, --quality-width <expr>              [default: 4**4]
+        The range of library sizes that you think will have a reasonable 
+        fraction of working members.  The default is 4**4, which corresponds to 
+        randomizing a 2bp stem.  I don't have anything to back this up, but 
         with that much randomness I just feel like functional designs won't be 
         common anymore.
 
@@ -77,7 +76,7 @@ def prob_working(x, mu, sig):
     has only two parameters, which will allow us to easily show how the best 
     library size depends on the shape of this function.
     """
-    return exp(-0.5 * log10(x/mu)**2 / (log10(mu/sig)/2.355)**2)
+    return exp(-0.5 * log10(x/mu)**2 / (log10(sig)/2.355)**2)
 
 def num_sampled(x, N):
     return x - x * ((x-1)/x)**N
@@ -99,7 +98,7 @@ class BestLibrarySize:
         self.library_sizes = None
         self.sampling_capacity = None
         self.quality_peak = None
-        self.quality_trough = None
+        self.quality_width = None
         self.log_base = None
 
         # Internally-used plotting objects.
@@ -163,7 +162,7 @@ class BestLibrarySize:
         from matplotlib.colors import LogNorm
         x = self._library_size_axis()
         mu = self._two_decades_around(self.quality_peak)
-        sig = self._two_decades_around(self.quality_trough)
+        sig = self._two_decades_around(self.quality_width)
         mu_2d, sig_2d = meshgrid(mu, sig)
         best = best_library_size(x, mu_2d, sig_2d, self.sampling_capacity)
         self.best_library_artist = self.axes[1,1].pcolor(
@@ -182,22 +181,22 @@ class BestLibrarySize:
         self.axes[1,1].set_xscale('log', basex = self.log_base)
         self.axes[1,1].set_yscale('log', basey = self.log_base)
         self.axes[1,1].set_xlabel("quality peak")
-        self.axes[1,1].set_ylabel("quality trough")
+        self.axes[1,1].set_ylabel("quality width")
 
     def _on_click(self, event):
         if event.inaxes is self.axes[1,1]:
             self.quality_peak = event.xdata
-            self.quality_trough = event.ydata
+            self.quality_width = event.ydata
             self._update_plots()
 
     def _update_plots(self):
         x = self._library_size_axis()
-        X = best_library_size(x, self.quality_peak, self.quality_trough,
+        X = best_library_size(x, self.quality_peak, self.quality_width,
                 self.sampling_capacity)
 
         self.prob_working_artist.set_xdata(x)
         self.prob_working_artist.set_ydata(
-                prob_working(x, self.quality_peak, self.quality_trough))
+                prob_working(x, self.quality_peak, self.quality_width))
 
         self.num_sampled_artist.set_xdata(x)
         self.num_sampled_artist.set_ydata(
@@ -205,7 +204,7 @@ class BestLibrarySize:
 
         self.prob_sample_working_artist.set_xdata(x)
         self.prob_sample_working_artist.set_ydata(
-                prob_sample_working(x, self.quality_peak, self.quality_trough,
+                prob_sample_working(x, self.quality_peak, self.quality_width,
                     self.sampling_capacity))
 
         for line in self.best_library_lines:
@@ -217,31 +216,19 @@ class BestLibrarySize:
             ax.autoscale_view()
 
         self.cursor_artist.set_xdata([self.quality_peak])
-        self.cursor_artist.set_ydata([self.quality_trough])
+        self.cursor_artist.set_ydata([self.quality_width])
 
         self.fig.canvas.draw()
         self.fig.canvas.flush_events()
 
     def _library_size_axis(self, num=500):
+        return self._two_decades_around(self.quality_peak, num)
+
+    def _two_decades_around(self, x, num=50):
         _log = lambda x: log(x) / log(self.log_base)
-
-        if self.library_sizes is not None:
-            start = _log(self.library_sizes[0])
-            stop = _log(self.library_sizes[1])
-        else:
-            range = abs(_log(self.quality_peak / self.quality_trough))
-            start = _log(self.quality_peak) - range
-            stop = _log(self.quality_peak) + range
-
-        start = floor(max(start, 0))
-        stop = ceil(stop)
-        return logspace(start, stop, num, base=self.log_base)
-
-    def _two_decades_around(self, x):
-        _log = lambda x: log(x) / log(self.log_base)
-        start = _log(x / 100)
+        start = max(1, _log(x / 100))
         stop = _log(x * 100)
-        return logspace(floor(start), ceil(stop), base=self.log_base)
+        return logspace(floor(start), ceil(stop), num=num, base=self.log_base)
 
 
 
@@ -255,7 +242,7 @@ if __name__ == '__main__':
     analysis.library_sizes = eval(args['--library-sizes'] or 'None') 
     analysis.sampling_capacity = eval(args['--sampling-capacity'])
     analysis.quality_peak = eval(args['--quality-peak'])
-    analysis.quality_trough = eval(args['--quality-trough'])
+    analysis.quality_width = eval(args['--quality-width'])
     analysis.log_base = int(args['--log-base'])
     analysis.plot()
     show()
