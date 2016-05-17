@@ -44,6 +44,7 @@ Options:
 """
 
 import re, numpy as np
+from nonstdlib import *
 from pprint import pprint
 inf = float('inf')
 
@@ -130,24 +131,7 @@ def cast_to_minutes(x):
     return 60 * int(hours) + int(minutes)
 
 def percent(x, precision=2):
-    return '{1:.{0}f}%'.format(precision, 100 * step.fraction_picked)
-
-def scientific_notation(x, precision=2):
-    from math import log10
-    exponent = int(log10(x))
-    mantissa = x / 10**exponent
-    mantissa_str = '{0:.{1}f}'.format(mantissa, precision)
-
-    # Handle the corner case where the mantissa rounds up to 10, in which case 
-    # we should increment the exponent by one.
-    if mantissa_str.startswith('10'):
-        exponent += 1
-        mantissa /= 10
-        mantissa_str = '{0:.{1}f}'.format(mantissa, precision)
-
-    superscripts = str.maketrans('-0123456789', '⁻⁰¹²³⁴⁵⁶⁷⁸⁹')
-    superscript_exponent = str(exponent).translate(superscripts)
-    return '{1:.{0}f}×10{2}'.format(precision, mantissa, superscript_exponent)
+    return '{0:{1}.{2}f}%'.format(100 * x, precision + 4, precision)
 
 def hours_and_minutes(x):
     return '{}h{:02d}'.format(x // 60, x % 60)
@@ -350,7 +334,7 @@ if __name__ == '__main__':
         if args['--int']:
             row.append(int(step.unique_items))
         else:
-            row.append(scientific_notation(step.unique_items))
+            row.append(sci(step.unique_items))
 
         row.append(percent(step.fraction_picked))
 
