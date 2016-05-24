@@ -42,19 +42,19 @@ protocol = dirty_water.Protocol()
 
 if args['--initial-sort']:
     protocol += """\
-    Make overnight cultures for the library and the 
-    controls.
+Make overnight cultures for the library and the 
+controls.
 
-    - Thaw a glycerol stock of MG1655 cells containing 
-      the library on ice for ≈10 min.
+- Thaw a glycerol stock of MG1655 cells containing 
+  the library on ice for ≈10 min.
 
-    - Add 1 mL of thawed glycerol stock to 4 mL LBCC 
-      (LB + 100 μg/mL Carb + 35 μg/mL Chlor).
+- Add 1 mL of thawed glycerol stock to 4 mL LBCC 
+  (LB + 100 μg/mL Carb + 35 μg/mL Chlor).
 
-    - Inoculate 5 mL LBCC with stabs from glycerol 
-      stocks for the "wt" and "dead" controls.
+- Inoculate 5 mL LBCC with stabs from glycerol 
+  stocks for the "wt" and "dead" controls.
 
-    - Grow all the cultures overnight at 37°C."""
+- Grow all the cultures overnight at 37°C."""
 
 overnight_vol = 50 if args['--initial-sort'] else 25
 media_vol = 2 if args['--initial-sort'] else 1
