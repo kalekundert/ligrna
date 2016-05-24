@@ -77,7 +77,7 @@ Setup {num} ligation reaction{s}.
 protocol += """\
 Incubate overnight at 16°C."""
 
-## Transformation
+## Top10 transformation
 
 protocol += """\
 Desalt and concentrate the ligated DNA using a 
@@ -97,25 +97,71 @@ protocol += """\
 Transform the ligated DNA into Top10 cells by 
 electroporation.
 
-- Plate 10⁻³, 10⁻⁴, 10⁻⁵, and 10⁻⁶ dilutions of 
-  the transformation, to determine how much of the 
-  library was successfully transformed."""
+- For each aliquot you're transforming, chill an 
+  electroporation cuvette and 1 μg of DNA on ice.  
+  Pre-warm 1 mL SOC and an LB + Carb plate.
+
+- Thaw the competent cells on ice for ~10 min.
+
+- Pipet once to mix the cells with the DNA, then 
+  load into the cuvette.  Tap to remove bubbles.
+
+- Shock at 1.8 kV with a 5 ms decay time (for 
+  cuvettes with a 1 mm gap).
+
+- Immediately add 1 mL pre-warmed SOC.  If you're 
+  transforming multiple aliquots of cells with the 
+  same DNA, combine them.
+
+- Before recovering, plate several 10x dilutions 
+  of cells (e.g. from 10⁻³ to 10⁻⁶) to count how 
+  many were transformed.
+
+- Recover at 37°C for 1h.
+  
+- Add 4 volumes LB + 5/4x Carb and grow overnight 
+  at 37°C."""
 
 ## Miniprep
 
 protocol += """\
-Transfer the cells to selective media:
+Miniprep to isolate library plasmid.
 
-- Pellet the cells by spinning at 1000g for 5 min.
+- Make a glycerol stock.
 
-- Resuspend in 5 mL LB + Carb."""
+- Miniprep 4 mL of overnight culture.  The yield 
+  should be ~400 ng/μL.
+
+- Elute in 50 μL water."""
 
 protocol += """\
-Grow overnight at 37°C."""
+If necessary, combine libraries in proportion to 
+the number of unique members in each."""
+
+## MG1655 transformation
 
 protocol += """\
-Miniprep to isolate library plasmid.  Store at 
--20°C until ready for use."""
+Transform the combined library into MG1655 cells 
+by electroporation.
+
+- It's best to do the transformation immediately, 
+  so as much of the DNA as possible will be 
+  supercoiled.  With MG1655 (but not Top10) cells, 
+  I find that supercoiled DNA gives 100x more 
+  transformants than relaxed DNA.
+
+- Use the transformation protocol described above, 
+  but use Carb + Chlor instead of just Carb."""
+
+## Glycerol stock
+
+protocol += """\
+Store the library as a glycerol stock.
+
+- 333 μL 80% glycerol
+- 1000 μL overnight culture
+
+- Place at -80°C without snap-freezing."""
 
 
 print(protocol)
