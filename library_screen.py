@@ -56,21 +56,25 @@ controls.
 
 - Grow all the cultures overnight at 37°C."""
 
-overnight_vol = 50 if args['--initial-sort'] else 25
-media_vol = 2 if args['--initial-sort'] else 1
+overnight_vol = 100 if args['--initial-sort'] else 25
+media_vol = 4 if args['--initial-sort'] else 1
 
 protocol += """\
 Grow the library and the controls with and without 
 theophylline, while inducing Cas9.
 
-- Subculture {overnight_vol} μL of each overnight into {media_vol} mL
+- Subculture {overnight_vol} μL of the library into {media_vol} mL
   EZCCA (EZ media + 0.1% glucose + 100 μg/mL Carb 
-  + 35 μg/mL Chlor + 1000 μg/mL ATC) and 2 mL 
-  EZCCAT (EZCCA + 1 mM theophylline).
+  + 35 μg/mL Chlor + 1000 μg/mL ATC) or EZCCAT 
+  (EZCCA + 1 mM theophylline), depending on what 
+  you're going to select for.
 
   My saturated cultures have an OD600 of ≈3.0, 
   which corresponds to ≈2.4×10⁶ cells/μL.  For a 
-  library of 10⁷, 10x coverage is 40 μL.
+  library of 5×10⁷, 10x coverage is 200 μL.
+
+- Subculture 50 μL of each other culture into 1 mL 
+  EZCCA and 1 mL EZCCAT.
 
 - Grow at 37°C for at least 9h."""
 
@@ -78,8 +82,7 @@ target_od = sci(1.93e-6 * eval(args['--event-rate']), 2)
 pbs_vol = int(2 * minutes(args['--sort-time']) / 60)
 
 protocol += """\
-Dilute the library and the controls into PBS for 
-sorting.
+Dilute each culture into PBS.
 
 - Measure the OD600 of the library using the 
   nanodrop.
@@ -94,14 +97,19 @@ sorting.
 
   Planned sort time:
 
-- Dilute 1 μL of each control into 1 mL PBS."""
+- Dilute 1 μL of each other culture into 1 mL 
+  PBS."""
 
 protocol += """\
-Record the cell populations for the library and 
-the controls."""
+Record the cell populations for each culture."""
 
 protocol += """\
 Sort the library.
+
+- Keep the cells at room temperature before and 
+  after the sort.
+
+- Put 1 mL SOC in each collection tube.
 
 Gate:"""
 
