@@ -1,6 +1,8 @@
 rfp-assay.pdf
+general
 *.aux
 *.log
 *.out
 *.toc
 .*.sw*
+*.ods
