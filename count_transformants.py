@@ -48,6 +48,7 @@ for i in range(len(cfus)):
         ))
 
 if num_data > 1:
+    idx = transformants > 0
     print("Weighted average: {:13.2e}".format(
-        np.average(transformants, weights=cfus)))
+        np.average(transformants[idx], weights=1/dilutions[idx])))
 
