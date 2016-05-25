@@ -49,7 +49,9 @@ from pprint import pprint
 inf = float('inf')
 
 def fraction_picked(num_items, num_picked):
-    return 1 - ((num_items - 1) / num_items)**num_picked
+    # I'm not sure I'm handling the "fractional" case correctly...
+    return 1 - ((num_items - 1) / num_items)**num_picked    \
+            if num_items > 1 else 1
 
 def unique_items(num_items, num_picked):
     return num_items * fraction_picked(num_items, num_picked)
@@ -91,7 +93,7 @@ def sort_efficiency(event_rate):
     event_rates = np.array(list(event_rates_to_efficiencies.keys()))
     efficiencies = np.array(list(event_rates_to_efficiencies.values()))
     m, b, _, _, _ = scipy.stats.linregress(event_rates, efficiencies)
-    return m * event_rate + b
+    return max(m * event_rate + b, 0)
 
 def sort_time(num_items, fraction_wanted, event_rate=10000, survival_rate=0.6):
     """
@@ -102,7 +104,10 @@ def sort_time(num_items, fraction_wanted, event_rate=10000, survival_rate=0.6):
     counting = np.log(1 - fraction_wanted) / np.log((num_items - 1) / num_items)
     return int(counting / items_sorted(1, event_rate, survival_rate))
 
-def items_sorted(sort_time, event_rate=10000, survival_rate=0.6):
+def items_sorted_by_counts(threshold_count, efficiency, survival_rate=0.6):
+    return threshold_count * efficiency * survival_rate
+
+def items_sorted_by_time(sort_time, event_rate=10000, survival_rate=0.6):
     """
     Return the number of cells that can be sorted in the given amount of time, 
     accounting for the fact that not all cells survive sorting and that the 
@@ -247,7 +252,8 @@ class SortStep(PickStep):
 
     @property
     def num_items(self):
-        return super().num_items * self.num_picked / self.num_sampled
+        try: return super().num_items * self.num_picked / self.num_sampled
+        except ZeroDivisionError: return 0
 
     @property
     def num_sampled(self):
@@ -275,17 +281,21 @@ def steps_from_yaml(path):
             step = PickStep(previous_step, num_picked)
 
         elif 'sorted' in record:
-            count_syntax = re.match('(.*) of (.*)', record['sorted'])
+            count_syntax = re.match('(.*) of (.*) at (.*)%', record['sorted'])
             percent_syntax = re.match('(.*)% for (.*) at (.*) evt/sec', record['sorted'])
 
             if count_syntax:
-                num_picked, num_sampled = count_syntax.groups()
+                num_sorted = cast_to_number(count_syntax.group(1))
+                threshold_count = cast_to_number(count_syntax.group(2))
+                efficiency = cast_to_number(count_syntax.group(3)) / 100
+                num_sampled = items_sorted_by_counts(threshold_count, efficiency)
+                num_picked = items_sorted_by_counts(num_sorted, 1)
 
             elif percent_syntax:
                 percent_kept = cast_to_number(percent_syntax.group(1)) / 100
                 sort_time = cast_to_minutes(percent_syntax.group(2))
                 event_rate = cast_to_number(percent_syntax.group(3))
-                num_sampled = items_sorted(sort_time, event_rate)
+                num_sampled = items_sorted_by_time(sort_time, event_rate)
                 num_picked = percent_kept * num_sampled
 
             else:
