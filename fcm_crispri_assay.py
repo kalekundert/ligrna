@@ -33,7 +33,7 @@ Grow overnight cultures:
 lb_vol = 2 * lb_vol
 atc_vol = 10 * lb_vol
 lbcca_vol = lb_vol // 2
-theo_vol = lbcca_vol / 30
+theo_vol = int(1000 * lbcca_vol / 30)
 
 protocol += """\
 Make enough LBCCA and LBCCAT for {num_cultures} cultures:
@@ -46,7 +46,7 @@ LBCCA:
 
 LBCCAT:
 - {lbcca_vol} mL LBCCA
-- {theo_vol:.2f} 30 mM (30x) theophylline"""
+- {theo_vol} μL 30 mM (30x) theophylline"""
 
 protocol += """\
 Grow the cultures with and without theophylline, 
