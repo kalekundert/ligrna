@@ -23,6 +23,9 @@ Options:
         Specify what the width and height of the resulting figure should be, in 
         inches.  The two numbers must be separated by a comma.
 
+    -i --title <str>
+        Provide a title for the plot.
+
     -s --subset <start:end>
         Only show experiments with indices inside the given range.  Indices are 
         interpreted as slices in python.  This option is meant to help when 
@@ -105,6 +108,7 @@ class FoldChange:
         self.pdf = None
         self.mode = None
         self.output_size = None
+        self.title = None
 
         # Internally used plot attributes.
         self.figure = None
@@ -149,6 +153,9 @@ class FoldChange:
                     width_ratios=(0.65, 0.35),
                 ),
         )
+
+        if self.title:
+            self.figure.suptitle(self.title)
 
     def _setup_grid_lines(self):
         """
@@ -386,8 +393,9 @@ if __name__ == '__main__':
     analysis.histogram = args['--histogram']
     analysis.pdf = args['--pdf']
     analysis.mode = args['--mode']
+    analysis.title = args['--title']
     if args['--output-size']:
-        analysis.output_size = map(int, args['--output-size'].split(','))
+        analysis.output_size = map(float, args['--output-size'].split(','))
 
     with analysis_helpers.plot_or_savefig(args['--output'], args['<yml_path>']):
         analysis.plot()
