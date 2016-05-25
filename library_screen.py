@@ -65,13 +65,13 @@ theophylline, while inducing Cas9.
 
 - Subculture {overnight_vol} μL of the library into {media_vol} mL
   EZCCA (EZ media + 0.1% glucose + 100 μg/mL Carb 
-  + 35 μg/mL Chlor + 1000 μg/mL ATC) or EZCCAT 
-  (EZCCA + 1 mM theophylline), depending on what 
-  you're going to select for.
+  + 35 μg/mL Chlor + 1 μg/mL ATC) or EZCCAT (EZCCA 
+  + 1 mM theophylline), depending on what you're 
+  going to select for.
 
   My saturated cultures have an OD600 of ≈3.0, 
   which corresponds to ≈2.4×10⁶ cells/μL.  For a 
-  library of 5×10⁷, 10x coverage is 200 μL.
+  library of 5×10⁷, 10x coverage is ≈200 μL.
 
 - Subculture 50 μL of each other culture into 1 mL 
   EZCCA and 1 mL EZCCAT.
