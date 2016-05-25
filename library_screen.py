@@ -56,7 +56,7 @@ controls.
 
 - Grow all the cultures overnight at 37°C."""
 
-overnight_vol = 100 if args['--initial-sort'] else 25
+overnight_vol = 200 if args['--initial-sort'] else 50
 media_vol = 4 if args['--initial-sort'] else 1
 
 protocol += """\
