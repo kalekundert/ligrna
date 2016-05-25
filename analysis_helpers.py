@@ -126,16 +126,16 @@ class RenameRedChannel(fcmcmp.ProcessingStep):
     I use different red channels on different cytometers.  In particular, I use 
     the "PE-Texas Red" channel on the BD LSRII and the "DsRed" channel on the 
     BD FACSAriaII.  To allow my scripts to work on data from either machine, I 
-    rename the red channel to "Red".
+    rename the red channel to "Red".  I have to be slightly careful because 
+    some of my data from the FACSAriaII also has data in the "PE-Texas Red" 
+    channel, so the "DsRed" channel has to take priority if both are present.
     """
 
     def process_well(self, experiment, well):
-        if well.meta['$CYT'] == 'FACSAriaII':
+        if 'DsRed-A' in well.data.columns:
             red_channel = 'DsRed-A'
-        elif well.meta['$CYT'] == 'LSRII':
+        elif 'PE-Texas Red-A' in well.data.columns:
             red_channel = 'PE-Texas Red-A'
-        else:
-            raise ValueError("Unknown cytometer: {}".format(well.meta['$CYT']))
 
         well.data.rename(columns={red_channel: 'Red-A'}, inplace=True)
 
