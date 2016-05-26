@@ -1,36 +1,16 @@
 #!/usr/bin/env python3
 
 """\
-Screen a library.
+Screen a library to find sgRNAs with aptamers inserted into them to find that 
+are sensitive to a small molecule.
 
 Usage:
     library_screen.py [options]
 
 Options:
-    -i --initial-sort
-        Print instructions for reviving the library from a glycerol stock, 
-        rather than assuming that you have an overnight culture of cells 
-        collected from a previous sort.
-
-    -e --event-rate <cells_per_sec>     [default: 1000]
-        The number of cells you want to pass the detector each second.  This is 
-        the most important determinant of sorting accuracy, although it's also 
-        easier to sort non-fluorescent cells (e.g. wt) than fluorescent cells 
-        (e.g. dead).  For reference, here are percentages of incorrectly sorted 
-        cells for several different event rates:
-        
-        Event rate  Expecting wt  Expecting dead
-         cells/sec   % incorrect     % incorrect
-        ==========  ============  ==============
-              3000           0.7             4.7
-              9000           1.4            11.3
-             27000          15.9            29.9
-
-    -t --sort-time <hours_and_minutes>   [default: 1h00]
-        How long you plan to sort for.  You can use the ``unique_variants.py``
-        script to work out how different combinations of event rate and sort 
-        time will affect library coverage.
-        
+    -m --materials
+        Print detailed instructions on how to make the media used in this 
+        protocol (LBCC, LBCC54, EZCCA, EZCCAT).
 """
 
 import docopt
@@ -40,46 +20,54 @@ from nonstdlib import *
 args = docopt.docopt(__doc__)
 protocol = dirty_water.Protocol()
 
-if args['--initial-sort']:
+if args['--materials']:
     protocol += """\
+Prepare the following reagents:
+
+Reagent  Description
+───────────────────────────────────────────
+LBCC     LB, 100 μg/mL carbenicillin, 35 μg/mL 
+         chloramphenicol
+LBCC54   LB, 125 μg/mL carbenicillin, 43 μg/mL 
+         chloramphenicol
+EZCCA    MOPS EZ rich defined media (Teknova 
+         M2105), 0.1% glucose, 100 μg/mL 
+         carbenicillin, 35 μg/mL chloramphenicol, 
+         1 μg/mL anhydrotetracycline
+EZCCAT   EZCCA, 1 mM theophylline"""
+
+protocol += """\
 Make overnight cultures for the library and the 
 controls.
 
 - Thaw a glycerol stock of MG1655 cells containing 
   the library on ice for ≈10 min.
 
-- Add 1 mL of thawed glycerol stock to 4 mL LBCC 
-  (LB + 100 μg/mL Carb + 35 μg/mL Chlor).
+- Add 1 mL of thawed glycerol stock to 4 mL LBCC.
 
 - Inoculate 5 mL LBCC with stabs from glycerol 
   stocks for the "wt" and "dead" controls.
 
 - Grow all the cultures overnight at 37°C."""
 
-overnight_vol = 200 if args['--initial-sort'] else 50
-media_vol = 4 if args['--initial-sort'] else 1
-
 protocol += """\
 Grow the library and the controls with and without 
 theophylline, while inducing Cas9.
 
-- Subculture {overnight_vol} μL of the library into {media_vol} mL
-  EZCCA (EZ media + 0.1% glucose + 100 μg/mL Carb 
-  + 35 μg/mL Chlor + 1 μg/mL ATC) or EZCCAT (EZCCA 
-  + 1 mM theophylline), depending on what you're 
-  going to select for.
+- Dilute enough of the library to get at least 10x 
+  coverage into 50 volumes of EZCCA and EZCCAT.  
+  Use at least 1 mL of media.
 
   My saturated cultures have an OD600 of ≈3.0, 
   which corresponds to ≈2.4×10⁶ cells/μL.  For a 
   library of 5×10⁷, 10x coverage is ≈200 μL.
 
-- Subculture 50 μL of each other culture into 1 mL 
-  EZCCA and 1 mL EZCCAT.
+Overnight volume, media volume:
+
+- Subculture 20 μL of each control into 50 volumes 
+  (i.e. 1 mL) EZCCA and EZCCAT.
 
 - Grow at 37°C for at least 9h."""
-
-target_od = sci(1.93e-6 * eval(args['--event-rate']), 2)
-pbs_vol = int(2 * minutes(args['--sort-time']) / 60)
 
 protocol += """\
 Dilute each culture into PBS.
@@ -93,15 +81,12 @@ Dilute each culture into PBS.
   1000 cells/sec (on the FACSAria II with the flow 
   rate set to "1.0").
 
-  Planned event rate:
+Planned event rate, sort time:
 
-  Planned sort time:
+Culture volume, PBS volume:
 
 - Dilute 1 μL of each other culture into 1 mL 
   PBS."""
-
-protocol += """\
-Record the cell populations for each culture."""
 
 protocol += """\
 Sort the library.
@@ -111,12 +96,35 @@ Sort the library.
 
 - Put 1 mL SOC in each collection tube.
 
-Gate:"""
+- Record data for the controls to make sure the 
+  cells are halthy and to help draw the gates.
 
-protocol += """\
-Dilute the collected cells and the controls in 4 
-volumes LB + 5/4x Carb + 5/4x Chlor.  Grow 
-overnight at 37°C."""
+- Record data for the library with and without 
+  theophylline to track the progress of the 
+  screen.
+
+Gate:
+   
+- Dilute the collected cells and the controls 
+  in 4 volumes LBCC54.  Grow overnight at 37°C."""
+
+for i in range(3):
+    protocol += """\
+Grow the library and the controls as above.
+
+Overnight volume, media volume:"""
+
+    protocol += """\
+Dilute the cultures as above.
+
+Planned event rate, sort time:
+
+Culture volume, PBS volume:"""
+
+    protocol += """\
+Sort the library as above.
+
+Gate:"""
 
 print(protocol)
 
