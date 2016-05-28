@@ -126,6 +126,9 @@ Sort the library as above.
 
 Gate:"""
 
+protocol += """\
+Plate ≈500 cells to individually test."""
+
 print(protocol)
 
 # vim: tw=50
