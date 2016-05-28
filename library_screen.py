@@ -13,8 +13,7 @@ Options:
         protocol (LBCC, LBCC54, EZCCA, EZCCAT).
 """
 
-import docopt
-import dirty_water
+import docopt, dirty_water
 from nonstdlib import *
 
 args = docopt.docopt(__doc__)
@@ -25,7 +24,7 @@ if args['--materials']:
 Prepare the following reagents:
 
 Reagent  Description
-───────────────────────────────────────────
+─────────────────────────────────────────────────
 LBCC     LB, 100 μg/mL carbenicillin, 35 μg/mL 
          chloramphenicol
 LBCC54   LB, 125 μg/mL carbenicillin, 43 μg/mL 
@@ -62,7 +61,10 @@ theophylline, while inducing Cas9.
   which corresponds to ≈2.4×10⁶ cells/μL.  For a 
   library of 5×10⁷, 10x coverage is ≈200 μL.
 
-Overnight volume, media volume:
+Media volume, overnight volume:
+
+- Make a glycerol stock of the library (1 mL 
+  overnight culture, 333 μL 80% glycerol).
 
 - Subculture 20 μL of each control into 50 volumes 
   (i.e. 1 mL) EZCCA and EZCCAT.
@@ -81,9 +83,7 @@ Dilute each culture into PBS.
   1000 cells/sec (on the FACSAria II with the flow 
   rate set to "1.0").
 
-Planned event rate, sort time:
-
-Culture volume, PBS volume:
+PBS volume, culture volume:
 
 - Dilute 1 μL of each other culture into 1 mL 
   PBS."""
@@ -91,40 +91,34 @@ Culture volume, PBS volume:
 protocol += """\
 Sort the library.
 
-- Keep the cells at room temperature before and 
-  after the sort.
-
-- Put 1 mL SOC in each collection tube.
-
 - Record data for the controls to make sure the 
-  cells are halthy and to help draw the gates.
+  cells are healthy and to help draw the gates.
 
 - Record data for the library with and without 
   theophylline to track the progress of the 
   screen.
 
-Gate:
+- Keep the cells at room temperature before and 
+  after the sort.
+
+- Put 1 mL SOC in each collection tube.
+
+Gating strategy:
    
 - Dilute the collected cells and the controls 
   in 4 volumes LBCC54.  Grow overnight at 37°C."""
 
 for i in range(3):
+    same_opposite = 'same' if i % 2 else 'opposite'
     protocol += """\
-Grow the library and the controls as above.
+Grow and sort the library as above.  Select for 
+the {same_opposite} condition as the first sort.
 
-Overnight volume, media volume:"""
+Media volume, overnight volume:
 
-    protocol += """\
-Dilute the cultures as above.
+PBS volume, culture volume:
 
-Planned event rate, sort time:
-
-Culture volume, PBS volume:"""
-
-    protocol += """\
-Sort the library as above.
-
-Gate:"""
+Gating strategy:"""
 
 protocol += """\
 Plate ≈500 cells to individually test."""
