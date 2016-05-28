@@ -47,12 +47,12 @@ protocol += """\
 Measure the {channel} fluorescence of each culture on 
 the BD LSRII flow cytometer.
 
-Loader Setting       Value      Laser         Voltage  Threshold
-──────────────────────────      ────────────────────────────────
-Flow rate       0.5 μL/sec      FSC               400
-Sample volume        60 μL      SSC               250
-Mixing volume       100 μL      FITC              600  {gfp_threshold:>9s}
-Mixing speed    180 μL/sec      PE-Texas Red      500  {rfp_threshold:>9s}
+Loader Setting       Value    Laser         Voltage  Threshold
+──────────────────────────    ────────────────────────────────
+Flow rate       0.5 μL/sec    FSC               400
+Sample volume        60 μL    SSC               250
+Mixing volume       100 μL    FITC              600  {gfp_threshold:>9s}
+Mixing speed    180 μL/sec    PE-Texas Red      500  {rfp_threshold:>9s}
 Num mixes                2
 Wash volume         800 μL"""
 
