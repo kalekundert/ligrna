@@ -61,7 +61,7 @@ theophylline, while inducing Cas9.
   which corresponds to ≈2.4×10⁶ cells/μL.  For a 
   library of 5×10⁷, 10x coverage is ≈200 μL.
 
-Media volume, overnight volume:
+Overnight volume:           EZ volume:
 
 - Make a glycerol stock of the library (1 mL 
   overnight culture, 333 μL 80% glycerol).
@@ -83,7 +83,7 @@ Dilute each culture into PBS.
   1000 cells/sec (on the FACSAria II with the flow 
   rate set to "1.0").
 
-PBS volume, culture volume:
+PBS volume:                 Culture volume:
 
 - Dilute 1 μL of each other culture into 1 mL 
   PBS."""
@@ -114,9 +114,9 @@ for i in range(3):
 Grow and sort the library as above.  Select for 
 the {same_opposite} condition as the first sort.
 
-Media volume, overnight volume:
+Overnight volume:           EZ volume:
 
-PBS volume, culture volume:
+PBS volume:                 Culture volume:
 
 Gating strategy:"""
 
