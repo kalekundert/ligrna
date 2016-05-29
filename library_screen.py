@@ -5,7 +5,7 @@ Screen a library to find sgRNAs with aptamers inserted into them to find that
 are sensitive to a small molecule.
 
 Usage:
-    library_screen.py [options]
+    library_screen.py [<rounds>] [options]
 
 Options:
     -m --materials
@@ -18,6 +18,7 @@ from nonstdlib import *
 
 args = docopt.docopt(__doc__)
 protocol = dirty_water.Protocol()
+num_rounds = int(args['<rounds>'] or 4)
 
 if args['--materials']:
     protocol += """\
@@ -61,7 +62,7 @@ theophylline, while inducing Cas9.
   which corresponds to ≈2.4×10⁶ cells/μL.  For a 
   library of 5×10⁷, 10x coverage is ≈200 μL.
 
-Overnight volume:           EZ volume:
+Overnight volume, media volume:
 
 - Make a glycerol stock of the library (1 mL 
   overnight culture, 333 μL 80% glycerol).
@@ -74,19 +75,31 @@ Overnight volume:           EZ volume:
 protocol += """\
 Dilute each culture into PBS.
 
-- Measure the OD600 of the library using the 
-  nanodrop.
+The following instructions are specific to the 
+FACSAria II with a flow rate of "1.0" (≈2 mL/h).
+At this flow rate, an OD600 of 3×10⁻³ corresponds 
+roughly to an event rate of ≈1000 evt/sec.
 
-- Work out how to dilute the library given that 2 
-  mL of sample lasts about 1h and that an OD600 of 
-  1.93×10⁻³ corresponds to an event rate of about 
-  1000 cells/sec (on the FACSAria II with the flow 
-  rate set to "1.0").
+- If you want to sort at a particular event rate, 
+  dilute the cells to the corresponding OD600 in 
+  enough PBS to last the duration of the sort.
 
-PBS volume:                 Culture volume:
+- If you want to maximize throughput at the 
+  expense of accuracy (e.g. the first screen):
 
-- Dilute 1 μL of each other culture into 1 mL 
-  PBS."""
+  - Dilute the library 60x into PBS.
+
+  - Load the library into the sorter and see what 
+    the sort efficiency is.  Dilute or concentrate 
+    the cells until the efficiency is ≈50%.  The 
+    event rate should be ≈20,000 evt/sec.
+
+  - Expect an error rate of 30% for fluorescent 
+    cells and 15% for non-fluorescent cells.
+
+- If there are fewer than ≈10⁴ clones remaining in 
+  the library (e.g. after the third screen), just 
+  dilute 1 μL of the library into 1 mL PBS."""
 
 protocol += """\
 Sort the library.
@@ -103,22 +116,20 @@ Sort the library.
 
 - Put 1 mL SOC in each collection tube.
 
-Gating strategy:
+Gate, sort rate, sort time:
    
 - Dilute the collected cells and the controls 
   in 4 volumes LBCC54.  Grow overnight at 37°C."""
 
-for i in range(3):
+for i in range(num_rounds - 1):
     same_opposite = 'same' if i % 2 else 'opposite'
     protocol += """\
 Grow and sort the library as above.  Select for 
 the {same_opposite} condition as the first sort.
 
-Overnight volume:           EZ volume:
+Overnight volume, media volume:
 
-PBS volume:                 Culture volume:
-
-Gating strategy:"""
+Gate, sort rate, sort time:"""
 
 protocol += """\
 Plate ≈500 cells to individually test."""
