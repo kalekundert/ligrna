@@ -86,5 +86,8 @@ ENV/
 
 # Data and script outputs
 *.pdf
+*.ps
 *.less
 *.html
+screens
+epmotion
