@@ -402,8 +402,9 @@ def get_duration(experiments):
     for experiment in experiments:
         for condition in experiment['wells']:
             for well in experiment['wells'][condition]:
-                min_time = min(min_time, min(well.data['Time'] / 100))
-                max_time = max(max_time, max(well.data['Time'] / 100))
+                dt = float(well.meta['$TIMESTEP'])
+                min_time = min(min_time, min(well.data['Time'] * dt))
+                max_time = max(max_time, max(well.data['Time'] * dt))
 
     return min_time, max_time
 
