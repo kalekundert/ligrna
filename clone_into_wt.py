@@ -110,15 +110,16 @@ def design_cloning_primers(name, spacer, cut=None, tm=60, verbose=False):
     return {name_5: primer_5, name_3: primer_3}
 
 def print_cloning_primers(primers):
-    print("Number of oilgos:")
+    from natsort import natsorted
+    print("Number of oligos:")
     print(len(primers))
     print()
     print("Primer names (ready to copy into Elim form):")
-    for name in sorted(primers):
+    for name in natsorted(primers):
         print(name)
     print()
     print("Primer sequences (ready to copy into Elim form):")
-    for name in sorted(primers):
+    for name in natsorted(primers):
         print(primers[name])
 
 def pick_primer_with_best_tm(seqs, tm):
