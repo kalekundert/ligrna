@@ -104,8 +104,8 @@ def sort_time(num_items, fraction_wanted, event_rate=10000, survival_rate=0.6):
     counting = np.log(1 - fraction_wanted) / np.log((num_items - 1) / num_items)
     return int(counting / items_sorted(1, event_rate, survival_rate))
 
-def items_sorted_by_counts(threshold_count, efficiency, survival_rate=0.6):
-    return threshold_count * efficiency * survival_rate
+def items_sorted_by_counts(num_processed, efficiency, survival_rate=0.6):
+    return num_processed * efficiency * survival_rate
 
 def items_sorted_by_time(sort_time, event_rate=10000, survival_rate=0.6):
     """
@@ -285,11 +285,11 @@ def steps_from_yaml(path):
             percent_syntax = re.match('(.*)% for (.*) at (.*) evt/sec', record['sorted'])
 
             if count_syntax:
-                num_sorted = cast_to_number(count_syntax.group(1))
-                threshold_count = cast_to_number(count_syntax.group(2))
+                num_collected = cast_to_number(count_syntax.group(1))
+                num_processed = cast_to_number(count_syntax.group(2))
                 efficiency = cast_to_number(count_syntax.group(3)) / 100
-                num_sampled = items_sorted_by_counts(threshold_count, efficiency)
-                num_picked = items_sorted_by_counts(num_sorted, 1)
+                num_sampled = items_sorted_by_counts(num_processed, efficiency)
+                num_picked = items_sorted_by_counts(num_collected, 1)
 
             elif percent_syntax:
                 percent_kept = cast_to_number(percent_syntax.group(1)) / 100
