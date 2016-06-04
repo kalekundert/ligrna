@@ -156,6 +156,10 @@ class Step:
     def previous_step(self):
         raise NotImplementedError
 
+    @property
+    def fold_coverage(self):
+        raise NotImplementedError
+
 
 class UniqueStep(Step):
 
@@ -177,6 +181,10 @@ class UniqueStep(Step):
     @property
     def previous_step(self):
         return self._previous_step
+
+    @property
+    def fold_coverage(self):
+        return 1
 
 
 class PickStep(Step):
@@ -239,6 +247,10 @@ class PickStep(Step):
     def previous_step(self):
         if isinstance(self._num_items, PickStep):
             return self._num_items
+
+    @property
+    def fold_coverage(self):
+        return self.num_picked / self.num_items
 
 
 class SortStep(PickStep):
@@ -349,6 +361,7 @@ if __name__ == '__main__':
             row.append(sci(step.unique_items))
 
         row.append(percent(step.fraction_picked))
+        row.append('{:.2f}x'.format(step.fold_coverage))
 
         if args['--event-rate']:
             row.append(hours_and_minutes(sort_time(
