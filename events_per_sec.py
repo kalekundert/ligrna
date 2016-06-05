@@ -24,8 +24,9 @@ Options:
         If an output path is specified, the resulting plot is written to that 
         path and the GUI isn't opened.  Dollar signs ($) in the output path 
         are replaced by the base name of the given experiment, minus the '.yml' 
-        suffix.  By default, no output is generated and the plot is shown in 
-        the GUI.
+        suffix.  The <path> "lpr" is treated specially and causes the plot to 
+        be sent to the printer via 'lpr'.  By default, no output is generated 
+        and the plot is shown in the GUI.
 
     -l --show-legend
         Show which lines came from which wells.
