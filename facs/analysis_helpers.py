@@ -416,8 +416,9 @@ def plot_or_savefig(output_path=None, substitution_path=None):
     path is given and it contains dollar signs ('$'), they will be replaced 
     with the given substitution path.
     """
-    import os, sys, matplotlib.pyplot as plt
+    import os, sys, subprocess, matplotlib.pyplot as plt
     from pathlib import Path
+    from tempfile import NamedTemporaryFile
 
     # We have to decide whether or not to fork before plotting anything, 
     # otherwise X11 will complain, and we only want to fork if we'll end up 
@@ -433,8 +434,17 @@ def plot_or_savefig(output_path=None, substitution_path=None):
     if output_path and substitution_path:
         output_path = output_path.replace('$', Path(substitution_path).stem)
 
-    if output_path:
+    # Print out the figure.
+    if output_path == 'lpr':
+        temp_file = NamedTemporaryFile(prefix='fcm_analysis_', suffix='.ps')
+        plt.savefig(temp_file.name, dpi=300)
+        subprocess.call(['lpr', '-o', 'number-up=4', temp_file.name])
+
+    # Save the figure to a file.
+    elif output_path:
         plt.savefig(output_path, dpi=300)
+
+    # Open the figure in a GUI.
     else:
         plt.gcf().canvas.set_window_title(' '.join(sys.argv))
         plt.show()

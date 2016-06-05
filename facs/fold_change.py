@@ -16,8 +16,9 @@ Options:
         If an output path is specified, the resulting plot is written to that 
         path and the GUI isn't opened.  Dollar signs ($) in the output path 
         are replaced by the base name of the given experiment, minus the '.yml' 
-        suffix.  By default, no output is generated and the plot is shown in 
-        the GUI.
+        suffix.  The <path> "lpr" is treated specially and causes the plot to 
+        be sent to the printer via 'lpr'.  By default, no output is generated 
+        and the plot is shown in the GUI.
 
     -O --output-size <width,height>
         Specify what the width and height of the resulting figure should be, in 
@@ -90,6 +91,13 @@ Options:
         Use the modes of the cell distributions to calculate fold-changes in 
         signal.  By default the medians are used for this calculation.
 """
+## Possible features
+
+# 1. Allow scrolling
+# 2. Sort by name, fold change, signal "before", signal "after".
+# 3. fcmcmp: load python scripts.
+# 4. fcmcmp: add "include" directive.
+
 
 import fcmcmp, analysis_helpers
 import numpy as np, matplotlib.pyplot as plt
