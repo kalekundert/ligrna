@@ -139,8 +139,7 @@ by electroporation.
 protocol += """\
 Store the library as a glycerol stock.
 
-- 333 μL 80% glycerol
-- 1000 μL overnight culture
+- 333 μL 80% glycerol, 1 mL overnight culture.
 
 - Place at -80°C without snap-freezing."""
 
