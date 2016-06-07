@@ -6,7 +6,7 @@ Usage:
     library_prep.py <num_libraries> [options]
 
 Options:
-    -t --annealing-temp <celsius>
+    -t --annealing-temp <celsius>   [default: 60]
         The annealing temperature for the PCR reaction.  I typically use NEB's 
         online "Tm Calculator" to determine this setting.
 """
@@ -21,30 +21,11 @@ s = 's' if num > 1 else ''
 
 ## Inverse PCR
 
-ta = (args['--annealing-temp'] or '__') + '°C'
-pcr_rxn = dirty_water.Reaction('''\
-Reagent                Conc  Each Rxn  Master Mix
-================  =========  ========  ==========
-water                           19 μL         yes
-pBLO2 template    100 pg/μL      1 μL         yes
-primer mix              10x      5 μL
-Q5 master mix            2x     25 μL         yes
-''')
-pcr_rxn.num_reactions = num + 1
-pcr_rxn.extra_master_mix = 0
+pcr = dirty_water.Pcr()
+pcr.num_reactions = num
+pcr.annealing_temp = args['--annealing-temp']
 
-protocol += """\
-Setup {num} PCR reaction{s} and 1 negative control:
-
-{pcr_rxn}"""
-
-protocol += """\
-Run the following thermocycler protocol:
-
-98°C → 98°C → {ta} → 72°C → 72°C → 12°C
-30s    10s    20s    2min   2min   ∞
-      └──────────────────┘
-               35x """
+protocol += pcr
 
 ## Gel extraction
 
