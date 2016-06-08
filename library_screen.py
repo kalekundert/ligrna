@@ -1,16 +1,17 @@
 #!/usr/bin/env python3
 
 """\
-Screen a library to find sgRNAs with aptamers inserted into them to find that 
-are sensitive to a small molecule.
+Screen a library of sgRNAs with aptamers inserted into them to find designs 
+that are sensitive to a small molecule.
 
 Usage:
-    library_screen.py [<rounds>] [options]
+    library_screen.py [<screens>] [-v]
 
 Options:
-    -m --materials
-        Print detailed instructions on how to make the media used in this 
-        protocol (LBCC, LBCC54, EZCCA, EZCCAT).
+    -v --verbose
+        Print out the more pedantic details of screening a library, including 
+        recipes for the medias used in this protocol (LBCC, LBCC54, EZCCA, 
+        EZCCAT), a discussion about gating strategies, and things like that.
 """
 
 import docopt, dirty_water
@@ -18,9 +19,10 @@ from nonstdlib import *
 
 args = docopt.docopt(__doc__)
 protocol = dirty_water.Protocol()
-num_rounds = int(args['<rounds>'] or 4)
+num_screens = int(args['<screens>'] or 4)
 
-if args['--materials']:
+## Media recipes
+if args['--verbose']:
     protocol += """\
 Prepare the following reagents:
 
@@ -36,6 +38,7 @@ EZCCA    MOPS EZ rich defined media (Teknova
          1 μg/mL anhydrotetracycline
 EZCCAT   EZCCA, 1 mM theophylline"""
 
+## Thaw library
 protocol += """\
 Make overnight cultures for the library and the 
 controls.
@@ -50,6 +53,7 @@ controls.
 
 - Grow all the cultures overnight at 37°C."""
 
+## Grow day cultures
 protocol += """\
 Grow the library and the controls with and without 
 theophylline, while inducing Cas9.
@@ -72,48 +76,22 @@ Overnight volume:           Media volume:
 
 - Grow at 37°C for at least 9h."""
 
-protocol += """\
-Dilute each culture into PBS.
-
-The following instructions are specific to the 
-FACSAria II with a flow rate of "1.0" (≈2 mL/h).
-At this flow rate, an OD600 of 3×10⁻³ corresponds 
-roughly to an event rate of ≈1000 evt/sec.
-
-- If you want to sort at a particular event rate, 
-  dilute the cells to the corresponding OD600 in 
-  enough PBS to last the duration of the sort.
-
-- If you want to maximize throughput at the 
-  expense of accuracy (e.g. the first screen), you 
-  want the sort efficiency to be ≈50%.  This is 
-  the point where efficiency starts decreasing 
-  faster than event rate can increase.  Start by 
-  diluting the library 60x into PBS, then add PBS 
-  or cells as necessary to get ≈50% efficiency.  
-  The event rate should be about ≈20,000 evt/sec.  
-  Expect error rates of up to 30% for fluorescent 
-  cells and up to 15% for non-fluorescent cells.
-  
-- If there are fewer than ≈10⁴ clones remaining in 
-  the library (e.g. after the third screen), just 
-  dilute 1 μL of the library into 1 mL PBS."""
-
+## Sort library (first time)
 protocol += """\
 Sort the library.
 
-- Record data for the controls to make sure the 
-  cells are healthy and to help draw the gates.
+- Dilute each culture into PBS to obtain the 
+  desired event rate.  Use the --verbose flag for 
+  guidance on choosing an event rate.
 
-- Record data for the library with and without 
-  theophylline to track the progress of the 
-  screen.
+- Record data for the controls and the library, 
+  with and without theophylline.
 
-- Keep the cells at room temperature before and 
-  after the sort.
-
-- Put 1 mL SOC in each collection tube.
-
+- Draw a gate and sort the library.  Have 1 mL SOC 
+  in each collection tube.  Keep the cells at room 
+  temperature before and after the sort.  Use the 
+  --verbose flag for guidance on drawing the gate.
+  
 Condition:                  Gate:
 
 Event rate:                 Sort time:
@@ -121,11 +99,11 @@ Event rate:                 Sort time:
 - Dilute the collected cells and the controls 
   in 4 volumes LBCC54.  Grow overnight at 37°C."""
 
-for i in range(num_rounds - 1):
-    same_opposite = 'same' if i % 2 else 'opposite'
+## Sort library (subsequent times)
+for i in range(num_screens - 1):
     protocol += """\
 Grow and sort the library as above.  Select for 
-the {same_opposite} condition as the first sort.
+the opposite condition as the previous sort.
 
 Overnight volume:           Media volume:
 
@@ -133,9 +111,106 @@ Condition:                  Gate:
 
 Event rate:                 Sort time:"""
 
+## Plate cells
 protocol += """\
 Plate ≈500 cells to individually test."""
 
+
 print(protocol)
+
+## How to choose event rates
+if args['--verbose']:
+    print("""\
+
+How to choose event rates
+─────────────────────────
+Your first priority is to get ≈10x coverage of 
+your library, and your second priority maximize 
+accuracy by sorting slowly.
+
+- If you cannot reach 10x coverage, sort at the 
+  event rate that maximizes the sort rate.  This 
+  is the event rate at which the sort efficiency 
+  is ≈50% and should be near ≈20,000 evt/sec.  
+  Beyond this, the sort rate suffers as the sort 
+  efficiency decreases faster than the event rate 
+  increases.
+  
+  If you are sorting a small populations (≈1%) at 
+  these rates, expect error rates of 15% for non-
+  fluorescent cells and 30% for fluorescent cells.
+  The error rates are better for big populations, 
+  but still not good.  You may decide to sort at a 
+  slower speed if you feel these error rates are 
+  prohibitive.
+
+- If you can reach 10x coverage, decide how long 
+  you want to sort for and pick an event rate 
+  accordingly.  Don't bother going slower than 
+  1000 evt/sec, because the accuracy doesn't get 
+  much better after that.
+
+- If your library doesn't have many members left, 
+  just sort at 1000 evt/sec for 10 min.  It's hard 
+  to estimate how many unique members remain after 
+  several screens, so it's better to do this that 
+  to try getting 10x coverage.""")
+
+## How to dilute cells
+if args['--verbose']:
+    print("""\
+
+How to dilute cells
+───────────────────
+The following instructions are specific to the 
+FACSAria II with a flow rate of "1.0" (≈2 mL/h).
+At this flow rate, 1 μL of an overnight culture 
+diluted into 1 mL PBS corresponds roughly to an 
+event rate of ≈1500 evt/sec.
+
+Using this as a guide, dilute your overnight 
+cultures to approximately the right concentration 
+in enough PBS to last the duration of your sort.  
+If it's important to get the sort rate right (e.g.  
+if you're doing a long sort), load the sample into 
+the sorter and adjust as necessary.""")
+
+## How to draw gates
+
+if args['--verbose']:
+    print("""\
+
+How to draw gates
+─────────────────
+Your first priority is to find designs that are 
+either fully on or fully off without ligand, and 
+your second priority is to find designs with the 
+biggest possible change in signal in response to 
+ligand:
+
+- For screens without ligand, draw gates based on 
+  the control population.  You want to be as 
+  stringent as possible while collecting at least 
+  one survivng cell for each library member that's
+  distributed like the control population.
+  
+  If you will only see each library member once 
+  (1x coverage), draw gates that encompass the 
+  entire control population.  If you will see 
+  each library member ten times (10x coverage), 
+  draw gates that include only the most extreme 
+  ≈50% of the library.
+
+- For screens with ligand, draw gates based on the 
+  most extreme library members.  If you can, draw 
+  gates that are ≈5x more populated with ligand 
+  than without it. 
+  
+  Otherwise, you can usually see one population 
+  that looks totally on or off and another sparser 
+  population that looks slightly less on or off.  
+  Draw gates big enough to include the some of the 
+  latter.""")
+
 
 # vim: tw=50
