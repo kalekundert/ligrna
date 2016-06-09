@@ -125,30 +125,27 @@ if args['--verbose']:
 How to choose event rates
 ─────────────────────────
 Your first priority is to get ≈10x coverage of 
-your library, and your second priority maximize 
-accuracy by sorting slowly.
+your library, and your second priority is to 
+maximize accuracy by sorting slowly.
 
 - If you cannot reach 10x coverage, sort at the 
-  event rate that maximizes the sort rate.  This 
-  is the event rate at which the sort efficiency 
-  is ≈50% and should be near ≈20,000 evt/sec.  
-  Beyond this, the sort rate suffers as the sort 
-  efficiency decreases faster than the event rate 
-  increases.
+  event rate that maximizes sort rate.  This event 
+  rate should be near ≈20,000 evt/sec and is 
+  defined by the sort efficiency being ≈50%.  
+  Further increases in event rate are more than 
+  offset by losses in sort efficiency.
   
-  If you are sorting a small populations (≈1%) at 
-  these rates, expect error rates of 15% for non-
-  fluorescent cells and 30% for fluorescent cells.
-  The error rates are better for big populations, 
-  but still not good.  You may decide to sort at a 
-  slower speed if you feel these error rates are 
-  prohibitive.
+  If you are sorting a small population (≈1%) at 
+  maximum speed, expect error rates of 15% for 
+  non-fluorescent cells and 30% for fluorescent 
+  cells.  Sort at less than maximum speed if you 
+  feel these error rates are prohibitive.
 
 - If you can reach 10x coverage, decide how long 
   you want to sort for and pick an event rate 
   accordingly.  Don't bother going slower than 
-  1000 evt/sec, because the accuracy doesn't get 
-  much better after that.
+  1000 evt/sec, because at that rate the accuracy 
+  is already about as good as it'll get.
 
 - If your library doesn't have many members left, 
   just sort at 1000 evt/sec for 10 min.  It's hard 
