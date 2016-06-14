@@ -24,10 +24,10 @@ Options:
         Specify what the width and height of the resulting figure should be, in 
         inches.  The two numbers must be separated by a comma.
 
-    -i --title <str>
+    -T --title <str>
         Provide a title for the plot.
 
-    -s --subset <start:end>
+    -i --indices <start:end>
         Only show experiments with indices inside the given range.  Indices are 
         interpreted as slices in python.  This option is meant to help when 
         viewing data from really high-throughput experiments.
@@ -50,6 +50,12 @@ Options:
         assumes that the fluorescent protein that isn't of interest is being 
         constitutively expressed, and therefore can be used as an internal 
         control for cell size and expression level.
+
+    -s --sort-by <attribute>
+        Sort the traces by the specified attribute.  The following attributes 
+        are understood: name (n), fold-change (f), most-wt (w), most-dead (d).  
+        You can use either the full names or the one-letter abbreviations.  By 
+        default the traces are shown in the order they appear in the YAML file.
 
     -t --time-gate <secs>               [default: 0]
         Exclude the first cells recorded from each well if you suspect that 
@@ -111,6 +117,7 @@ class FoldChange:
         self.channel = None
         self.control_channel = None
         self.normalize_by = None
+        self.sort_by = None
         self.log_toggle = None
         self.histogram = None
         self.pdf = None
@@ -135,6 +142,7 @@ class FoldChange:
         self._pick_xlim()
         self._estimate_distributions()
         self._rescale_distributions()
+        self._sort_wells()
 
         for i, experiment in enumerate(reversed(self.analyzed_wells)):
             self._plot_fold_change(i, experiment)
@@ -246,6 +254,48 @@ class FoldChange:
         for _, _, well in self._yield_analyzed_wells():
             well.y *= scale_factor
 
+    def _sort_wells(self):
+        if self.sort_by is None:
+            return
+
+        if self.sort_by.lower() in {'n', 'name'}:
+            key = lambda expt: self._get_label(expt)
+            reverse = self.sort_by[0].isupper()
+
+        elif self.sort_by.lower() in {'f', 'fold-change'}:
+            key = lambda expt: self._get_fold_change(expt)[0]
+            reverse = not self.sort_by[0].isupper()
+
+        elif self.sort_by.lower() in {'w', 'most-wt'}:
+            key = lambda expt: np.mean([w.loc for w in expt['before']])
+            reverse = False
+
+        elif self.sort_by.lower() in {'d', 'most-dead'}:
+            key = lambda expt: np.mean([w.loc for w in expt['before']])
+            reverse = True
+
+        self.analyzed_wells.sort(key=key, reverse=reverse)
+
+    def _get_label(self, experiment):
+        return experiment['before'][0].experiment['label']
+
+    def _get_fold_change(self, experiment):
+        # Calculate fold changes between the before and after distributions, 
+        # accounting for the fact that the distributions may be in either 
+        # linear or log space.
+        locations = {
+                condition: np.array([
+                    well.loc for well in experiment[condition]])
+                for condition in experiment
+        }
+
+        if self.reference_well.log_scale:
+            fold_changes = 10**(locations['before'] - locations['after'])
+        else:
+            fold_changes = locations['before'] / locations['after']
+
+        return fold_changes.mean(), fold_changes
+
     def _plot_distribution(self, i, well, condition):
         """
         Plot the given distributions of cells on the same axis, for comparison.
@@ -281,37 +331,25 @@ class FoldChange:
                 i - self.location_depth,
                 **location_styles[condition])
 
-    def _plot_fold_change(self, i, analyzed_wells):
+    def _plot_fold_change(self, i, experiment):
         # I really don't think this function is comparing distributions or 
         # calculating error bars in the right way.  I think it might be best to 
         # do some sort of resampling technique.  That would allow me to 
         # incorporate knowledge of the underlying distributions into the 
         # standard deviation.
 
-        # Calculate fold changes between the before and after distributions, 
-        # accounting for the fact that the distributions may be in either 
-        # linear or log space.
-        locations = {
-                condition: np.array([
-                    well.loc for well in analyzed_wells[condition]])
-                for condition in analyzed_wells
-        }
-
-        if self.reference_well.log_scale:
-            fold_changes = 10**(locations['before'] - locations['after'])
-        else:
-            fold_changes = locations['before'] / locations['after']
+        fold_change, fold_changes = self._get_fold_change(experiment)
 
         # We don't care which direction the fold change is in, so invert the 
-        # fold change if it's less than 1 (e.g.  for a backward design).
-        fold_change = fold_changes.mean()
-        if fold_change < 1.0: fold_change **= -1
+        # fold change if it's less than 1 (e.g. for a backward design).
+        if fold_change < 1.0:
+            fold_change **= -1
 
         # Plot the fold-change with standard-error error-bars.  I use plot() 
         # and not barh() to draw the bar plots because I don't want the width 
         # of the bars to change with the y-axis (either as more bars are added 
         # or as the user zooms in).
-        experiment = next(iter(analyzed_wells.values()))[0].experiment
+        experiment = next(iter(experiment.values()))[0].experiment
         color = analysis_helpers.pick_color(experiment)
 
         self.axes[1].plot(
@@ -370,9 +408,10 @@ class FoldChange:
         y_ticks = []
         y_tick_labels = []
 
-        for i, experiment in enumerate(reversed(self.experiments)):
+        for i, experiment in enumerate(reversed(self.analyzed_wells)):
+            label = self._get_label(experiment).replace('//', '\n')
+            y_tick_labels.append(label)
             y_ticks.append(i)
-            y_tick_labels.append(experiment['label'].replace('//', '\n'))
 
         self.axes[0].set_yticks(y_ticks)
         self.axes[0].set_yticklabels(y_tick_labels)
@@ -384,7 +423,7 @@ if __name__ == '__main__':
     args = docopt.docopt(__doc__)
     experiments = fcmcmp.load_experiments(args['<yml_path>'])
 
-    if args['--subset']:
+    if args['--indices']:
         start, end = (int(x) for x in args['--subset'].split(':'))
         experiments = experiments[start:end]
 
@@ -397,6 +436,7 @@ if __name__ == '__main__':
     analysis = FoldChange(experiments)
     analysis.channel = args['--channel']
     analysis.normalize_by = args['--normalize-by'] or args['--normalize-by-internal-control']
+    analysis.sort_by = args['--sort-by']
     analysis.log_toggle = args['--log-toggle']
     analysis.histogram = args['--histogram']
     analysis.pdf = args['--pdf']
