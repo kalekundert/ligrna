@@ -27,11 +27,6 @@ Options:
     -T --title <str>
         Provide a title for the plot.
 
-    -i --indices <start:end>
-        Only show experiments with indices inside the given range.  Indices are 
-        interpreted as slices in python.  This option is meant to help when 
-        viewing data from really high-throughput experiments.
-
     -c --channel <channel>
         The channel to plot.  By default, this is deduced from the YAML file.  
         If an experiment has a 'channel' attribute, that channel is displayed.  
@@ -56,6 +51,12 @@ Options:
         are understood: name (n), fold-change (f), most-wt (w), most-dead (d).  
         You can use either the full names or the one-letter abbreviations.  By 
         default the traces are shown in the order they appear in the YAML file.
+
+    -i --indices <selection>
+        Only show experiments with the given indices.  The indices should be 
+        comma separated, and ranges of indices can be specified using a hyphen 
+        (e.g. 2-8).  This option is meant to help when viewing data from really 
+        high-throughput experiments.  By default, all the data are shown.
 
     -t --time-gate <secs>               [default: 0]
         Exclude the first cells recorded from each well if you suspect that 
@@ -105,7 +106,7 @@ Options:
 # 4. fcmcmp: add "include" directive.
 
 
-import fcmcmp, analysis_helpers
+import fcmcmp, analysis_helpers, nonstdlib
 import numpy as np, matplotlib.pyplot as plt
 from pprint import pprint
 
@@ -118,6 +119,7 @@ class FoldChange:
         self.control_channel = None
         self.normalize_by = None
         self.sort_by = None
+        self.show_indices = None
         self.log_toggle = None
         self.histogram = None
         self.pdf = None
@@ -143,6 +145,7 @@ class FoldChange:
         self._estimate_distributions()
         self._rescale_distributions()
         self._sort_wells()
+        self._filter_wells()
 
         for i, experiment in enumerate(reversed(self.analyzed_wells)):
             self._plot_fold_change(i, experiment)
@@ -276,6 +279,13 @@ class FoldChange:
 
         self.analyzed_wells.sort(key=key, reverse=reverse)
 
+    def _filter_wells(self):
+        if self.show_indices is not None:
+            self.analyzed_wells = [
+                    expt for i, expt in enumerate(self.analyzed_wells)
+                    if i in self.show_indices
+            ]
+
     def _get_label(self, experiment):
         return experiment['before'][0].experiment['label']
 
@@ -401,7 +411,7 @@ class FoldChange:
     def _pick_ylim(self):
         margin = 0.3
         y_min = 0 - self.location_depth - margin
-        y_max = len(self.experiments) - 1 + self.max_dist_height + margin
+        y_max = len(self.analyzed_wells) - 1 + self.max_dist_height + margin
         self.axes[0].set_ylim(y_min, y_max)
 
     def _pick_yticks(self):
@@ -423,10 +433,6 @@ if __name__ == '__main__':
     args = docopt.docopt(__doc__)
     experiments = fcmcmp.load_experiments(args['<yml_path>'])
 
-    if args['--indices']:
-        start, end = (int(x) for x in args['--subset'].split(':'))
-        experiments = experiments[start:end]
-
     shared_steps = analysis_helpers.SharedProcessingSteps()
     shared_steps.early_event_threshold = float(args['--time-gate'])
     shared_steps.small_cell_threshold = float(args['--size-gate'])
@@ -442,6 +448,9 @@ if __name__ == '__main__':
     analysis.pdf = args['--pdf']
     analysis.mode = args['--mode']
     analysis.title = args['--title']
+
+    if args['--indices']:
+        analysis.show_indices = nonstdlib.indices_from_str(args['--indices'])
     if args['--output-size']:
         analysis.output_size = map(float, args['--output-size'].split(','))
 
