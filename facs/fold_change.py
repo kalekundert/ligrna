@@ -53,10 +53,10 @@ Options:
         default the traces are shown in the order they appear in the YAML file.
 
     -i --indices <selection>
-        Only show experiments with the given indices.  The indices should be 
-        comma separated, and ranges of indices can be specified using a hyphen 
-        (e.g. 2-8).  This option is meant to help when viewing data from really 
-        high-throughput experiments.  By default, all the data are shown.
+        Only show experiments with the given indices (counting from 1).  The 
+        indices should be comma separated, and ranges of indices can be 
+        specified using a hyphen (e.g. 2-8).  This option is meant to help when 
+        viewing data from really high-throughput experiments.
 
     -t --time-gate <secs>               [default: 0]
         Exclude the first cells recorded from each well if you suspect that 
@@ -450,7 +450,7 @@ if __name__ == '__main__':
     analysis.title = args['--title']
 
     if args['--indices']:
-        analysis.show_indices = nonstdlib.indices_from_str(args['--indices'])
+        analysis.show_indices = nonstdlib.indices_from_str(args['--indices'], start=1)
     if args['--output-size']:
         analysis.output_size = map(float, args['--output-size'].split(','))
 
