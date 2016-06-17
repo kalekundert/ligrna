@@ -98,13 +98,6 @@ Options:
         Use the modes of the cell distributions to calculate fold-changes in 
         signal.  By default the medians are used for this calculation.
 """
-## Possible features
-
-# 1. Allow scrolling
-# 2. Sort by name, fold change, signal "before", signal "after".
-# 3. fcmcmp: load python scripts.
-# 4. fcmcmp: add "include" directive.
-
 
 import fcmcmp, analysis_helpers, nonstdlib
 import numpy as np, matplotlib.pyplot as plt
@@ -270,11 +263,11 @@ class FoldChange:
             reverse = not self.sort_by[0].isupper()
 
         elif self.sort_by.lower() in {'w', 'most-wt'}:
-            key = lambda expt: np.mean([w.loc for w in expt['before']])
+            key = lambda expt: np.mean([w.loc for w in expt['no_ligand']])
             reverse = False
 
         elif self.sort_by.lower() in {'d', 'most-dead'}:
-            key = lambda expt: np.mean([w.loc for w in expt['before']])
+            key = lambda expt: np.mean([w.loc for w in expt['no_ligand']])
             reverse = True
 
         self.analyzed_wells.sort(key=key, reverse=reverse)
@@ -287,11 +280,11 @@ class FoldChange:
             ]
 
     def _get_label(self, experiment):
-        return experiment['before'][0].experiment['label']
+        return experiment['no_ligand'][0].experiment['label']
 
     def _get_fold_change(self, experiment):
-        # Calculate fold changes between the before and after distributions, 
-        # accounting for the fact that the distributions may be in either 
+        # Calculate the fold changes between the "no_ligand" and "ligand" 
+        # distributions, accounting for the fact that they may be in either 
         # linear or log space.
         locations = {
                 condition: np.array([
@@ -300,9 +293,9 @@ class FoldChange:
         }
 
         if self.reference_well.log_scale:
-            fold_changes = 10**(locations['before'] - locations['after'])
+            fold_changes = 10**(locations['no_ligand'] - locations['ligand'])
         else:
-            fold_changes = locations['before'] / locations['after']
+            fold_changes = locations['no_ligand'] / locations['ligand']
 
         return fold_changes.mean(), fold_changes
 
@@ -319,7 +312,7 @@ class FoldChange:
         fold change.
         """
         location_styles = {
-                'before': {
+                'no_ligand': {
                     'marker': '+',
                     'markeredgecolor': 'black',
                     'markerfacecolor': 'none',
@@ -327,7 +320,7 @@ class FoldChange:
                     'linestyle': ' ',
                     'zorder': 1,
                 },
-                'after': {
+                'ligand': {
                     'marker': '+',
                     'markeredgecolor': analysis_helpers.pick_color(well.experiment),
                     'markerfacecolor': 'none',
