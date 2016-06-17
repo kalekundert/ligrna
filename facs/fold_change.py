@@ -88,6 +88,11 @@ Options:
         are thus PDFs.  By default, the area of each curve reflects the number 
         of cells that were counted from that well.
 
+    -f --fold-change-xlim <xlim>
+        Set the extent of the x-axis for the fold-change plot.  By default this 
+        axis is automatically scaled to fit the data, but this option is useful 
+        if you want to compare different plots.
+
     -l --log-toggle
         Plot the data on a linear scale if it would normally be plotted on a 
         log scale, and vice versa.  In most cases, this means plotting the 
@@ -119,6 +124,7 @@ class FoldChange:
         self.mode = None
         self.output_size = None
         self.title = None
+        self.fold_change_xlim = None
 
         # Internally used plot attributes.
         self.figure = None
@@ -399,6 +405,9 @@ class FoldChange:
                 ticks.add(1); ticks.discard(0)
                 return sorted(ticks)
 
+        if self.fold_change_xlim is not None:
+            self.axes[1].set_xlim(0, self.fold_change_xlim)
+
         self.axes[1].xaxis.set_major_locator(FoldChangeLocator())
 
     def _pick_ylim(self):
@@ -446,6 +455,8 @@ if __name__ == '__main__':
         analysis.show_indices = nonstdlib.indices_from_str(args['--indices'], start=1)
     if args['--output-size']:
         analysis.output_size = map(float, args['--output-size'].split(','))
+    if args['--fold-change-xlim']:
+        analysis.fold_change_xlim = float(args['--fold-change-xlim'])
 
     with analysis_helpers.plot_or_savefig(args['--output'], args['<yml_path>']):
         analysis.plot()
