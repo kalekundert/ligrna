@@ -106,6 +106,7 @@ from __future__ import unicode_literals
 
 import sgrna_sensor
 import docopt
+import math
 
 args = docopt.docopt(__doc__)
 designs = []
@@ -148,15 +149,40 @@ longest_name = max([8] + [len(x.name) for x in designs])
 header_template = '{{0:{}s}}'.format(longest_name)
 
 def rnafold(design, constraints=False):
-    from subprocess import Popen, PIPE; import shlex
+    from subprocess import Popen, PIPE; import shlex, re
     design.show(labels=False, rna=True, color=args['--color'])
+
     if constraints:
-        cmd = 'RNAfold --noPS --MEA -C'
-        stdin = design.rna + '\n' + design.constraints 
-        print(design.constraints, '(constraints)')
+        cmd = 'RNAfold --noPS --MEA'
+        stdin = design.rna
+
+        aptamer_pattern = re.compile('.AUACCAGCCGAAAGGCCCUUGGCAG.')
+        aptamer_match = aptamer_pattern.search(design.rna)
+
+        if aptamer_match:
+            aptamer_seq = aptamer_match.group()
+            aptamer_fold = '(...((.(((....)))....))...)'
+
+            # Calculate the free energy of aptamer folding.
+            rt_37 = 1.9858775e-3 * 310  # kcal/mol at 37°C
+            aptamer_kd = 0.32  # μM
+            std_conc = 1e6  # 1M in μM
+            aptamer_dg = rt_37 * math.log(aptamer_kd / std_conc)
+
+            # Add the aptamer motif to RNAfold.
+            cmd += ' --motif "{},{},{}"'.format(
+                    aptamer_seq, aptamer_fold, aptamer_dg)
+
+            # Show the user how the aptamer is being scored.
+            print(' ' * aptamer_match.start(), end='')
+            print(aptamer_fold, end='')
+            print(' ' * (len(design) - aptamer_match.end()), end=' ')
+            print("({:.2f} kcal/mol)".format(aptamer_dg))
+
     else:
         cmd = 'RNAfold --noPS --MEA'
         stdin = design.rna
+
     process = Popen(shlex.split(cmd), stdin=PIPE, stdout=PIPE, stderr=PIPE)
     stdout, stderr = process.communicate(stdin.encode())
     print('\n'.join(
