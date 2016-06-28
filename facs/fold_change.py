@@ -158,6 +158,8 @@ class FoldChange:
         self._pick_ylim()
         self._pick_yticks()
 
+        self.figure.tight_layout()
+
     def _setup_figure(self):
         """
         Make two subplots with a shared y-axis.
@@ -167,7 +169,6 @@ class FoldChange:
                 sharey=True,
                 figsize=self.output_size,
                 gridspec_kw=dict(
-                    hspace=0.001,
                     width_ratios=(0.65, 0.35),
                 ),
         )
