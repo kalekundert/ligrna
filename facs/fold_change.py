@@ -270,11 +270,15 @@ class FoldChange:
             reverse = not self.sort_by[0].isupper()
 
         elif self.sort_by.lower() in {'w', 'most-wt'}:
-            key = lambda expt: np.mean([w.loc for w in expt['no_ligand']])
+            key = lambda expt: min(
+                    np.mean([w.loc for w in expt['no_ligand']]),
+                    np.mean([w.loc for w in expt['ligand']]))
             reverse = False
 
         elif self.sort_by.lower() in {'d', 'most-dead'}:
-            key = lambda expt: np.mean([w.loc for w in expt['no_ligand']])
+            key = lambda expt: max(
+                    np.mean([w.loc for w in expt['no_ligand']]),
+                    np.mean([w.loc for w in expt['ligand']]))
             reverse = True
 
         self.analyzed_wells.sort(key=key, reverse=reverse)
