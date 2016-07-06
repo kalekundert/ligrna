@@ -2,7 +2,7 @@
 
 """\
 Usage:
-    crispri_assay.py [--lb] [--rfp]
+    crispri_assay.py [--lb] [--rfp] [--verbose]
 
 Options:
     --lb
@@ -13,6 +13,11 @@ Options:
     --rfp
         Measure red fluorescence rather than green.  This changes some of the 
         flow cytometry parameters.
+
+    -v --verbose
+        Print out the more pedantic details about the protocol, including 
+        recipes for the medias, product numbers 
+        for some reagents, and things like that.
 """
 
 import docopt
@@ -24,6 +29,33 @@ media = 'LB' if args['--lb'] else 'EZ'
 channel = 'RFP' if args['--rfp'] else 'GFP'
 gfp_threshold = '5000' if args['--rfp'] else ''
 rfp_threshold = '' if args['--rfp'] else '500'
+
+if args['--verbose']:
+    if args['--lb']:
+        protocol += """\
+Prepare the following reagents:
+
+Reagent  Description
+─────────────────────────────────────────────────
+LBCC     LB, 100 μg/mL carbenicillin, 35 μg/mL 
+         chloramphenicol
+LBCCA    LBCC, 1 μg/mL anhydrotetracycline
+LBCCAT   LBCCA, 1 mM theophylline
+"""
+    else:
+        protocol += """\
+Prepare the following reagents:
+
+Reagent  Description
+─────────────────────────────────────────────────
+LBCC     LB, 100 μg/mL carbenicillin, 35 μg/mL 
+         chloramphenicol
+EZCCA    MOPS EZ rich defined media (Teknova 
+         M2105), 0.1% glucose, 100 μg/mL 
+         carbenicillin, 35 μg/mL chloramphenicol, 
+         1 μg/mL anhydrotetracycline
+EZCCAT   EZCCA, 1 mM theophylline
+"""
 
 protocol += """\
 Make overnight cultures of the designs you want to 
