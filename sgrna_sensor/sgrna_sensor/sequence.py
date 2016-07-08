@@ -368,11 +368,15 @@ class Construct (Sequence):
 
         if start_index == '...':
             start_index = 0
+        if start_index < 0:
+            start_index += len(start_domain)
         if start_index not in start_domain.attachment_sites:
             raise ValueError("Position {} of domain {} is not an attachment site.".format(start_index, start_domain.name))
 
         if end_index == '...':
             end_index = len(end_domain)
+        if end_index < 0:
+            end_index += len(end_domain)
         if end_index not in end_domain.attachment_sites:
             raise ValueError("Position {} of domain {} is not an attachment site.".format(end_index, end_domain.name))
 
