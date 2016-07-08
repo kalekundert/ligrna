@@ -150,12 +150,12 @@ by electroporation.
 
 - It's best to do the transformation immediately, 
   so as much of the DNA as possible will be 
-  supercoiled.  With MG1655 (but not Top10) cells, 
-  I find that supercoiled DNA gives 100x more 
-  transformants than relaxed DNA.
+  supercoiled.  With MG1655 (but not Top10)
+  cells, I find that supercoiled DNA gives 100x
+  more transformants than relaxed DNA.
 
-- Use the transformation protocol described above, 
-  but use Carb + Chlor instead of just Carb."""
+- Use the transformation protocol described
+  above, but use Carb + Chlor instead of Carb."""
 
 ## Glycerol stock
 
