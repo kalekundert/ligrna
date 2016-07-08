@@ -1271,6 +1271,12 @@ def monte_carlo_hairpin(N, A=1, ligand='theo', target='aavs'):
     sgrna = wt_sgrna(target)
     sgrna.attach(insert, 'nexus', 0, 'hairpins', 17)
 
+    # Specify how the new domains should be colored.
+    sgrna['nexus_n'].style = 'red'
+    sgrna['ruler'].style = 'magenta'
+    sgrna["linker/5'"].style = 'blue'
+    sgrna["linker/3'"].style = 'blue'
+
     return sgrna
 
 
