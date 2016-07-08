@@ -116,7 +116,7 @@ def aptamer(ligand, piece='whole'):
 
     if ligand in ('th', 'theo', 'theophylline'):
         sequence_pieces   = 'AUACCAGCC', 'GAAA', 'GGCCCUUGGCAG'
-        constraint_pieces = '.(.((((((', '....', ')))...))).).'
+        constraint_pieces = '.((((.(((', '....', ')))....)))).'
 
     elif ligand in ('3mx', '3-methylxanthine'):
         # Soukup, Emilsson, Breaker. Altering molecular recognition of RNA 
@@ -147,7 +147,7 @@ def aptamer(ligand, piece='whole'):
     # Define the domains that make up the aptamer.
 
     aptamer_5 = Domain("aptamer/5'", sequence_pieces[0])
-    aptamer_S = Domain("splitter", sequence_pieces[1])
+    aptamer_S = Domain("aptamer/splitter", sequence_pieces[1])
     aptamer_3 = Domain("aptamer/3'", sequence_pieces[2])
 
     aptamer_5.constraints = constraint_pieces[0]
@@ -187,12 +187,12 @@ def aptamer_insert(ligand, linker_len=0, splitter_len=0, repeat_factory=repeat,
     # If multiple aptamers were requested, build them around the central one.
 
     for i in range(1, num_aptamers):
-        insert.replace('splitter', aptamer(ligand))
+        insert.replace('aptamer/splitter', aptamer(ligand))
 
     # If a splitter was requested, insert it into the middle of the aptamer.
 
     if splitter_len != 0:
-        insert.replace('splitter', repeat_factory('splitter', splitter_len))
+        insert.replace('aptamer/splitter', repeat_factory('aptamer/splitter', splitter_len))
 
     # Add a linker between the aptamer and the sgRNA.
 
