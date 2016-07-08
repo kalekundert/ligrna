@@ -13,11 +13,34 @@ Options:
 
 import docopt
 import dirty_water
+import nonstdlib
 
 args = docopt.docopt(__doc__)
 protocol = dirty_water.Protocol()
 num = int(eval(args['<num_libraries>']))
-s = 's' if num > 1 else ''
+N = nonstdlib.plural(num)
+
+## Primer design
+
+protocol += """\
+Design primers to assemble the {N:/library/libraries} with.
+
+- The ``clone_into_wt.py`` script can design these 
+  primers automatically.
+
+- The primers should have overhangs containing the 
+  degenerate nucleotides that make up the library.
+
+- The complementary between the primers and the 
+  plasmid should have a Tm near 60°C.
+
+- Order the 5' phosphate modification for the 
+  primers.
+  
+- You can also order HPLC/PAGE purification if 
+  your primers are long and you don't mind the 
+  extra expense, but the regular purification 
+  worked well for me."""
 
 ## Inverse PCR
 
@@ -30,7 +53,7 @@ protocol += pcr
 ## Gel extraction
 
 protocol += """\
-Purify the PCR product{s} by gel extraction.
+Purify the PCR {N:product/s} by gel extraction.
 
 - 1% agarose/TAE/GelRed gel at 130V for 1h.
 
@@ -51,7 +74,7 @@ T4 ligase          400 U/μL   1.00 μL
 lig_rxn.show_master_mix = False
 
 protocol += """\
-Setup {num} ligation reaction{s}.
+Setup {num} ligation {N:reaction/s}.
 
 {lig_rxn}"""
 
