@@ -8,11 +8,11 @@ Usage:
     scorefxn.py [options] <names>...
 
 Options:
-    -x, --scorefxn SFXN      [default: mea_tree_metric]
+    -x, --scorefxn SFXN      [default: active_population]
         Specify which score function to use.
 """
 
-import docopt, math
+import docopt, math, numpy as np
 import RNA, sgrna_sensor
 
 def mfe_tree_metric(design, ligand_bound=False):
@@ -66,20 +66,30 @@ def mea_string_metric(design, ligand_bound=False):
     return RNA.string_edit_distance(ref_str, mfe_str)
 
 def active_population(design, ligand_bound=False):
-    RNA.pf_fold(design.seq, None)
-    bppm = RNA.export_bppm()
+    seq = design.seq
+    N = len(seq)
+    RNA.pf_fold(seq, None)
+    bppm = np.array([[RNA.get_pr(i,j) for i in range(N)] for j in range(N)])
+
+    import matplotlib.pyplot as plt
+
+    plt.imshow(bppm)
+    plt.colorbar()
+    plt.show()
+
     print bppm
+    print bppm.shape
     print type(bppm)
 
     #s = ""
     #RNA.assign_plist_from_pr(s, bppm, len(design), 0)
 
-    from ctypes import *
-    c_double_list = POINTER(c_double)
-    print c_double_list
-    print int(bppm)
-    print dir(bppm)
-    c_bppm = c_double_list(int(bppm))
+    #from ctypes import *
+    #c_double_list = POINTER(c_double)
+    #print c_double_list
+    #print int(bppm)
+    #print dir(bppm)
+    #c_bppm = c_double_list(int(bppm))
 
     #RNA.print_bppm(bppm)
     return 1
