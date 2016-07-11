@@ -108,6 +108,83 @@ def dead_sgrna(target=None):
 
     return sgrna
 
+@design('on')
+def on(target=None):
+    """
+    Return an optimized sgRNA sequence.
+
+    This is an optimized version of the standard sgRNA sequence used for 
+    Cas9-mediated genome editing, gene regulation, and chromosome labeling.  
+    The optimizations come from Dang et al. Genome Biology 12:280 (2015).  
+    First, a base pair in the lower stem is changed from ``UA`` to ``CG`` to 
+    breakup a series of 4 thymidines that stalls the mammalian RNA polymerase.
+    Second, the upper stem is extended by 5 base pairs, taken from the native 
+    crRNA/tracrRNA duplex (which is 10bp longer than the canonical sgRNA).
+
+    This construct is constitutively on and is meant to be used as a positive 
+    control.
+    """
+    sgrna = Construct('wtx')
+
+    if target is not None:
+        sgrna += spacer(target)
+
+    # Although this sequence is just an optimized version of ``wt``, it is 
+    # constructed rather differently.  
+    # 
+    # First of all, it has a different name.  I do think ``on`` is more clear 
+    # than ``wt``, because this construct shows me what happens when Cas9 is 
+    # on.  The name ``wt`` also never really made sense, because sgRNA is 
+    # inherently artificial.  But my real motivation was to name the negative 
+    # control something other than ``dead``.  The ``dead`` name was confusing 
+    # because lots of things can be dead, and it's not always clear which ones 
+    # I'm talking about.  I think ``off`` will be much more clear.
+    #
+    # More importantly, the domains are much more finely divided.  I've found 
+    # that this makes it easier to construct designs, both because there are 
+    # more places where sequences can be inserted without messing up the 
+    # indexing and because you don't have to count as far to figure out 
+    # insertion indices and the like.  It's never been worth the effort to 
+    # update ``wt``, but I hope that what I'll lose here in interoperability 
+    # I'll gain in ease-of-use.
+
+    sgrna += Domain('lower_stem/5', 'GUUUCA', 'green')
+    sgrna += Domain('bulge/5', 'GA', 'yellow')
+    sgrna += Domain('upper_stem/5', 'GCUAUGCUG', 'green')
+    sgrna += Domain('upper_stem/o', 'GAAA', 'green')
+    sgrna += Domain('upper_stem/3', 'CAGCAUAGC', 'green')
+    sgrna += Domain('bulge/3', 'AAGU', 'yellow')
+    sgrna += Domain('lower_stem/3', 'UGAAAU', 'green')
+    sgrna += Domain('nexus/5', 'AAGG', 'red')
+    sgrna += Domain('nexus/o', 'CUAGU', 'red')
+    sgrna += Domain('nexus/3', 'CCGU', 'red')
+    sgrna += Domain('ruler', 'UAUCA', 'magenta')
+    sgrna += Domain('hairpin/5', 'ACUU', 'blue')
+    sgrna += Domain('hairpin/o', 'GAAA', 'blue')
+    sgrna += Domain('hairpin/3', 'AAGU', 'blue')
+    sgrna += Domain('terminator/5', 'GGCACCG', 'blue')
+    sgrna += Domain('terminator/o', 'AGU', 'blue')
+    sgrna += Domain('terminator/3', 'CGGUGC', 'blue')
+    sgrna += Domain('terminator/u', 'UUUUUU', 'blue')
+
+    return sgrna
+
+@design('off')
+def off(target=None):
+    """
+    Return the sequence for the negative control sgRNA.
+
+    This sequence has two mutations in the nexus region that prevent the sgRNA 
+    from folding properly.  These mutations were described by Briner et al.
+    """
+    sgrna = on(target)
+    sgrna.name = 'off'
+
+    sgrna['nexus/5'].mutate(2, 'C')
+    sgrna['nexus/5'].mutate(3, 'C')
+
+    return sgrna
+
 @design('fu', 'us')
 def fold_upper_stem(N, linker_len=0, splitter_len=0, num_aptamers=1, ligand='theo', target='aavs'):
     """

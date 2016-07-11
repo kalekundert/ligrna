@@ -37,6 +37,12 @@ def test_wt_sgrna():
 def test_dead_sgrna():
     assert from_name('dead') == 'GUUUUAGAGCUAGAAAUAGCAAGUUAAAAU' 'AACCCUAGUCCGU' 'UAUCAACUUGAAAAAGUGGCACCGAGUCGGUGC' 'UUUUUU'
 
+def test_on():
+    assert from_name('on').seq == 'guuuCagagcuaUGCUGgaaaCAGCAuagcaaguuGaaauaaggcuaguccguuaucaacuugaaaaaguggcaccgagucggugcuuuuuu'.upper()
+
+def test_off():
+    assert from_name('off').seq == 'guuuCagagcuaUGCUGgaaaCAGCAuagcaaguuGaaauaacccuaguccguuaucaacuugaaaaaguggcaccgagucggugcuuuuuu'.upper()
+
 def test_fold_upper_stem():
     with pytest.raises(ValueError):
         from_name('us(5)')
