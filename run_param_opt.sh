@@ -9,12 +9,12 @@ mkdir -p stdout
 fixed_args="inputs/mh_7.yml inputs/scorefxn.yml -n1000"
 
 declare -A parameter_args
-parameter_args[auto_25]="-T 'auto 25'"
-parameter_args[auto_50]="-T 'auto 50'"
-parameter_args[auto_75]="-T 'auto 75'"
-parameter_args[anneal_T_1]="-T '1 to 0 in 500 steps'"
-parameter_args[anneal_T_2]="-T '2 to 0 in 500 steps'"
-parameter_args[anneal_T_4]="-T '4 to 0 in 500 steps'"
+parameter_args[auto_25]="-T 'auto 25%'"
+parameter_args[auto_50]="-T 'auto 50%'"
+parameter_args[auto_75]="-T 'auto 75%'"
+#parameter_args[anneal_T_1]="-T '1 to 0 in 500 steps'"
+#parameter_args[anneal_T_2]="-T '2 to 0 in 500 steps'"
+#parameter_args[anneal_T_4]="-T '4 to 0 in 500 steps'"
 
 declare -A spacer_args
 spacer_args[no_spacers]=''
