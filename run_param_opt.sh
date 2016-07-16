@@ -25,6 +25,6 @@ for params in "${!parameter_args[@]}"; do
     for spacer in "${!spacer_args[@]}"; do
         output_dir="results/param_opt/${params}/${spacer}"
         rm -rf ${output_dir}; mkdir -p ${output_dir}
-        qsub -t 1-10 -v "OUTPUT_PREFIX=${output_dir},ADDAPT_ARGS=${fixed_args} ${parameter_args[$params]} ${spacer_args[$spacer]}" sgrna_mc
+        qsub -t 1-10 -l "h_rt=00:29:00" -v "OUTPUT_PREFIX=${output_dir}/mh,ADDAPT_ARGS=${fixed_args} ${parameter_args[$params]} ${spacer_args[$spacer]}" sgrna_mc
     done
 done
