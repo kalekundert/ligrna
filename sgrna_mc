@@ -1,0 +1,40 @@
+#!/bin/bash
+set -eo pipefail
+#$ -S /bin/bash
+#$ -o stdout
+#$ -j y
+#$ -cwd
+#$ -l mem_free=200M
+#$ -l arch=linux-x64
+#$ -l netapp=1G,scratch=1G
+#$ -l h_rt=10:00:00
+
+# Make sure the expected environment variables are defined.
+if [ "x$SGE_TASK_ID" = x ] || \
+   [ "x$ADDAPT_ARGS" = x ] || \
+   [ "x$OUTPUT_PREFIX" = x ]; then
+    echo "Usage:"
+    echo "SGE_TASK_ID=<id> ADDAPT_ARGS=<...> OUTPUT_PREFIX=<name> ./sgrna_mc"
+    exit 1
+fi
+
+# Make sure everything has been committed.
+commit_path=$(printf "./${OUTPUT_PREFIX}_%03d.commit" "$SGE_TASK_ID")
+. scripts/require_commit.sh > $commit_path
+
+# Specify where the output files will be created.
+tmp_traj_path=$(mktemp "/scratch/sgrna_mc.XXXXXXXX")
+traj_path=$(printf "./${OUTPUT_PREFIX}_%03d.tsv" "$SGE_TASK_ID")
+
+# Make sure the output file is copied from scratch when the program ends.
+trap "mv $tmp_traj_path $traj_path" EXIT
+
+# Run the design simulation.
+echo "addapt version $(addapt --version)"
+addapt \
+    $ADDAPT_ARGS \
+    -r $SGE_TASK_ID \
+    -o $tmp_traj_path
+
+# Report how much resource the simulation used.
+qstat -j $JOB_ID
