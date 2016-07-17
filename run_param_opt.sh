@@ -6,18 +6,15 @@ rm -rf stdout
 mkdir -p stdout
 
 # Submit the design jobs
-fixed_args="inputs/mh_7.yml inputs/scorefxn.yml -n1000"
+fixed_args="inputs/mh_7.yml inputs/scorefxn.yml -n10000"
 
 declare -A parameter_args
-#parameter_args[auto_25]="-T 'auto 25%'"
-#parameter_args[auto_50]="-T 'auto 50%'"
-#parameter_args[auto_75]="-T 'auto 75%'"
+parameter_args[auto_25]="-T 'auto 25%'"
+parameter_args[auto_50]="-T 'auto 50%'"
+parameter_args[auto_75]="-T 'auto 75%'"
 parameter_args[auto_anneal_25]="-T '25% to 0% in 500 steps'"
 parameter_args[auto_anneal_50]="-T '50% to 0% in 500 steps'"
 parameter_args[auto_anneal_75]="-T '75% to 0% in 500 steps'"
-#parameter_args[anneal_T_1]="-T '1 to 0 in 500 steps'"
-#parameter_args[anneal_T_2]="-T '2 to 0 in 500 steps'"
-#parameter_args[anneal_T_4]="-T '4 to 0 in 500 steps'"
 
 declare -A spacer_args
 spacer_args[no_spacers]=''
@@ -28,6 +25,6 @@ for params in "${!parameter_args[@]}"; do
     for spacer in "${!spacer_args[@]}"; do
         output_dir="results/param_opt/${params}/${spacer}"
         rm -rf ${output_dir}; mkdir -p ${output_dir}
-        qsub -t 1-10 -l "h_rt=00:29:00" -v "OUTPUT_PREFIX=${output_dir}/mh,ADDAPT_ARGS=${fixed_args} ${parameter_args[$params]} ${spacer_args[$spacer]}" sgrna_mc
+        qsub -t 1-10 -v "OUTPUT_PREFIX=${output_dir}/mh,ADDAPT_ARGS=${fixed_args} ${parameter_args[$params]} ${spacer_args[$spacer]}" sgrna_mc
     done
 done
