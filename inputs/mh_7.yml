@@ -1,3 +1,4 @@
-sequence: guuuuagagcuagaaauagcaaguuaaaauaaggCUAGUccGUUAUCAACUgauaccagccgaaaggcccuuggcagcAGUggcaccgagucggugcuuuuuu
+sequence: guuucagagcuaugcuggaaacagcauagcaaguugaaauaaggCUAGUccGUUAUCAACUgauaccagccgaaaggcccuuggcagcAGUggcaccgagucggugcuuuuuu
 macrostates:
-  active: (............................)xx..xxxxx..xxxxxxx(...............................).(.............)......
+  active: (......................................)xx..xxxxx..xxxxxxx(...............................).(.............)......
+
