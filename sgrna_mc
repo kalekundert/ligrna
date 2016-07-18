@@ -7,7 +7,7 @@ set -eo pipefail
 #$ -l mem_free=200M
 #$ -l arch=linux-x64
 #$ -l netapp=1G,scratch=1G
-#$ -l h_rt=24:00:00
+#$ -l h_rt=36:00:00
 
 # Make sure the expected environment variables are defined.
 if [ "x$SGE_TASK_ID" = x ] || \
