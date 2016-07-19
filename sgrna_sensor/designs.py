@@ -124,7 +124,7 @@ def on(target=None):
     This construct is constitutively on and is meant to be used as a positive 
     control.
     """
-    sgrna = Construct('wtx')
+    sgrna = Construct('on')
 
     if target is not None:
         sgrna += spacer(target)
@@ -1113,10 +1113,6 @@ def random_bulge_backward(i, target='aavs'):
       Linkers are complementary to each other, but are predicted to be fully 
       base paired with or without theo.
       
-    rbb(21):
-      Linkers are complementary to each other, but are predicted to be fully 
-      base paired with or without theo.
-      
     rbb(27):
       Predicted to work.  The 5' linker sequence has some complementarity 
       with the aptamer.  When it base pairs with the aptamer, it forms a 
@@ -1125,15 +1121,57 @@ def random_bulge_backward(i, target='aavs'):
       linker to form a stem that prevents Cas9 binding.  I think this linker- 
       linker interaction is a little weaker, because it has a CU mismatch in 
       the middle of an otherwise complementary region.
+
+    rbb(29):
+      Linkers are complementary to each other, but are predicted to be fully 
+      base paired with or without theo.
+      
+    rbb(39):
+      Linkers are complementary to each other, but are predicted to be fully 
+      base paired with or without theo.
+      
+    rbb(42):
+      Predicted to work.  The two linkers are perfectly complementary with the 
+      exception of a UU mismatch.  In the apo-state, this is enough to allow a 
+      bulge-like fold to form.  In the holo state, the bulge is gone.  I wonder 
+      if this could be a generic design.  Despite being so close to the spacer, 
+      the aptamer is insulated by the always-base-paired lower stem.  And the 
+      change in base pairing is small, which means there shouldn't be a large 
+      kinetic barrier.
+      
+    rbb(45):
+      Linkers are complementary to each other, but are predicted to be fully 
+      base paired with or without theo.
+      
     """
     linkers = {
-            4: ('AAGCTG', 'CGGCGC'),    # rb/6/6
-            15: ('CCCTA', 'TGGGGT'),    # rb/5/6
-            21: ('AAGCTG', 'CGGCGC'),   # rb/6/6
+            # First screen
+            4:  ('AAGCTG', 'CGGCGC'),   # rb/6/6
+            15: ('CCCTA',  'TGGGGT'),   # rb/5/6
             27: ('GCGCTG', 'CGTCGC'),   # rb/6/6
+
+            # Second screen
+            29: ('GTCTGT', 'ATAGAT'),   # rb/6/6
+            39: ('ACCTGC', 'GTAGGT'),   # rb/6/6
+            42: ('ACCTC',  'GTGGT'),    # rb/5/5
+            45: ('CCCCC',  'GGGGGT'),   # rb/5/6
+
     }
     aliases = {
-            42: 27,
+            19: 27,
+            25: 27,
+            41: 27,
+            46: 45,
+            47: 27,
+            52: 27,
+            53: 27,
+            54: 45,
+            69: 27,
+            74: 27,
+            77: 42,
+            85: 39,
+            89: 27,
+            91: 29,
     }
     if i in aliases:
         raise ValueError("rbb({}) is the same as rbb({})".format(i, aliases[i]))
@@ -1194,6 +1232,55 @@ def random_nexus(N, M, A=1, ligand='theo', target='aavs'):
             'nexus', 2,
             'nexus', 11,
     )
+    return sgrna
+
+@design('rxb')
+def random_nexus_backwards(i, target='aavs'):
+    """
+    Most of these designs are not predicted to fold correctly in either 
+    condition.  The exception is rxb(51), for which the lower stem is predicted 
+    to fold better without ligand than with it.
+    """
+    linkers = {
+            2:  ('GGGGA', 'TCTCC'),     # rx/5/5
+            11: ('GTGGG', 'CCTAC'),     # rx/5/5
+            14: ('GAAGG', 'CTTTC'),     # rx/5/5
+            22: ('GGTG',  'CATCT'),     # rx/4/5
+            39: ('GGGGA', 'TCTTC'),     # rx/5/5
+            44: ('GGGGA', 'TTTGC'),     # rx/5/5
+            51: ('GCCCG', 'CGAGT'),     # rx/5/5
+            91: ('GGGAA', 'TTCC'),      # rx/5/4
+            94: ('GTG',   'CAC'),       # rx/3/3
+    }
+    aliases = {
+            19: 14,
+            26: 14,
+            41: 2,
+            52: 11,
+            54: 11,
+            61: 11,
+            66: 14,
+            68: 2,
+            70: 2,
+            88: 11,
+            93: 51,
+    }
+    if i in aliases:
+        raise ValueError("rxb({}) is the same as rxb({})".format(i, aliases[i]))
+    if i not in linkers:
+        raise ValueError("no sequence for rxb({})".format(i))
+
+    sequenced_insert = aptamer('theo')
+    sequenced_insert.prepend(Domain("linker/5'", linkers[i][0]))
+    sequenced_insert.append(Domain("linker/3'", linkers[i][1]))
+
+    sgrna = wt_sgrna(target)
+    sgrna.attach(
+            sequenced_insert,
+            'nexus', 2,
+            'nexus', 11,
+    )
+
     return sgrna
 
 @design('rh')
@@ -1286,73 +1373,65 @@ def monte_carlo_hairpin(N, A=1, ligand='theo', target='aavs'):
     the positions that were most likely to mutate in Monte Carlo RNA design 
     simulations.
 
-    The score function in the Monte Carlo simulations was based on the base-
-    pair probability matrix (BPPM) calculated by ViennaRNA as part of its 
-    partition function folding algorithm.  Each element in this matrix is the 
-    probability that the two corresponding nucleotides will be base-paired at 
-    equilibrium.  The score function I used required that certain base pairs be 
-    either present or not present in either the apo or holo states.
-
+    The score function in the Monte Carlo simulations was the probability that 
+    the sgRNA would adopt the active fold with ligand and would not adopt it 
+    without the ligand.  These probabilities were obtained by dividing the 
+    partition function for the active macrostate by the partition function for 
+    the entire ensemble.  The partition functions were calculated by ViennaRNA 
+    and the active macrostate was defined and simulated using constraints.
+    
     The sampling moves in the Monte Carlo simulations were simply point 
-    mutations made randomly to selected positions.
+    mutations made randomly to selected positions.  Positions that were 
+    constrained to be base paired were mutated such that the base pair was 
+    maintained and the overall distribution of nucleotides was not biased.  GU 
+    pairs were not sampled at these positions.
 
-    More than 300 rounds of simulated annealing were carried out, and from 
-    those trajectories more than 200 independent, high-scoring sequences were 
-    identified.  These sequences were visualized as a sequence logo.
+    500 rounds of simulated annealing were carried out, and more than 300 
+    independent, high-scoring sequences were picked from those trajectories.  
+    These sequences were visualized as a sequence logo.
 
     Based on the ``best_library_size.py`` script and the empirical observation 
     that in my rbf screens I found about as many N=10 sequences and N=12 ones, 
-    I decided to randomize 11 positions.  I chose to randomize the 5 positions 
-    5' of the aptamer, the 3 positions 3' of the aptamer, and the 3 remaining 
-    positions (2 in the nexus, 1 in the ruler) where the wildtype nucleotide 
-    was most depleted.
-
+    I wanted to randomize 11 positions.  I chose to randomize the 5 position in 
+    between the nexus stem and 4 or 5 positions in between the nexus and the 
+    hairpin (a region I'm calling the "ruler").  Instead of randomizing the 
+    hairpin stem linking the aptamer to the sgRNA, I used the linker sequence 
+    from rhf(6).  It's a stem of length four with three GC pairs and one CA 
+    mismatch.
+    
     Parameters
     ----------
     N: int
-        The length of the ruler domain.  The natural length of this domain is 
-        7.  Positions 43-46 can be deleted to make the ruler length as short 
-        as 3 nucleotides.  Adenosines can be inserted after position 46 to make 
-        the ruler longer, because the simulations prefer adenosine at every 
-        position in the ruler.
+        The length of the ruler domain, which must be either 6 or 7.  The 
+        natural length of this domain is 7, but it is of length 6 in rhf(6).
     """
 
-    # Make domains that will replace the nexus and first part of the hairpins.  
-    # Randomize the positions where the wildtype nucleotide is predicted to be 
-    # most deleterious.
-    nexus = Domain('nexus_n', 'AAGGNUNGUCCN')
-    ruler = Domain('ruler', 'UUAU')
+    # Base this library on the optimized sgRNA described by Dang et al.
+    sgrna = on(target)
 
-    # If a length shorter than 7 is requested, remove nucleotides from the 
-    # ruler domain (between the nexus and the hairpin).
-    if N < 7:
-        if N < 3:
-            raise ValueError("mh: N must be at least 3")
-        ruler.delete(0, 7 - N)
+    # Randomize the top of the nexus.  This region is predicted to be important 
+    # for allowing the sgRNA to work with multiple spacers.
+    sgrna['nexus/o'].seq = 'NNNNN'
+    sgrna['nexus/3'].seq = 'CCNN'
 
-    # If a length longer than 7 is requested, add adenosines to the ruler.
-    if N > 7:
-        ruler.append('A' * (N - 7))
+    # Randomize most of the nucleotides connecting the nexus to the hairpins.  
+    # This region is also predicted to be important for allowing the sgRNA to 
+    # work with multiple spacers.
+    if N == 7:
+        sgrna['ruler'].seq = 'NAUNN'
+    elif N == 6:
+        sgrna['ruler'].seq = 'AUNN'
+    else:
+        raise ValueError("mh: N must be either 6 or 7")
 
-    # Randomize the nucleotides around the aptamer, but always flank it with a 
-    # GC pair.  The GC pair is partly a restriction imposed by the way the 
-    # aptamer is simulated by ViennaRNA, but it's also a motif that appears 
-    # frequently in the sequences I've recovered from FACS.
-    insert = random_insert(ligand, 5, 3)
-    insert["linker/5'"].append('G')
-    insert["linker/3'"].prepend('C')
-    insert.prepend(ruler)
-    insert.prepend(nexus)
+    # Insert the aptamer into the hairpin.
+    apt = aptamer(ligand);
+    sgrna['hairpin/o'].attachment_sites = 0,4
+    sgrna.attach(apt, 'hairpin/o', 0, 'hairpin/o', 4)
 
-    # Attach the custom nexus and aptamer domains to the sgRNA scaffold.
-    sgrna = wt_sgrna(target)
-    sgrna.attach(insert, 'nexus', 0, 'hairpins', 17)
-
-    # Specify how the new domains should be colored.
-    sgrna['nexus_n'].style = 'red'
-    sgrna['ruler'].style = 'magenta'
-    sgrna["linker/5'"].style = 'blue'
-    sgrna["linker/3'"].style = 'blue'
+    # Use the sequence found in rhf/6 to link 
+    sgrna['hairpin/5'].seq = 'GCCG'
+    sgrna['hairpin/3'].seq = 'CGAC'
 
     return sgrna
 
