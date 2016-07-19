@@ -1,14 +1,18 @@
 #!/usr/bin/env python3
 
 """\
-Pick inverse PCR primers that can be used to clone a rationally designed sgRNA 
-into a plasmid already harboring the wildtype sgRNA.
+Design inverse PCR primers that can be used to clone a new sgRNA into a plasmid 
+already harboring a related sgRNA.
 
 Usage:
-    clone_into_wt.py <designs>... [options]
+    clone_into_sgrna.py <designs>... [options]
 
 Options:
-    -s, --spacer <name>     [default: gfp]
+    -t, --target <name>     [default: on]
+        The name of the sgRNA to clone into.  By default this is the "on" 
+        positive control sgRNA.
+
+    -s, --spacer <name>     [default: none]
         The spacer sequence of the wildtype plasmid.  For some designs, this 
         doesn't matter because the primers won't overlap the spacer.  But for 
         other designs, particularly upper stem designs, different primers are 
@@ -24,14 +28,22 @@ Options:
 
     -v, --verbose
         Show extra debugging output.
-        
 """
 
-def design_cloning_primers(name, spacer, cut=None, tm=60, verbose=False):
+def design_cloning_primers(target, name, spacer, cut=None, tm=60, verbose=False):
     import sgrna_sensor, itertools
 
-    wt = sgrna_sensor.from_name('wt', target=spacer)
+    wt = sgrna_sensor.from_name(target, target=spacer)
     design = sgrna_sensor.from_name(name, target=spacer)
+
+    if verbose:
+        print("name (wt):", target)
+        print("name (design):", name)
+        print()
+        print("full sequence (wt):", wt)
+        print("full sequence (design):", design)
+        print()
+
 
     # Find where the design differs from the wildtype sgRNA:
 
@@ -89,6 +101,10 @@ def design_cloning_primers(name, spacer, cut=None, tm=60, verbose=False):
         dlen = len(overlap_5) - len(overlap_3)
         cut = (len(insert) - dlen) // 2
 
+    if verbose:
+        print("cut point:", cut)
+        print()
+
     overhang_5 = insert[:cut].lower()
     overhang_3 = insert[cut:].lower()
 
@@ -104,6 +120,8 @@ def design_cloning_primers(name, spacer, cut=None, tm=60, verbose=False):
     primer_3 = overhang_3 + overlap_3
 
     name = design.underscore_name.upper()
+    if name.startswith('NONE_'): name = name[5:]
+
     name_5 = name + '_REV'
     name_3 = name + '_FOR'
 
@@ -181,8 +199,10 @@ if __name__ == '__main__':
     primers = {}
 
     for design in args['<designs>']:
-        primers.update(design_cloning_primers(design, spacer,
-            cut=cut, tm=tm, verbose=args['--verbose']))
+        primers.update(
+                design_cloning_primers(
+                    args['--target'], design, spacer,
+                    cut=cut, tm=tm, verbose=args['--verbose']))
 
     print_cloning_primers(primers)
 
