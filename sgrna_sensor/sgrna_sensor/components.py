@@ -51,7 +51,9 @@ def spacer(name='aavs'):
     target: 'rfp', 'aavs', 'vegfa'
         The sequence to target.
     """
-    if name == 'rfp':
+    if name == 'none':
+        sequence = ''
+    elif name == 'rfp':
         sequence = 'AACTTTCAGTTTAGCGGTCT'
     elif name == 'gfp':
         sequence = 'CATCTAATTCAACAAGAATT'
