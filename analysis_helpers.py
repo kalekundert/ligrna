@@ -195,14 +195,14 @@ class ExperimentPlot:
         Work out how many wells need to be shown.
         
         There will be two rows and as many columns as necessary to show all the 
-        wells.  The first row is for the "no_ligand" wells and the second row is 
-        for the "ligand" ones.
+        wells.  The first row is for the "apo" wells and the second row is 
+        for the "holo" ones.
         """
-        num_no_ligand = len(self.experiment['wells']['no_ligand'])
-        num_ligand = len(self.experiment['wells']['ligand'])
+        num_apo = len(self.experiment['wells']['apo'])
+        num_holo = len(self.experiment['wells']['holo'])
 
         self.num_rows = 2
-        self.num_cols = max(num_no_ligand, num_ligand)
+        self.num_cols = max(num_apo, num_holo)
 
         # The 'squeeze=False' argument guarantees that the returned axes are 
         # always a 2D array, even if one of the dimensions happens to be 1.
@@ -247,7 +247,7 @@ class ExperimentPlot:
                 yield row, col
 
     def _get_condition(self, row):
-        return ('no_ligand', 'ligand')[row]
+        return ('apo', 'holo')[row]
 
     def _get_well(self, row, col):
         return self.experiment['wells'][self._get_condition(row)][col]
@@ -334,7 +334,7 @@ def pick_ucsf_color(experiment):
         return red[0]
     elif experiment['label'].startswith('sgGFP'):
         return olive[0]
-    elif experiment['label'] in ('wt', 'dead', 'null'):
+    elif experiment['label'] in ('wt', 'dead', 'null', 'on', 'off'):
         return dark_grey[0]
     elif lower_stem.match(experiment['label']):
         return purple[0]
@@ -351,13 +351,13 @@ def pick_ucsf_color(experiment):
 
 def pick_style(experiment, condition):
     styles = {
-            'no_ligand': {
+            'apo': {
                 'color': 'black',
                 'dashes': [5,2],
                 'linewidth': 1,
                 'zorder': 1,
             },
-            'ligand': {
+            'holo': {
                 'color': pick_color(experiment),
                 'linestyle': '-',
                 'linewidth': 1,
