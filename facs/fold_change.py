@@ -271,14 +271,14 @@ class FoldChange:
 
         elif self.sort_by.lower() in {'w', 'most-wt'}:
             key = lambda expt: min(
-                    np.mean([w.loc for w in expt['no_ligand']]),
-                    np.mean([w.loc for w in expt['ligand']]))
+                    np.mean([w.loc for w in expt['apo']]),
+                    np.mean([w.loc for w in expt['holo']]))
             reverse = False
 
         elif self.sort_by.lower() in {'d', 'most-dead'}:
             key = lambda expt: max(
-                    np.mean([w.loc for w in expt['no_ligand']]),
-                    np.mean([w.loc for w in expt['ligand']]))
+                    np.mean([w.loc for w in expt['apo']]),
+                    np.mean([w.loc for w in expt['holo']]))
             reverse = True
 
         self.analyzed_wells.sort(key=key, reverse=reverse)
@@ -291,10 +291,10 @@ class FoldChange:
             ]
 
     def _get_label(self, experiment):
-        return experiment['no_ligand'][0].experiment['label']
+        return experiment['apo'][0].experiment['label']
 
     def _get_fold_change(self, experiment):
-        # Calculate the fold changes between the "no_ligand" and "ligand" 
+        # Calculate the fold changes between the "apo" and "holo" 
         # distributions, accounting for the fact that they may be in either 
         # linear or log space.
         locations = {
@@ -304,9 +304,9 @@ class FoldChange:
         }
 
         if self.reference_well.log_scale:
-            fold_changes = 10**(locations['no_ligand'] - locations['ligand'])
+            fold_changes = 10**(locations['apo'] - locations['holo'])
         else:
-            fold_changes = locations['no_ligand'] / locations['ligand']
+            fold_changes = locations['apo'] / locations['holo']
 
         return fold_changes.mean(), fold_changes
 
@@ -323,7 +323,7 @@ class FoldChange:
         fold change.
         """
         location_styles = {
-                'no_ligand': {
+                'apo': {
                     'marker': '+',
                     'markeredgecolor': 'black',
                     'markerfacecolor': 'none',
@@ -331,7 +331,7 @@ class FoldChange:
                     'linestyle': ' ',
                     'zorder': 1,
                 },
-                'ligand': {
+                'holo': {
                     'marker': '+',
                     'markeredgecolor': analysis_helpers.pick_color(well.experiment),
                     'markerfacecolor': 'none',
