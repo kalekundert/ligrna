@@ -21,7 +21,7 @@ Arguments:
 
 Options:
     -i --int
-        Report the number of unique library members as full-precision integers.  
+        Report the number of unique library members as full-precision integers.
         By default, these numbers are rounded and reported using scientific 
         notation.
 
