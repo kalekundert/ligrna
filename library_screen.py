@@ -49,7 +49,7 @@ controls.
 - Add 1 mL of thawed glycerol stock to 4 mL LBCC.
 
 - Inoculate 5 mL LBCC with stabs from glycerol 
-  stocks for the "wt" and "dead" controls.
+  stocks for the positive and negative controls.
 
 - Grow all the cultures overnight at 37°C."""
 
