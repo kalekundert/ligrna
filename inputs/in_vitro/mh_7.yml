@@ -1,0 +1,9 @@
+sequence:   guuucagagcuaugcuggaaacagcauagcaaguugaaauaaggcuaguccGUUAUCAACUgauaccagccgaaaggcccuuggcagcAGUggcaccgagucggugcuuuuuu
+
+macrostates:
+  active:   (......................................)xx..xxxxx..xxxxxxx(...............................).(.............)......
+  inactive: (......................................)........|................................................................
+
+objective:
+  apo: inactive
+  holo: active
