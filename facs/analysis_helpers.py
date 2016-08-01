@@ -14,7 +14,7 @@ fluorescence_controls = {
 class AnalyzedWell (fcmcmp.Well):
 
     def __init__(self, experiment, well, channel=None, normalize_by=None, 
-            log_toggle=False, histogram=False, pdf=False, mode=False):
+            log_toggle=False, histogram=False, pdf=False, loc_metric=False):
 
         super().__init__(well.label, well.meta, well.data)
 
@@ -24,7 +24,7 @@ class AnalyzedWell (fcmcmp.Well):
         self.log_toggle = log_toggle
         self.calc_histogram = histogram
         self.calc_pdf = pdf
-        self.calc_mode = mode
+        self.loc_metric = loc_metric
 
         self.measurements = None
         self.log_scale = None
@@ -81,7 +81,8 @@ class AnalyzedWell (fcmcmp.Well):
         # Create the x-axis based on the user-specified limits.  The limits 
         # can't be picked automatically because it's important that they be the 
         # same for every plot.
-        self.x = np.linspace(*xlim, num=100)
+        N = 100 if self.loc_metric != 'mode' else 500
+        self.x = np.linspace(*xlim, num=N)
 
         # Estimate the distribution underlying the measurements.  By default 
         # use a Gaussian kernel density estimate (KDE), or use a histogram if 
@@ -103,11 +104,21 @@ class AnalyzedWell (fcmcmp.Well):
         if not self.calc_pdf:
             self.y *= len(self.measurements)
 
-        # Calculate the median or the mode of the data, as requested.
-        if self.calc_mode:
-            self.loc = self.measurements[np.argmax(self.y)]
-        else:
+        # Calculate the median, mean, or mode of the data, as requested.  The 
+        # problem with the mean and the mode is that they change if the data is 
+        # log-transformed.  The mode also depends on the resolution of the 
+        # x-axis.  In general, I think the median is the best metric.
+        if self.loc_metric is None or self.loc_metric == 'median':
             self.loc = np.median(self.measurements)
+        elif self.loc_metric == 'mean':
+            self.loc = np.mean(self.measurements)
+        elif self.loc_metric == 'mode':
+            self.loc = self.x[np.argmax(self.y)]
+        else:
+            raise ValueError("No such metric '{}'".format(self.loc_metric))
+
+        self.linear_loc = 10**self.loc if self.log_scale else self.loc
+
 
 
 class GateLowFluorescence(fcmcmp.GatingStep):

@@ -4,7 +4,7 @@
 Show the changes between populations of cells in different conditions.
 
 Usage:
-    my_analysis.py <yml_path> [options]
+    fold_change.py <yml_path> [options]
 
 Arguments:
     <yml_path>
@@ -81,7 +81,7 @@ Options:
         sensitive to the choice of bin size.  This is especially true for weak 
         fluorescence signals, which have smaller bins due to the logarithmic 
         scaling of the data.  Smaller bins are noisier and make the modes less 
-        reliable (see --mode).  Larger bins may hide features.  
+        reliable (see --loc-metric).  Larger bins may hide features.  
         
     -p --pdf
         Normalize the cell distributions such they all have the same area, and 
@@ -99,9 +99,13 @@ Options:
         fluorescent channels on a linear scale and the size channels on a log 
         scale.
 
-    -m --mode
-        Use the modes of the cell distributions to calculate fold-changes in 
-        signal.  By default the medians are used for this calculation.
+    -m --loc-metric <median|mean|mode>
+        Specify which metric should be used to determine the "centers" of the 
+        cell distributions for the purpose of calculating the fold change in 
+        signal.  By default the median is used for this calculation.  Note that 
+        the mean and the mode will both change depending on whether or not the 
+        data has been log-transformed (see --log-toggle).  The mode will also 
+        change based on how data is histogrammed (see --histogram).
 """
 
 import fcmcmp, analysis_helpers, nonstdlib
@@ -121,7 +125,7 @@ class FoldChange:
         self.log_toggle = None
         self.histogram = None
         self.pdf = None
-        self.mode = None
+        self.loc_metric = None
         self.output_size = None
         self.title = None
         self.fold_change_xlim = None
@@ -198,7 +202,7 @@ class FoldChange:
                         log_toggle=self.log_toggle,
                         histogram=self.histogram,
                         pdf=self.pdf,
-                        mode=self.mode,
+                        loc_metric=self.loc_metric,
                     )
                     for well in experiment['wells'][condition]
                 ]
@@ -294,20 +298,10 @@ class FoldChange:
         return experiment['apo'][0].experiment['label']
 
     def _get_fold_change(self, experiment):
-        # Calculate the fold changes between the "apo" and "holo" 
-        # distributions, accounting for the fact that they may be in either 
-        # linear or log space.
-        locations = {
-                condition: np.array([
-                    well.loc for well in experiment[condition]])
-                for condition in experiment
-        }
-
-        if self.reference_well.log_scale:
-            fold_changes = 10**(locations['apo'] - locations['holo'])
-        else:
-            fold_changes = locations['apo'] / locations['holo']
-
+        fold_changes = np.array([
+                holo.linear_loc / apo.linear_loc
+                for apo, holo in zip(experiment['apo'], experiment['holo'])
+        ])
         return fold_changes.mean(), fold_changes
 
     def _plot_distribution(self, i, well, condition):
@@ -453,7 +447,7 @@ if __name__ == '__main__':
     analysis.log_toggle = args['--log-toggle']
     analysis.histogram = args['--histogram']
     analysis.pdf = args['--pdf']
-    analysis.mode = args['--mode']
+    analysis.loc_metric = args['--loc-metric']
     analysis.title = args['--title']
 
     if args['--indices']:
