@@ -99,13 +99,15 @@ Zymo spin column with the Qiagen buffers:
 
 protocol += """\
 Transform the ligated DNA into Top10 cells by 
-electroporation.
+electroporation.  For each transformation:
 
-- For each aliquot you're transforming, chill an 
-  electroporation cuvette and 1 μg of DNA on ice.  
-  Pre-warm 1 mL SOC and an LB + Carb plate.
+- Pre-warm 1 mL SOC and an LB + Carb plate.
 
-- Thaw the competent cells on ice for ~10 min.
+- Chill an electroporation cuvette and 2 μL 
+  (≈250 ng) of DNA on ice.  
+
+- Thaw an aliquot of competent cells on ice for 
+  ~10 min.
 
 - Pipet once to mix the cells with the DNA, then 
   load into the cuvette.  Tap to remove bubbles.
@@ -136,7 +138,7 @@ Miniprep to isolate library plasmid.
 - Miniprep 4 mL of overnight culture.  The yield 
   should be ~400 ng/μL.
 
-- Elute in 50 μL water."""
+- Elute in 30 μL water."""
 
 protocol += """\
 If necessary, combine libraries in proportion to 
