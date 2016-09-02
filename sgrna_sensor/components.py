@@ -51,21 +51,27 @@ def spacer(name='aavs'):
     target: 'rfp', 'aavs', 'vegfa'
         The sequence to target.
     """
-    if name == 'none':
-        sequence = ''
-    elif name == 'rfp':
-        sequence = 'AACTTTCAGTTTAGCGGTCT'
-    elif name == 'gfp':
-        sequence = 'CATCTAATTCAACAAGAATT'
-    elif name == 'aavs':
-        sequence = 'GGGGCCACTAGGGACAGGAT'
-    elif name == 'vegfa':
-        sequence = 'GGGTGGGGGGAGTTTGCTCC'
-    elif name in ('k1', 'klein1'):
-        sequence = 'GGGCACGGGCAGCTTGCCCG'
-    elif name in ('k2', 'klein2'):
-        sequence = 'GTCGCCCTCGAACTTCACCT'
-    else:
+    aliases = {
+            'rfp1': 'rfp',
+            'gfp1': 'gfp',
+            'k1': 'klein1',
+            'k2': 'klein2',
+    }
+    spacers = {
+            'none':   '',
+            'rfp':    'AACTTTCAGTTTAGCGGTCT',
+            'rfp2':   'UGGAACCGUACUGGAACUGC',
+            'gfp':    'CATCTAATTCAACAAGAATT',
+            'gfp2':   'AGUAGUGCAAAUAAAUUUAA',
+            'aavs':   'GGGGCCACTAGGGACAGGAT',
+            'vegfa':  'GGGTGGGGGGAGTTTGCTCC',
+            'klein1': 'GGGCACGGGCAGCTTGCCCG',
+            'klein2': 'GTCGCCCTCGAACTTCACCT',
+    }
+
+    try:
+        sequence = spacers[aliases.get(name, name)]
+    except KeyError:
         raise ValueError("Unknown spacer: '{}'".format(name))
 
     spacer = Domain('spacer', sequence)
