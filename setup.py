@@ -31,6 +31,7 @@ setup(
         'matplotlib',
         'numpy',
         'pylab',
+        'regex',
     ],
     license='MIT',
     zip_safe=False,
