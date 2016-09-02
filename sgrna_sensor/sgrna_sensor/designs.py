@@ -1435,4 +1435,59 @@ def monte_carlo_hairpin(N, A=1, ligand='theo', target='aavs'):
 
     return sgrna
 
+@design('mhf')
+def monte_carlo_hairpin_forward(i, expected_only=False, target='aavs'):
+    """
+    mhf(3):
+    """
+    linkers = {
+            3:  ('CGGTC', 'GTC', 'CA'),
+            4:  ('ACGAA', 'GTA', 'CC'),
+            7:  ('TCTGA', 'AG',  'CC'),
+            13: ('TGACA', 'GC',  'CC'),
+            16: ('TGGTA', 'AT',  'CC'),
+            20: ('TAAAC', 'CTC', 'CA'),
+            21: ('ATCCT', 'CGC', 'GC'),
+            25: ('ACGTC', 'GC',  'TC'),
+            26: ('TTCGT', 'GCC', 'TC'),
+            30: ('GTGTC', 'GT',  'AC'),
+            35: ('GCACT', 'TA',  'CC'),
+            37: ('TCTTC', 'CGC', 'CC'),
+            38: ('ACGGT', 'CGC', 'CC'),
+            41: ('ACTCT', 'GT',  'CG'),
+    }
+    aliases = {
+            29: 21,
+    }
+    unexpected_muts = {
+            4:  ('upper_stem/5', 8, 'T'),
+            7:  ('upper_stem/5', 3, 'T'),
+            13: ('upper_stem/5', 3, 'T'),
+            21: ('upper_stem/3', 3, 'A'),
+            26: ('upper_stem/3', 3, 'T'),
+            35: ('upper_stem/5', 5, 'A'),
+            37: ('upper_stem/5', 2, ''),
+            38: ('upper_stem/5', 2, 'C'),
+    }
+
+    if i in aliases:
+        raise ValueError("mbf({}) is the same as mbf({})".format(i, aliases[i]))
+    if i not in linkers:
+        raise ValueError("no sequence for mbf({})".format(i))
+
+    sequenced_insert = aptamer('theo')
+    sequenced_insert.prepend(Domain("linker/5'", linkers[i][0]))
+    sequenced_insert.append(Domain("linker/3'", linkers[i][1]))
+
+    N = len(''.join(linkers[i])) - 5 + 2
+    sgrna = mh(N, target=target)
+    sgrna['nexus/o'].seq = linkers[i][0]
+    sgrna['nexus/3'].seq = 'CC' + linkers[i][1][0:2]
+    sgrna['ruler'].seq = linkers[i][1][2:3] + 'AU' + linkers[i][2]
+
+    if not expected_only and i in unexpected_muts:
+        domain, idx, nuc = unexpected_muts[i]
+        sgrna[domain].mutate(idx, nuc)
+
+    return sgrna
 
