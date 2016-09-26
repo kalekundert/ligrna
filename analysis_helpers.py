@@ -127,7 +127,7 @@ class GateLowFluorescence(fcmcmp.GatingStep):
         self.threshold = threshold
 
     def gate(self, experiment, well):
-        channel = fluorescence_controls.get(experiment['channel'])
+        channel = fluorescence_controls.get(pick_channel(experiment))
         if channel is not None:
             return well.data[channel] < self.threshold
 
@@ -301,9 +301,9 @@ def pick_tango_color(experiment):
     purple = '#ad7fa8', '#75507b', '#5c3566'
     brown =  '#e9b96e', '#c17d11', '#8f5902'
 
-    if experiment['label'].startswith('sgRFP'):
+    if 'rfp' in experiment['label'].lower():
         return red[1]
-    elif experiment['label'].startswith('sgGFP'):
+    elif 'gfp' in experiment['label'].lower():
         return green[2]
     elif experiment['label'] in ('wt', 'dead', 'null'):
         return grey[4]
@@ -341,9 +341,9 @@ def pick_ucsf_color(experiment):
     dark_grey = ['#b4b9bf', '#cbced2', '#e1e3e6', '#f8f8f9']
     light_grey = ['#d1d3d3', '#dfe0e0', '#ededee', '#fafbfb'] 
 
-    if experiment['label'].startswith('sgRFP'):
+    if 'rfp' in experiment['label'].lower():
         return red[0]
-    elif experiment['label'].startswith('sgGFP'):
+    elif 'gfp' in experiment['label'].lower():
         return olive[0]
     elif experiment['label'] in ('wt', 'dead', 'null', 'on', 'off'):
         return dark_grey[0]
@@ -398,9 +398,9 @@ def pick_channel(experiment, users_choice=None):
             return channel
 
     # If a channel can be inferred from the name of the experiment, use it. 
-    if 'sgGFP' in experiment['label']:
+    if 'gfp' in experiment['label'].lower():
         return 'FITC-A'
-    if 'sgRFP' in experiment['label']:
+    if 'rfp' in experiment['label'].lower():
         return 'Red-A'
 
     # Default to the red channel, if nothing else is specified.
