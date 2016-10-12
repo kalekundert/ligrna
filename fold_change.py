@@ -298,11 +298,21 @@ class FoldChange:
         return experiment['apo'][0].experiment['label']
 
     def _get_fold_change(self, experiment):
+
+        def get_fold_change(apo, holo):
+            # We don't care which direction the fold change is in, so invert 
+            # the fold change if it's less than 1 (e.g. for a backward design).
+            x = holo.linear_loc / apo.linear_loc
+            return x if x > 1 else 1/x
+
         fold_changes = np.array([
-                holo.linear_loc / apo.linear_loc
+                get_fold_change(apo, holo)
                 for apo, holo in zip(experiment['apo'], experiment['holo'])
         ])
-        return fold_changes.mean(), fold_changes
+        if fold_changes.size > 0:
+            return fold_changes.mean(), fold_changes
+        else:
+            return 0, fold_changes
 
     def _plot_distribution(self, i, well, condition):
         """
@@ -348,10 +358,9 @@ class FoldChange:
 
         fold_change, fold_changes = self._get_fold_change(experiment)
 
-        # We don't care which direction the fold change is in, so invert the 
-        # fold change if it's less than 1 (e.g. for a backward design).
-        if fold_change < 1.0:
-            fold_change **= -1
+        # If there isn't enough data to calculate a fold change, bail out here.
+        if fold_changes.size == 0:
+            return
 
         # Plot the fold-change with standard-error error-bars.  I use plot() 
         # and not barh() to draw the bar plots because I don't want the width 
