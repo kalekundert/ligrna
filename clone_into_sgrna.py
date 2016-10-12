@@ -5,14 +5,26 @@ Design inverse PCR primers that can be used to clone a new sgRNA into a plasmid
 already harboring a related sgRNA.
 
 Usage:
-    clone_into_sgrna.py <designs>... [options]
+    clone_into_sgrna.py <constructs>... [options]
+
+Arguments:
+    <constructs>...
+        The names of one or more constructs to clone (e.g. rhf/6).  You can 
+        also specify any command-line that would be valid on its own for this 
+        command (e.g. 'rhf/6 -c 10').  Any options specified in this way will 
+        only apply to the constructs named within the sub-command-line.
 
 Options:
-    -t, --target <name>     [default: on]
+    -q, --quikchange
+        Design primers for Quikchange instead of inverse PCR.  Quikchange is 
+        slightly easier for point mutations or very small insertions or 
+        deletions.
+        
+    -b, --backbone <name>
         The name of the sgRNA to clone into.  By default this is the "on" 
         positive control sgRNA.
 
-    -s, --spacer <name>     [default: none]
+    -s, --spacer <name>
         The spacer sequence of the wildtype plasmid.  For some designs, this 
         doesn't matter because the primers won't overlap the spacer.  But for 
         other designs, particularly upper stem designs, different primers are 
@@ -23,111 +35,268 @@ Options:
         relative to the insert itself.  By default, the cut site is chosen to 
         make the primers the same length.  
 
-    -t, --tm <celsius>      [default: 60]
-        The desired melting temperature for the primers.
+    -T, --tm <celsius>
+        The desired melting temperature for the primers.  The default is 60°C 
+        for inverse PCR primers and 78°C for Quikchange.  (Note that Tm is 
+        calculated differently for the two cloning strategies.)
 
     -v, --verbose
         Show extra debugging output.
 """
 
-def design_cloning_primers(target, name, spacer, cut=None, tm=60, verbose=False):
-    import sgrna_sensor, itertools
+class PrimerDesigner:
 
-    wt = sgrna_sensor.from_name(target, target=spacer)
-    design = sgrna_sensor.from_name(name, target=spacer)
+    def __init__(self):
+        self.name = None
+        self.construct = None
+        self.backbone = None
+        self.spacer = None
+        self.quikchange = False
+        self.cut = None
+        self.tm = None
+        self.verbose = False
 
-    if verbose:
-        print("name (wt):", target)
-        print("name (design):", name)
-        print()
-        print("full sequence (wt):", wt)
-        print("full sequence (design):", design)
-        print()
+    def design_primers(self):
+        if self.quikchange:
+            return self.design_quikchange_primers()
+        else:
+            return self.design_inverse_pcr_primers()
 
+    def design_inverse_pcr_primers(self):
+        # Find where the design differs from the wildtype sequence.
 
-    # Find where the design differs from the wildtype sgRNA:
+        bb_5, insert, _, bb_3 = self.find_mismatch()
 
-    mismatch_5 = None
-    mismatch_3 = None
+        # Design the part of the primers that will anneal with the wildtype 
+        # plasmid.
 
-    for i in itertools.count():
-        if wt.dna[i] != design.dna[i]:
-            mismatch_5 = i
-            break
+        overlaps_5 = [bb_5[-j:] for j in range(1, len(bb_5))]
+        overlap_5, tm_5 = pick_primer_with_best_tm(overlaps_5, self.tm)
 
-    for j in itertools.count(1):
-        if wt.dna[-j] != design.dna[-j]:
-            mismatch_3 = -j + 1
-            break
+        overlaps_3 = [bb_3[:i] for i in range(1, len(bb_3))]
+        overlap_3, tm_3 = pick_primer_with_best_tm(overlaps_3, self.tm)
 
-    if verbose:
-        print("5' matching region (wt):", wt.dna[:mismatch_5])
-        print("5' matching region (design):", design.dna[:mismatch_5])
-        print()
-        print("mismatched region (wt):", wt.dna[mismatch_5:mismatch_3])
-        print("mismatched region (design):", design.dna[mismatch_5:mismatch_3])
-        print()
-        print("3' matching region (wt):", wt.dna[mismatch_3:])
-        print("3' matching region (design):", design.dna[mismatch_3:])
-        print()
+        if self.verbose:
+            print("5' overlap:", overlap_5)
+            print("5' overlap Tm:", tm_5)
+            print("5' overlap GC%:", gc_percent(overlap_5))
+            print("5' overlap len:", len(overlap_5))
+            print()
+            print("3' overlap:", overlap_3)
+            print("3' overlap Tm:", tm_3)
+            print("3' overlap GC%:", gc_percent(overlap_3))
+            print("3' overlap len:", len(overlap_3))
+            print()
 
-    wt_5 = wt.dna[:mismatch_5]
-    wt_3 = wt.dna[mismatch_3:]
-    insert = design.dna[mismatch_5:mismatch_3]
+        tm_margin = 3
+        if abs(self.tm - tm_5) > tm_margin or abs(self.tm - tm_3) > tm_margin:
+            raise ValueError("Can't design primers for {0.name} with Tm within {1}°C of {0.tm}".format(self, tm_margin))
 
-    # Design the part of the primers that will anneal with the wildtype plasmid.
+        # Design the part of the primers that will contain the insert.
 
-    overlaps_5 = [wt_5[-j:] for j in range(1, len(wt_5))]
-    overlap_5, tm_5 = pick_primer_with_best_tm(overlaps_5, tm)
-
-    overlaps_3 = [wt_3[:i] for i in range(1, len(wt_5))]
-    overlap_3, tm_3 = pick_primer_with_best_tm(overlaps_3, tm)
-
-    if verbose:
-        print("5' overlap:", overlap_5)
-        print("5' overlap Tm:", tm_5)
-        print("5' overlap GC%:", 100 * sum(x in 'GC' for x in overlap_5) / len(overlap_5))
-        print("5' overlap len:", len(overlap_5))
-        print()
-        print("3' overlap:", overlap_3)
-        print("3' overlap Tm:", tm_3)
-        print("3' overlap GC%:", 100 * sum(x in 'GC' for x in overlap_3) / len(overlap_3))
-        print("3' overlap len:", len(overlap_3))
-        print()
-
-    # Design the part of the primers that will contain the aptamer insert.
-
-    if cut is None:
         dlen = len(overlap_5) - len(overlap_3)
-        cut = (len(insert) - dlen) // 2
+        default_cut = (len(insert) - dlen) // 2
+        cut = self.cut or default_cut
 
-    if verbose:
-        print("cut point:", cut)
-        print()
+        if self.verbose:
+            print("cut point:", cut)
+            print()
 
-    overhang_5 = insert[:cut].lower()
-    overhang_3 = insert[cut:].lower()
+        overhang_5 = insert[:cut]
+        overhang_3 = insert[cut:]
 
-    if verbose:
-        print("5' overhang:", overlap_5)
-        print("3' overhang:", overlap_3)
-        print()
+        if self.verbose:
+            print("5' overhang:", overlap_5)
+            print("3' overhang:", overlap_3)
+            print()
 
-    # Combine the two halves of each primer.  Print the overlap in uppercase and 
-    # the overhang in lowercase.  Reverse-complement the 5' primer.
+        # Combine the two halves of each primer.  Print the overlap in uppercase and 
+        # the overhang in lowercase.  Reverse-complement the 5' primer.
 
-    primer_5 = reverse(complement(overlap_5 + overhang_5))
-    primer_3 = overhang_3 + overlap_3
+        primer_5 = reverse(complement(overlap_5.lower() + overhang_5.upper()))
+        primer_3 = overhang_3.upper() + overlap_3.lower()
 
-    name = design.underscore_name.upper()
-    if name.startswith('NONE_'): name = name[5:]
+        if self.verbose:
+            print("forward primer len:", len(primer_3))
+            print("reverse primer len:", len(primer_5))
+            print()
 
-    name_5 = name + '_REV'
-    name_3 = name + '_FOR'
+        name = self.name.upper()
+        if name.startswith('NONE_'): name = name[5:]
+        name_5 = name + '_REV'
+        name_3 = name + '_FOR'
 
-    return {name_5: primer_5, name_3: primer_3}
+        return {name_5: primer_5, name_3: primer_3}
 
-def print_cloning_primers(primers):
+    def design_quikchange_primers(self):
+        # Find where the construct differs from the backbone.
+
+        bb_5, insert, replace, bb_3 = self.find_mismatch()
+        bb_5, insert, bb_3 = bb_5.lower(), insert.upper(), bb_3.lower()
+
+        # Make a list of every possible primer that has the insert centered to 
+        # within two nucleotides.
+
+        primers = []
+        max_n = min(len(bb_5), len(bb_3))
+        for n in range(max_n):
+            for dn in range(-2, 3):
+                if n + dn > 0:
+                    primers.append(bb_5[-n:] + insert + bb_3[:n+dn])
+
+        if self.verbose:
+            print("num possible primers:", len(primers))
+
+        # Discard any primer with a Tm below the given limit.
+
+        primer_tms = {
+                primer: calculate_agilent_tm(primer, insert, replace)
+                for primer in primers}
+
+        primers = [
+                primer for primer in primers
+                if primer_tms[primer] >= self.tm]
+
+        if self.verbose:
+            print("num high enough Tm:", len(primers))
+            print()
+
+        if not primers:
+            raise ValueError("no primers with Tm > {}°C for {}".format(self.tm, self.name))
+
+        # Score the remaining primers based on how close their Tm is to the 
+        # limit, how close their GC% is to 0.4, and whether they start and end 
+        # with a 'G' or a 'C'.
+
+        primer_scores = {
+                primer: sum([
+                    1.0 * abs(self.tm - primer_tms[primer]),  # Prefer primers with melting temperature close to 78°C.
+                    5.0 * abs(0.4 - gc_percent(primer)),  # Prefer primers with about 40% G or C.
+                    5.0 * ((primer[0] in 'AT') + (primer[-1] in 'AT')),  # Prefer primers that start and end with G or C.
+                    1.0 * max(0, len(primer) - 50),  # Primers longer than 50 bp are more expensive.
+                ])
+                for primer in primers
+        }
+
+        # Pick the primer with the best score.
+
+        by_score = lambda k: primer_scores[k]
+        best_primers = sorted(primer_scores.keys(), key=by_score)
+        best_primer = best_primers[0]
+
+        if self.verbose:
+            print("best primer score:", primer_scores[best_primer])
+            print("best primer Tm:", primer_tms[best_primer])
+            print("best primer GC%:", gc_percent(best_primer))
+            print("best primer len:", len(best_primer))
+            print()
+
+        # Construct the forward and reverse primers.
+
+        name = self.name.upper()
+        if name.startswith('NONE_'): name = name[5:]
+        name_for = name + '_FOR'
+        name_rev = name + '_REV'
+
+        return {name_for: best_primer, name_rev: reverse(complement(best_primer))}
+
+    def find_mismatch(self):
+        import itertools
+
+        if self.construct == self.backbone:
+            raise ValueError("{} is the same as the backbone.".format(self.name))
+
+        mismatch_5 = None
+        mismatch_3 = None
+
+        for i in itertools.count():
+            if self.backbone[i] != self.construct[i]:
+                mismatch_5 = i
+                break
+
+        for j in itertools.count(1):
+            if self.backbone[-j] != self.construct[-j]:
+                mismatch_3 = -j + 1
+                break
+
+        if self.verbose:
+            print("5' matching region (construct):", self.construct[:mismatch_5])
+            print("5' matching region (backbone):", self.backbone[:mismatch_5])
+            print()
+            print("mismatched region (construct):", self.construct[mismatch_5:mismatch_3])
+            print("mismatched region (backbone):", self.backbone[mismatch_5:mismatch_3])
+            print()
+            print("3' matching region (construct):", self.construct[mismatch_3:])
+            print("3' matching region (backbone):", self.backbone[mismatch_3:])
+            print()
+
+        return (self.backbone[:mismatch_5],
+                self.construct[mismatch_5:mismatch_3],
+                self.backbone[mismatch_5:mismatch_3],
+                self.backbone[mismatch_3:])
+
+
+
+def configure_primer_designers_from_docopt():
+    import docopt
+    import shlex
+    import sgrna_sensor
+
+    args = docopt.docopt(__doc__)
+    default_backbone_name = args['--backbone'] or 'on'
+    default_spacer = args['--spacer'] or 'none'
+    default_quikchange = args['--quikchange']
+    default_cut = args['--cut']
+    default_tm = args['--tm']
+    default_verbose = args['--verbose']
+
+    for name in args['<constructs>']:
+        sub_cli = shlex.split(name)
+        sub_args = docopt.docopt(__doc__, sub_cli)
+
+        for sub_name in sub_args['<constructs>']:
+            designer = PrimerDesigner()
+            designer.name = sub_name
+            designer.spacer = sub_args['--spacer'] or default_spacer
+            designer.quikchange = sub_args['--quikchange'] or default_quikchange
+            designer.cut = int_or_none(sub_args['--cut'] or default_cut)
+            designer.tm = float(sub_args['--tm'] or default_tm or \
+                    (78 if designer.quikchange else 60))
+            designer.verbose = sub_args['--verbose'] or default_verbose
+
+            sgrna = sgrna_sensor.from_name(sub_name, target=designer.spacer)
+            designer.name = sgrna.underscore_name
+            designer.construct = sgrna.dna
+            designer.backbone = sgrna_sensor.from_name(
+                    sub_args['--backbone'] or default_backbone_name,
+                    target=designer.spacer).dna
+
+            yield designer
+
+def consolidate_duplicate_primers(primers, term_sep='_'):
+    from collections import defaultdict
+    from natsort import natsorted
+
+    # Find all the names that each primer is referred to by.
+
+    primer_names = defaultdict(list)
+
+    for name, primer in primers.items():
+        primer_names[primer].append(name)
+
+    # For primers that have multiple names, make a new name by combining all 
+    # the old ones.  The user will be expected to simplify the name when 
+    # copying and pasting the primers into the Elim form.
+
+    unique_primers = {}
+
+    for primer, names in primer_names.items():
+        name = '\t'.join(natsorted(names))
+        unique_primers[name] = primer
+
+    return unique_primers
+    
+def report_primers_for_elim(primers):
     from natsort import natsorted
     print("Number of oligos:")
     print(len(primers))
@@ -149,10 +318,20 @@ def pick_primer_with_best_tm(seqs, tm):
     seq_tms.sort(key=lambda seq_tm: abs(seq_tm[1] - tm))
     return seq_tms[0]
 
-def reverse(sequence):
-    return sequence[::-1]
+def calculate_agilent_tm(seq, insert, replace):
+    """
+    Use the Agilent formula to calculate a Tm for the given sequence.  This is 
+    the only method that should be used when designing Quikchange primers.
+    """
+    gc = 100 * gc_percent(seq)
+    N = len(seq)
+    mismatch = 100 * min(len(insert), len(replace)) / N
+    return 81.5 + 0.41*gc - 675/N - mismatch
 
-def complement(sequence):
+def reverse(seq):
+    return seq[::-1]
+
+def complement(seq):
     complements = {
             'a': 't',
             't': 'a',
@@ -187,22 +366,20 @@ def complement(sequence):
             'H': 'D',
             'N': 'N',
     }
-    return ''.join(complements[x] for x in sequence)
+    return ''.join(complements[x] for x in seq)
+
+def gc_percent(seq):
+    seq = seq.upper()
+    gc = seq.count('G') + seq.count('C')
+    return gc / len(seq)
+
+def int_or_none(x):
+    return x if x is None else int(x)
 
 
 if __name__ == '__main__':
-    import docopt
-    args = docopt.docopt(__doc__)
-    cut = args['--cut'] and int(args['--cut'])
-    tm = float(args['--tm'])
-    spacer = args['--spacer']
     primers = {}
-
-    for design in args['<designs>']:
-        primers.update(
-                design_cloning_primers(
-                    args['--target'], design, spacer,
-                    cut=cut, tm=tm, verbose=args['--verbose']))
-
-    print_cloning_primers(primers)
-
+    for designer in configure_primer_designers_from_docopt():
+        primers.update(designer.design_primers())
+    primers = consolidate_duplicate_primers(primers)
+    report_primers_for_elim(primers)
