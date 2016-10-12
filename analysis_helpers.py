@@ -14,7 +14,7 @@ fluorescence_controls = {
 class AnalyzedWell (fcmcmp.Well):
 
     def __init__(self, experiment, well, channel=None, normalize_by=None, 
-            log_toggle=False, histogram=False, pdf=False, loc_metric=False):
+            log_toggle=False, histogram=False, pdf=False, loc_metric='median'):
 
         super().__init__(well.label, well.meta, well.data)
 
@@ -35,7 +35,7 @@ class AnalyzedWell (fcmcmp.Well):
 
         self._find_measurements()
 
-    def estimate_distribution(self, axes_or_xlim):
+    def estimate_distribution(self, axes_or_xlim=(1,5)):
         if isinstance(axes_or_xlim, plt.Axes):
             xlim = axes_or_xlim.get_xlim()
         else:
@@ -154,9 +154,9 @@ class RenameRedChannel(fcmcmp.ProcessingStep):
 class SharedProcessingSteps:
 
     def __init__(self):
-        self.early_event_gate = None
-        self.small_cell_gate = None
-        self.low_fluorescence_gate = None
+        self.early_event_threshold = 0
+        self.small_cell_threshold = 0
+        self.low_fluorescence_threshold = 1e3
 
     def process(self, experiments):
         rename_red_channel = RenameRedChannel()
