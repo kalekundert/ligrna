@@ -22,19 +22,6 @@ setup(
     description='',
     long_description=readme,
     url='https://github.com/kalekundert/sgrna_sensor',
-    packages=[
-        'sgrna_sensor',
-    ],
-    include_package_data=True,
-    install_requires=[
-        'docopt',
-        'matplotlib',
-        'numpy',
-        'pylab',
-        'regex',
-    ],
-    license='MIT',
-    zip_safe=False,
     keywords=[
         'sgrna_sensor',
     ],
@@ -43,13 +30,25 @@ setup(
         'Intended Audience :: Developers',
         'License :: OSI Approved :: MIT License',
         'Natural Language :: English',
+        'Programming Language :: Python :: 2',
         'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.0',
-        'Programming Language :: Python :: 3.1',
-        'Programming Language :: Python :: 3.2',
-        'Programming Language :: Python :: 3.3',
-        'Programming Language :: Python :: 3.4',
-        'Programming Language :: Python :: 3.5',
-        'Topic :: Software Development :: Libraries',
     ],
+    license='MIT',
+    packages=[
+        'sgrna_sensor',
+    ],
+    install_requires=[
+        'docopt',
+        'matplotlib',
+        'numpy',
+        'pylab',
+        'regex',
+    ],
+    entry_points={
+        'console_scripts': [
+            'sgrna_sensor = sgrna_sensor.show_seqs:main',
+        ],
+    },
+    include_package_data=True,
+    zip_safe=False,
 )
