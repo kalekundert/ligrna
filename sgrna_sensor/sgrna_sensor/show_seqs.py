@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 # encoding: utf-8
 
 """\
@@ -108,53 +108,18 @@ import sgrna_sensor
 import docopt
 import math
 
-args = docopt.docopt(__doc__)
-designs = []
-
-kwargs = {}
-if args['--spacer']:
-    kwargs['target'] = args['--spacer']
-if args['--no-spacer']:
-    kwargs['target'] = None
-
-for name in args['<names>']:
-    design = sgrna_sensor.from_name(name, **kwargs)
-    designs.append(design)
-
-if args['--batch']:
-    args['--t7'] = True
-if args['--t7']:
-    args['--dna'] = True
-
-format_args = {  # (no fold)
-        'color': args['--color'],
-        'rna': True,    # Overridden if 'dna' is True.
-        'dna': args['--dna'] or args['--fasta'],
-        'pad': False,
-}
-
-if args['--slice']:
-    int_or_none = lambda x: int(x) if x else None
-
-    if args['--slice'].startswith('_'):
-        format_args['pad'] = True
-        args['--slice'] = args['--slice'][1:]
-    if ':' in args['--slice']:
-        format_args['start'] = int_or_none(args['--slice'].split(':')[0])
-        format_args['end'] = int_or_none(args['--slice'].split(':')[1])
-    else:
-        format_args['start'] = int(args['--slice'])
-
-longest_name = max([8] + [len(x.name) for x in designs])
-header_template = '{{0:{}s}}'.format(longest_name)
-
-def rnafold(design, constraints=False):
-    from subprocess import Popen, PIPE; import shlex, re
-    design.show(labels=False, rna=True, color=args['--color'])
+def predict_fold(design, constraints=False):
+    import shlex, re
+    from subprocess import Popen, PIPE
 
     if constraints:
         cmd = 'RNAfold --noPS --MEA'
         stdin = design.rna
+
+        # Note that this will only give a reasonable answer if the design in 
+        # question has the theophylline aptamer flanked by a valid base pair 
+        # (e.g. GC, AU, GU).  The folding simulation won't complain if either 
+        # of those conditions isn't met, but it will give the wrong answer.
 
         aptamer_pattern = re.compile('.AUACCAGCCGAAAGGCCCUUGGCAG.')
         aptamer_match = aptamer_pattern.search(design.rna)
@@ -185,44 +150,95 @@ def rnafold(design, constraints=False):
 
     process = Popen(shlex.split(cmd), stdin=PIPE, stdout=PIPE, stderr=PIPE)
     stdout, stderr = process.communicate(stdin.encode())
-    print('\n'.join(
+    return '\n'.join(
         x for x in stdout.decode().split('\n')[1:]
-        if not x.startswith('WARNING')).strip())
+        if not x.startswith('WARNING')).strip()
 
+def main():
+    args = docopt.docopt(__doc__)
+    designs = []
 
-for design in designs:
-    if args['--verbose']:
-        from textwrap import dedent
-        header = "{}".format(design.name)
-        print()
-        print(header)
-        print('=' * len(header))
-        if design.doc:
-            print(dedent(design.doc).strip())
-            print()
-            print("Sequence")
-            print("--------")
+    kwargs = {}
+    if args['--spacer']:
+        kwargs['target'] = args['--spacer']
+    if args['--no-spacer']:
+        kwargs['target'] = None
+
+    for name in args['<names>']:
+        design = sgrna_sensor.from_name(name, **kwargs)
+        designs.append(design)
+
+    if args['--batch']:
+        args['--t7'] = True
     if args['--t7']:
-        design.prepend(sgrna_sensor.t7_promoter())
+        args['--dna'] = True
 
-    if args['--pretty']:
-        print(header_template.format(design.name), end='  ')
-        design.show(labels=True, **format_args)
-    elif args['--batch']:
-        print(header_template.format(design.underscore_name), end='\t')
-        design.show(labels=False, **format_args)
-    elif args['--fasta']:
-        print('> ' + design.name)
-        design.show(labels=False, **format_args)
-    elif args['--length']:
-        print(header_template.format(design.name), end='  ')
-        print(len(design))
-    elif args['--rnafold']:
-        rnafold(design)
-        if args['--constraints']:
+    format_args = {  # (no fold)
+            'color': args['--color'],
+            'rna': True,    # Overridden if 'dna' is True.
+            'dna': args['--dna'] or args['--fasta'],
+            'pad': False,
+    }
+
+    if args['--slice']:
+        int_or_none = lambda x: int(x) if x else None
+
+        if args['--slice'].startswith('_'):
+            format_args['pad'] = True
+            args['--slice'] = args['--slice'][1:]
+        if ':' in args['--slice']:
+            format_args['start'] = int_or_none(args['--slice'].split(':')[0])
+            format_args['end'] = int_or_none(args['--slice'].split(':')[1])
+        else:
+            format_args['start'] = int(args['--slice'])
+
+    longest_name = max([8] + [len(x.name) for x in designs])
+    header_template = '{{0:{}s}}'.format(longest_name)
+
+    for design in designs:
+        if args['--verbose']:
+            from textwrap import dedent
+            header = "{}".format(design.name)
             print()
-            rnafold(design, True)
-    else:
-        design.show(labels=False, **format_args)
+            print(header)
+            print('=' * len(header))
+            if design.doc:
+                print(dedent(design.doc).strip())
+                print()
+                print("Sequence")
+                print("--------")
 
+        if args['--t7']:
+            design.prepend(sgrna_sensor.t7_promoter())
+
+        if args['--pretty']:
+            print(header_template.format(design.name), end='  ')
+            design.show(labels=True, **format_args)
+
+        elif args['--batch']:
+            print(header_template.format(design.underscore_name), end='\t')
+            design.show(labels=False, **format_args)
+
+        elif args['--fasta']:
+            print('> ' + design.name)
+            design.show(labels=False, **format_args)
+
+        elif args['--length']:
+            print(header_template.format(design.name), end='  ')
+            print(len(design))
+
+        elif args['--rnafold']:
+            design.show(labels=False, rna=True, color=args['--color'])
+            print(predict_fold(design))
+
+            if args['--constraints']:
+                print()
+                design.show(labels=False, rna=True, color=args['--color'])
+                print(predict_fold(design, True))
+
+            if design is not designs[-1]:
+                print()
+
+        else:
+            design.show(labels=False, **format_args)
 
