@@ -58,7 +58,48 @@ work use something like these commands to install ViennaRNA from source::
 
 Usage
 =====
-The rational design library is mostly made available through the 
-``sgrna_sensor`` command that's installed alongside the library::
+Use the ``sgrna_sensor`` script to look at sequences for specific designs.  For 
+example, to see the sequence of the positive control sgRNA::
 
-   $ sgrna_sensor -h
+   $ sgrna_sensor on
+   GUUUCAGAGCUAUGCUGGAAACAGCAUAGCAAGUUGAAAUAAGGCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU
+
+By default, different domains are displayed in different colors:
+
+- Green: Upper and lower stems
+- Yellow: Bulge
+- Red: Nexus
+- Purple: Ruler
+- Blue: Hairpins
+- Orange: Aptamer
+
+You can specify which spacer sequence to use as part of the design name::
+
+   $ sgrna_sensor aavs/on
+   GGGGCCACUAGGGACAGGAUGUUUCAGAGCUAUGCUGGAAACAGCAUAGCAAGUUGAAAUAAGGCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU
+
+There are many different options to control how the sequences are printed, and 
+you can see all of them using the ``--help`` flag.  Some of the most useful are 
+``-d`` to print DNA sequences, ``-b`` to display sequences in a tab-separated 
+format that can be easily copied into the IDT order form, ``-f`` to display 
+sequences in the FASTA format, and ``-r`` to predict 2° structures of the RNA 
+constructs (this will only work if you installed the python bindings to 
+ViennaRNA)::
+
+   $ sgrna_sensor on -d
+   GTTTCAGAGCTATGCTGGAAACAGCATAGCAAGTTGAAATAAGGCTAGTCCGTTATCAACTTGAAAAAGTGGCACCGAGTCGGTGCTTTTTT
+
+   $ sgrna_sensor aavs/on -b
+   aavs_on 	TATAGTAATAATACGACTCACTATAGGGGGCCACTAGGGACAGGATGTTTCAGAGCTATGCTGGAAACAGCATAGCAAGTTGAAATAAGGCTAGTCCGTTATCAACTTGAAAAAGTGGCACCGAGTCGGTGCTTTTTT
+
+   $ sgrna_sensor on -f
+   > on
+   GTTTCAGAGCTATGCTGGAAACAGCATAGCAAGTTGAAATAAGGCTAGTCCGTTATCAACTTGAAAAAGTGGCACCGAGTCGGTGCTTTTTT
+
+   $ sgrna_sensor on -r    
+   GUUUCAGAGCUAUGCUGGAAACAGCAUAGCAAGUUGAAAUAAGGCUAGUCCGUUAUCAACUUGAAAAAGUGGCACCGAGUCGGUGCUUUUUU
+   ........(((((((((....)))))))))(((((((.....((.....))....)))))))...((((.(((((((...))))))).)))) (-33.00)
+   ........(((((((((....)))))))))(((((((..{,,{(.....}).}},))))))),,,{(({.(((((((...))))))).))), [-35.21]
+   ........(((((((((....)))))))))(((((((.....((.....))....)))))))........(((((((...)))))))..... {-32.40 d=8.64}
+   ........(((((((((....)))))))))(((((((...(.((.....))..).)))))))....(((.(((((((...))))))).))). {-29.60 MEA=77.14}
+    frequency of mfe structure in ensemble 0.0279294; ensemble diversity 12.74
