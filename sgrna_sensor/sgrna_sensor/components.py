@@ -42,7 +42,7 @@ def manual(*sequences):
         for seq, color in zip(sequences, cycle(colors))
     ])
 
-def spacer(name='aavs'):
+def spacer(name='none'):
     """
     Return the specified spacer sequence.
 

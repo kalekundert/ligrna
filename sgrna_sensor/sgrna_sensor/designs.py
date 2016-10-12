@@ -186,7 +186,7 @@ def off(target=None):
     return sgrna
 
 @design('fu', 'us')
-def fold_upper_stem(N, linker_len=0, splitter_len=0, num_aptamers=1, ligand='theo', target='aavs'):
+def fold_upper_stem(N, linker_len=0, splitter_len=0, num_aptamers=1, target='none', ligand='theo'):
     """
     Insert the aptamer into the upper stem region of the sgRNA.
 
@@ -241,7 +241,7 @@ def fold_upper_stem(N, linker_len=0, splitter_len=0, num_aptamers=1, ligand='the
     return sgrna
 
 @design('fl', 'ls')
-def fold_lower_stem(N, linker_len=0, splitter_len=0, ligand='theo', target='aavs'):
+def fold_lower_stem(N, linker_len=0, splitter_len=0, target='none', ligand='theo'):
     """
     Insert the aptamer into the lower stem region of the sgRNA.
 
@@ -285,7 +285,7 @@ def fold_lower_stem(N, linker_len=0, splitter_len=0, ligand='theo', target='aavs
     return sgrna
 
 @design('fx', 'nx')
-def fold_nexus(linker_len=0, ligand='theo', target='aavs'):
+def fold_nexus(linker_len=0, target='none', ligand='theo'):
     """
     Insert the aptamer into the nexus region of the sgRNA.
 
@@ -325,7 +325,7 @@ def fold_nexus(linker_len=0, ligand='theo', target='aavs'):
     return sgrna
     
 @design('fxv', 'nxx')
-def fold_nexus_2(N, M, splitter_len=0, num_aptamers=1, ligand='theo', target='aavs'):
+def fold_nexus_2(N, M, splitter_len=0, num_aptamers=1, target='none', ligand='theo'):
     """
     Insert the aptamer into the nexus region of the sgRNA.
 
@@ -395,7 +395,7 @@ def fold_nexus_2(N, M, splitter_len=0, num_aptamers=1, ligand='theo', target='aa
     return sgrna
 
 @design('fh')
-def fold_hairpin(H, N, A=1, ligand='theo', target='aavs'):
+def fold_hairpin(H, N, A=1, target='none', ligand='theo'):
     """
     Replace either of the hairpins with the aptamer.  Briner et al. showed that 
     the sgRNA is at least somewhat sensitive to the distance between the nexus 
@@ -456,7 +456,7 @@ def fold_hairpin(H, N, A=1, ligand='theo', target='aavs'):
     return sgrna
 
 @design('hp')
-def replace_hairpins(N, ligand='theo', target='aavs'):
+def replace_hairpins(N, target='none', ligand='theo'):
     """
     Remove a portion of the 3' terminal hairpins and replace it with the 
     aptamer.
@@ -493,7 +493,7 @@ def replace_hairpins(N, ligand='theo', target='aavs'):
     return design
 
 @design('zu', 'id')
-def zipper_upper_stem(half, N, target='aavs', ligand='theo'):
+def zipper_upper_stem(half, N, target='none', ligand='theo'):
     """
     Split the guide RNA into its two naturally occurring halves, and use the 
     aptamer to bring those halves together in the presence of the ligand.  The 
@@ -546,7 +546,7 @@ def zipper_upper_stem(half, N, target='aavs', ligand='theo'):
     return design
 
 @design('sb')
-def serpentine_bulge(N, tuning_strategy='', A=1, ligand='theo', target='aavs'):
+def serpentine_bulge(N, tuning_strategy='', A=1, target='none', ligand='theo'):
     """
     Sequester the bulge in a non-productive hairpin when the ligand isn't 
     present.  The bulge is an interesting target because it doesn't have to be 
@@ -601,7 +601,7 @@ def serpentine_bulge(N, tuning_strategy='', A=1, ligand='theo', target='aavs'):
     return sgrna
 
 @design('sl')
-def serpentine_lower_stem(tuning_strategy='', A=1, ligand='theo', target='aavs'):
+def serpentine_lower_stem(tuning_strategy='', A=1, target='none', ligand='theo'):
     """
     Sequester the nexus in base pairs with the lower stem in the absence of the 
     ligand.  This design is based off two ideas:
@@ -655,7 +655,7 @@ def serpentine_lower_stem(tuning_strategy='', A=1, ligand='theo', target='aavs')
     return sgrna
 
 @design('slx')
-def serpentine_lower_stem_around_nexus(tuning_strategy='', A=1, ligand='theo', target='aavs'):
+def serpentine_lower_stem_around_nexus(tuning_strategy='', A=1, target='none', ligand='theo'):
     """
     Use the lower stem to extend the nexus stem in the absence of the aptamer 
     ligand.  This design is based of the idea that the sgRNA is very sensitive 
@@ -699,7 +699,7 @@ def serpentine_lower_stem_around_nexus(tuning_strategy='', A=1, ligand='theo', t
     return sgrna
 
 @design('sh')
-def serpentine_hairpin(N, tuning_strategy='', A=1, ligand='theo', target='aavs'):
+def serpentine_hairpin(N, tuning_strategy='', A=1, target='none', ligand='theo'):
     """
     Sequester the 3' end of the nexus in base pairs with the 5' strand of the 
     first hairpin in the absence of aptamer ligand.  This design is based on 
@@ -749,7 +749,7 @@ def serpentine_hairpin(N, tuning_strategy='', A=1, ligand='theo', target='aavs')
     return sgrna
 
 @design('cb')
-def circle_bulge(tuning_strategy='', A=1, ligand='theo', target='aavs'):
+def circle_bulge(tuning_strategy='', A=1, target='none', ligand='theo'):
     """
     Extend the lower stem hairpin through the bulge when the small molecule is 
     absent.  This design is based off the fact that "straightening" the bulge 
@@ -792,7 +792,7 @@ def circle_bulge(tuning_strategy='', A=1, ligand='theo', target='aavs'):
     return sgrna
 
 @design('cbc')
-def circle_bulge_combo(tuning_strategy, combo_strategy, combo_arg=None, A=1, ligand='theo', target='aavs'):
+def circle_bulge_combo(tuning_strategy, combo_strategy, combo_arg=None, A=1, target='none', ligand='theo'):
     """
     Combine the circle bulge design with orthogonal designs.  The idea is to 
     increase fold activation, possibly at the expense of affinity, by requiring 
@@ -850,7 +850,7 @@ def circle_bulge_combo(tuning_strategy, combo_strategy, combo_arg=None, A=1, lig
     return sgrna
 
 @design('cl')
-def circle_lower_stem(tuning_strategy='', A=1, ligand='theo', target='aavs'):
+def circle_lower_stem(tuning_strategy='', A=1, target='none', ligand='theo'):
     """
     Sequester the 5' half of the nexus in base pairs with the 5' half of the 
     lower stem in the absence of aptamer ligand.  This strategy is based on  
@@ -902,7 +902,7 @@ def circle_lower_stem(tuning_strategy='', A=1, ligand='theo', target='aavs'):
     return sgrna
 
 @design('ch')
-def circle_hairpin(N, tuning_strategy='', A=1, ligand='theo', target='aavs'):
+def circle_hairpin(N, tuning_strategy='', A=1, target='none', ligand='theo'):
     """
     Move the nexus closer to the hairpins in the absence of the aptamer's 
     ligand.  This design is supported by the fact that inserting one residue 
@@ -953,7 +953,7 @@ def circle_hairpin(N, tuning_strategy='', A=1, ligand='theo', target='aavs'):
     return sgrna
 
 @design('hu')
-def hammerhead_upper_stem(mode, A=1, ligand='theo', target='aavs'):
+def hammerhead_upper_stem(mode, A=1, target='none', ligand='theo'):
     sgrna = wt_sgrna(target)
     sgrna.attach(
             hammerhead_insert(ligand, mode, num_aptamers=A),
@@ -963,7 +963,7 @@ def hammerhead_upper_stem(mode, A=1, ligand='theo', target='aavs'):
     return sgrna
 
 @design('hx')
-def hammerhead_nexus(mode, A=1, ligand='theo', target='aavs'):
+def hammerhead_nexus(mode, A=1, target='none', ligand='theo'):
     sgrna = wt_sgrna(target)
     sgrna.attach(
             hammerhead_insert(ligand, mode, num_aptamers=A),
@@ -973,7 +973,7 @@ def hammerhead_nexus(mode, A=1, ligand='theo', target='aavs'):
     return sgrna
 
 @design('hh')
-def hammerhead_hairpin(mode, A=1, ligand='theo', target='aavs'):
+def hammerhead_hairpin(mode, A=1, target='none', ligand='theo'):
     sgrna = wt_sgrna(target)
     sgrna.attach(
             hammerhead_insert(ligand, mode, num_aptamers=A),
@@ -983,7 +983,7 @@ def hammerhead_hairpin(mode, A=1, ligand='theo', target='aavs'):
     return sgrna
 
 @design('rb')
-def random_bulge(N, M, A=1, ligand='theo', target='aavs'):
+def random_bulge(N, M, A=1, target='none', ligand='theo'):
     sgrna = wt_sgrna(target)
     sgrna.attach(
             random_insert(ligand, N, M),
@@ -993,7 +993,7 @@ def random_bulge(N, M, A=1, ligand='theo', target='aavs'):
     return sgrna
 
 @design('rbf')
-def random_bulge_forward(i, ligand='theo', target='aavs'):
+def random_bulge_forward(i, target='none', ligand='theo'):
     """
     rbf(6):
         The 5' link can base pair with the aptamer and the 3' linker can base 
@@ -1103,7 +1103,7 @@ def random_bulge_forward(i, ligand='theo', target='aavs'):
     return sgrna
 
 @design('rbb')
-def random_bulge_backward(i, ligand='theo', target='aavs'):
+def random_bulge_backward(i, target='none', ligand='theo'):
     """
     rbb(4):
       Linkers are complementary to each other, but are predicted to be fully 
@@ -1191,7 +1191,7 @@ def random_bulge_backward(i, ligand='theo', target='aavs'):
     return sgrna
 
 @design('rx')
-def random_nexus(N, M, A=1, ligand='theo', target='aavs'):
+def random_nexus(N, M, A=1, target='none', ligand='theo'):
     """
     Flank the aptamer with a random sequence on either side and insert it into 
     the nexus.
@@ -1235,7 +1235,7 @@ def random_nexus(N, M, A=1, ligand='theo', target='aavs'):
     return sgrna
 
 @design('rxb')
-def random_nexus_backwards(i, ligand='theo', target='aavs'):
+def random_nexus_backwards(i, target='none', ligand='theo'):
     """
     Most of these designs are not predicted to fold correctly in either 
     condition.  The exception is rxb(51), for which the lower stem is predicted 
@@ -1284,7 +1284,7 @@ def random_nexus_backwards(i, ligand='theo', target='aavs'):
     return sgrna
 
 @design('rh')
-def random_hairpin(N, M, A=1, ligand='theo', target='aavs'):
+def random_hairpin(N, M, A=1, target='none', ligand='theo'):
     """
     Flank the aptamer with a random sequence on either side and insert it into 
     the first hairpin.
@@ -1324,7 +1324,7 @@ def random_hairpin(N, M, A=1, ligand='theo', target='aavs'):
     return sgrna
 
 @design('rhf')
-def random_hairpin_forward(i, expected_only=False, ligand='theo', target='aavs'):
+def random_hairpin_forward(i, expected_only=False, target='none', ligand='theo'):
     """
     rhf(6):
         The 3' link can base pair with the 'GUC' motif in the nexus, while the 
@@ -1367,7 +1367,7 @@ def random_hairpin_forward(i, expected_only=False, ligand='theo', target='aavs')
     return sgrna
 
 @design('mh')
-def monte_carlo_hairpin(N, A=1, ligand='theo', target='aavs'):
+def monte_carlo_hairpin(N, A=1, target='none', ligand='theo'):
     """
     Insert the aptamer into the hairpin and build a library by randomizing 
     the positions that were most likely to mutate in Monte Carlo RNA design 
@@ -1436,7 +1436,7 @@ def monte_carlo_hairpin(N, A=1, ligand='theo', target='aavs'):
     return sgrna
 
 @design('mhf')
-def monte_carlo_hairpin_forward(i, expected_only=False, ligand='theo', target='aavs'):
+def monte_carlo_hairpin_forward(i, expected_only=False, target='none', ligand='theo'):
     linkers = {
             3:  ('CGGTC', 'GTC', 'CA'),
             4:  ('ACGAA', 'GTA', 'CC'),
