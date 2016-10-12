@@ -41,7 +41,6 @@ setup(
         'docopt',
         'matplotlib',
         'numpy',
-        'pylab',
         'regex',
     ],
     entry_points={
