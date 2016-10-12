@@ -272,7 +272,7 @@ def main():
 
         if args['--t7']:
             if design['spacer'] == '':
-                print('{} does not have a spacer sequence, refusing to add T7 promoter.'.format(design.name))
+                print("'{}' does not have a spacer sequence, refusing to add T7 promoter.".format(design.name))
                 continue
             design.prepend(t7_promoter())
 

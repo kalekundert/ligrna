@@ -57,7 +57,7 @@ def design(abbreviation, *legacy_abbreviations):
 
 
 @design('wt')
-def wt_sgrna(target=None):
+def wt_sgrna(target='none'):
     """
     Return the wildtype sgRNA sequence.
 
@@ -69,8 +69,7 @@ def wt_sgrna(target=None):
     """
     sgrna = Construct('wt')
 
-    if target is not None:
-        sgrna += spacer(target)
+    sgrna += spacer(target)
 
     sgrna += Domain('stem', 'GUUUUAGAGCUAGAAAUAGCAAGUUAAAAU')
     sgrna += Domain('nexus', 'AAGGCUAGUCCGU')
@@ -91,7 +90,7 @@ def wt_sgrna(target=None):
     return sgrna
 
 @design('dead')
-def dead_sgrna(target=None):
+def dead_sgrna(target='none'):
     """
     Return the sequence for the negative control sgRNA.
 
@@ -109,7 +108,7 @@ def dead_sgrna(target=None):
     return sgrna
 
 @design('on')
-def on(target=None):
+def on(target='none'):
     """
     Return an optimized sgRNA sequence.
 
@@ -125,9 +124,6 @@ def on(target=None):
     control.
     """
     sgrna = Construct('on')
-
-    if target is not None:
-        sgrna += spacer(target)
 
     # Although this sequence is just an optimized version of ``wt``, it is 
     # constructed rather differently.  
@@ -148,6 +144,7 @@ def on(target=None):
     # update ``wt``, but I hope that what I'll lose here in interoperability 
     # I'll gain in ease-of-use.
 
+    sgrna += spacer(target)
     sgrna += Domain('lower_stem/5', 'GUUUCA', 'green')
     sgrna += Domain('bulge/5', 'GA', 'yellow')
     sgrna += Domain('upper_stem/5', 'GCUAUGCUG', 'green')
@@ -170,7 +167,7 @@ def on(target=None):
     return sgrna
 
 @design('off')
-def off(target=None):
+def off(target='none'):
     """
     Return the sequence for the negative control sgRNA.
 
