@@ -132,6 +132,17 @@ def aptamer(ligand, piece='whole'):
         sequence_pieces   = 'AUACCAGCC', 'GAAA', 'GGCCAUUGGCAG'
         constraint_pieces = '.(.((((((', '....', ')))...))).).'
 
+    elif ligand in ('tmr', 'tetramethylrosamine', 'mg', 'malachite green'):
+        # Baugh, Grate, Wilson. 2.8Å structure of the malachite green aptamer.  
+        # JMB (2000) 301:1:117-128.
+        #
+        # This aptamer was used to make riboswitches, but with luciferase and 
+        # not RFP, possibly because TMR is a fluorescent dye: Borujeni et al.  
+        # Automated physics-based design of synthetic riboswitches from diverse 
+        # RNA aptamers. Nucl.  Acids Res.  (2016) 44:1:1-13.
+        sequence_pieces   = 'CCGACUGGC', 'GAGA', 'GCCAGGUAACGAAUG'
+        constraint_pieces = '(...(((((', '....', '))))).........)'
+
     elif ligand in ('tc', 'tet', 'tetracycline'):
         # Weigand, Suess. Tetracycline aptamer-controlled regulation of pre- 
         # mRNA splicing in yeast. Nucl. Acids Res. (2007) 35 (12): 4179-4185.
@@ -148,6 +159,20 @@ def aptamer(ligand, piece='whole'):
         # this project.  
         sequence_pieces   = 'AAAACAUACCAGAU', 'UUCG', 'AUCUGGAGAAGGUGAAGAAUUCGACCACCU'
         constraint_pieces = '........((((((', '....', '))))))...(((((...........)))))'
+
+    elif ligand in ('asp', 'aspartame'):
+        # Ferguson et al. A novel strategy for selection of allosteric 
+        # ribozymes yields RiboReporter™ sensors for caffeine and aspartame.  
+        # Nucl. Acids Res. (2004) 32:5
+        sequence_pieces   = 'CGGTGCTAGTTAGTTGCAGTTTCGGTTGTTACG',
+        constraint_pieces = '((.............................))',
+
+    elif ligand in ('caf', 'caffeine'):
+        # Ferguson et al. A novel strategy for selection of allosteric 
+        # ribozymes yields RiboReporter™ sensors for caffeine and aspartame.  
+        # Nucl. Acids Res. (2004) 32:5
+        sequence_pieces   = 'GATCATCGGACTTTGTCCTGTGGAGTAAGATCG',
+        constraint_pieces = '.................................',
 
     else:
         raise ValueError("no aptamer for '{}'".format(ligand))
