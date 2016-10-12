@@ -993,7 +993,7 @@ def random_bulge(N, M, A=1, ligand='theo', target='aavs'):
     return sgrna
 
 @design('rbf')
-def random_bulge_forward(i, target='aavs'):
+def random_bulge_forward(i, ligand='theo', target='aavs'):
     """
     rbf(6):
         The 5' link can base pair with the aptamer and the 3' linker can base 
@@ -1090,7 +1090,7 @@ def random_bulge_forward(i, target='aavs'):
     if i not in linkers:
         raise ValueError("no sequence for rbf({})".format(i))
 
-    sequenced_insert = aptamer('theo')
+    sequenced_insert = aptamer(ligand)
     sequenced_insert.prepend(Domain("linker/5'", linkers[i][0]))
     sequenced_insert.append(Domain("linker/3'", linkers[i][1]))
 
@@ -1103,7 +1103,7 @@ def random_bulge_forward(i, target='aavs'):
     return sgrna
 
 @design('rbb')
-def random_bulge_backward(i, target='aavs'):
+def random_bulge_backward(i, ligand='theo', target='aavs'):
     """
     rbb(4):
       Linkers are complementary to each other, but are predicted to be fully 
@@ -1178,7 +1178,7 @@ def random_bulge_backward(i, target='aavs'):
     if i not in linkers:
         raise ValueError("no sequence for rbb({})".format(i))
 
-    sequenced_insert = aptamer('theo')
+    sequenced_insert = aptamer(ligand)
     sequenced_insert.prepend(Domain("linker/5'", linkers[i][0]))
     sequenced_insert.append(Domain("linker/3'", linkers[i][1]))
 
@@ -1235,7 +1235,7 @@ def random_nexus(N, M, A=1, ligand='theo', target='aavs'):
     return sgrna
 
 @design('rxb')
-def random_nexus_backwards(i, target='aavs'):
+def random_nexus_backwards(i, ligand='theo', target='aavs'):
     """
     Most of these designs are not predicted to fold correctly in either 
     condition.  The exception is rxb(51), for which the lower stem is predicted 
@@ -1270,7 +1270,7 @@ def random_nexus_backwards(i, target='aavs'):
     if i not in linkers:
         raise ValueError("no sequence for rxb({})".format(i))
 
-    sequenced_insert = aptamer('theo')
+    sequenced_insert = aptamer(ligand)
     sequenced_insert.prepend(Domain("linker/5'", linkers[i][0]))
     sequenced_insert.append(Domain("linker/3'", linkers[i][1]))
 
@@ -1324,7 +1324,7 @@ def random_hairpin(N, M, A=1, ligand='theo', target='aavs'):
     return sgrna
 
 @design('rhf')
-def random_hairpin_forward(i, expected_only=False, target='aavs'):
+def random_hairpin_forward(i, expected_only=False, ligand='theo', target='aavs'):
     """
     rhf(6):
         The 3' link can base pair with the 'GUC' motif in the nexus, while the 
@@ -1350,7 +1350,7 @@ def random_hairpin_forward(i, expected_only=False, target='aavs'):
     if i not in linkers:
         raise ValueError("no sequence for rbf({})".format(i))
 
-    sequenced_insert = aptamer('theo')
+    sequenced_insert = aptamer(ligand)
     sequenced_insert.prepend(Domain("linker/5'", linkers[i][0]))
     sequenced_insert.append(Domain("linker/3'", linkers[i][1]))
 
@@ -1425,7 +1425,7 @@ def monte_carlo_hairpin(N, A=1, ligand='theo', target='aavs'):
         raise ValueError("mh: N must be either 6 or 7")
 
     # Insert the aptamer into the hairpin.
-    apt = aptamer(ligand);
+    apt = aptamer(ligand)
     sgrna['hairpin/o'].attachment_sites = 0,4
     sgrna.attach(apt, 'hairpin/o', 0, 'hairpin/o', 4)
 
@@ -1436,10 +1436,7 @@ def monte_carlo_hairpin(N, A=1, ligand='theo', target='aavs'):
     return sgrna
 
 @design('mhf')
-def monte_carlo_hairpin_forward(i, expected_only=False, target='aavs'):
-    """
-    mhf(3):
-    """
+def monte_carlo_hairpin_forward(i, expected_only=False, ligand='theo', target='aavs'):
     linkers = {
             3:  ('CGGTC', 'GTC', 'CA'),
             4:  ('ACGAA', 'GTA', 'CC'),
@@ -1471,16 +1468,14 @@ def monte_carlo_hairpin_forward(i, expected_only=False, target='aavs'):
     }
 
     if i in aliases:
-        raise ValueError("mbf({}) is the same as mbf({})".format(i, aliases[i]))
+        raise ValueError("mhf({}) is the same as mhf({})".format(i, aliases[i]))
     if i not in linkers:
-        raise ValueError("no sequence for mbf({})".format(i))
-
-    sequenced_insert = aptamer('theo')
-    sequenced_insert.prepend(Domain("linker/5'", linkers[i][0]))
-    sequenced_insert.append(Domain("linker/3'", linkers[i][1]))
+        raise ValueError("no sequence for mhf({})".format(i))
+    if expected_only and i not in unexpected_muts:
+        raise ValueError("mhf({}) doesn't have any unexpected mutations.".format(i))
 
     N = len(''.join(linkers[i])) - 5 + 2
-    sgrna = mh(N, target=target)
+    sgrna = mh(N, ligand=ligand, target=target)
     sgrna['nexus/o'].seq = linkers[i][0]
     sgrna['nexus/3'].seq = 'CC' + linkers[i][1][0:2]
     sgrna['ruler'].seq = linkers[i][1][2:3] + 'AU' + linkers[i][2]
