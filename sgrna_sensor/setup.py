@@ -45,7 +45,7 @@ setup(
     ],
     entry_points={
         'console_scripts': [
-            'sgrna_sensor = sgrna_sensor.show_seqs:main',
+            'sgrna_sensor = sgrna_sensor.usage:main',
         ],
     },
     include_package_data=True,

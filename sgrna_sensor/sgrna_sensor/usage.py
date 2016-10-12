@@ -104,9 +104,68 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 
-import sgrna_sensor
 import docopt
 import math
+
+from .components import *
+from .designs import *
+from .helpers import *
+from .sequence import *
+
+def from_name(name, **kwargs):
+    import re, inspect
+
+    name = name.strip()
+    if not name:
+        raise ValueError("Can't parse empty name.")
+
+    tokens = re.findall('[a-zA-Z0-9]+', name)
+
+    # If the first token matches the name of one of the known targeting 
+    # sequences, use that sequence to build the design.  If the next token 
+    # (which would be the first if no targeting sequence was found and the 
+    # second otherwise) matches the name of one of the known ligand, use that 
+    # ligand's aptamer to build the design.
+
+    try:
+        spacer(tokens[0])
+    except ValueError:
+        pass
+    else:
+        if 'target' not in kwargs:
+            kwargs['target'] = tokens.pop(0)
+
+    try:
+        aptamer(tokens[0])
+    except ValueError:
+        pass
+    else:
+        if 'ligand' not in kwargs:
+            kwargs['ligand'] = tokens.pop(0)
+
+    # The first token after the (optional) aptamer specifies the factory 
+    # function to use and must exist in the global namespace. 
+
+    try:
+        factory = globals()[tokens[0]]
+    except KeyError:
+        raise ValueError("No designs named '{}'.".format(tokens[0]))
+
+    # All further tokens are arguments.  Arguments that look like integers need 
+    # to be casted to integers.
+
+    def cast_if_necessary(x):  # (no fold)
+        try: return int(x)
+        except: return x
+
+    args = [cast_if_necessary(x) for x in tokens[1:]]
+
+    # Use keyword arguments passed into this function if the factory knows how 
+    # to handle them.  Silently ignore the arguments otherwise.
+
+    argspec = inspect.getargspec(factory)
+    known_kwargs = {k:v for k,v in kwargs.items() if k in argspec.args}
+    return factory(*args, **known_kwargs)
 
 def predict_fold(design, constraints=False):
     import shlex, re
@@ -154,6 +213,9 @@ def predict_fold(design, constraints=False):
         x for x in stdout.decode().split('\n')[1:]
         if not x.startswith('WARNING')).strip()
 
+def molecular_weight(name, polymer='rna'):
+    return from_name(name).mass(polymer)
+
 def main():
     args = docopt.docopt(__doc__)
     designs = []
@@ -165,7 +227,7 @@ def main():
         kwargs['target'] = None
 
     for name in args['<names>']:
-        design = sgrna_sensor.from_name(name, **kwargs)
+        design = from_name(name, **kwargs)
         designs.append(design)
 
     if args['--batch']:
@@ -209,7 +271,10 @@ def main():
                 print("--------")
 
         if args['--t7']:
-            design.prepend(sgrna_sensor.t7_promoter())
+            if design['spacer'] == '':
+                print('{} does not have a spacer sequence, refusing to add T7 promoter.'.format(design.name))
+                continue
+            design.prepend(t7_promoter())
 
         if args['--pretty']:
             print(header_template.format(design.name), end='  ')
