@@ -285,7 +285,8 @@ def main():
             design.show(labels=False, **format_args)
 
         elif args['--fasta']:
-            print('> ' + design.name)
+            print('>' + design.name)
+            format_args['color'] = 'never'
             design.show(labels=False, **format_args)
 
         elif args['--length']:
