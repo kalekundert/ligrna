@@ -11,7 +11,9 @@ from .helpers import *
 # s: serpentine
 # c: circle
 # h: hammerhead
-# n: directed evolution
+# r: random
+# m: Monte Carlo
+# q: sequence logo
 
 ## Domain Abbreviations
 # u: upper stem
@@ -1480,6 +1482,59 @@ def monte_carlo_hairpin_forward(i, expected_only=False, target='none', ligand='t
     if not expected_only and i in unexpected_muts:
         domain, idx, nuc = unexpected_muts[i]
         sgrna[domain].mutate(idx, nuc)
+
+    return sgrna
+
+@design('qh')
+def seqlogo_hairpin(N, target='none', ligand='theo'):
+    """
+    Randomize the stem linking the aptamer to the sgRNA and the parts of the 
+    sgRNA that were the most conserved after being randomized in previous 
+    screens.  Specifically, I identified these conserved positions by looking 
+    at a sequence logo of the relatively few (≈20) clones I sequenced from my 
+    previous screen.  The theory behind this strategy is that positions with 
+    a clear preference for some nucleotides over others are more likely to be 
+    important for sensor activity.
+
+    In this case, the previous screen was ``mhf`` and the sequence logo showed 
+    that all three positions in the ruler that were randomized had a preference 
+    for a non-native nucleotide.  (In fact, the preference was for C in all 
+    three cases.)  The ``mhf`` screen kept two positions in the ruler fixed, 
+    but since these positions were flanked by important-seeming positions on 
+    both sides, I decided to randomize the whole ruler this time.
+
+    I am also randomizing the stem (often called a communication module) that 
+    connects the aptamer to the sgRNA.  The ``N`` parameter dictates how long 
+    this stem should be, in base pairs, not counting any base pairs that are 
+    implicitly included with the aptamer.  (Note: I realized that including one 
+    base pair on the end of the aptamer domain makes simulating the whole 
+    construct easier, so all the new aptamers include one base pair like that.  
+    But the theophylline aptamer predates this realization, so it doesn't.)
+
+    Parameters
+    ----------
+    N: int
+        The length of the communication module, in base pairs.  Recommended 
+        values are 3 and 4.
+    """
+
+    # Make sure the length of the communication module makes sense.
+    if N < 0:
+        raise ValueError('qh: N must be >= 0')
+
+    # Base this library on the optimized sgRNA described by Dang et al.
+    sgrna = on(target)
+
+    # Randomize the entire ruler.
+    sgrna['ruler'].seq = 'NNNNN'
+
+    # Randomize the communication module.
+    sgrna['hairpin/5'].seq = N * 'N'
+    sgrna['hairpin/3'].seq = N * 'N'
+
+    # Insert the aptamer above the communication module.
+    sgrna['hairpin/o'].attachment_sites = 0,4
+    sgrna.attach(aptamer(ligand), 'hairpin/o', 0, 'hairpin/o', 4)
 
     return sgrna
 
