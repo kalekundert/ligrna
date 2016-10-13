@@ -41,7 +41,8 @@ setup(
         'docopt',
         'matplotlib',
         'numpy',
-        'regex',
+        'nonstdlib',
+        'decorator',
     ],
     entry_points={
         'console_scripts': [
