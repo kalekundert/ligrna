@@ -1,0 +1,6 @@
+contexts:
+  none:  ['',                   '']
+  gfp:   [CATCTAATTCAACAAGAATT, '']
+  rfp:   [AACTTTCAGTTTAGCGGTCT, '']
+  gfp2:  [AGUAGUGCAAAUAAAUUUAA, '']
+  rfp2:  [UGGAACCGUACUGGAACUGC, '']
