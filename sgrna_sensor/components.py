@@ -125,6 +125,7 @@ def aptamer(ligand, piece='whole'):
     if ligand in ('th', 'theo', 'theophylline'):
         sequence_pieces   = 'AUACCAGCC', 'GAAA', 'GGCCCUUGGCAG'
         constraint_pieces = '.((((.(((', '....', ')))....)))).'
+        affinity_uM = 0.32
 
     elif ligand in ('3mx', '3-methylxanthine'):
         # Soukup, Emilsson, Breaker. Altering molecular recognition of RNA 
@@ -142,6 +143,17 @@ def aptamer(ligand, piece='whole'):
         # RNA aptamers. Nucl.  Acids Res.  (2016) 44:1:1-13.
         sequence_pieces   = 'CCGACUGGC', 'GAGA', 'GCCAGGUAACGAAUG'
         constraint_pieces = '(...(((((', '....', '))))).........)'
+
+    elif ligand in ('tpp', 'thiamine', 'thiamine pyrophosphate'):
+        # Winkler, Hahvi, Breaker. Thiamine derivatives bind messenger RNAs 
+        # directly to regulate bacterial gene expression. Nature (2002) 
+        # 419:952-956.
+
+        # The TPP aptamer I've seen used in other papers is the ThiM 91 
+        # fragment from Winkler et al.
+        sequence_pieces   = 'AAGGGAUGCGACC', 'GUAAUA', 'GGUCUAGUCCACUAUGCCCAUAAAGAGUCGGAAGUGCGUCUUCCCGUGGGGCU'
+        constraint_pieces = '(..((((..((((', '......', '))))..))))......(((((........(((((.....))))).)))))..)'
+        affinity_uM = 0.0324 # (had to interpolate from figure)
 
     elif ligand in ('tc', 'tet', 'tetracycline'):
         # Weigand, Suess. Tetracycline aptamer-controlled regulation of pre- 
@@ -164,15 +176,15 @@ def aptamer(ligand, piece='whole'):
         # Ferguson et al. A novel strategy for selection of allosteric 
         # ribozymes yields RiboReporter™ sensors for caffeine and aspartame.  
         # Nucl. Acids Res. (2004) 32:5
-        sequence_pieces   = 'CGGTGCTAGTTAGTTGCAGTTTCGGTTGTTACG',
-        constraint_pieces = '((.............................))',
+        sequence_pieces   = 'CGGTGCTAGTTAGTTG', '', 'CAGTTTCGGTTGTTACG',
+        constraint_pieces = '((..............', '', '...............))',
 
     elif ligand in ('caf', 'caffeine'):
         # Ferguson et al. A novel strategy for selection of allosteric 
         # ribozymes yields RiboReporter™ sensors for caffeine and aspartame.  
         # Nucl. Acids Res. (2004) 32:5
-        sequence_pieces   = 'GATCATCGGACTTTGTCCTGTGGAGTAAGATCG',
-        constraint_pieces = '.................................',
+        sequence_pieces   = 'GATCATCGGACTTTGT', '', 'CCTGTGGAGTAAGATCG',
+        constraint_pieces = '................', '', '.................',
 
     else:
         raise ValueError("no aptamer for '{}'".format(ligand))
