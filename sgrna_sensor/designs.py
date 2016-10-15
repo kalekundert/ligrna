@@ -13,6 +13,7 @@ from .helpers import *
 # h: hammerhead
 # r: random
 # m: Monte Carlo
+# d: diversify
 # q: sequence logo
 
 ## Domain Abbreviations
@@ -20,6 +21,7 @@ from .helpers import *
 # l: lower stem
 # b: bulge
 # x: nexus
+# r: ruler
 # h: hairpins
 
 
@@ -154,9 +156,11 @@ def on(target='none'):
     sgrna += Domain('upper_stem/3', 'CAGCAUAGC', 'green')
     sgrna += Domain('bulge/3', 'AAGU', 'yellow')
     sgrna += Domain('lower_stem/3', 'UGAAAU', 'green')
-    sgrna += Domain('nexus/5', 'AAGG', 'red')
+    sgrna += Domain('nexus/aa', 'AA', 'red')
+    sgrna += Domain('nexus/5', 'GG', 'red')
     sgrna += Domain('nexus/o', 'CUAGU', 'red')
-    sgrna += Domain('nexus/3', 'CCGU', 'red')
+    sgrna += Domain('nexus/3', 'CC', 'red')
+    sgrna += Domain('nexus/gu', 'GU', 'red')
     sgrna += Domain('ruler', 'UAUCA', 'magenta')
     sgrna += Domain('hairpin/5', 'ACUU', 'blue')
     sgrna += Domain('hairpin/o', 'GAAA', 'blue')
@@ -179,8 +183,7 @@ def off(target='none'):
     sgrna = on(target)
     sgrna.name = 'off'
 
-    sgrna['nexus/5'].mutate(2, 'C')
-    sgrna['nexus/5'].mutate(3, 'C')
+    sgrna['nexus/5'].seq = 'CC'
 
     return sgrna
 
@@ -1234,7 +1237,7 @@ def random_nexus(N, M, A=1, target='none', ligand='theo'):
     return sgrna
 
 @design('rxb')
-def random_nexus_backwards(i, target='none', ligand='theo'):
+def random_nexus_backwards(i, dang_sgrna=False, target='none', ligand='theo'):
     """
     Most of these designs are not predicted to fold correctly in either 
     condition.  The exception is rxb(51), for which the lower stem is predicted 
@@ -1273,12 +1276,22 @@ def random_nexus_backwards(i, target='none', ligand='theo'):
     sequenced_insert.prepend(Domain("linker/5'", linkers[i][0]))
     sequenced_insert.append(Domain("linker/3'", linkers[i][1]))
 
-    sgrna = wt_sgrna(target)
-    sgrna.attach(
-            sequenced_insert,
-            'nexus', 2,
-            'nexus', 11,
-    )
+    if dang_sgrna:
+        sgrna = on(target)
+        sgrna['nexus/5'].attachment_sites = 0,
+        sgrna['nexus/3'].attachment_sites = 2,
+        sgrna.attach(
+                sequenced_insert,
+                'nexus/5', 0,
+                'nexus/3', 2,
+        )
+    else:
+        sgrna = wt_sgrna(target)
+        sgrna.attach(
+                sequenced_insert,
+                'nexus', 2,
+                'nexus', 11,
+        )
 
     return sgrna
 
@@ -1365,8 +1378,59 @@ def random_hairpin_forward(i, expected_only=False, target='none', ligand='theo')
 
     return sgrna
 
-@design('mh')
-def monte_carlo_hairpin(N, A=1, target='none', ligand='theo'):
+@design('dx')
+def diversify_nexus(N, target='none', ligand='theo'):
+    """
+    Randomize the region 3' of the evolved linker from rxb/11, the strongest 
+    sensor from the rxb screen, keeping the linker itself unchanged.  The 
+    purpose of this strategy is to create a library that is highly enriched 
+    with functional sensors, so that we can be fairly stringent while we screen 
+    for sensors that are not specific to any one targeting sequence.
+
+    We chose to randomize the region 3' of the evolved linker to minimize the 
+    chance that the mutations will interact with the targeting sequence (by 
+    virtue of being relatively far away in the primary sequence).  The argument 
+    N gives the number of nucleotides, counting 3' from the base of the evolved 
+    stem, to mutate.  If any nucleotides that are part of the hairpin stem 
+    would be randomized, their base-pairing partner is also randomized.
+
+    Parameters
+    ----------
+    N: int
+        The number of nucleotides, counting 3' from the base of the evolved 
+        stem, to randomize.  Note that the actual number of randomized position 
+        may be greater than N, because positions being randomized in the 
+        hairpin stem will automatically include their base-pairing partner.
+    """
+
+    # Base this library on the optimized sgRNA described by Dang et al.
+    sgrna = on(target)
+
+    # Use the communication module from rxb/xxx.
+    sgrna['nexus/5'].seq = 'GTGGG'
+    sgrna['nexus/3'].seq = 'CCTAC'
+
+    # Insert the aptamer into the nexus.
+    sgrna['nexus/o'].attachment_sites = 0,5
+    sgrna.attach(aptamer(ligand), 'nexus/o', 0, 'nexus/o', 5)
+
+    # Randomize the specified number of nucleotides 3' of the nexus.
+    if N < 0 or N > 11:
+        raise ValueError("dh: N must be between 0 and 11, not {}".format(N))
+
+    Nx = max(min(N, 2), 0)
+    Nr = max(min(N - 2, 5), 0)
+    Nh = max(min(N - 7, 4), 0)
+
+    sgrna['nexus/gu'].seq = ('N' * Nx) + sgrna['nexus/gu'][Nx:]
+    sgrna['ruler'].seq = ('N' * Nr) + sgrna['ruler'][Nr:]
+    sgrna['hairpin/5'].seq = ('N' * Nh) + sgrna['hairpin/5'][Nh:]
+    sgrna['hairpin/3'].seq = sgrna['hairpin/3'][:4-Nh] + ('N' * Nh)
+
+    return sgrna
+
+@design('dh', 'mh')
+def diversify_hairpin(N, A=1, target='none', ligand='theo'):
     """
     Insert the aptamer into the hairpin and build a library by randomizing 
     the positions that were most likely to mutate in Monte Carlo RNA design 
@@ -1411,7 +1475,7 @@ def monte_carlo_hairpin(N, A=1, target='none', ligand='theo'):
     # Randomize the top of the nexus.  This region is predicted to be important 
     # for allowing the sgRNA to work with multiple spacers.
     sgrna['nexus/o'].seq = 'NNNNN'
-    sgrna['nexus/3'].seq = 'CCNN'
+    sgrna['nexus/gu'].seq = 'NN'
 
     # Randomize most of the nucleotides connecting the nexus to the hairpins.  
     # This region is also predicted to be important for allowing the sgRNA to 
@@ -1434,8 +1498,8 @@ def monte_carlo_hairpin(N, A=1, target='none', ligand='theo'):
 
     return sgrna
 
-@design('mhf')
-def monte_carlo_hairpin_forward(i, expected_only=False, target='none', ligand='theo'):
+@design('dhf', 'mhf')
+def diversify_hairpin_forward(i, expected_only=False, target='none', ligand='theo'):
     linkers = {
             3:  ('CGGTC', 'GTC', 'CA'),
             4:  ('ACGAA', 'GTA', 'CC'),
@@ -1476,7 +1540,7 @@ def monte_carlo_hairpin_forward(i, expected_only=False, target='none', ligand='t
     N = len(''.join(linkers[i])) - 5 + 2
     sgrna = mh(N, ligand=ligand, target=target)
     sgrna['nexus/o'].seq = linkers[i][0]
-    sgrna['nexus/3'].seq = 'CC' + linkers[i][1][0:2]
+    sgrna['nexus/gu'].seq = linkers[i][1][0:2]
     sgrna['ruler'].seq = linkers[i][1][2:3] + 'AU' + linkers[i][2]
 
     if not expected_only and i in unexpected_muts:
