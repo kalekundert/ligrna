@@ -136,11 +136,14 @@ def aptamer(ligand, piece='whole'):
     elif ligand in ('tmr', 'tetramethylrosamine', 'mg', 'malachite green'):
         # Baugh, Grate, Wilson. 2.8Å structure of the malachite green aptamer.  
         # JMB (2000) 301:1:117-128.
-        #
+
         # This aptamer was used to make riboswitches, but with luciferase and 
         # not RFP, possibly because TMR is a fluorescent dye: Borujeni et al.  
         # Automated physics-based design of synthetic riboswitches from diverse 
         # RNA aptamers. Nucl.  Acids Res.  (2016) 44:1:1-13.
+
+        # I can't find any commercial TMR.  Sigma used to sell it as product 
+        # number T1823, but has since discontinued it.
         sequence_pieces   = 'CCGACUGGC', 'GAGA', 'GCCAGGUAACGAAUG'
         constraint_pieces = '(...(((((', '....', '))))).........)'
 
@@ -150,21 +153,66 @@ def aptamer(ligand, piece='whole'):
         # 419:952-956.
 
         # The TPP aptamer I've seen used in other papers is the ThiM 91 
-        # fragment from Winkler et al.
+        # fragment from Winkler et al.  Grow in M9.
         sequence_pieces   = 'AAGGGAUGCGACC', 'GUAAUA', 'GGUCUAGUCCACUAUGCCCAUAAAGAGUCGGAAGUGCGUCUUCCCGUGGGGCU'
         constraint_pieces = '(..((((..((((', '......', '))))..))))......(((((........(((((.....))))).)))))..)'
         affinity_uM = 0.0324 # (had to interpolate from figure)
 
+    elif ligand in ('add', 'adenine'):
+        # Serganov et al. Structural Basis for discriminative regulation of 
+        # gene expression by adenine- and guanine-sensing mRNAs. Chemistry & 
+        # Biology (2004) 11:1729-1741.
+
+        # I truncated 7 base pairs that weren't interacting with the ligand 
+        # from the end of the construct.  I haven't been able to find an 
+        # example of the adenine aptamer being used in a riboswitch to see if 
+        # this is what other people have done.  But Nomura et al. made 
+        # essentially the same truncation to the guanine aptamer when using it 
+        # to make an allosteric ribozyme, so I'm pretty confident that this 
+        # could work.  Grow in M9.
+        sequence_pieces   = 'UAUAAUCCUAAUGAUAUGGUUUGGGAGUUUCUACCAAGAG', 'CCUUAAA', 'CUCUUGAUUA'
+        constraint_pieces = '((...(((((((.......)))))))........((((((', '.......', '))))))..))'
+
+    elif ligand in ('amm', 'ammeline'):
+        # Dixon et al. Reengineering orthogonally selective riboswitches. PNAS 
+        # (2010) 107:7:2830-2835.
+
+        # This is the M6 construct, which is just the adenine aptamer from 
+        # above with U47C and U51C.
+        sequence_pieces   = 'UAUAAUCCUAAU', 'GAUAUGG', 'UUUGGGAGCUUCCACCAAGAGCCUUAAACUCUUGAUUA'
+        constraint_pieces = '((...(((((((', '.......', ')))))))........((((((.......))))))..))'
+
+    elif ligand in ('gua', 'guanine'):
+        # Nomura, Zhou, Miu, Yokobayashi. Controlling Mammalian Gene Expression 
+        # by Allosteric Hepatitis Delta Virus Ribozymes. ACS Syn. Biol. (2013) 
+        # 2:684-689.
+        sequence_pieces   = 'UAUAAUCGCGUGGAUAUGGCACGCAAGUUUCUACCGGGCA', 'CCGUAAA', 'UGUCCGACUA'
+        constraint_pieces = '((...(.(((((.......))))).)........((((((', '.......', '))))))..))'
+        affinity_uM = 0.005
+
+    elif ligand in ('fmn', 'flavin', 'flavin mononucleotide'):
+        # Soukup, Breaker. Engineering precision RNA molecular switches. PNAS 
+        # (1999) 96:3584-3589.  
+
+        # I can't find any examples of anyone using this aptamer in vivo.
+        sequence_pieces   = 'GAGGAUAUGC', 'UUCG', 'GCAGAAGGC'
+        constraint_pieces = '(......(((', '....', '))).....)'
+
+    elif ligand in ('ms2', 'ms2 coat protein'):
+        # Qi, Lucks, Liu, Mutalik, Arkin. Engineering naturally occurring 
+        # trans-acting non-coding RNAs to sense molecular signals. Nucl. Acids 
+        # Res. (2012) 40:12:5775-5786. Sequence in supplement.
+        sequence_pieces  = 'AACAUGAGG', 'ACCA', 'CCCAUGUU'
+        contraint_pieces = '((((((.((', '....', '))))))))'
+
     elif ligand in ('tc', 'tet', 'tetracycline'):
         # Weigand, Suess. Tetracycline aptamer-controlled regulation of pre- 
         # mRNA splicing in yeast. Nucl. Acids Res. (2007) 35 (12): 4179-4185.
-        #sequence_pieces   = 'GGCCUAAAACAUACCAGAU', 'GAAA', 'GUCUGGAGAGGUGAAGAAUACGACCACCUAGGCC'
-        #constraint_pieces = '(((((........((((((', '....', '))))))..(((((...........))))))))))'
 
         # Win, Smolke. A modular and extensible RNA-based gene-regulatory 
         # platform for engineering cellular function. PNAS (2007) 104 (36): 
         # 14283-14288.
-        #
+
         # Win & Smolke use a truncated tet aptamer to actually affect gene 
         # expression in vivo.  The Weigand & Suess aptamer has a stem on the 
         # end, which makes me skeptical that it would work for the purposes of 
