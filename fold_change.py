@@ -52,6 +52,11 @@ Options:
         You can use either the full names or the one-letter abbreviations.  By 
         default the traces are shown in the order they appear in the YAML file.
 
+    -q --query <regex>
+        Only show experiments if their label matches the given regular 
+        expression.  This option is meant to help show interesting subsets of 
+        really high throughput experiments.
+
     -i --indices <selection>
         Only show experiments with the given indices (counting from 1).  The 
         indices should be comma separated, and ranges of indices can be 
@@ -108,7 +113,7 @@ Options:
         change based on how data is histogrammed (see --histogram).
 """
 
-import fcmcmp, analysis_helpers, nonstdlib
+import fcmcmp, analysis_helpers, nonstdlib, re
 import numpy as np, matplotlib.pyplot as plt
 from pprint import pprint
 
@@ -121,6 +126,7 @@ class FoldChange:
         self.control_channel = None
         self.normalize_by = None
         self.sort_by = None
+        self.label_filter = None
         self.show_indices = None
         self.log_toggle = None
         self.histogram = None
@@ -288,6 +294,18 @@ class FoldChange:
         self.analyzed_wells.sort(key=key, reverse=reverse)
 
     def _filter_wells(self):
+        # Filter out experiments with labels that don't match the user given 
+        # regular expression.
+        if self.label_filter is not None:
+            label_filter = re.compile(self.label_filter)
+            self.analyzed_wells = [
+                    expt for expt in self.analyzed_wells
+                    if label_filter.search(expt['apo'][0].experiment['label'])
+            ]
+
+        # Filter out experiments that aren't in the user given list of indices.  
+        # This filter is applied after the regex filter, so if the user wants 
+        # to use both, the indices will be relative to what appears in the GUI.
         if self.show_indices is not None:
             self.analyzed_wells = [
                     expt for i, expt in enumerate(self.analyzed_wells)
@@ -453,6 +471,7 @@ if __name__ == '__main__':
     analysis.channel = args['--channel']
     analysis.normalize_by = args['--normalize-by'] or args['--normalize-by-internal-control']
     analysis.sort_by = args['--sort-by']
+    analysis.label_filter = args['--query']
     analysis.log_toggle = args['--log-toggle']
     analysis.histogram = args['--histogram']
     analysis.pdf = args['--pdf']
