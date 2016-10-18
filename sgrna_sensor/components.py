@@ -166,7 +166,7 @@ def aptamer(ligand, piece='whole'):
         # I truncated 7 base pairs that weren't interacting with the ligand 
         # from the end of the construct.  I haven't been able to find an 
         # example of the adenine aptamer being used in a riboswitch to see if 
-        # this is what other people have done.  But Nomura et al. made 
+        # this is what other people have done, but Nomura et al. made 
         # essentially the same truncation to the guanine aptamer when using it 
         # to make an allosteric ribozyme, so I'm pretty confident that this 
         # could work.  Grow in M9.
@@ -202,8 +202,34 @@ def aptamer(ligand, piece='whole'):
         # Qi, Lucks, Liu, Mutalik, Arkin. Engineering naturally occurring 
         # trans-acting non-coding RNAs to sense molecular signals. Nucl. Acids 
         # Res. (2012) 40:12:5775-5786. Sequence in supplement.
-        sequence_pieces  = 'AACAUGAGG', 'ACCA', 'CCCAUGUU'
-        contraint_pieces = '((((((.((', '....', '))))))))'
+
+        # I can't really figure out which MS2 aptamer people use for synthetic 
+        # biology.  All the papers I've read agree that the aptamer has one 
+        # stem and three unpaired adenosines.  The sequences from Romaniuk, 
+        # Convery, and Qi actually have the same stem, they just differ in the 
+        # loop.  The Culler stem is totally different.
+
+        # The loop from Romaniuk and Convery is AUUA (the wildtype sequence) 
+        # while the loop from Qi is ACCA.  I'm inclined to use ACCA because Qi 
+        # was doing synthetic biology and because Convery mentions that the 
+        # natural consensus sequence for the loop is ANYA, a standard tetraloop 
+        # which doesn't preclude ACCA.
+
+        # I should consider making the N55K mutation to the coat protein 
+        # itself.  One of the plasmids on AddGene mentioned that this mutation 
+        # increases affinity for the aptamer.  That plasmid was for mammalian 
+        # expression, and so far I haven't seen this assertion corroborated for 
+        # bacterial systems.
+
+        sequence_pieces   = 'AACAUGAGG', 'ACCA', 'CCCAUGUU'
+        constraint_pieces = '((((((.((', '....', '))))))))'
+
+    elif ligand in ('bca', 'beta-catenin'):
+        # Culler, Hoff, Smolke. Reprogramming cellular behavior with rna 
+        # controllers responsive to endogenous proteins. Science (2010) 
+        # 330:6008:1251-1255.
+        sequence_pieces = 'AGGCCGATCTATGGACGCTATAGGCACACCGGATACTTTAACGATTGGCT'
+        raise NotImplementedError
 
     elif ligand in ('tc', 'tet', 'tetracycline'):
         # Weigand, Suess. Tetracycline aptamer-controlled regulation of pre- 
