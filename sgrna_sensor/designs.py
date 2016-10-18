@@ -11,9 +11,9 @@ from .helpers import *
 # s: serpentine
 # c: circle
 # h: hammerhead
-# r: random
-# m: Monte Carlo
-# d: diversify
+# r: root
+# u: unbalance
+# d: diversify (also 'm')
 # q: sequence logo
 
 ## Domain Abbreviations
@@ -22,7 +22,7 @@ from .helpers import *
 # b: bulge
 # x: nexus
 # r: ruler
-# h: hairpins
+# h: hairpin
 
 
 def design(abbreviation, *legacy_abbreviations):
@@ -985,7 +985,7 @@ def hammerhead_hairpin(mode, A=1, target='none', ligand='theo'):
     return sgrna
 
 @design('rb')
-def random_bulge(N, M, A=1, target='none', ligand='theo'):
+def root_bulge(N, M, A=1, target='none', ligand='theo'):
     sgrna = wt_sgrna(target)
     sgrna.attach(
             random_insert(ligand, N, M),
@@ -995,7 +995,7 @@ def random_bulge(N, M, A=1, target='none', ligand='theo'):
     return sgrna
 
 @design('rbf')
-def random_bulge_forward(i, target='none', ligand='theo'):
+def root_bulge_forward(i, target='none', ligand='theo'):
     """
     rbf(6):
         The 5' link can base pair with the aptamer and the 3' linker can base 
@@ -1105,7 +1105,7 @@ def random_bulge_forward(i, target='none', ligand='theo'):
     return sgrna
 
 @design('rbb')
-def random_bulge_backward(i, target='none', ligand='theo'):
+def root_bulge_backward(i, target='none', ligand='theo'):
     """
     rbb(4):
       Linkers are complementary to each other, but are predicted to be fully 
@@ -1193,7 +1193,7 @@ def random_bulge_backward(i, target='none', ligand='theo'):
     return sgrna
 
 @design('rx')
-def random_nexus(N, M, A=1, target='none', ligand='theo'):
+def root_nexus(N, M, A=1, target='none', ligand='theo'):
     """
     Flank the aptamer with a random sequence on either side and insert it into 
     the nexus.
@@ -1219,14 +1219,14 @@ def random_nexus(N, M, A=1, target='none', ligand='theo'):
     Parameters
     ----------
     N: int
-        The number of random base pairs to put 5' of the aptamer.  I anticipate 
-        N being between 2 and 5, enough to recapitulate the stem and to add 
-        some possible interactions above it.
+        The number of random nucleotides to put 5' of the aptamer.  I 
+        anticipate N being between 2 and 5, enough to recapitulate the stem and 
+        to add some possible interactions above it.
         
     M: int
-        The number of random base pairs to put 3' of the aptamer.  I anticipate 
-        N being between 2 and 5, enough to recapitulate the stem and to add 
-        some possible interactions above it.
+        The number of random nucleotides to put 3' of the aptamer.  I 
+        anticipate N being between 2 and 5, enough to recapitulate the stem and 
+        to add some possible interactions above it.
     """
     sgrna = wt_sgrna(target)
     sgrna.attach(
@@ -1237,7 +1237,7 @@ def random_nexus(N, M, A=1, target='none', ligand='theo'):
     return sgrna
 
 @design('rxb')
-def random_nexus_backwards(i, dang_sgrna=False, target='none', ligand='theo'):
+def root_nexus_backwards(i, dang_sgrna=False, target='none', ligand='theo'):
     """
     Most of these designs are not predicted to fold correctly in either 
     condition.  The exception is rxb(51), for which the lower stem is predicted 
@@ -1296,7 +1296,7 @@ def random_nexus_backwards(i, dang_sgrna=False, target='none', ligand='theo'):
     return sgrna
 
 @design('rh')
-def random_hairpin(N, M, A=1, target='none', ligand='theo'):
+def root_hairpin(N, M, dang_sgrna=False, target='none', ligand='theo'):
     """
     Flank the aptamer with a random sequence on either side and insert it into 
     the first hairpin.
@@ -1336,7 +1336,7 @@ def random_hairpin(N, M, A=1, target='none', ligand='theo'):
     return sgrna
 
 @design('rhf')
-def random_hairpin_forward(i, expected_only=False, target='none', ligand='theo'):
+def root_hairpin_forward(i, expected_only=False, target='none', ligand='theo'):
     """
     rhf(6):
         The 3' link can base pair with the 'GUC' motif in the nexus, while the 
@@ -1378,6 +1378,57 @@ def random_hairpin_forward(i, expected_only=False, target='none', ligand='theo')
 
     return sgrna
 
+@design('uh')
+def unbalance_hairpin(N, target='none', ligand='theo'):
+    """
+    Randomize the region 5' of the hairpin in the hopes of creating a sequence 
+    that is partially complementary to the aptamer.  Presently, this strategy 
+    is intended for protein binding aptamers like MS2 that aren't expected to 
+    have significantly different bound and unbound conformations.  The hope is 
+    that protein binding can stabilize an otherwise minor conformation (i.e. 
+    conformational selection) and lock the sgRNA into an active or inactive 
+    state.
+
+    This strategy is unbalanced because rather than randomizing stretches of 
+    nucleotides on both sides of the aptamer and hoping for a stem that will 
+    respond to the ligand, we are only randomizing nucleotides on one side of 
+    the aptamer and hoping that those nucleotides will interfere with the stem 
+    formed naturally by the aptamer in a way that is sensitive to ligand.
+
+    Parameter
+    ---------
+    N: int
+        The number of nucleotides 5' of the hairpin to randomize.  The maximum 
+        number is 12.  This is enough to extend almost throughout the nexus, 
+        but the 2 bp stem in the nexus is always excluded.  The hairpin stem 
+        itself is eliminated and totally replaced by the aptamer.
+    """
+    sgrna = on(target)
+
+    # Replace the hairpin with the aptamer.
+    sgrna['hairpin/5'].attachment_sites = 0,
+    sgrna['hairpin/3'].attachment_sites = 4,
+    sgrna.attach(aptamer(ligand), 'hairpin/5', 0, 'hairpin/3', 4)
+
+    # Randomize the specified number of nucleotides 5' of the hairpin.
+    Lr  = len(sgrna['ruler'])
+    Lx3 = len(sgrna['nexus/gu'])
+    Lx5 = len(sgrna['nexus/o'])
+    L = Lr + Lx3 + Lx5
+
+    if N < 0 or N > L:
+        raise ValueError("rh: N must be between 0 and {}, not {}".format(L, N))
+
+    Nr  = clamp(N,            0, Lr)
+    Nx3 = clamp(N - Lr,       0, Lx3)
+    Nx5 = clamp(N - Lr - Lx3, 0, Lx5)
+
+    sgrna['ruler'].seq = sgrna['ruler'][:Lr-Nr] + ('N' * Nr)
+    sgrna['nexus/gu'].seq = sgrna['nexus/gu'][:Lx3-Nx3] + ('N' * Nx3)
+    sgrna['nexus/o'].seq = sgrna['nexus/o'][:Lx5-Nx5] + ('N' * Nx5)
+
+    return sgrna
+
 @design('dx')
 def diversify_nexus(N, target='none', ligand='theo'):
     """
@@ -1401,6 +1452,14 @@ def diversify_nexus(N, target='none', ligand='theo'):
         stem, to randomize.  Note that the actual number of randomized position 
         may be greater than N, because positions being randomized in the 
         hairpin stem will automatically include their base-pairing partner.
+
+    I was considering both rxb/11 and rxb/2 as the template for this library.  
+    I ultimately decided to use rxb/11 for two reasons.  First, it was slightly 
+    more common than rxb/2, suggesting that it was at least slightly more fit.  
+    Second, rxb/11 turned off almost all the way without ligand while rxb/2 
+    turned on almost all the way with ligand.  Since backward designs should 
+    effectively activate transcription, it's better than they turn all the way 
+    off.
     """
 
     # Base this library on the optimized sgRNA described by Dang et al.

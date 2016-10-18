@@ -63,4 +63,5 @@ def find_middlemost(seq, pattern, num_matches=1):
     indices.sort(key=dist_to_middle)
     return [(i, len(seq) - i - 1) for i in indices[:num_matches]]
 
-
+def clamp(x, low, hi):
+    return min(max(x, low), hi)
