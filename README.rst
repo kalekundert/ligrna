@@ -19,7 +19,7 @@ The second step is to install the library somewhere python can find it.  If you
 are using the system python, this command will require an administrator's 
 password::
 
-   $ pip install --editable ./sgrna_sensor_scripts/sgrna_sensor
+   $ pip install --editable ./sgrna_sensor_designs
 
 The ``--editable`` flag will cause any changes you make to the repository to be 
 immediately reflected in the installed library and command line tools.
