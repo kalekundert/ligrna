@@ -81,6 +81,10 @@ Options:
         Display (DNA) sequences in the FASTA format.  T7 promoters are not 
         appended unless the --t7 flag is also given.
 
+    -z, --library-size
+        Calculate the number of variants the given designs have.  Libraries 
+        should contain IUPAC codes for degenerate nucleotides (e.g. N).
+
     -l, --length
         Show how long a design is, counting only the RNA, not the T7 promoter.
         
@@ -288,6 +292,10 @@ def main():
             print('>' + design.name)
             format_args['color'] = 'never'
             design.show(labels=False, **format_args)
+
+        elif args['--library-size']:
+            print(header_template.format(design.name), end='  ')
+            print(library_size(design))
 
         elif args['--length']:
             print(header_template.format(design.name), end='  ')

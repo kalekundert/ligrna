@@ -65,3 +65,18 @@ def find_middlemost(seq, pattern, num_matches=1):
 
 def clamp(x, low, hi):
     return min(max(x, low), hi)
+
+def library_size(sequence):
+    library_size = 1
+    num_possibilities = {
+            'A': 1, 'G': 1, 'C': 1, 'T': 1, 'U': 1,
+            'R': 2, 'Y': 2, 'M': 2, 'K': 2, 'S': 2, 'W': 2,
+            'H': 3, 'B': 3, 'V': 3, 'D': 3,
+            'N': 4,
+    }
+
+    for letter in sequence.upper():
+        library_size *= num_possibilities[letter]
+
+    return library_size
+
