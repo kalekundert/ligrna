@@ -16,7 +16,14 @@ def test_aptamer():
     with pytest.raises(ValueError):
         aptamer('theo', 'unknown piece')
 
-    assert aptamer('theo') == 'AUACCAGCCGAAAGGCCCUUGGCAG'
+    assert aptamer('theo').seq == 'AUACCAGCCGAAAGGCCCUUGGCAG'
+    assert aptamer('3mx').seq == 'AUACCAGCCGAAAGGCCAUUGGCAG'
+    assert aptamer('tmr').seq == 'CCGACUGGCGAGAGCCAGGUAACGAAUG'
+    assert aptamer('tpp').seq == 'UCGGGGUGCCCUUCUGCGUGAAGGCUGAGAAAUACCCGUAUCACCUGAUCUGGAUAAUGCCAGCGUAGGGAA'
+    assert aptamer('add').seq == 'UAUAAUCCUAAUGAUAUGGUUUGGGAGUUUCUACCAAGAGCCUUAAACUCUUGAUUA'
+    assert aptamer('amm').seq == 'UAUAAUCCUAAUGAUAUGGUUUGGGAGCUUCCACCAAGAGCCUUAAACUCUUGAUUA'
+    assert aptamer('gua').seq == 'UAUAAUCGCGUGGAUAUGGCACGCAAGUUUCUACCGGGCACCGUAAAUGUCCGACUA'
+    assert aptamer('ms2').seq == 'AACAUGAGGACCACCCAUGUU'
 
 def test_spacer():
     with pytest.raises(ValueError):

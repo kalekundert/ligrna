@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 
+from pprint import pprint
 from .sequence import *
 from .helpers import *
 
@@ -127,13 +128,13 @@ def aptamer(ligand, piece='whole'):
         constraint_pieces = '.((((.(((', '....', ')))....)))).'
         affinity_uM = 0.32
 
-    elif ligand in ('3mx', '3-methylxanthine'):
+    elif ligand in ('3', '3mx', '3-methylxanthine'):
         # Soukup, Emilsson, Breaker. Altering molecular recognition of RNA 
         # aptamers by allosteric selection. J. Mol. Biol. (2000) 298, 623-632.
         sequence_pieces   = 'AUACCAGCC', 'GAAA', 'GGCCAUUGGCAG'
         constraint_pieces = '.(.((((((', '....', ')))...))).).'
 
-    elif ligand in ('tmr', 'tetramethylrosamine', 'mg', 'malachite green'):
+    elif ligand in ('r', 'tmr', 'tetramethylrosamine', 'mg', 'malachite green'):
         # Baugh, Grate, Wilson. 2.8Å structure of the malachite green aptamer.  
         # JMB (2000) 301:1:117-128.
 
@@ -144,21 +145,36 @@ def aptamer(ligand, piece='whole'):
 
         # I can't find any commercial TMR.  Sigma used to sell it as product 
         # number T1823, but has since discontinued it.
-        sequence_pieces   = 'CCGACUGGC', 'GAGA', 'GCCAGGUAACGAAUG'
-        constraint_pieces = '(...(((((', '....', '))))).........)'
+        sequence_pieces   = 'CCGACUGGCGAGAGCCAGGUAACGAAUG',
+        constraint_pieces = '(...(((((....))))).........)',
 
-    elif ligand in ('tpp', 'thiamine', 'thiamine pyrophosphate'):
+    elif ligand in ('t', 'tpp', 'thiamine', 'thiamine pyrophosphate'):
         # Winkler, Hahvi, Breaker. Thiamine derivatives bind messenger RNAs 
         # directly to regulate bacterial gene expression. Nature (2002) 
         # 419:952-956.
 
-        # The TPP aptamer I've seen used in other papers is the ThiM 91 
-        # fragment from Winkler et al.  Grow in M9.
-        sequence_pieces   = 'AAGGGAUGCGACC', 'GUAAUA', 'GGUCUAGUCCACUAUGCCCAUAAAGAGUCGGAAGUGCGUCUUCCCGUGGGGCU'
-        constraint_pieces = '(..((((..((((', '......', '))))..))))......(((((........(((((.....))))).)))))..)'
-        affinity_uM = 0.0324 # (had to interpolate from figure)
+        # The sequence I've copied here is the ThiM 91 fragment from Winkler et 
+        # al.  Weiland et al. used almost the same sequence, but they mutated 
+        # the last nucleotide from A to U to break a base pair.
 
-    elif ligand in ('add', 'adenine'):
+        # Winker et al used "M9 glucose minimal media (plus 50 μg/mL vitamin 
+        # assay Casamino acids; Difco)" with or without 100 μM thiamine for 
+        # their in vivo assays (figure 4b, bottom).  The "vitamin assay" means 
+        # the casein digest was treated to remove certain vitamins, and is 
+        # presumably an important detail.
+
+        # Weiland et al. used M63 media with or without 1 mM thiamine for their 
+        # in vivo assays.  This is a little confusing to me because the M63 
+        # recipe I found contains thiamine.  Also, the titrations in figure 3B 
+        # and 3C only go to 50 μM (and saturate around 1 μM).
+
+        # My plan is to use M9 media with glucose and "vitamin assay" Casamino 
+        # acids, with and without 100 μM thiamine.
+        sequence_pieces   = 'UCGGGGUGCCCUUCUGCGUGAAGGCUGAGAAAUACCCGUAUCACCUGAUCUGGAUAAUGCCAGCGUAGGGAA',
+        constraint_pieces = '(..(((((.(((((.....)))))........)))))......((((..((((......))))..))))..)',
+        affinity_uM = 0.0324 # (interpolated from figure 2b in Winkler et al.)
+
+    elif ligand in ('a', 'add', 'adenine'):
         # Serganov et al. Structural Basis for discriminative regulation of 
         # gene expression by adenine- and guanine-sensing mRNAs. Chemistry & 
         # Biology (2004) 11:1729-1741.
@@ -167,27 +183,36 @@ def aptamer(ligand, piece='whole'):
         # from the end of the construct.  I haven't been able to find an 
         # example of the adenine aptamer being used in a riboswitch to see if 
         # this is what other people have done, but Nomura et al. made 
-        # essentially the same truncation to the guanine aptamer when using it 
-        # to make an allosteric ribozyme, so I'm pretty confident that this 
-        # could work.  Grow in M9.
-        sequence_pieces   = 'UAUAAUCCUAAUGAUAUGGUUUGGGAGUUUCUACCAAGAG', 'CCUUAAA', 'CUCUUGAUUA'
-        constraint_pieces = '((...(((((((.......)))))))........((((((', '.......', '))))))..))'
+        # essentially the same truncation to the highly homologous guanine 
+        # aptamer when using it to make an allosteric ribozyme, so I'm pretty 
+        # confident that this could work.
 
-    elif ligand in ('amm', 'ammeline'):
+        # Dixon et al. used "fresh M9" and 500 μM ligand.  I assume this means 
+        # M9 with glucose.  The ligand was also in some amount of DMSO, but I'm 
+        # not sure how much.  The solubility of adenine in water is 7.6 mM, so 
+        # maybe the DMSO was only necessary for some of their other ligands.
+        #
+        # My plan is to use M9 with glucose and "vitamin assay" Casamino acids, 
+        # as I'm doing for thiamine.  I couldn't confirm that Casamino acids 
+        # don't have nucleotides, but I think it's unlikely.
+        sequence_pieces   = 'UAUAAUCCUAAUGAUAUGGUUUGGGAGUUUCUACCAAGAGCCUUAAACUCUUGAUUA',
+        constraint_pieces = '((...(((((((.......)))))))........((((((.......))))))..))',
+
+    elif ligand in ('b', 'amm', 'ammeline'):
         # Dixon et al. Reengineering orthogonally selective riboswitches. PNAS 
         # (2010) 107:7:2830-2835.
 
         # This is the M6 construct, which is just the adenine aptamer from 
         # above with U47C and U51C.
-        sequence_pieces   = 'UAUAAUCCUAAU', 'GAUAUGG', 'UUUGGGAGCUUCCACCAAGAGCCUUAAACUCUUGAUUA'
-        constraint_pieces = '((...(((((((', '.......', ')))))))........((((((.......))))))..))'
+        sequence_pieces   = 'UAUAAUCCUAAUGAUAUGGUUUGGGAGCUUCCACCAAGAGCCUUAAACUCUUGAUUA',
+        constraint_pieces = '((...(((((((.......)))))))........((((((.......))))))..))',
 
-    elif ligand in ('gua', 'guanine'):
-        # Nomura, Zhou, Miu, Yokobayashi. Controlling Mammalian Gene Expression 
-        # by Allosteric Hepatitis Delta Virus Ribozymes. ACS Syn. Biol. (2013) 
+    elif ligand in ('g', 'gua', 'guanine'):
+        # Nomura, Zhou, Miu, Yokobayashi. Controlling mammalian gene expression 
+        # by allosteric Hepatitis Delta Virus ribozymes. ACS Syn. Biol. (2013) 
         # 2:684-689.
-        sequence_pieces   = 'UAUAAUCGCGUGGAUAUGGCACGCAAGUUUCUACCGGGCA', 'CCGUAAA', 'UGUCCGACUA'
-        constraint_pieces = '((...(.(((((.......))))).)........((((((', '.......', '))))))..))'
+        sequence_pieces   = 'UAUAAUCGCGUGGAUAUGGCACGCAAGUUUCUACCGGGCACCGUAAAUGUCCGACUA',
+        constraint_pieces = '((...(.(((((.......))))).)........((((((.......))))))..))',
         affinity_uM = 0.005
 
     elif ligand in ('fmn', 'flavin', 'flavin mononucleotide'):
@@ -195,10 +220,10 @@ def aptamer(ligand, piece='whole'):
         # (1999) 96:3584-3589.  
 
         # I can't find any examples of anyone using this aptamer in vivo.
-        sequence_pieces   = 'GAGGAUAUGC', 'UUCG', 'GCAGAAGGC'
-        constraint_pieces = '(......(((', '....', '))).....)'
+        sequence_pieces   = 'GAGGAUAUGCUUCGGCAGAAGGC',
+        constraint_pieces = '(......(((....))).....)',
 
-    elif ligand in ('ms2', 'ms2 coat protein'):
+    elif ligand in ('m', 'ms2', 'ms2 coat protein'):
         # Qi, Lucks, Liu, Mutalik, Arkin. Engineering naturally occurring 
         # trans-acting non-coding RNAs to sense molecular signals. Nucl. Acids 
         # Res. (2012) 40:12:5775-5786. Sequence in supplement.
@@ -207,7 +232,8 @@ def aptamer(ligand, piece='whole'):
         # biology.  All the papers I've read agree that the aptamer has one 
         # stem and three unpaired adenosines.  The sequences from Romaniuk, 
         # Convery, and Qi actually have the same stem, they just differ in the 
-        # loop.  The Culler stem is totally different.
+        # loop.  The sequences from Batey and Culler are exactly the same, but 
+        # different from those in the other papers.
 
         # The loop from Romaniuk and Convery is AUUA (the wildtype sequence) 
         # while the loop from Qi is ACCA.  I'm inclined to use ACCA because Qi 
@@ -220,15 +246,14 @@ def aptamer(ligand, piece='whole'):
         # increases affinity for the aptamer.  That plasmid was for mammalian 
         # expression, and so far I haven't seen this assertion corroborated for 
         # bacterial systems.
-
-        sequence_pieces   = 'AACAUGAGG', 'ACCA', 'CCCAUGUU'
-        constraint_pieces = '((((((.((', '....', '))))))))'
+        sequence_pieces   = 'AACAUGAGGACCACCCAUGUU',
+        constraint_pieces = '((((((.((....))))))))',
 
     elif ligand in ('bca', 'beta-catenin'):
         # Culler, Hoff, Smolke. Reprogramming cellular behavior with rna 
         # controllers responsive to endogenous proteins. Science (2010) 
         # 330:6008:1251-1255.
-        sequence_pieces = 'AGGCCGATCTATGGACGCTATAGGCACACCGGATACTTTAACGATTGGCT'
+        sequence_pieces = 'AGGCCGATCTATGGACGCTATAGGCACACCGGATACTTTAACGATTGGCT',
         raise NotImplementedError
 
     elif ligand in ('tc', 'tet', 'tetracycline'):
@@ -243,58 +268,77 @@ def aptamer(ligand, piece='whole'):
         # expression in vivo.  The Weigand & Suess aptamer has a stem on the 
         # end, which makes me skeptical that it would work for the purposes of 
         # this project.  
-        sequence_pieces   = 'AAAACAUACCAGAU', 'UUCG', 'AUCUGGAGAAGGUGAAGAAUUCGACCACCU'
-        constraint_pieces = '........((((((', '....', '))))))...(((((...........)))))'
+        sequence_pieces   = 'AAAACAUACCAGAUUUCGAUCUGGAGAAGGUGAAGAAUUCGACCACCU',
+        constraint_pieces = '........((((((....))))))...(((((...........)))))',
 
     elif ligand in ('asp', 'aspartame'):
         # Ferguson et al. A novel strategy for selection of allosteric 
         # ribozymes yields RiboReporter™ sensors for caffeine and aspartame.  
         # Nucl. Acids Res. (2004) 32:5
-        sequence_pieces   = 'CGGTGCTAGTTAGTTG', '', 'CAGTTTCGGTTGTTACG',
-        constraint_pieces = '((..............', '', '...............))',
+        sequence_pieces   = 'CGGTGCTAGTTAGTTGCAGTTTCGGTTGTTACG',
+        constraint_pieces = '((.............................))',
 
     elif ligand in ('caf', 'caffeine'):
         # Ferguson et al. A novel strategy for selection of allosteric 
         # ribozymes yields RiboReporter™ sensors for caffeine and aspartame.  
         # Nucl. Acids Res. (2004) 32:5
-        sequence_pieces   = 'GATCATCGGACTTTGT', '', 'CCTGTGGAGTAAGATCG',
-        constraint_pieces = '................', '', '.................',
+        sequence_pieces   = 'GATCATCGGACTTTGTCCTGTGGAGTAAGATCG',
+        constraint_pieces = '.................................',
 
     else:
         raise ValueError("no aptamer for '{}'".format(ligand))
 
+    # Check for obvious entry errors in the aptamer sequences.
+
+    if len(sequence_pieces) not in (1, 3):
+        raise AssertionError("{} has {} sequence pieces, not 1 or 3.".format(ligand, len(sequence_pieces)))
+    if len(sequence_pieces) != len(constraint_pieces):
+        raise AssertionError("{} has {} sequence pieces and {} constraint pieces.".format(ligand, len(sequence_pieces), len(constraint_pieces)))
+    if len(''.join(sequence_pieces)) != len(''.join(constraint_pieces)):
+        raise AssertionError("the {} sequence has a different length than its constraints.".format(ligand))
+
     # Define the domains that make up the aptamer.
 
-    aptamer_5 = Domain("aptamer/5'", sequence_pieces[0])
-    aptamer_S = Domain("aptamer/splitter", sequence_pieces[1])
-    aptamer_3 = Domain("aptamer/3'", sequence_pieces[2])
+    if len(sequence_pieces) == 1:
+        aptamer = Domain("aptamer", sequence_pieces[0])
+        aptamer.contraints = constraint_pieces[0]
+        aptamer.style = 'yellow', 'bold'
 
-    aptamer_5.constraints = constraint_pieces[0]
-    aptamer_S.constraints = constraint_pieces[1]
-    aptamer_3.constraints = constraint_pieces[2]
+    if len(sequence_pieces) == 3:
+        aptamer_5 = Domain("aptamer/5'", sequence_pieces[0])
+        aptamer_S = Domain("aptamer/splitter", sequence_pieces[1])
+        aptamer_3 = Domain("aptamer/3'", sequence_pieces[2])
 
-    aptamer_5.style = 'yellow', 'bold'
-    aptamer_S.style = 'yellow', 'bold'
-    aptamer_3.style = 'yellow', 'bold'
+        aptamer_5.constraints = constraint_pieces[0]
+        aptamer_S.constraints = constraint_pieces[1]
+        aptamer_3.constraints = constraint_pieces[2]
 
-    aptamer_S.mutable = True
+        aptamer_5.style = 'yellow', 'bold'
+        aptamer_S.style = 'yellow', 'bold'
+        aptamer_3.style = 'yellow', 'bold'
+
+        aptamer_S.mutable = True
 
     # Assemble the aptamer domains into a single construct and return it.
 
     construct = Construct('aptamer')
 
-    if piece == 'whole':
-        construct += aptamer_5
-        construct += aptamer_S
-        construct += aptamer_3
-    elif str(piece) == '5':
-        construct += aptamer_5
-    elif piece == 'splitter':
-        construct += aptamer_S
-    elif str(piece) == '3':
-        construct += aptamer_3
-    else:
-        raise ValueError("must request 'whole', '5', '3', or 'splitter' piece of aptamer, not {}.".format(piece))
+    if len(sequence_pieces) == 1:
+        construct += aptamer
+
+    if len(sequence_pieces) == 3:
+        if piece == 'whole':
+            construct += aptamer_5
+            construct += aptamer_S
+            construct += aptamer_3
+        elif str(piece) == '5':
+            construct += aptamer_5
+        elif piece == 'splitter':
+            construct += aptamer_S
+        elif str(piece) == '3':
+            construct += aptamer_3
+        else:
+            raise ValueError("must request 'whole', '5', '3', or 'splitter' piece of aptamer, not {}.".format(piece))
 
     return construct
 
