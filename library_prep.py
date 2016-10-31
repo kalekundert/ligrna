@@ -6,6 +6,9 @@ Usage:
     library_prep.py <num_libraries> [options]
 
 Options:
+    -p --primer-conc <uM>           [default: 200]
+        The concentration of the primers.
+
     -t --annealing-temp <celsius>   [default: 60]
         The annealing temperature for the PCR reaction.  I typically use NEB's 
         online "Tm Calculator" to determine this setting.
@@ -31,7 +34,7 @@ Design primers to assemble the {N:/library/libraries} with.
 - The primers should have overhangs containing the 
   degenerate nucleotides that make up the library.
 
-- The complementary between the primers and the 
+- The complementarity between the primers and the 
   plasmid should have a Tm near 60°C.
 
 - Order the 5' phosphate modification for the 
@@ -47,6 +50,7 @@ Design primers to assemble the {N:/library/libraries} with.
 pcr = dirty_water.Pcr()
 pcr.num_reactions = num
 pcr.annealing_temp = args['--annealing-temp']
+pcr.make_primer_mix = True
 
 protocol += pcr
 
@@ -135,8 +139,14 @@ Miniprep to isolate library plasmid.
 
 - Make a glycerol stock.
 
-- Miniprep 4 mL of overnight culture.  The yield 
-  should be ~400 ng/μL.
+- Miniprep 4 mL of overnight culture.
+
+- Do a phenol-chloroform extraction on the lysate 
+  after pelleting the insoluble cell debris and 
+  before loading it onto the miniprep column.  
+  This extra step modestly improves transformation 
+  efficiency and isn't necessary for libraries 
+  with fewer than 11 randomized positions.
 
 - Elute in 30 μL water."""
 
