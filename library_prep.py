@@ -54,6 +54,12 @@ pcr.make_primer_mix = True
 
 protocol += pcr
 
+## DpnI digestion
+
+protocol += """\
+Add 1 μL (20 units) DpnI to each reaction and 
+incubate at 37°C for 1h."""
+
 ## Gel extraction
 
 protocol += """\
