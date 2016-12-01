@@ -208,7 +208,7 @@ def predict_fold(design, constraints=False):
             if not theo_match:
                 raise ValueError('No aptamer in {}.'.format(design.name))
 
-            aptamer_seq = aptamer_match.group()
+            aptamer_seq = theo_match.group()
             aptamer_fold = '(...((.(((....)))....))...)'
             aptamer_kd = 0.0324  # μM
 
