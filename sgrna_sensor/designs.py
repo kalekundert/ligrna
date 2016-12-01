@@ -1257,6 +1257,14 @@ def root_nexus_backwards(i, dang_sgrna=False, target='none', ligand='theo'):
             51: ('GCCCG', 'CGAGT'),     # rx/5/5
             91: ('GGGAA', 'TTCC'),      # rx/5/4
             94: ('GTG',   'CAC'),       # rx/3/3
+
+            # Manually swap the GU base pair in the middle of rxb/11.  My 
+            # hypothesis is that Cas9 needs to interact with that U, and that 
+            # the aptamer controls whether it's flipped out and available to 
+            # Cas9 or sequestered in a base pair.  Swapping the GU base pair 
+            # tests this hypothesis by changing the position of the U without 
+            # changing the strength of the stem.
+            '11u': ('GTTGG', 'CCGAC'),
     }
     aliases = {
             19: 14,
