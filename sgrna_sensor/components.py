@@ -128,6 +128,14 @@ def aptamer(ligand, piece='whole'):
         constraint_pieces = '.((((.(((', '....', ')))....)))).'
         affinity_uM = 0.32
 
+    if ligand in ('gtheoc'):
+        # The theophylline aptamer, bracketed by a GC base pair.  This 
+        # construct is more convenient to use with ViennaRNA, because a 
+        # bracketing base pair is required to make a constraint.
+        sequence_pieces   = 'GAUACCAGCC', 'GAAA', 'GGCCCUUGGCAGC'
+        constraint_pieces = '(.((((.(((', '....', ')))....)))).)'
+        affinity_uM = 0.32
+
     elif ligand in ('3', '3mx', '3-methylxanthine'):
         # Soukup, Emilsson, Breaker. Altering molecular recognition of RNA 
         # aptamers by allosteric selection. J. Mol. Biol. (2000) 298, 623-632.
@@ -148,7 +156,7 @@ def aptamer(ligand, piece='whole'):
         sequence_pieces   = 'CCGACUGGCGAGAGCCAGGUAACGAAUG',
         constraint_pieces = '(...(((((....))))).........)',
 
-    elif ligand in ('t', 'tpp', 'thiamine', 'thiamine pyrophosphate'):
+    elif ligand in ('tpp', 'thiamine', 'thiamine pyrophosphate'):
         # Winkler, Hahvi, Breaker. Thiamine derivatives bind messenger RNAs 
         # directly to regulate bacterial gene expression. Nature (2002) 
         # 419:952-956.
@@ -160,8 +168,8 @@ def aptamer(ligand, piece='whole'):
         # Winker et al used "M9 glucose minimal media (plus 50 μg/mL vitamin 
         # assay Casamino acids; Difco)" with or without 100 μM thiamine for 
         # their in vivo assays (figure 4b, bottom).  The "vitamin assay" means 
-        # the casein digest was treated to remove certain vitamins, and is 
-        # presumably an important detail.
+        # the casein digest was treated to remove certain vitamins; presumably 
+        # this is an important detail.
 
         # Weiland et al. used M63 media with or without 1 mM thiamine for their 
         # in vivo assays.  This is a little confusing to me because the M63 
@@ -187,14 +195,14 @@ def aptamer(ligand, piece='whole'):
         # aptamer when using it to make an allosteric ribozyme, so I'm pretty 
         # confident that this could work.
 
-        # Dixon et al. used "fresh M9" and 500 μM ligand.  I assume this means 
-        # M9 with glucose.  The ligand was also in some amount of DMSO, but I'm 
-        # not sure how much.  The solubility of adenine in water is 7.6 mM, so 
-        # maybe the DMSO was only necessary for some of their other ligands.
-        #
-        # My plan is to use M9 with glucose and "vitamin assay" Casamino acids, 
-        # as I'm doing for thiamine.  I couldn't confirm that Casamino acids 
-        # don't have nucleotides, but I think it's unlikely.
+        # Dixon et al. used M9 + 0.4% glucose + 2 mg/mL cas-amino acids + 0.1 
+        # mg/mL thiamine.  This is a higher concentration of cas-amino acids 
+        # than Winkler et al. use for the TPP aptamer, but this is much more in 
+        # line with the standard protocols.
+        # 
+        # The ligand was also in some amount of DMSO, but I'm not sure how 
+        # much.  The solubility of adenine in water is 7.6 mM, so maybe the 
+        # DMSO was only necessary for some of their other ligands.
         sequence_pieces   = 'UAUAAUCCUAAUGAUAUGGUUUGGGAGUUUCUACCAAGAGCCUUAAACUCUUGAUUA',
         constraint_pieces = '((...(((((((.......)))))))........((((((.......))))))..))',
 
@@ -203,14 +211,16 @@ def aptamer(ligand, piece='whole'):
         # (2010) 107:7:2830-2835.
 
         # This is the M6 construct, which is just the adenine aptamer from 
-        # above with U47C and U51C.
+        # above with U47C and U51C.  The affinity measurement is actually for 
+        # M6'', because it was not measured for M6.
         sequence_pieces   = 'UAUAAUCCUAAUGAUAUGGUUUGGGAGCUUCCACCAAGAGCCUUAAACUCUUGAUUA',
         constraint_pieces = '((...(((((((.......)))))))........((((((.......))))))..))',
+        affinity_uM = 1.19
 
     elif ligand in ('g', 'gua', 'guanine'):
         # Nomura, Zhou, Miu, Yokobayashi. Controlling mammalian gene expression 
-        # by allosteric Hepatitis Delta Virus ribozymes. ACS Syn. Biol. (2013) 
-        # 2:684-689.
+        # by allosteric Hepatitis Delta Virus ribozymes. ACS Synth. Biol.  
+        # (2013) 2:684-689.
         sequence_pieces   = 'UAUAAUCGCGUGGAUAUGGCACGCAAGUUUCUACCGGGCACCGUAAAUGUCCGACUA',
         constraint_pieces = '((...(.(((((.......))))).)........((((((.......))))))..))',
         affinity_uM = 0.005
@@ -301,8 +311,9 @@ def aptamer(ligand, piece='whole'):
 
     if len(sequence_pieces) == 1:
         aptamer = Domain("aptamer", sequence_pieces[0])
-        aptamer.contraints = constraint_pieces[0]
+        aptamer.constraints = constraint_pieces[0]
         aptamer.style = 'yellow', 'bold'
+        aptamer.kd = affinity_uM
 
     if len(sequence_pieces) == 3:
         aptamer_5 = Domain("aptamer/5'", sequence_pieces[0])

@@ -179,33 +179,54 @@ def predict_fold(design, constraints=False):
         cmd = 'RNAfold --noPS --MEA'
         stdin = design.rna
 
+        # Look for aptamer domains in the given design.
+
+        try:
+            aptamer = design['aptamer']
+            aptamer_seq = aptamer.rna
+            aptamer_fold = aptamer.constraints
+
+            if not hasattr(aptamer, 'kd'):
+                raise ValueError("This aptamer does not specify an affinity.")
+
+            aptamer_kd = aptamer.kd
+
+        # If no aptamer domains are found, look specifically for the 
+        # theophylline aptamer.  The theophylline aptamer cannot be recognized 
+        # by the above code because it's got too much backwards-compatibility 
+        # baggage, but it's important enough to merit a special case.
+
         # Note that this will only give a reasonable answer if the design in 
         # question has the theophylline aptamer flanked by a valid base pair 
-        # (e.g. GC, AU, GU).  The folding simulation won't complain if either 
-        # of those conditions isn't met, but it will give the wrong answer.
+        # (e.g. GC, AU, GU).  The folding simulation won't complain if this 
+        # condition isn't met, but it will give the wrong answer.
 
-        aptamer_pattern = re.compile('.AUACCAGCCGAAAGGCCCUUGGCAG.')
-        aptamer_match = aptamer_pattern.search(design.rna)
+        except KeyError:
+            theo_pattern = re.compile('.AUACCAGCCGAAAGGCCCUUGGCAG.')
+            theo_match = theo_pattern.search(design.rna)
 
-        if aptamer_match:
+            if not theo_match:
+                raise ValueError('No aptamer in {}.'.format(design.name))
+
             aptamer_seq = aptamer_match.group()
             aptamer_fold = '(...((.(((....)))....))...)'
+            aptamer_kd = 0.0324  # μM
 
-            # Calculate the free energy of aptamer folding.
-            rt_37 = 1.9858775e-3 * 310  # kcal/mol at 37°C
-            aptamer_kd = 0.32  # μM
-            std_conc = 1e6  # 1M in μM
-            aptamer_dg = rt_37 * math.log(aptamer_kd / std_conc)
+        # Calculate the free energy of aptamer folding.
+        rt_37 = 1.9858775e-3 * 310  # kcal/mol at 37°C
+        std_conc = 1e6  # 1M in μM
+        aptamer_dg = rt_37 * math.log(aptamer_kd / std_conc)
 
-            # Add the aptamer motif to RNAfold.
-            cmd += ' --motif "{},{},{}"'.format(
-                    aptamer_seq, aptamer_fold, aptamer_dg)
+        # Add the aptamer motif to RNAfold.
+        cmd += ' --motif "{},{},{}"'.format(
+                aptamer_seq, aptamer_fold, aptamer_dg)
 
-            # Show the user how the aptamer is being scored.
-            print(' ' * aptamer_match.start(), end='')
-            print(aptamer_fold, end='')
-            print(' ' * (len(design) - aptamer_match.end()), end=' ')
-            print("({:.2f} kcal/mol)".format(aptamer_dg))
+        # Show the user how the aptamer is being scored.
+        aptamer_start = design.rna.find(aptamer_seq)
+        print(' ' * aptamer_start, end='')
+        print(aptamer_fold, end='')
+        print(' ' * (len(design) - aptamer_start - len(aptamer_seq)), end=' ')
+        print("({:.2f} kcal/mol)".format(aptamer_dg))
 
     else:
         cmd = 'RNAfold --noPS --MEA'
@@ -295,7 +316,8 @@ def main():
 
         elif args['--library-size']:
             print(header_template.format(design.name), end='  ')
-            print(library_size(design))
+            z = library_size(design.seq)
+            print('{}  (4**{})'.format(z, math.log(z)/math.log(4)))
 
         elif args['--length']:
             print(header_template.format(design.name), end='  ')
