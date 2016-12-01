@@ -1446,8 +1446,8 @@ def unbalance_hairpin(N, target='none', ligand='theo'):
 
     return sgrna
 
-@design('dx')
-def diversify_nexus(N, target='none', ligand='theo'):
+@design('mx', 'dx')
+def modify_nexus(N, target='none', ligand='theo'):
     """
     Randomize the region 3' of the evolved linker from rxb/11, the strongest 
     sensor from the rxb screen, keeping the linker itself unchanged.  The 
@@ -1505,8 +1505,8 @@ def diversify_nexus(N, target='none', ligand='theo'):
 
     return sgrna
 
-@design('dh', 'mh')
-def diversify_hairpin(N, A=1, target='none', ligand='theo'):
+@design('mh')
+def modify_hairpin(N, A=1, target='none', ligand='theo'):
     """
     Insert the aptamer into the hairpin and build a library by randomizing 
     the positions that were most likely to mutate in Monte Carlo RNA design 
@@ -1574,8 +1574,8 @@ def diversify_hairpin(N, A=1, target='none', ligand='theo'):
 
     return sgrna
 
-@design('dhf', 'mhf')
-def diversify_hairpin_forward(i, expected_only=False, target='none', ligand='theo'):
+@design('mhf')
+def modify_hairpin_forward(i, expected_only=False, target='none', ligand='theo'):
     linkers = {
             3:  ('CGGTC', 'GTC', 'CA'),
             4:  ('ACGAA', 'GTA', 'CC'),
