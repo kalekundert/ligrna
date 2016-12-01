@@ -112,7 +112,7 @@ def dead_sgrna(target='none'):
     return sgrna
 
 @design('on')
-def on(target='none'):
+def on(pam=None, target='none'):
     """
     Return an optimized sgRNA sequence.
 
@@ -170,6 +170,10 @@ def on(target='none'):
     sgrna += Domain('terminator/3', 'CGGUGC', 'blue')
     sgrna += Domain('terminator/u', 'UUUUUU', 'blue')
 
+    if pam == 'pam':
+        sgrna['lower_stem/5'][1:3] = 'GG'
+        sgrna['lower_stem/3'][3:5] = 'CC'
+
     return sgrna
 
 @design('off')
@@ -180,7 +184,7 @@ def off(target='none'):
     This sequence has two mutations in the nexus region that prevent the sgRNA 
     from folding properly.  These mutations were described by Briner et al.
     """
-    sgrna = on(target)
+    sgrna = on(target=target)
     sgrna.name = 'off'
 
     sgrna['nexus/5'].seq = 'CC'
@@ -1272,12 +1276,17 @@ def root_nexus_backwards(i, dang_sgrna=False, target='none', ligand='theo'):
     if i not in linkers:
         raise ValueError("no sequence for rxb({})".format(i))
 
+    linker_5 = Domain("linker/5'", linkers[i][0])
+    linker_5.style = 'red'
+    linker_3 = Domain("linker/3'", linkers[i][1])
+    linker_3.style = 'red'
+
     sequenced_insert = aptamer(ligand)
-    sequenced_insert.prepend(Domain("linker/5'", linkers[i][0]))
-    sequenced_insert.append(Domain("linker/3'", linkers[i][1]))
+    sequenced_insert.prepend(linker_5)
+    sequenced_insert.append(linker_3)
 
     if dang_sgrna:
-        sgrna = on(target)
+        sgrna = on(target=target)
         sgrna['nexus/5'].attachment_sites = 0,
         sgrna['nexus/3'].attachment_sites = 2,
         sgrna.attach(
@@ -1403,7 +1412,7 @@ def unbalance_hairpin(N, target='none', ligand='theo'):
         but the 2 bp stem in the nexus is always excluded.  The hairpin stem 
         itself is eliminated and totally replaced by the aptamer.
     """
-    sgrna = on(target)
+    sgrna = on(target=target)
 
     # Replace the hairpin with the aptamer.
     sgrna['hairpin/5'].attachment_sites = 0,
@@ -1463,7 +1472,7 @@ def diversify_nexus(N, target='none', ligand='theo'):
     """
 
     # Base this library on the optimized sgRNA described by Dang et al.
-    sgrna = on(target)
+    sgrna = on(target=target)
 
     # Use the communication module from rxb/xxx.
     sgrna['nexus/5'].seq = 'GTGGG'
@@ -1529,7 +1538,7 @@ def diversify_hairpin(N, A=1, target='none', ligand='theo'):
     """
 
     # Base this library on the optimized sgRNA described by Dang et al.
-    sgrna = on(target)
+    sgrna = on(target=target)
 
     # Randomize the top of the nexus.  This region is predicted to be important 
     # for allowing the sgRNA to work with multiple spacers.
@@ -1646,7 +1655,7 @@ def seqlogo_hairpin(N, target='none', ligand='theo'):
         raise ValueError('qh: N must be >= 0')
 
     # Base this library on the optimized sgRNA described by Dang et al.
-    sgrna = on(target)
+    sgrna = on(target=target)
 
     # Randomize the entire ruler.
     sgrna['ruler'].seq = 'NNNNN'
