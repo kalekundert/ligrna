@@ -1395,57 +1395,6 @@ def root_hairpin_forward(i, expected_only=False, target='none', ligand='theo'):
 
     return sgrna
 
-@design('uh')
-def unbalance_hairpin(N, target='none', ligand='theo'):
-    """
-    Randomize the region 5' of the hairpin in the hopes of creating a sequence 
-    that is partially complementary to the aptamer.  Presently, this strategy 
-    is intended for protein binding aptamers like MS2 that aren't expected to 
-    have significantly different bound and unbound conformations.  The hope is 
-    that protein binding can stabilize an otherwise minor conformation (i.e. 
-    conformational selection) and lock the sgRNA into an active or inactive 
-    state.
-
-    This strategy is unbalanced because rather than randomizing stretches of 
-    nucleotides on both sides of the aptamer and hoping for a stem that will 
-    respond to the ligand, we are only randomizing nucleotides on one side of 
-    the aptamer and hoping that those nucleotides will interfere with the stem 
-    formed naturally by the aptamer in a way that is sensitive to ligand.
-
-    Parameter
-    ---------
-    N: int
-        The number of nucleotides 5' of the hairpin to randomize.  The maximum 
-        number is 12.  This is enough to extend almost throughout the nexus, 
-        but the 2 bp stem in the nexus is always excluded.  The hairpin stem 
-        itself is eliminated and totally replaced by the aptamer.
-    """
-    sgrna = on(target=target)
-
-    # Replace the hairpin with the aptamer.
-    sgrna['hairpin/5'].attachment_sites = 0,
-    sgrna['hairpin/3'].attachment_sites = 4,
-    sgrna.attach(aptamer(ligand), 'hairpin/5', 0, 'hairpin/3', 4)
-
-    # Randomize the specified number of nucleotides 5' of the hairpin.
-    Lr  = len(sgrna['ruler'])
-    Lx3 = len(sgrna['nexus/gu'])
-    Lx5 = len(sgrna['nexus/o'])
-    L = Lr + Lx3 + Lx5
-
-    if N < 0 or N > L:
-        raise ValueError("rh: N must be between 0 and {}, not {}".format(L, N))
-
-    Nr  = clamp(N,            0, Lr)
-    Nx3 = clamp(N - Lr,       0, Lx3)
-    Nx5 = clamp(N - Lr - Lx3, 0, Lx5)
-
-    sgrna['ruler'].seq = sgrna['ruler'][:Lr-Nr] + ('N' * Nr)
-    sgrna['nexus/gu'].seq = sgrna['nexus/gu'][:Lx3-Nx3] + ('N' * Nx3)
-    sgrna['nexus/o'].seq = sgrna['nexus/o'][:Lx5-Nx5] + ('N' * Nx5)
-
-    return sgrna
-
 @design('mx', 'dx')
 def modify_nexus(N, target='none', ligand='theo'):
     """
@@ -1675,6 +1624,57 @@ def seqlogo_hairpin(N, target='none', ligand='theo', pam=None):
     # Insert the aptamer above the communication module.
     sgrna['hairpin/o'].attachment_sites = 0,4
     sgrna.attach(aptamer(ligand), 'hairpin/o', 0, 'hairpin/o', 4)
+
+    return sgrna
+
+@design('ph')
+def protein_binding_hairpin(N, target='none', ligand='theo', pam=None):
+    """
+    Randomize the region 5' of the hairpin in the hopes of creating a sequence 
+    that is partially complementary to the aptamer.  Presently, this strategy 
+    is intended for protein binding aptamers like MS2 that aren't expected to 
+    have significantly different bound and unbound conformations.  The hope is 
+    that protein binding can stabilize an otherwise minor conformation (i.e. 
+    conformational selection) and lock the sgRNA into an active or inactive 
+    state.
+
+    This strategy is unbalanced because rather than randomizing stretches of 
+    nucleotides on both sides of the aptamer and hoping for a stem that will 
+    respond to the ligand, we are only randomizing nucleotides on one side of 
+    the aptamer and hoping that those nucleotides will interfere with the stem 
+    formed naturally by the aptamer in a way that is sensitive to ligand.
+
+    Parameter
+    ---------
+    N: int
+        The number of nucleotides 5' of the hairpin to randomize.  The maximum 
+        number is 12.  This is enough to extend almost throughout the nexus, 
+        but the 2 bp stem in the nexus is always excluded.  The hairpin stem 
+        itself is eliminated and totally replaced by the aptamer.
+    """
+    sgrna = on(pam=pam, target=target)
+
+    # Replace the hairpin with the aptamer.
+    sgrna['hairpin/5'].attachment_sites = 0,
+    sgrna['hairpin/3'].attachment_sites = 4,
+    sgrna.attach(aptamer(ligand), 'hairpin/5', 0, 'hairpin/3', 4)
+
+    # Randomize the specified number of nucleotides 5' of the hairpin.
+    Lr  = len(sgrna['ruler'])
+    Lx3 = len(sgrna['nexus/gu'])
+    Lx5 = len(sgrna['nexus/o'])
+    L = Lr + Lx3 + Lx5
+
+    if N < 0 or N > L:
+        raise ValueError("rh: N must be between 0 and {}, not {}".format(L, N))
+
+    Nr  = clamp(N,            0, Lr)
+    Nx3 = clamp(N - Lr,       0, Lx3)
+    Nx5 = clamp(N - Lr - Lx3, 0, Lx5)
+
+    sgrna['ruler'].seq = sgrna['ruler'][:Lr-Nr] + ('N' * Nr)
+    sgrna['nexus/gu'].seq = sgrna['nexus/gu'][:Lx3-Nx3] + ('N' * Nx3)
+    sgrna['nexus/o'].seq = sgrna['nexus/o'][:Lx5-Nx5] + ('N' * Nx5)
 
     return sgrna
 
