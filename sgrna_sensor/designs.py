@@ -1762,3 +1762,18 @@ def sequester_uracil_59(N, M, target='none', ligand='theo', pam=None):
 
     return sgrna
 
+@design('liu')
+def liu_sgrna(target='none', ligand='theo'):
+    spacer_seq = spacer(target).rna
+    stem_5 = rna_reverse_complement(spacer_seq[:15])
+    stem_3 = rna_reverse_complement(stem_5[-9:])
+
+    sgrna = wt(target=target)
+    sgrna.remove('tail')
+    sgrna += Domain('stem/5', stem_5)
+    sgrna += aptamer(ligand, liu=True)
+    sgrna += Domain('stem/3', stem_3)
+    sgrna += Domain('tail', 'TTTTTT')
+
+    return sgrna
+

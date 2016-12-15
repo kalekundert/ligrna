@@ -99,7 +99,7 @@ def repeat(name, length, pattern='UUUCCC'):
     sequence = pattern * (1 + length // len(pattern))
     return Domain(name, sequence[:length])
 
-def aptamer(ligand, piece='whole'):
+def aptamer(ligand, piece='whole', liu=False):
     """
     Construct aptamer sequences.
 
@@ -121,14 +121,18 @@ def aptamer(ligand, piece='whole'):
         RNAfold to approximate a ligand bound state.
     """
 
+    affinity_uM = float('inf')
+
     # Get the right sequence for the requested aptamer.
 
     if ligand in ('th', 'theo', 'theophylline'):
-        sequence_pieces   = 'AUACCAGCC', 'GAAA', 'GGCCCUUGGCAG'
-        constraint_pieces = '.((((.(((', '....', ')))....)))).'
+        sequence_pieces         = 'AUACCAGCC', 'GAAA', 'GGCCCUUGGCAG'
+        if liu: sequence_pieces = 'AUACCACGC', 'GAAA', 'GCGCCUUGGCAG'
+        constraint_pieces       = '.((((.(((', '....', ')))....)))).'
         affinity_uM = 0.32
 
-    if ligand in ('gtheoc'):
+
+    elif ligand in ('gtheoc'):
         # The theophylline aptamer, bracketed by a GC base pair.  This 
         # construct is more convenient to use with ViennaRNA, because a 
         # bracketing base pair is required to make a constraint.
