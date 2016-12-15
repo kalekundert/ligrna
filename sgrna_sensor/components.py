@@ -60,6 +60,7 @@ def spacer(name='none'):
     }
     spacers = {
             'none':   '',
+            'n20':    'NNNNNNNNNNNNNNNNNNNN',
             'rfp':    'AACTTTCAGTTTAGCGGTCT',
             'rfp2':   'UGGAACCGUACUGGAACUGC',
             'gfp':    'CATCTAATTCAACAAGAATT',
@@ -130,7 +131,6 @@ def aptamer(ligand, piece='whole', liu=False):
         if liu: sequence_pieces = 'AUACCACGC', 'GAAA', 'GCGCCUUGGCAG'
         constraint_pieces       = '.((((.(((', '....', ')))....)))).'
         affinity_uM = 0.32
-
 
     elif ligand in ('gtheoc'):
         # The theophylline aptamer, bracketed by a GC base pair.  This 
