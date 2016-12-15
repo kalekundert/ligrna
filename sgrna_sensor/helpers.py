@@ -4,13 +4,8 @@ def reverse(sequence):
     return sequence[::-1]
 
 def rna_complement(sequence):
-    complements = {
-            'A': 'U',
-            'C': 'G',
-            'G': 'C',
-            'U': 'A',
-    }
-    return ''.join(complements[x] for x in sequence)
+    complements = str.maketrans('ACUGNacugn', 'UGACNugacn')
+    return sequence.translate(complements)
 
 complement = rna_complement
 
@@ -20,13 +15,8 @@ def rna_reverse_complement(sequence):
 reverse_complement = rna_reverse_complement
 
 def dna_complement(sequence):
-    complements = {
-            'A': 'T',
-            'C': 'G',
-            'G': 'C',
-            'T': 'A',
-    }
-    return ''.join(complements[x] for x in sequence)
+    complements = str.maketrans('ACTGNactgn', 'TGACNtgacn')
+    return sequence.translate(complements)
 
 def dna_reverse_complement(sequence):
     return reverse(dna_complement(sequence))
