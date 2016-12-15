@@ -177,14 +177,14 @@ def on(pam=None, target='none'):
     return sgrna
 
 @design('off')
-def off(target='none'):
+def off(pam=None, target='none'):
     """
     Return the sequence for the negative control sgRNA.
 
     This sequence has two mutations in the nexus region that prevent the sgRNA 
     from folding properly.  These mutations were described by Briner et al.
     """
-    sgrna = on(target=target)
+    sgrna = on(pam=pam, target=target)
     sgrna.name = 'off'
 
     sgrna['nexus/5'].seq = 'CC'
@@ -1241,7 +1241,7 @@ def root_nexus(N, M, A=1, target='none', ligand='theo'):
     return sgrna
 
 @design('rxb')
-def root_nexus_backwards(i, dang_sgrna=False, target='none', ligand='theo'):
+def root_nexus_backwards(i, dang_sgrna=False, target='none', ligand='theo', pam=None):
     """
     Most of these designs are not predicted to fold correctly in either 
     condition.  The exception is rxb(51), for which the lower stem is predicted 
@@ -1294,7 +1294,7 @@ def root_nexus_backwards(i, dang_sgrna=False, target='none', ligand='theo'):
     sequenced_insert.append(linker_3)
 
     if dang_sgrna:
-        sgrna = on(target=target)
+        sgrna = on(pam=pam, target=target)
         sgrna['nexus/5'].attachment_sites = 0,
         sgrna['nexus/3'].attachment_sites = 2,
         sgrna.attach(
@@ -1506,7 +1506,7 @@ def modify_nexus(N, target='none', ligand='theo'):
     return sgrna
 
 @design('mh')
-def modify_hairpin(N, A=1, target='none', ligand='theo'):
+def modify_hairpin(N, A=1, target='none', ligand='theo', pam=None):
     """
     Insert the aptamer into the hairpin and build a library by randomizing 
     the positions that were most likely to mutate in Monte Carlo RNA design 
@@ -1546,7 +1546,7 @@ def modify_hairpin(N, A=1, target='none', ligand='theo'):
     """
 
     # Base this library on the optimized sgRNA described by Dang et al.
-    sgrna = on(target=target)
+    sgrna = on(pam=pam, target=target)
 
     # Randomize the top of the nexus.  This region is predicted to be important 
     # for allowing the sgRNA to work with multiple spacers.
@@ -1575,7 +1575,7 @@ def modify_hairpin(N, A=1, target='none', ligand='theo'):
     return sgrna
 
 @design('mhf')
-def modify_hairpin_forward(i, expected_only=False, target='none', ligand='theo'):
+def modify_hairpin_forward(i, expected_only=False, target='none', ligand='theo', pam=None):
     linkers = {
             3:  ('CGGTC', 'GTC', 'CA'),
             4:  ('ACGAA', 'GTA', 'CC'),
@@ -1614,7 +1614,7 @@ def modify_hairpin_forward(i, expected_only=False, target='none', ligand='theo')
         raise ValueError("mhf({}) doesn't have any unexpected mutations.".format(i))
 
     N = len(''.join(linkers[i])) - 5 + 2
-    sgrna = mh(N, ligand=ligand, target=target)
+    sgrna = mh(N, ligand=ligand, target=target, pam=pam)
     sgrna['nexus/o'].seq = linkers[i][0]
     sgrna['nexus/gu'].seq = linkers[i][1][0:2]
     sgrna['ruler'].seq = linkers[i][1][2:3] + 'AU' + linkers[i][2]
@@ -1626,7 +1626,7 @@ def modify_hairpin_forward(i, expected_only=False, target='none', ligand='theo')
     return sgrna
 
 @design('qh')
-def seqlogo_hairpin(N, target='none', ligand='theo'):
+def seqlogo_hairpin(N, target='none', ligand='theo', pam=None):
     """
     Randomize the stem linking the aptamer to the sgRNA and the parts of the 
     sgRNA that were the most conserved after being randomized in previous 
@@ -1663,7 +1663,7 @@ def seqlogo_hairpin(N, target='none', ligand='theo'):
         raise ValueError('qh: N must be >= 0')
 
     # Base this library on the optimized sgRNA described by Dang et al.
-    sgrna = on(target=target)
+    sgrna = on(pam=pam, target=target)
 
     # Randomize the entire ruler.
     sgrna['ruler'].seq = 'NNNNN'

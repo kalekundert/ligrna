@@ -131,6 +131,9 @@ def from_name(name, **kwargs):
     # second otherwise) matches the name of one of the known ligand, use that 
     # ligand's aptamer to build the design.
 
+    if tokens[0] == 'pam':
+        kwargs['pam'] = tokens.pop(0)
+
     try:
         spacer(tokens[0])
     except ValueError:
