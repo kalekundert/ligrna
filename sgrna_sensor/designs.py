@@ -1678,3 +1678,87 @@ def protein_binding_hairpin(N, target='none', ligand='theo', pam=None):
 
     return sgrna
 
+@design('uh')
+def sequester_uracil_59(N, M, target='none', ligand='theo', pam=None):
+    """
+    Parameters
+    ==========
+    N: int
+        Length of the loop in the nexus.  This region is intended to base pair 
+        with the aptamer in a way that sequesters U59.  Typical this argument 
+        would be between 4 and 6.
+
+    M: int
+        Length of the ruler. Typically either 6 or 7.
+    """
+
+    # When designing this library, I had to choose between randomizing:
+    # - the AA on the very 5' side of the nexus.
+    # - the length of the nexus loop.
+    # - the hairpin stem (in part or in full).
+    #
+    # I didn't want to randomize more than 12 residues, and I already had 10 
+    # residues that I definitely wanted to randomize, so I could only choose 
+    # one of these regions to randomize.
+    #
+    # I decided against randomizing the AA on the 5' side of the nexus because 
+    # I felt it would be better to just add random nucleotides to the loop.  
+    # The point of randomizing those nucleotides would've been to allow the 
+    # nexus to base pair with the aptamer.  But adding random nucleotides to 
+    # the nexus rather than randomizing the AA gives the library a bigger 
+    # contiguous stretch of nucleotides to work with, and I think that's more 
+    # likely to have something good.
+    #
+    # I decided against randomizing the hairpin stem for more pragmatic 
+    # reasons.  Because the hairpin spans the aptamer and most of my 
+    # alternative aptamers are quite long, constructing a library that 
+    # randomizes most of the nexus, adds a large aptamer, and randomizes part 
+    # of the hairpin stem would require very long primers.  If only the nexus 
+    # is being randomized, I can assemble the library in two steps using short 
+    # primers for both assemblies.  I could get around this problem by only 
+    # randomizing one side of the stem, but I think this would too severely 
+    # limit the ability of that region to form base pairs.
+    #
+    # So in the end I decided to randomize the length of the nexus loop.  This 
+    # gives the most contiguous variation, which I think will be helpful for 
+    # forming the base-pairs needed to make a sensor.
+
+    # Base this library on the optimized sgRNA described by Dang et al.
+    sgrna = on(pam=pam, target=target)
+
+    # Randomize the nexus.
+    sgrna['nexus/o'].seq = N * 'N' + 'U'
+    sgrna['nexus/gu'].seq = min(M, 2) * 'N'
+
+    # Randomize the ruler.  I think it's important to randomize this region 
+    # because there are two roles I can imagine it fulfilling.  First, it could 
+    # form base-pairing interactions that would help sequester U59.  Second, it 
+    # could be the loop in a stem between the nexus and the aptamer.
+    #
+    # I also reduce the length of the ruler by one nucleotide relative to the 
+    # positive control.  This mimics mhf/30 and reduces the complexity of the 
+    # library.
+    sgrna['ruler'].seq = (M - 2) * 'N'
+
+    # I have two options with regard to the first hairpin stem:
+    # - Randomize it (in part or in full).
+    # - Use the sequence from rhf/6.
+    #
+    # Which option is best depends on how this stem contributes to the sensor.  
+    # If it's participating in off-state base-pairs with the aptamer, then I'd 
+    # want to randomize it to give it a chance to adapt to new aptamers.  If 
+    # it's just allowing conformational changes in the aptamer to propagate to 
+    # the rest of the sgRNA, then I'd want to use the sequence from rhf/6.
+    #
+    # I chose to use the sequence from rhf/6 because it simplifies the library 
+    # construction (see above), I'm already randomizing 12 other positions, and 
+    # this stem doesn't seem to be interacting with the aptamer in mhf/30.
+    sgrna['hairpin/5'].seq = 'GCCG'
+    sgrna['hairpin/3'].seq = 'CGAC'
+
+    # Insert the aptamer above the communication module.
+    sgrna['hairpin/o'].attachment_sites = 0,4
+    sgrna.attach(aptamer(ligand), 'hairpin/o', 0, 'hairpin/o', 4)
+
+    return sgrna
+
