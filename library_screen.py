@@ -46,9 +46,9 @@ controls.
 - Thaw a glycerol stock of MG1655 cells containing 
   the library on ice for ≈10 min.
 
-- Add 1 mL of thawed glycerol stock to 4 mL LBCC.
+- Add 1 mL of thawed glycerol stock to 50 mL LBCC.
 
-- Inoculate 5 mL LBCC with stabs from glycerol 
+- Inoculate 1 mL LBCC with stabs from glycerol 
   stocks for the positive and negative controls.
 
 - Grow all the cultures overnight at 37°C."""
@@ -59,7 +59,7 @@ Grow the library and the controls with and without
 theophylline, while inducing Cas9.
 
 - Dilute enough of the library to get at least 10x 
-  coverage into 50 volumes of EZCCA and EZCCAT.  
+  coverage into 250 volumes of EZCCA and EZCCAT.  
   Use at least 1 mL of media.
 
   My saturated cultures have an OD600 of ≈3.0, 
@@ -71,7 +71,7 @@ Overnight volume:           Media volume:
 - Make a glycerol stock of the library (1 mL 
   overnight culture, 333 μL 80% glycerol).
 
-- Subculture 20 μL of each control into 50 volumes 
+- Subculture 4 μL of each control into 250 volumes 
   (i.e. 1 mL) EZCCA and EZCCAT.
 
 - Grow at 37°C for at least 9h."""
@@ -188,8 +188,8 @@ ligand:
 - For screens without ligand, draw gates based on 
   the control population.  You want to be as 
   stringent as possible while collecting at least 
-  one survivng cell for each library member that's
-  distributed like the control population.
+  one surviving cell for each library member 
+  that's distributed like the control population.
   
   If you will only see each library member once 
   (1x coverage), draw gates that encompass the 
