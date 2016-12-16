@@ -291,15 +291,15 @@ def consolidate_duplicate_primers(primers, term_sep='_'):
     unique_primers = {}
 
     for primer, names in primer_names.items():
-        name = '\t'.join(natsorted(names))
+        name = ', '.join(natsorted(names))
         unique_primers[name] = primer
 
     return unique_primers
     
 def report_primers_for_elim(primers):
     from natsort import natsorted
-    print("Number of oligos:")
-    print(len(primers))
+    print("Number of oligos:", len(primers))
+    print("Max primer length:", max(len(x) for x in primers.values()))
     print()
     print("Primer names (ready to copy into Elim form):")
     for name in natsorted(primers):
