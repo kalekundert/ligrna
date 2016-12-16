@@ -207,7 +207,22 @@ ligand:
   that looks totally on or off and another sparser 
   population that looks slightly less on or off.  
   Draw gates big enough to include the some of the 
-  latter.""")
+  latter.
 
+If you can, you want to gate for cells that have 
+working CRISPRi systems in your first screen.  The 
+first screen is when throughput is the most 
+important, and these cells can be sorted at higher 
+throughput for two reasons.
+
+The first is that they naturally grow faster 
+becuase they are expressing only one fluorescent 
+protein instead of two.  This growth advantage 
+effectively serves as an extra selection step.
+
+The second is that they can be sorted more 
+accurately, because it's easier for the sorter to 
+notice droplets that contain unwanted bright cells 
+than unwanted dark cells.""")
 
 # vim: tw=50
