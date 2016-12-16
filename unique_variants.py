@@ -216,7 +216,7 @@ class PickStep(Step):
         try:
             import sgrna_sensor
             design = sgrna_sensor.from_name(self._num_items)
-            return 4 ** design.dna.upper().count('N')
+            return sgrna_sensor.library_size(design.seq)
         except:
             pass
 
