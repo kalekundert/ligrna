@@ -51,6 +51,7 @@ pcr = dirty_water.Pcr()
 pcr.num_reactions = num
 pcr.annealing_temp = args['--annealing-temp']
 pcr.make_primer_mix = True
+pcr.reaction.volume = 100
 
 protocol += pcr
 
