@@ -195,8 +195,8 @@ class PrimerDesigner:
 
         name = self.name.upper()
         if name.startswith('NONE_'): name = name[5:]
-        name_for = name + '_FOR'
-        name_rev = name + '_REV'
+        name_for = name + '_QUIK_FOR'
+        name_rev = name + '_QUIK_REV'
 
         return {name_for: best_primer, name_rev: reverse(complement(best_primer))}
 
