@@ -189,6 +189,41 @@ protocol += """\
 Nanodrop to determine the RNA concentration."""
 
 protocol += """\
+Run the RNA on a denaturing gel to make sure it's 
+homogeneous and of the right size.
+
+- Setup a gel cast and make sure it doesn't leak.
+  
+- Combine the following reagents in a 15 mL tube and 
+  mix until the urea has dissolved (~5 min).
+
+  8% TBE/Urea polyacrylamide gel
+  ──────────────────────────────
+  4.2 g urea
+  2.0 mL 5x TBE
+  2.67 mL 30% acrylamide/bis (29:1)
+  water to 10 mL
+
+- Add 10 uL TEMED and 10 μL 0.4 mg/μL APS (freshly 
+  prepared), invert once or twice to mix, then 
+  immediately pipet into the gel cast.
+  
+- Either use the gel immediately, or wrap it in a
+  wet paper towel and store at 4°C overnight to use 
+  the next day.
+  
+To run the gel:
+
+- Mix 2 μL of RNA with 2 μL of loading dye.
+
+- Denature at 95°C for 2 min.
+
+- Wash out any urea that's leached into your wells, 
+  then quickly load all of your samples.
+
+- Run at 180V for 30 min."""
+
+protocol += """\
 Dilute (if desired) enough sgRNA to make several 
 15 μL aliquots.  Keep any left-over RNA undiluted.  
 Flash-freeze in liquid N₂ and store at -80°C."""
