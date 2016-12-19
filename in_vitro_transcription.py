@@ -34,7 +34,8 @@ Options:
 """
 
 import docopt
-import math
+import dirty_water
+from nonstdlib import plural
 
 ## Calculate reagent volumes.
 
@@ -43,115 +44,138 @@ volume = eval(args['<reactions>']) * (1 + float(args['--extra'] or 0) / 100)
 scale = lambda ref, name: (ref * volume, name)
 dna = float(args['--dna'])
 
+protocol = dirty_water.Protocol()
+ivtt = dirty_water.Reaction()
+ivtt.num_reactions = eval(args['<reactions>'])
+ivtt.extra_master_mix = float(args['--extra'])
+
 if 'hiscribe'.startswith(args['--kit'].lower()):
     incubation_time = args['--incubate'] or 4
     incubation_temp = '37'
-    reagents = [
-            scale(11.0 - dna, "nuclease-free water"),
-            scale(1.5, "10x reaction buffer"),
-    ]
+
+    # For short RNA transcripts (< 0.3 kb), we can use less buffer, rNTPs, and 
+    # polymerase than usual.  The '10x' concentrations in the reagent table 
+    # below are what's printed on the tubes and are relative to the normal 
+    # reaction, but maybe confusing unless you keep in mind that our final 
+    # concentrations will be 0.75x.
+
+    ivtt['nuclease-free water'].std_volume = 11 - dna, 'μL'
+    ivtt['nuclease-free water'].master_mix = True
+    ivtt['reaction buffer'].std_volume = 1.5, 'μL'
+    ivtt['reaction buffer'].std_stock_conc = '10x'
+    ivtt['reaction buffer'].master_mix = True
+
     if args['--no-rntp-mix']:
-        reagents += [
-            scale(1.5, "100 mM ATP"),
-            scale(1.5, "100 mM CTP"),
-            scale(1.5, "100 mM GTP"),
-            scale(1.5, "100 mM UTP"),
-        ]
+        ivtt['ATP'].std_volume = 1.5, 'μL'
+        ivtt['ATP'].master_mix = True
+        ivtt['ATP'].std_stock_conc = 100, 'mM'
+        ivtt['CTP'].std_volume = 1.5, 'μL'
+        ivtt['CTP'].master_mix = True
+        ivtt['CTP'].std_stock_conc = 100, 'mM'
+        ivtt['GTP'].std_volume = 1.5, 'μL'
+        ivtt['GTP'].master_mix = True
+        ivtt['GTP'].std_stock_conc = 100, 'mM'
+        ivtt['UTP'].std_volume = 1.5, 'μL'
+        ivtt['UTP'].master_mix = True
+        ivtt['UTP'].std_stock_conc = 100, 'mM'
     else:
-        reagents += [
-            scale(6.0, "100 mM rNTP mix"),
-        ]
-    reagents += [
-            scale(1.5, "HiScribe T7 (NEB)"),
-    ]
+        ivtt['rNTP mix'].std_volume = 6.0, 'μL'
+        ivtt['rNTP mix'].std_stock_conc = 100, 'mM'
+        ivtt['rNTP mix'].master_mix = True
+
+    ivtt['HiScribe T7 (NEB)'].std_volume = 1.5, 'μL'
+    ivtt['HiScribe T7 (NEB)'].std_stock_conc = '10x'
+    ivtt['HiScribe T7 (NEB)'].master_mix = True
+    ivtt['DNA template'].std_volume = dna, 'μL'
+    ivtt['DNA template'].std_stock_conc = 10, 'ng/μL'
+
 elif 'ampliscribe'.startswith(args['--kit'].lower()):
     incubation_time = args['--incubate'] or 1
     incubation_temp = '42'
-    reagents = [
-            scale(6.3 - dna, "nuclease-free water"),
-            scale(2.0, "10x reaction buffer"),
-    ]
+
+    ivtt['nuclease-free water'].std_volume = 6.3 - dna, 'μL'
+    ivtt['nuclease-free water'].master_mix = True
+    ivtt['reaction buffer'].std_volume = 2.0, 'μL'
+    ivtt['reaction buffer'].std_stock_conc = '10x'
+    ivtt['reaction buffer'].master_mix = True
+
     if args['--no-rntp-mix']:
-        reagents += [
-            scale(1.8, "100 mM ATP"),
-            scale(1.8, "100 mM CTP"),
-            scale(1.8, "100 mM GTP"),
-            scale(1.8, "100 mM UTP"),
-        ]
+        ivtt['ATP'].std_volume = 1.8, 'μL'
+        ivtt['ATP'].std_stock_conc = 100, 'mM'
+        ivtt['ATP'].master_mix = True
+        ivtt['CTP'].std_volume = 1.8, 'μL'
+        ivtt['CTP'].std_stock_conc = 100, 'mM'
+        ivtt['CTP'].master_mix = True
+        ivtt['GTP'].std_volume = 1.8, 'μL'
+        ivtt['GTP'].std_stock_conc = 100, 'mM'
+        ivtt['GTP'].master_mix = True
+        ivtt['UTP'].std_volume = 1.8, 'μL'
+        ivtt['UTP'].std_stock_conc = 100, 'mM'
+        ivtt['UTP'].master_mix = True
     else:
-        reagents += [
-            scale(7.2, "100 mM rNTP mix"),
-        ]
-    reagents += [
-            scale(2.0, "100 mM DTT"),
-            scale(0.5, "RiboGuard RNase inhibitor"),
-            scale(2.0, "AmpliScribe T7 (Epicentre)"),
-    ]
+        ivtt['rNTP mix'].std_volume = 7.2, 'μL'
+        ivtt['rNTP mix'].std_stock_conc = 100, 'mM'
+        ivtt['rNTP mix'].master_mix = True
+
+    ivtt['DTT'].std_volume = 2.0, 'μL'
+    ivtt['DTT'].std_stock_conc = 100, 'mM'
+    ivtt['DTT'].master_mix = True
+    ivtt['RiboGuard RNase innhibitor'].std_volume = 0.5, 'μL'
+    ivtt['RiboGuard RNase innhibitor'].std_stock_conc = '40x'
+    ivtt['RiboGuard RNase innhibitor'].master_mix = True
+    ivtt['Ampliscribe T7 (Epicentre)'].std_volume = 2.0, 'μL'
+    ivtt['Ampliscribe T7 (Epicentre)'].std_stock_conc = '10x'
+    ivtt['Ampliscribe T7 (Epicentre)'].master_mix = True
+    ivtt['DNA template'].std_volume = dna, 'μL'
+    ivtt['DNA template'].std_stock_conc = 10, 'ng/μL'
+
 else:
     print("Unknown in vitro transcription kit: '{}'".format(args['--kit']))
     print("Known kits are: 'hiscribe' or 'ampliscribe'")
     raise SystemExit
 
-total_amount = sum(amount for amount, reagent in reagents)
-longest_amount = int(math.ceil(math.log10(total_amount)))
-
 ## Run the reactions.
 
-print("""\
-1. Setup {} in vitro transcription reaction(s) by 
-   mixing the following reagents at room temperature 
-   in the order given.
-""".format(args['<reactions>']))
+protocol += """\
+Setup {:? in vitro transcription reaction/s} by mixing
+the following reagents at room temperature in the
+order given.
 
-print('   T7 Master Mix for {:.1f} reactions'.format(volume))
-print('   ' + 30 * '=')
-for amount, reagent in reagents:
-    row = '{{:{}.2f}} μL  {{}}'.format(longest_amount + 3)
-    print('   ' + row.format(amount, reagent))
-print('   ' + 30 * '-')
-print('   ' + row.format(total_amount, 'total master mix'))
-print()
-print('   Each T7 Reaction')
-print('   ' + 30 * '=')
-print('   ' + row.format(total_amount / volume, 'master mix'))
-print('   ' + row.format(dna, '10 ng/μL DNA template'))
-print("""\
+{}""".format(
+        plural(ivtt.num_reactions), ivtt)
 
-2. Incubate at {}°C (thermocycler) for {} hour{}.
-""".format(
-    incubation_temp,
-    incubation_time, '' if int(incubation_time) == 1 else 's'))
+protocol += """\
+Incubate at {}°C (thermocycler) for {:? hour/s}.""".format(
+    incubation_temp, plural(incubation_time))
 
 ## Clean up the reactions.
 
 if args['--cleanup'] == 'zymo':
-    print("""\
-3. Remove unincorporated ribonucleotides using
-   Zymo RNA Clean & Concentrator 25 Spin kits.
-   Follow the manufacturer's instructions.
-""")
+    protocol += """\
+Remove unincorporated ribonucleotides using
+Zymo RNA Clean & Concentrator 25 Spin kits.
+Follow the manufacturer's instructions."""
 
 elif args['--cleanup'] == 'ammonium':
-    print("""\
-3. Remove unincorporated ribonucleotides using
-   ammonium acetate precipitation.
+    protocol += """\
+Remove unincorporated ribonucleotides using
+ammonium acetate precipitation.
 
-   Note that ammonium acetate precipitation only 
-   works for constructs that are longer than 100 bp.
+Note that ammonium acetate precipitation only 
+works for constructs that are longer than 100 bp.
 
-   Ammonium Acetate Precipitation
-   ==============================
-   a. Add 1 volume (20 μL) 5M ammonium acetate to 
-      each reaction.
+Ammonium Acetate Precipitation
+──────────────────────────────
+a. Add 1 volume (20 μL) 5M ammonium acetate to 
+   each reaction.
 
-   b. Incubate on ice for 15 min.
+b. Incubate on ice for 15 min.
 
-   c. Centrifuge at >10,000g for 15 min at 4°C.
+c. Centrifuge at >10,000g for 15 min at 4°C.
 
-   d. Wash pellet with 70% ethanol.
+d. Wash pellet with 70% ethanol.
 
-   e. Dissolve pellet in 20μL nuclease-free water.
-""")
+e. Dissolve pellet in 20μL nuclease-free water."""
 
 elif args['--cleanup'] == 'none':
     raise SystemExit
@@ -159,12 +183,16 @@ elif args['--cleanup'] == 'none':
 else:
     raise ValueError("unknown RNA clean-up method: '{}'".format(args['--cleanup']))
 
-print("""\
-4. Nanodrop to determine the RNA concentration.
+## Quantify and aliquot the reactions.
 
-5. Dilute (if desired) enough sgRNA to make several 
-   15 μL aliquots.  Keep any left-over RNA undiluted.  
-   Flash-freeze in liquid N₂ and store at -80°C.
-""")
+protocol += """\
+Nanodrop to determine the RNA concentration."""
+
+protocol += """\
+Dilute (if desired) enough sgRNA to make several 
+15 μL aliquots.  Keep any left-over RNA undiluted.  
+Flash-freeze in liquid N₂ and store at -80°C."""
+
+print(protocol)
 
 # vim: tw=53
