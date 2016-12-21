@@ -31,30 +31,31 @@ Options:
         'none': Carry on the crude reaction mix.
         'zymo': Zymo spin kits.
         'ammonium': Ammonium acetate precipitation.
+
+    -g --gel
+        Print detailed instructions on how to do RNA PAGE.
 """
 
 import docopt
 import dirty_water
 from nonstdlib import plural
 
+args = docopt.docopt(__doc__)
+protocol = dirty_water.Protocol()
+
 ## Calculate reagent volumes.
 
-args = docopt.docopt(__doc__)
-volume = eval(args['<reactions>']) * (1 + float(args['--extra'] or 0) / 100)
-scale = lambda ref, name: (ref * volume, name)
-dna = float(args['--dna'])
-
-protocol = dirty_water.Protocol()
 ivtt = dirty_water.Reaction()
 ivtt.num_reactions = eval(args['<reactions>'])
 ivtt.extra_master_mix = float(args['--extra'])
+dna = float(args['--dna'])
 
 if 'hiscribe'.startswith(args['--kit'].lower()):
     incubation_time = args['--incubate'] or 4
     incubation_temp = '37'
 
     # For short RNA transcripts (< 0.3 kb), we can use less buffer, rNTPs, and 
-    # polymerase than usual.  The '10x' concentrations in the reagent table 
+    # polymerase than usual.  The "10x" concentrations in the reagent table 
     # below are what's printed on the tubes and are relative to the normal 
     # reaction, but maybe confusing unless you keep in mind that our final 
     # concentrations will be 0.75x.
@@ -62,7 +63,7 @@ if 'hiscribe'.startswith(args['--kit'].lower()):
     ivtt['nuclease-free water'].std_volume = 11 - dna, 'μL'
     ivtt['nuclease-free water'].master_mix = True
     ivtt['reaction buffer'].std_volume = 1.5, 'μL'
-    ivtt['reaction buffer'].std_stock_conc = '10x'
+    ivtt['reaction buffer'].std_stock_conc = '"10x"'
     ivtt['reaction buffer'].master_mix = True
 
     if args['--no-rntp-mix']:
@@ -84,7 +85,7 @@ if 'hiscribe'.startswith(args['--kit'].lower()):
         ivtt['rNTP mix'].master_mix = True
 
     ivtt['HiScribe T7 (NEB)'].std_volume = 1.5, 'μL'
-    ivtt['HiScribe T7 (NEB)'].std_stock_conc = '10x'
+    ivtt['HiScribe T7 (NEB)'].std_stock_conc = '"10x"'
     ivtt['HiScribe T7 (NEB)'].master_mix = True
     ivtt['DNA template'].std_volume = dna, 'μL'
     ivtt['DNA template'].std_stock_conc = 10, 'ng/μL'
@@ -134,7 +135,13 @@ else:
     print("Known kits are: 'hiscribe' or 'ampliscribe'")
     raise SystemExit
 
-## Run the reactions.
+## Clean your bench
+
+protocol += """\
+Wipe down your bench and anything you'll touch (e.g. 
+pipets, racks, pens, etc.) with RNaseZap."""
+
+## In vitro transcription
 
 protocol += """\
 Setup {:? in vitro transcription reaction/s} by mixing
@@ -148,21 +155,20 @@ protocol += """\
 Incubate at {}°C (thermocycler) for {:? hour/s}.""".format(
     incubation_temp, plural(incubation_time))
 
-## Clean up the reactions.
+## Purify product
 
 if args['--cleanup'] == 'zymo':
     protocol += """\
-Remove unincorporated ribonucleotides using
-Zymo RNA Clean & Concentrator 25 Spin kits.
-Follow the manufacturer's instructions."""
+Remove unincorporated ribonucleotides using Zymo RNA 
+Clean & Concentrator 25 spin columns."""
 
 elif args['--cleanup'] == 'ammonium':
     protocol += """\
 Remove unincorporated ribonucleotides using
 ammonium acetate precipitation.
 
-Note that ammonium acetate precipitation only 
-works for constructs that are longer than 100 bp.
+Note that ammonium acetate precipitation only works 
+for constructs that are longer than 100 bp.
 
 Ammonium Acetate Precipitation
 ──────────────────────────────
@@ -183,30 +189,40 @@ elif args['--cleanup'] == 'none':
 else:
     raise ValueError("unknown RNA clean-up method: '{}'".format(args['--cleanup']))
 
-## Quantify and aliquot the reactions.
+## Nanodrop concentration
 
 protocol += """\
 Nanodrop to determine the RNA concentration."""
 
-protocol += """\
+## Gel electrophoresis
+
+if not args['--gel']:
+    protocol += """\
+Run the RNA on a denaturing gel to make sure it's 
+homogeneous and of the right size."""
+
+else:
+    protocol += """\
 Run the RNA on a denaturing gel to make sure it's 
 homogeneous and of the right size.
 
 - Setup a gel cast and make sure it doesn't leak.
   
 - Combine the following reagents in a 15 mL tube and 
-  mix until the urea has dissolved (~5 min).
+  mix until the urea dissolves (~5 min).
 
-  8% TBE/Urea polyacrylamide gel
+  8% TBE/urea polyacrylamide gel
   ──────────────────────────────
   4.2 g urea
   2.0 mL 5x TBE
   2.67 mL 30% acrylamide/bis (29:1)
-  water to 10 mL
+  water to 10 mthe
 
 - Add 10 uL TEMED and 10 μL 0.4 mg/μL APS (freshly 
   prepared), invert once or twice to mix, then 
   immediately pipet into the gel cast.
+
+- Let the gel set for 1h.
   
 - Either use the gel immediately, or wrap it in a
   wet paper towel and store at 4°C overnight to use 
@@ -218,15 +234,20 @@ To run the gel:
 
 - Denature at 95°C for 2 min.
 
-- Wash out any urea that's leached into your wells, 
-  then quickly load all of your samples.
+- Wash out any urea that's leached into the wells, 
+  then quickly load all of the samples.
 
-- Run at 180V for 30 min."""
+- Run at 180V for 30 min.
+  
+- Soak in 3x GelRed for ~15 min to stain."""
+
+## Aliquot
 
 protocol += """\
 Dilute (if desired) enough sgRNA to make several 
 15 μL aliquots.  Keep any left-over RNA undiluted.  
 Flash-freeze in liquid N₂ and store at -80°C."""
+
 
 print(protocol)
 
