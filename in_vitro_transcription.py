@@ -138,37 +138,37 @@ else:
 ## Clean your bench
 
 protocol += """\
-Wipe down your bench and anything you'll touch (e.g. 
-pipets, racks, pens, etc.) with RNaseZap."""
+Wipe down your bench and anything you'll touch 
+(e.g.  pipets, racks, pens) with RNaseZap."""
 
 ## In vitro transcription
 
 protocol += """\
-Setup {:? in vitro transcription reaction/s} by mixing
-the following reagents at room temperature in the
-order given.
+Setup {:? in vitro transcription reaction/s} by 
+mixing the following reagents at room temperature 
+in the order given.
 
 {}""".format(
         plural(ivtt.num_reactions), ivtt)
 
 protocol += """\
 Incubate at {}°C (thermocycler) for {:? hour/s}.""".format(
-    incubation_temp, plural(incubation_time))
+        incubation_temp, plural(incubation_time))
 
 ## Purify product
 
 if args['--cleanup'] == 'zymo':
     protocol += """\
-Remove unincorporated ribonucleotides using Zymo RNA 
-Clean & Concentrator 25 spin columns."""
+Remove unincorporated ribonucleotides using Zymo 
+RNA Clean & Concentrator 25 spin columns."""
 
 elif args['--cleanup'] == 'ammonium':
     protocol += """\
 Remove unincorporated ribonucleotides using
 ammonium acetate precipitation.
 
-Note that ammonium acetate precipitation only works 
-for constructs that are longer than 100 bp.
+Note that ammonium acetate precipitation only 
+works for constructs that are longer than 100 bp.
 
 Ammonium Acetate Precipitation
 ──────────────────────────────
@@ -208,8 +208,8 @@ homogeneous and of the right size.
 
 - Setup a gel cast and make sure it doesn't leak.
   
-- Combine the following reagents in a 15 mL tube and 
-  mix until the urea dissolves (~5 min).
+- Combine the following reagents in a 15 mL tube 
+  and mix until the urea dissolves (~5 min).
 
   8% TBE/urea polyacrylamide gel
   ──────────────────────────────
@@ -225,8 +225,8 @@ homogeneous and of the right size.
 - Let the gel set for 1h.
   
 - Either use the gel immediately, or wrap it in a
-  wet paper towel and store at 4°C overnight to use 
-  the next day.
+  wet paper towel and store at 4°C overnight to 
+  use the next day.
   
 To run the gel:
 
@@ -251,4 +251,4 @@ Flash-freeze in liquid N₂ and store at -80°C."""
 
 print(protocol)
 
-# vim: tw=53
+# vim: tw=50
