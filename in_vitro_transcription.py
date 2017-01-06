@@ -139,7 +139,7 @@ else:
 
 protocol += """\
 Wipe down your bench and anything you'll touch 
-(e.g.  pipets, racks, pens) with RNaseZap."""
+(pipets, racks, pens, etc.) with RNaseZap."""
 
 ## In vitro transcription
 
@@ -216,7 +216,7 @@ homogeneous and of the right size.
   4.2 g urea
   2.0 mL 5x TBE
   2.67 mL 30% acrylamide/bis (29:1)
-  water to 10 mthe
+  water to 10 mL
 
 - Add 10 uL TEMED and 10 μL 0.4 mg/μL APS (freshly 
   prepared), invert once or twice to mix, then 
