@@ -4,8 +4,8 @@
 Calculate how to dilute sgRNA to particular concentration.
 
 Usage:
-    sgrna_to_300nM.py <name> <ng_uL> [options]
-    sgrna_to_300nM.py <tsv> [options]
+    dilute_sgrna.py <name> <ng_uL> [options]
+    dilute_sgrna.py <tsv> [options]
 
 Options:
     -c --target-conc <nM>  [default: 1500]
@@ -70,10 +70,10 @@ def process_sample(sgrna, initial_ng_uL, args):
         -p, --print-nM
     """)
 
-    print('{:>6.2f} μL {} ng/uL {}'.format(sgrna_to_add, initial_ng_uL, sgrna.function_name))
+    print('{:>6.2f} μL {} ng/uL {}'.format(sgrna_to_add, initial_ng_uL, sgrna.name))
     print('{:>6.2f} μL nuclease-free water'.format(water_to_add))
     print(30 * '─')
-    print('{:>6.2f} μL {:.1f} nM {}'.format(sgrna_to_add + water_to_add, target_nM, sgrna.function_name))
+    print('{:>6.2f} μL {:.1f} nM {}'.format(sgrna_to_add + water_to_add, target_nM, sgrna.name))
 
 
 # Figure out if name is filename or sgRNA name
