@@ -71,14 +71,9 @@ incubate at 37°C for 1h."""
 ## Gel extraction
 
 protocol += """\
-Purify the PCR {N:product/s} by gel extraction.
-
-- 1% agarose/TAE/GelRed gel at 130V for 1h.
-
-- For the PE wash step, only do one wash, but let 
-  it sit for 5 min.
-
-- Elute in 50 μL water."""
+Run a gel to confirm that the product is clean.  
+If it's not you can either try to optimize the 
+reaction or to gel extract the desired band."""
 
 ## Ligation
 
