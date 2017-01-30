@@ -6,3 +6,4 @@ general
 *.toc
 .*.sw*
 *.ods
+__pycache__
