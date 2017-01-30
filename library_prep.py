@@ -6,12 +6,18 @@ Usage:
     library_prep.py <num_libraries> [options]
 
 Options:
-    -p --primer-conc <uM>           [default: 200]
+    -r --reaction-volume <μL>       [default: 100]
+        The volume of each PCR reaction.
+
+    -p --primer-conc <μM>           [default: 200]
         The concentration of the primers.
 
-    -t --annealing-temp <celsius>   [default: 60]
+    -t --annealing-temp <°C>   [default: 60]
         The annealing temperature for the PCR reaction.  I typically use NEB's 
-        online "Tm Calculator" to determine this setting.
+        online "Tm Calculator" to determine this parameter.
+
+    -v --verbose
+        Include extra steps such as how to order primers.
 """
 
 import docopt
@@ -25,7 +31,8 @@ N = nonstdlib.plural(num)
 
 ## Primer design
 
-protocol += """\
+if args['--verbose']:
+    protocol += """\
 Design primers to assemble the {N:/library/libraries} with.
 
 - The ``clone_into_wt.py`` script can design these 
@@ -51,7 +58,7 @@ pcr = dirty_water.Pcr()
 pcr.num_reactions = num
 pcr.annealing_temp = args['--annealing-temp']
 pcr.make_primer_mix = True
-pcr.reaction.volume = 100
+pcr.reaction.volume = eval(args['--reaction-volume'])
 
 protocol += pcr
 
