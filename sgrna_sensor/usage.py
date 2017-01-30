@@ -110,6 +110,7 @@ from __future__ import unicode_literals
 
 import docopt
 import math
+import re
 
 from .components import *
 from .designs import *
@@ -302,7 +303,10 @@ def main():
             if design['spacer'] == '':
                 print("'{}' does not have a spacer sequence, refusing to add T7 promoter.".format(design.name))
                 continue
-            design.prepend(t7_promoter())
+
+            leading_gua = re.match('G*', design.seq)
+            gua_to_add = max(3 - len(leading_gua.group()), 0)
+            design.prepend(t7_promoter(extra_gua=gua_to_add))
 
         if args['--pretty']:
             print(header_template.format(design.name), end='  ')

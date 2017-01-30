@@ -4,7 +4,7 @@ from pprint import pprint
 from .sequence import *
 from .helpers import *
 
-def t7_promoter(source='briner'):
+def t7_promoter(source='briner', extra_gua=0):
     """
     Return the sequence for the T7 promoter.
 
@@ -25,6 +25,8 @@ def t7_promoter(source='briner'):
 
     else:
         raise ValueError("Unknown T7 sequence: '{}'".format(source))
+
+    sequence += extra_gua * 'G'
 
     return Construct(
             '{} t7'.format(source),
@@ -69,6 +71,9 @@ def spacer(name='none'):
             'vegfa':  'GGGTGGGGGGAGTTTGCTCC',
             'klein1': 'GGGCACGGGCAGCTTGCCCG',
             'klein2': 'GTCGCCCTCGAACTTCACCT',
+            'cf1':    'CCGGCAAGCTGCCCGTGCCC', # sgGFP9 (Christoff Fellman)
+            'cf2':    'CAGGGTCAGCTTGCCGTAGG', # sgGFP8
+            'cf3':    'CCTCGAACTTCACCTCGGCG', # sgGFP1
     }
 
     try:
@@ -77,7 +82,7 @@ def spacer(name='none'):
         raise ValueError("Unknown spacer: '{}'".format(name))
 
     spacer = Domain('spacer', sequence)
-    spacer.style = 'white'
+    spacer.style = 'white', 'bold'
 
     return Construct(name, spacer)
 
