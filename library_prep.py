@@ -3,7 +3,7 @@
 
 """\
 Usage:
-    library_prep.py <num_libraries> [options]
+    library_prep.py <num_libraries> <annealing_temp> [options]
 
 Options:
     -r --reaction-volume <μL>       [default: 100]
@@ -11,10 +11,6 @@ Options:
 
     -p --primer-conc <μM>           [default: 200]
         The concentration of the primers.
-
-    -t --annealing-temp <°C>   [default: 60]
-        The annealing temperature for the PCR reaction.  I typically use NEB's 
-        online "Tm Calculator" to determine this parameter.
 
     -v --verbose
         Include extra steps such as how to order primers.
@@ -56,7 +52,7 @@ Design primers to assemble the {N:/library/libraries} with.
 
 pcr = dirty_water.Pcr()
 pcr.num_reactions = num
-pcr.annealing_temp = args['--annealing-temp']
+pcr.annealing_temp = args['<annealing_temp>']
 pcr.make_primer_mix = True
 pcr.reaction.volume = eval(args['--reaction-volume'])
 
@@ -72,8 +68,8 @@ incubate at 37°C for 1h."""
 
 protocol += """\
 Run a gel to confirm that the product is clean.  
-If it's not you can either try to optimize the 
-reaction or to gel extract the desired band."""
+If it's not you can either optimize the reaction 
+or gel extract the desired band."""
 
 ## Ligation
 
