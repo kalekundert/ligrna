@@ -57,6 +57,12 @@ Options:
         expression.  This option is meant to help show interesting subsets of 
         really high throughput experiments.
 
+    -u --quality-filter <level>         [default: good]
+        Only show experiments of the indicated quality or better.  Understood quality 
+        levels are 'all', 'good', and 'bad'.  All data is assumed to be good by 
+        default, but certain data point can marked as bad by setting `discard: 
+        True` in the *.yml file.
+
     -i --indices <selection>
         Only show experiments with the given indices (counting from 1).  The 
         indices should be comma separated, and ranges of indices can be 
@@ -127,6 +133,7 @@ class FoldChange:
         self.normalize_by = None
         self.sort_by = None
         self.label_filter = None
+        self.quality_filter = None
         self.show_indices = None
         self.log_toggle = None
         self.histogram = None
@@ -294,6 +301,22 @@ class FoldChange:
         self.analyzed_wells.sort(key=key, reverse=reverse)
 
     def _filter_wells(self):
+        # Filter out data points that are marked as being high or low quality.
+        if self.quality_filter == 'good' or self.quality_filter is None:
+            self.analyzed_wells = [
+                    expt for expt in self.analyzed_wells
+                    if not expt['apo'][0].experiment.get('discard')
+            ]
+        elif self.quality_filter == 'bad':
+            self.analyzed_wells = [
+                    expt for expt in self.analyzed_wells
+                    if expt['apo'][0].experiment.get('discard')
+            ]
+        elif self.quality_filter == 'all':
+            pass
+        else:
+            raise ValueError("unknown quality filter '{}'".format(self.quality_filter))
+
         # Filter out experiments with labels that don't match the user given 
         # regular expression.
         if self.label_filter is not None:
@@ -472,6 +495,7 @@ if __name__ == '__main__':
     analysis.normalize_by = args['--normalize-by'] or args['--normalize-by-internal-control']
     analysis.sort_by = args['--sort-by']
     analysis.label_filter = args['--query']
+    analysis.quality_filter = args['--quality-filter']
     analysis.log_toggle = args['--log-toggle']
     analysis.histogram = args['--histogram']
     analysis.pdf = args['--pdf']
