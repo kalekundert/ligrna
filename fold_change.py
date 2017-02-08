@@ -20,9 +20,9 @@ Options:
         be sent to the printer via 'lpr'.  By default, no output is generated 
         and the plot is shown in the GUI.
 
-    -O --output-size <width,height>
+    -O --output-size <width "x" height>
         Specify what the width and height of the resulting figure should be, in 
-        inches.  The two numbers must be separated by a comma.
+        inches.  The two numbers must be separated by an "x".
 
     -T --title <str>
         Provide a title for the plot.
@@ -481,7 +481,7 @@ if __name__ == '__main__':
     if args['--indices']:
         analysis.show_indices = nonstdlib.indices_from_str(args['--indices'], start=1)
     if args['--output-size']:
-        analysis.output_size = map(float, args['--output-size'].split(','))
+        analysis.output_size = map(float, args['--output-size'].split('x'))
     if args['--fold-change-xlim']:
         analysis.fold_change_xlim = float(args['--fold-change-xlim'])
 
