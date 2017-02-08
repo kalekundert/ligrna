@@ -120,7 +120,6 @@ class AnalyzedWell (fcmcmp.Well):
         self.linear_loc = 10**self.loc if self.log_scale else self.loc
 
 
-
 class GateLowFluorescence(fcmcmp.GatingStep):
 
     def __init__(self, threshold=1e3):
@@ -147,6 +146,10 @@ class RenameRedChannel(fcmcmp.ProcessingStep):
             red_channel = 'DsRed-A'
         elif 'PE-Texas Red-A' in well.data.columns:
             red_channel = 'PE-Texas Red-A'
+        elif 'mCherry-A' in well.data.columns:
+            red_channel = 'mCherry-A'
+        else:
+            raise ValueError('No red channel found!')
 
         well.data.rename(columns={red_channel: 'Red-A'}, inplace=True)
 
