@@ -442,32 +442,40 @@ def plot_or_savefig(output_path=None, substitution_path=None):
     from pathlib import Path
     from tempfile import NamedTemporaryFile
 
+    # Decide how we are going to display the plot.  We have to do this before 
+    # anything is plotted, because if we want to 
+
+    if output_path is None:
+        fate = 'gui'
+    elif output_path is False:
+        fate = 'none'
+    elif output_path == 'lpr':
+        fate = 'print'
+    else:
+        fate = 'save'
+
     # We have to decide whether or not to fork before plotting anything, 
     # otherwise X11 will complain, and we only want to fork if we'll end up 
     # showing the GUI.  So first we calculate the output path, then we either 
     # fork or don't, then we yield to let the caller plot everything, then we 
     # either display the GUI or save the figure to a file.
 
-    if not output_path and os.fork():
+    if fate == 'gui' and os.fork():
         sys.exit()
 
     yield
 
-    if output_path and substitution_path:
-        output_path = output_path.replace('$', Path(substitution_path).stem)
-
-    # Print out the figure.
-    if output_path == 'lpr':
+    if fate == 'print':
         temp_file = NamedTemporaryFile(prefix='fcm_analysis_', suffix='.ps')
         plt.savefig(temp_file.name, dpi=300)
         subprocess.call(['lpr', '-o', 'number-up=4', temp_file.name])
 
-    # Save the figure to a file.
-    elif output_path:
+    if fate == 'save':
+        if substitution_path:
+            output_path = output_path.replace('$', Path(substitution_path).stem)
         plt.savefig(output_path, dpi=300)
 
-    # Open the figure in a GUI.
-    else:
+    if fate == 'gui':
         plt.gcf().canvas.set_window_title(' '.join(sys.argv))
         plt.show()
 
