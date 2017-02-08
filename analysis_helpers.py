@@ -212,11 +212,10 @@ class ExperimentPlot:
         wells.  The first row is for the "apo" wells and the second row is 
         for the "holo" ones.
         """
-        num_apo = len(self.experiment['wells']['apo'])
-        num_holo = len(self.experiment['wells']['holo'])
-
-        self.num_rows = 2
-        self.num_cols = max(num_apo, num_holo)
+        self.num_rows = len(self.experiment['wells'])
+        self.num_cols = max(
+                len(self.experiment['wells'][cond])
+                for cond in self.experiment['wells'])
 
         # The 'squeeze=False' argument guarantees that the returned axes are 
         # always a 2D array, even if one of the dimensions happens to be 1.
@@ -261,7 +260,7 @@ class ExperimentPlot:
                 yield row, col
 
     def _get_condition(self, row):
-        return ('apo', 'holo')[row]
+        return list(self.experiment['wells'].keys())[row]
 
     def _get_well(self, row, col):
         return self.experiment['wells'][self._get_condition(row)][col]
