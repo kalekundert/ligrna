@@ -30,10 +30,11 @@ Options:
 
     -l --show-legend
         Show which lines came from which wells.
-        
-    --histogram-bins <num>              [default: 100]
-        The number of bins to use in the time dimension when calculating the 
-        number of events per second.
+
+    -w --time-window <secs>          [default: 2]
+        Specify how long of a time interval to consider when calculating the 
+        number of events per second.  Longer time intervals will give smoother 
+        plots, but will lag relative to shorter intervals.
 """
 
 import docopt, fcmcmp, analysis_helpers
@@ -45,30 +46,34 @@ class EventsPerSec:
     def __init__(self, experiments):
         self.experiments = experiments
         self.keyword = None
-        self.show_legend = None
-        self.histogram_bins = None
+        self.show_legend = False
+        self.time_window = 1
 
     def plot(self):
-        min_time, max_time = analysis_helpers.get_duration(self.experiments)
         data = fcmcmp.yield_unique_wells(self.experiments, self.keyword)
+        min_time, max_time = analysis_helpers.get_duration(self.experiments)
+        time_coord = np.linspace(min_time, max_time, num=500)
 
-        for experiment, condition, well in data:
+        for experiment, condition, well in sorted(data, key=lambda x: x[2]):
             times = well.data['Time'] * float(well.meta['$TIMESTEP'])
-            bins = np.linspace(min_time, max_time, self.histogram_bins)
-            events_per_bin, bin_edges = np.histogram(times, bins)
-            secs_per_bin = bin_edges[1] - bin_edges[0]
-            events_per_sec = events_per_bin / secs_per_bin
-            time_coord = (bin_edges[1:] + bin_edges[:-1]) / 2
-            nonzero = events_per_sec.nonzero()
+            events_per_sec = np.zeros(time_coord.shape)
+
+            for i, x in enumerate(time_coord):
+                time_range = x - self.time_window/2, x + self.time_window/2
+                a, b = np.searchsorted(times, time_range)
+                b -= 1 # keep ``b`` in bounds.
+                dt = times.iloc[b] - times.iloc[a]
+                events_per_sec[i] = (b - a) / dt
 
             plt.plot(
-                    time_coord[nonzero],
-                    events_per_sec[nonzero],
-                    label=well.label,
+                    time_coord,
+                    events_per_sec,
+                    label='{} ({})'.format(well.label, condition),
                     **analysis_helpers.pick_style(experiment, condition)
             )
 
         plt.xlim(min_time, max_time)
+        plt.ylim(0, plt.ylim()[1])
         plt.xlabel('Collection time (sec)')
         plt.ylabel('Events/sec')
 
@@ -85,7 +90,7 @@ if __name__ == '__main__':
     analysis = EventsPerSec(experiments)
     analysis.keyword = args['<keyword>']
     analysis.show_legend = args['--show-legend']
-    analysis.histogram_bins = args['--histogram-bins']
+    analysis.time_window = float(args['--time-window'])
 
     with analysis_helpers.plot_or_savefig(args['--output'], args['<yml_path>']):
         analysis.plot()
