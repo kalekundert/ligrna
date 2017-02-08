@@ -176,6 +176,7 @@ class FoldChange:
         self._pick_yticks()
 
         self.figure.tight_layout()
+        return self.figure
 
     def _setup_figure(self):
         """
@@ -242,8 +243,6 @@ class FoldChange:
         for _, _, well in self._yield_analyzed_wells():
             x_min = min(x_min, np.min(well.measurements))
             x_max = max(x_max, np.max(well.measurements))
-            x_01 = min(x_01, np.percentile(well.measurements,  1))
-            x_99 = max(x_99, np.percentile(well.measurements, 99))
 
         self.axes[0].set_xlim(x_min, x_max)
 
@@ -477,6 +476,35 @@ class FoldChange:
         self.axes[0].set_yticks(y_ticks)
         self.axes[0].set_yticklabels(y_tick_labels)
 
+
+
+def fold_change(yml_path, *, time_gate=0, size_gate=0, expression_gate=1e3,
+        channel=None, normalize_by=None, sort_by=None, label_filter=None,
+        log_toggle=None, histogram=None, pdf=None, loc_metric=None, title=None,
+        indices=None, fold_change_xlim=None, output_size=None):
+
+    experiments = fcmcmp.load_experiments(yml_path)
+
+    shared_steps = analysis_helpers.SharedProcessingSteps()
+    shared_steps.early_event_threshold = time_gate
+    shared_steps.small_cell_threshold = size_gate
+    shared_steps.low_fluorescence_threshold = expression_gate
+    shared_steps.process(experiments)
+
+    analysis = FoldChange(experiments)
+    analysis.title = title
+    analysis.channel = channel
+    analysis.normalize_by = normalize_by
+    analysis.sort_by = sort_by
+    analysis.label_filter = label_filter
+    analysis.show_indices = indices
+    analysis.log_toggle = log_toggle
+    analysis.histogram = histogram
+    analysis.pdf = pdf
+    analysis.loc_metric = loc_metric
+    analysis.output_size = output_size
+    analysis.fold_change_xlim = fold_change_xlim
+    analysis.plot()
 
 
 if __name__ == '__main__':
