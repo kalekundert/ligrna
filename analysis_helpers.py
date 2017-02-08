@@ -278,11 +278,12 @@ def pick_color(experiment):
     return pick_ucsf_color(experiment)
 
 
-upper_stem = re.compile('(us|.u.?)\(')
-lower_stem = re.compile('(ls|.l.?)\(')
-bulge = re.compile('.b.?\(')
-nexus = re.compile('(nx|.x.?)\(')
-hairpin = re.compile('.h.?\(')
+control = re.compile('(on|off|wt|dead)[ (]')
+upper_stem = re.compile('(us|.u.?)[ (]')
+lower_stem = re.compile('(ls|.l.?)[ (]')
+bulge = re.compile('.b.?[ (]')
+nexus = re.compile('(nx|.x.?)[ (]')
+hairpin = re.compile('.h.?[( ]')
 
 def pick_tango_color(experiment):
     """
@@ -307,7 +308,7 @@ def pick_tango_color(experiment):
         return red[1]
     elif 'gfp' in experiment['label'].lower():
         return green[2]
-    elif experiment['label'] in ('wt', 'dead', 'null'):
+    elif control.match(experiment['label']):
         return grey[4]
     elif lower_stem.match(experiment['label']):
         return purple[1]
@@ -347,7 +348,7 @@ def pick_ucsf_color(experiment):
         return red[0]
     elif 'gfp' in experiment['label'].lower():
         return olive[0]
-    elif experiment['label'] in ('wt', 'dead', 'null', 'on', 'off'):
+    elif control.match(experiment['label']):
         return dark_grey[0]
     elif lower_stem.match(experiment['label']):
         return purple[0]
@@ -363,21 +364,29 @@ def pick_ucsf_color(experiment):
         return navy[0]
 
 def pick_style(experiment, condition):
-    styles = {
-            'apo': {
-                'color': 'black',
+    if 'colors' in experiment and condition in experiment['colors']:
+        color = experiment['colors'][condition]
+    elif 'color' in experiment:
+        color = experiment['color']
+    elif condition == 'apo':
+        color = 'black'
+    else:
+        color = pick_color(experiment)
+    
+    if condition == 'apo':
+        return {
+                'color': color,
                 'dashes': [5,2],
                 'linewidth': 1,
                 'zorder': 1,
-            },
-            'holo': {
-                'color': pick_color(experiment),
+        }
+    else:
+        return {
+                'color': color,
                 'linestyle': '-',
                 'linewidth': 1,
                 'zorder': 2,
-            },
-    }
-    return styles[condition]
+        }
 
 def pick_channel(experiment, users_choice=None):
     """
