@@ -1,0 +1,28 @@
+1. Mix the following media components:
+
+   Reagent          Conc     Vol
+   ─────────────────────────────
+   MOPS Mixture      10x  100 mL
+   Supplement EZ      5x  200 mL
+   K₂HPO₄         132 mM   10 mL
+   glucose           20%    5 mL
+   ATC              100x   10 mL
+   Carb            1000x    1 mL
+   Chlor           1000x    1 mL
+   water               to 800 mL
+
+2. Split the media into 2 400 mL portions.
+
+3. To one portion, add adenine and guanine:
+
+   Reagent          Conc     Vol
+   ─────────────────────────────
+   adenine          5 mM   50 mL
+   guanine         50 mM    5 mL
+   water               to 500 mL
+
+4. To the other, add water to 500 mL.
+
+5. Sterile-filter both portions.
+
+6. Make 6 50 mL and ≈100 2 mL aliquots of both portions.
