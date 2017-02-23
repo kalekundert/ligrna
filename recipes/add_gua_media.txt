@@ -25,4 +25,5 @@
 
 5. Sterile-filter both portions.
 
-6. Make 6 50 mL and ≈100 2 mL aliquots of both portions.
+6. Make 6 50 mL and ≈100 2 mL aliquots of both
+   portions.
