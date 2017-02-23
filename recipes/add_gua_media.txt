@@ -17,8 +17,8 @@
 
    Reagent          Conc     Vol
    ─────────────────────────────
-   adenine          5 mM   50 mL
-   guanine         50 mM    5 mL
+   adenine          5 mM   25 mL
+   guanine         50 mM  2.5 mL
    water               to 500 mL
 
 4. To the other, add water to 500 mL.
