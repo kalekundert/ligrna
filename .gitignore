@@ -4,6 +4,7 @@ general
 *.log
 *.out
 *.toc
+.~lock*#
 .*.sw*
 *.ods
 __pycache__
