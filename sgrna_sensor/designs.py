@@ -1860,7 +1860,7 @@ def sequester_uracil_59_forward(i, expected_only=False, target='none', ligand='t
     return sgrna
 
 @design('m11')
-def modulate_rxb_11_1(seq_5='', seq_3=None, target='none', ligand='theo'):
+def modulate_rxb_11_1(seq='', target='none', ligand='theo'):
     """
     Attempt to modulate the leakiness of rxb 11,1 by changing the strength of 
     the base-pairs above U94.
@@ -1896,22 +1896,21 @@ def modulate_rxb_11_1(seq_5='', seq_3=None, target='none', ligand='theo'):
 
     Parameters
     ==========
-    seq_5: str
+    seq: str
         The sequence to install on the 5' side of the nexus above U94.  The 
+        usual base pairs can be specified with "a", "c", "g", and "u".  Wobble 
+        base pairs can be specified with "h" (GU pair) and "v" (UG pair).  The 
         sequence is case-insensitive.  The value corresponding to the original 
         rxb 11,1 sequence is "gg".
-        
-    seq_3: str:
-        The sequence to install on the 3' side of the nexus above U94.  By 
-        default this is just the reverse complement of ``seq_5``.  Explicitly 
-        specifying the 3' sequence allows you to install mismatches and wobble 
-        base pairs.
     """
 
     sgrna = rxb(11, 1, target=target, ligand=ligand)
 
-    if seq_3 is None:
-        seq_3 = rna_reverse_complement(seq_5)
+    trans_5 = str.maketrans('THVthv', 'UGUugu')
+    trans_3 = str.maketrans('ACGUTHVacguthv', 'UGCAAUGugcaaug')
+
+    seq_5 = seq.translate(trans_5)
+    seq_3 = seq.translate(trans_3)[::-1]
     
     sgrna['linker/5'].replace(3, 5, seq_5)
     sgrna['linker/3'].replace(0, 2, seq_3)
@@ -1920,11 +1919,5 @@ def modulate_rxb_11_1(seq_5='', seq_3=None, target='none', ligand='theo'):
 
 @design('w11')
 def strand_swap_rxb_11_1(N, target='none', ligand='theo'):
-            # Manually swap the GU base pair in the middle of rxb/11.  My 
-            # hypothesis is that Cas9 needs to interact with that U, and that 
-            # the aptamer controls whether it's flipped out and available to 
-            # Cas9 or sequestered in a base pair.  Swapping the GU base pair 
-            # tests this hypothesis by changing the position of the U without 
-            # changing the strength of the stem.
     pass
 
