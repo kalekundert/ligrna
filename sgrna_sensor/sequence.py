@@ -66,14 +66,14 @@ class Sequence (object):
         """
         Return the DNA version of the sequence.  This simply replaces U with T.
         """
-        return self.seq.replace('U', 'T')
+        return self.seq.replace('U', 'T').replace('u', 't')
 
     @property
     def rna(self):
         """
         Return the RNA version of the sequence.  This simply replaces T with U.
         """
-        return self.seq.replace('T', 'U')
+        return self.seq.replace('T', 'U').replace('t', 'u')
 
     @property
     def indices(self):

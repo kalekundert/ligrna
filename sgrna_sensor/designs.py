@@ -11,10 +11,12 @@ from .helpers import *
 # s: serpentine
 # c: circle
 # h: hammerhead
-# r: root
-# u: unbalance
+# r: randomize
 # d: diversify (also 'm')
 # q: sequence logo
+# u: sequester uracil 59
+# w: strand swap
+# m: modulate
 
 ## Domain Abbreviations
 # u: upper stem
@@ -23,6 +25,11 @@ from .helpers import *
 # x: nexus
 # r: ruler
 # h: hairpin
+
+## Design Abbreviations
+# 11: rxb 11,1
+# 30: mhf 30
+# 37: mhf 37
 
 
 def design(abbreviation, *legacy_abbreviations):
@@ -108,6 +115,21 @@ def dead_sgrna(target='none'):
     sgrna['nexus'].mutate(2, 'C')
     sgrna['nexus'].mutate(3, 'C')
     sgrna['nexus'].mutable = False
+
+    return sgrna
+
+@design('liu')
+def liu_sgrna(target='none', ligand='theo'):
+    spacer_seq = spacer(target).rna
+    stem_5 = rna_reverse_complement(spacer_seq[:15])
+    stem_3 = rna_reverse_complement(stem_5[-9:])
+
+    sgrna = wt(target=target)
+    sgrna.remove('tail')
+    sgrna += Domain('stem/5', stem_5)
+    sgrna += aptamer(ligand, liu=True)
+    sgrna += Domain('stem/3', stem_3)
+    sgrna += Domain('tail', 'TTTTTT')
 
     return sgrna
 
@@ -989,7 +1011,7 @@ def hammerhead_hairpin(mode, A=1, target='none', ligand='theo'):
     return sgrna
 
 @design('rb')
-def root_bulge(N, M, A=1, target='none', ligand='theo'):
+def randomize_bulge(N, M, A=1, target='none', ligand='theo'):
     sgrna = wt_sgrna(target)
     sgrna.attach(
             random_insert(ligand, N, M),
@@ -999,7 +1021,7 @@ def root_bulge(N, M, A=1, target='none', ligand='theo'):
     return sgrna
 
 @design('rbf')
-def root_bulge_forward(i, target='none', ligand='theo'):
+def randomize_bulge_forward(i, target='none', ligand='theo'):
     """
     rbf(6):
         The 5' link can base pair with the aptamer and the 3' linker can base 
@@ -1109,7 +1131,7 @@ def root_bulge_forward(i, target='none', ligand='theo'):
     return sgrna
 
 @design('rbb')
-def root_bulge_backward(i, target='none', ligand='theo'):
+def randomize_bulge_backward(i, target='none', ligand='theo'):
     """
     rbb(4):
       Linkers are complementary to each other, but are predicted to be fully 
@@ -1197,7 +1219,7 @@ def root_bulge_backward(i, target='none', ligand='theo'):
     return sgrna
 
 @design('rx')
-def root_nexus(N, M, A=1, target='none', ligand='theo'):
+def randomize_nexus(N, M, A=1, target='none', ligand='theo'):
     """
     Flank the aptamer with a random sequence on either side and insert it into 
     the nexus.
@@ -1241,7 +1263,7 @@ def root_nexus(N, M, A=1, target='none', ligand='theo'):
     return sgrna
 
 @design('rxb')
-def root_nexus_backwards(i, dang_sgrna=False, target='none', ligand='theo', pam=None):
+def randomize_nexus_backwards(i, dang_sgrna=False, target='none', ligand='theo', pam=None):
     """
     Most of these designs are not predicted to fold correctly in either 
     condition.  The exception is rxb(51), for which the lower stem is predicted 
@@ -1264,7 +1286,11 @@ def root_nexus_backwards(i, dang_sgrna=False, target='none', ligand='theo', pam=
             # Cas9 or sequestered in a base pair.  Swapping the GU base pair 
             # tests this hypothesis by changing the position of the U without 
             # changing the strength of the stem.
-            '11u': ('GTTGG', 'CCGAC'),
+            '11a': ('cTGGG', 'CCTAg'),
+            '11b': ('GaGGG', 'CCTtC'),
+            '11c': ('GTtGG', 'CCgAC'),
+            '11d': ('GTGcG', 'CgTAC'),
+            '11e': ('GTGGc', 'gCTAC'),
     }
     aliases = {
             19: 14,
@@ -1278,15 +1304,16 @@ def root_nexus_backwards(i, dang_sgrna=False, target='none', ligand='theo', pam=
             70: 2,
             88: 11,
             93: 51,
+            '11u': '11c'
     }
     if i in aliases:
         raise ValueError("rxb({}) is the same as rxb({})".format(i, aliases[i]))
     if i not in linkers:
         raise ValueError("no sequence for rxb({})".format(i))
 
-    linker_5 = Domain("linker/5'", linkers[i][0])
+    linker_5 = Domain('linker/5', linkers[i][0])
     linker_5.style = 'red'
-    linker_3 = Domain("linker/3'", linkers[i][1])
+    linker_3 = Domain('linker/3', linkers[i][1])
     linker_3.style = 'red'
 
     sequenced_insert = aptamer(ligand)
@@ -1313,7 +1340,7 @@ def root_nexus_backwards(i, dang_sgrna=False, target='none', ligand='theo', pam=
     return sgrna
 
 @design('rh')
-def root_hairpin(N, M, dang_sgrna=False, target='none', ligand='theo'):
+def randomize_hairpin(N, M, dang_sgrna=False, target='none', ligand='theo'):
     """
     Flank the aptamer with a random sequence on either side and insert it into 
     the first hairpin.
@@ -1353,7 +1380,7 @@ def root_hairpin(N, M, dang_sgrna=False, target='none', ligand='theo'):
     return sgrna
 
 @design('rhf')
-def root_hairpin_forward(i, expected_only=False, target='none', ligand='theo'):
+def randomize_hairpin_forward(i, expected_only=False, target='none', ligand='theo'):
     """
     rhf(6):
         The 3' link can base pair with the 'GUC' motif in the nexus, while the 
@@ -1762,18 +1789,135 @@ def sequester_uracil_59(N, M, target='none', ligand='theo', pam=None):
 
     return sgrna
 
-@design('liu')
-def liu_sgrna(target='none', ligand='theo'):
-    spacer_seq = spacer(target).rna
-    stem_5 = rna_reverse_complement(spacer_seq[:15])
-    stem_3 = rna_reverse_complement(stem_5[-9:])
+@design('uhf')
+def sequester_uracil_59_forward(i, expected_only=False, target='none', ligand='theo', pam=None):
+    """
+    uhf 37:
+        No predicted response to ligand.
 
-    sgrna = wt(target=target)
-    sgrna.remove('tail')
-    sgrna += Domain('stem/5', stem_5)
-    sgrna += aptamer(ligand, liu=True)
-    sgrna += Domain('stem/3', stem_3)
-    sgrna += Domain('tail', 'TTTTTT')
+    uhf 49:
+        No predicted response to ligand.
+
+    uhf 84:
+        This design has strongly predicted differences in 2° structure between 
+        apo and holo, although it's a little hard to rationalize why the holo 
+        form is functional.  The nexus is predicted to form, except the 5' side 
+        pairs with the ruler instead of the 3' side.  The stem is 5 bp long and 
+        has two GU pairs in the middle, one of which probably has to be flipped 
+        out.  In the apo fold, the nexus basically pairs with the terminator.
+
+    uhf 135:
+    """
+    linkers = {
+            8:   ('CGCAG',  'GTCCCT'),  # First try
+            30:  ('CCTG',   'GTGATCA'),
+            37:  ('GCAGG',  'GTTCCCA'),
+            49:  ('CTAGG',  'GTTCCCG'),
+            66:  ('CAGAGG', 'GTTCCT'),
+            71:  ('TTCAC',  'GTTCCCA'),
+            84:  ('GCGAG',  'GTTCCCA'),
+            132: ('CGCCAG', 'GTTCCT'),  # Second try
+            135: ('TTTGA',  'GTTCAGG'),
+            160: ('CCCTG',  'GCGATCA'),
+            174: ('CTTG',   'GCGCTG'),
+    }
+    aliases = {
+            57: 8,
+            62: 37,
+            89: 84,
+            137: 132,
+            170: 132,
+            172: 132,
+            173: 160,
+            179: 160,
+            182: 132,
+    }
+    unexpected_muts = {
+            8:   ('upper_stem/o', 0, 'T'),
+            66:  ('upper_stem/5', 3, 'T'),
+            132: ('upper_stem/5', 8, 'T'),
+            135: ('upper_stem/5', 3, ''),
+            160: ('upper_stem/o', 0, 'T'),
+            174: ('upper_stem/5', 8, 'T'),
+    }
+
+    if i in aliases:
+        raise ValueError("uhf({}) is the same as uhf({})".format(i, aliases[i]))
+    if i not in linkers:
+        raise ValueError("no sequence for uhf({})".format(i))
+    if expected_only and i not in unexpected_muts:
+        raise ValueError("uhf({}) doesn't have any unexpected mutations.".format(i))
+
+    sgrna = uh(0, 0, ligand=ligand, target=target, pam=pam)
+    sgrna['nexus/o'].seq  = linkers[i][0] + 'U'
+    sgrna['nexus/gu'].seq = linkers[i][1][0:2]
+    sgrna['ruler'].seq    = linkers[i][1][2:]
+
+    if not expected_only and i in unexpected_muts:
+        domain, idx, nuc = unexpected_muts[i]
+        sgrna[domain].mutate(idx, nuc)
 
     return sgrna
+
+@design('m11')
+def modulate_rxb_11_1(seq='', target='none', ligand='theo'):
+    """
+    Attempt to modulate the leakiness of rxb 11,1 by changing the strength of 
+    the base-pairs above U94.
+
+    This design strategy is based off the hypothesis that rxb 11,1 works by 
+    controlling the ability of U94 (which corresponds to U59 in wt sgRNA) to 
+    flip out and interact with Cas9.  In turn, this hypothesis is based on the 
+    claim made by Kyle Watters (citing unpublished data) that wildtype sgRNA 
+    can only bind Cas9 if U59 is unpaired.
+
+    In rxb 11,1, U94 forms a wobble base pair in the middle of a 5 bp stem:
+
+        [aptamer]
+           G=C
+           G=C
+           G·U ←94
+           U-A
+        5' G=C 3'
+
+    The hypothesis is that when no ligand is present, the base of the aptamer 
+    comes apart and allows the top of the stem to melt, which allows U94 to 
+    flip out and interact with Cas9.  When ligand is present, the base of the 
+    aptamer comes together, locks the stem in place, and prevents U94 from 
+    flipping out.
+
+    If this hypothesis is correct, we should be able to modulate how well rxb 
+    11,1 turns on or off by increasing or decreasing, respectively, the 
+    strength of the base pairs above it.  For example, replacing one or both of 
+    the GC base pairs with AU base pairs should allow the top of the stem to 
+    melt more easily, which should create a sensor that turns on better.  
+    Likewise, increasing the length of the stem should make it harder for U59 
+    to flip out, which should create a sensor that turns off better.
+
+    Parameters
+    ==========
+    seq: str
+        The sequence to install on the 5' side of the nexus above U94.  The 
+        usual base pairs can be specified with "a", "c", "g", and "u".  Wobble 
+        base pairs can be specified with "h" (GU pair) and "v" (UG pair).  The 
+        sequence is case-insensitive.  The value corresponding to the original 
+        rxb 11,1 sequence is "gg".
+    """
+
+    sgrna = rxb(11, 1, target=target, ligand=ligand)
+
+    trans_5 = str.maketrans('THVthv', 'UGUugu')
+    trans_3 = str.maketrans('ACGUTHVacguthv', 'UGCAAUGugcaaug')
+
+    seq_5 = seq.translate(trans_5)
+    seq_3 = seq.translate(trans_3)[::-1]
+    
+    sgrna['linker/5'].replace(3, 5, seq_5)
+    sgrna['linker/3'].replace(0, 2, seq_3)
+
+    return sgrna
+
+@design('w11')
+def strand_swap_rxb_11_1(N, target='none', ligand='theo'):
+    pass
 
