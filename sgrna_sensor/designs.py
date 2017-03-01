@@ -1903,7 +1903,6 @@ def modulate_rxb_11_1(seq='', target='none', ligand='theo'):
         sequence is case-insensitive.  The value corresponding to the original 
         rxb 11,1 sequence is "gg".
     """
-
     sgrna = rxb(11, 1, target=target, ligand=ligand)
 
     trans_5 = str.maketrans('THVthv', 'UGUugu')
@@ -1919,5 +1918,55 @@ def modulate_rxb_11_1(seq='', target='none', ligand='theo'):
 
 @design('w11')
 def strand_swap_rxb_11_1(N, target='none', ligand='theo'):
-    pass
+    """
+    Make strand-swapping mutations to test my proposed mechanism for rxb 11,1.
 
+    The hypothesis I want to test is that rxb 11,1 works by controlling the 
+    ability of U94 (which corresponds to U59 in wt sgRNA) to flip out and 
+    interact with Cas9.  This hypothesis is based on the claim made by Kyle 
+    Watters (citing unpublished data) that wildtype sgRNA can only bind Cas9 if 
+    U59 is unpaired.  
+    
+    In rxb 11,1, U94 forms a wobble base pair in the middle of a 5 bp stem:
+
+        [aptamer]
+           G=C
+           G=C
+       64→ G·U ←94
+           U-A
+        5' G=C 3'
+
+    The hypothesis is that when no ligand is present, the base of the aptamer 
+    comes apart and allows the top of the stem to melt, which allows U94 to 
+    flip out and interact with Cas9.  When ligand is present, the base of the 
+    aptamer comes together, locks the stem in place, and prevents U94 from 
+    flipping out.
+
+    If this hypothesis is correct, swapping G64 and U94 should have a severe 
+    detrimental effect on the sensor, because U94 will no longer be in a 
+    position to interact with Cas9 (despite the fact that this mutation does 
+    not change the strength of the nexus stem).  But swapping any of the other 
+    base pairs in the nexus stem should have no effect.
+
+    Parameters
+    ==========
+    N: int
+        The position in the nexus stem to swap.  Positions 1 and 5 correspond 
+        to the base pairs furthest and closest to the aptamer, respectively.
+    """
+    if N < 1 or N > 5:
+        raise ValueError('N must be between 1 and 5, not {}'.format(N))
+
+    sgrna = rxb(11, 1, target=target, ligand=ligand)
+
+    linker_5 = sgrna['linker/5'].seq
+    linker_3 = sgrna['linker/3'].seq
+    print(N, N-1, 5-N)
+    print(linker_5)
+    print(linker_3)
+    print()
+
+    sgrna['linker/5'].mutate(N-1, linker_3[5-N])
+    sgrna['linker/3'].mutate(5-N, linker_5[N-1])
+
+    return sgrna
