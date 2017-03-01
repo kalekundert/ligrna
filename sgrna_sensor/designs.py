@@ -1961,10 +1961,6 @@ def strand_swap_rxb_11_1(N, target='none', ligand='theo'):
 
     linker_5 = sgrna['linker/5'].seq
     linker_3 = sgrna['linker/3'].seq
-    print(N, N-1, 5-N)
-    print(linker_5)
-    print(linker_3)
-    print()
 
     sgrna['linker/5'].mutate(N-1, linker_3[5-N])
     sgrna['linker/3'].mutate(5-N, linker_5[N-1])
