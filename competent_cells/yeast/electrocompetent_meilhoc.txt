@@ -1,0 +1,21 @@
+Reagents
+========
+- 10 mM Tris, 270 mM sucrose, 1 mM MgCl₂, pH 7.5 (EB)
+
+Protocol
+========
+1. Grow cells at 30°C to a density of 1×10⁷ cells/mL in YPD media.
+
+2. Wash twice with EB (volume not specified)
+
+3. Resuspend in EB to give 5×10⁷ cells in 48 μL.
+
+4. Add 2 μL of DNA to the cells.
+
+5. Pulse
+
+6. Add 1 mL pre-warmed (30°C) YPD directly to the cuvette.
+
+7. Incubate at 30°C for 1h.
+
+8. Plate.
