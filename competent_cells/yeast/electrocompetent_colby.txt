@@ -1,68 +1,92 @@
 Reagents
 ========
-- 1 mL 2.5M DTT, 1M Tris, pH 8.0 (freshly prepared, room temp)
-- 30 mL 10 mM Tris, 270 mM sucrose, 1 mM MgCl2, pH 7.5 (E buffer) (room temp)
+- 1 mL 2.5M DTT, 1M Tris, pH 8.0 (freshly prepared, 
+  room temp)
+- 30 mL 10 mM Tris, 270 mM sucrose, 1 mM MgCl2, pH 
+  7.5 (E buffer) (room temp)
 - 1 mL YPD (room temp)
 - 1 selective plate
 
 Protocol
 ========
-This protocol has been adapted from Meilhoc et al. [17] and generates enough 
-cells for the transformation of ∼60 μg of insert DNA and ∼6 μg of vector, which 
-typically produces ∼5 × 10⁷ yeast transformants.
+This protocol has been adapted from Meilhoc et al. 
+[17] and generates enough cells for the 
+transformation of ∼60 μg of insert DNA and ∼6 μg of 
+vector, which typically produces ∼5×10⁷ yeast 
+transformants.
 
-1.  Inoculate 100 ml of YPD to OD600 0.1 from a fresh overnight culture of 
-    EBY100 (or appropriate yeast strain).
+1. Inoculate 100 ml of YPD to OD600 0.1 from a fresh 
+   overnight culture of EBY100 (or appropriate yeast 
+   strain).
 
-2.  Grow cells with vigorous shaking at 30° to an OD600 of 1.3–1.5 (about 6 h).
+2. Grow cells with vigorous shaking at 30° to an 
+   OD600 of 1.3–1.5 (about 6 h).
 
-3.  Add 1 ml filter-sterilized 1,4-dithiothreitol (DTT, Mallinckrodt) solution 
-    (1 M Tris, pH 8.0, 2.5 M DTT). DTT is unstable and the solution must be 
-    made fresh just before use. Continue to grow with shaking at 30° for 
-    20 min.
+3. Add 1 ml filter-sterilized 1,4-dithiothreitol 
+   (DTT, Mallinckrodt) solution (1 M Tris, pH 8.0, 
+   2.5 M DTT). DTT is unstable and the solution must 
+   be made fresh just before use. Continue to grow 
+   with shaking at 30° for 20 min.
 
-4.  Harvest cells at 3500 rpm, 5 min, 4°. Discard supernatant. All 
-    centrifugation steps should be carried out in autoclaved centrifuge tubes 
-    or in sterile Falcon tubes.
+4. Harvest cells at 3500 rpm, 5 min, 4°. Discard 
+   supernatant. All centrifugation steps should be 
+   carried out in autoclaved centrifuge tubes or in 
+   sterile Falcon tubes.
 
-5.  Wash with 25 ml of E buffer (10 mM Tris, pH 7.5, 270 mM sucrose, 1 mM 
-    MgCl2) at room temperature. Spin down again.
+5. Wash with 25 ml of E buffer (10 mM Tris, pH 7.5, 
+   270 mM sucrose, 1 mM MgCl2) at room temperature. 
+   Spin down again.
 
-6.  Transfer to two 1.5-ml microcentrifuge tubes and wash a second time with 
-    1 ml of E buffer each. Spin down.
+6. Transfer to two 1.5-ml microcentrifuge tubes and 
+   wash a second time with 1 ml of E buffer each. 
+   Spin down.
 
-7.  Resuspend both pellets in E buffer to a final combined volume of 300 μl. 
-    Any extra cells not used immediately may be frozen down in 50-μl aliquots 
-    for future use. Note that using frozen cells results in a 3- to 10-fold 
-    loss in transformation efficiency.
+7. Resuspend both pellets in E buffer to a final 
+   combined volume of 300 μl.  Any extra cells not 
+   used immediately may be frozen down in 50-μl 
+   aliquots for future use. Note that using frozen 
+   cells results in a 3- to 10-fold loss in 
+   transformation efficiency.
 
-8.  In a microcentrifuge tube, mix 0.5 μl vector (1 μg), 4.5 μl insert (9 μg), 
-    and 50 μl electrocompetent yeast cells. Add the mixture to a sterile 0.2-cm 
-    electroporation cuvette (Bio-Rad). Incubate on ice 5 min. Prepare 
-    additional cuvettes until all of the DNA is used.
+8. In a microcentrifuge tube, mix 0.5 μl vector 
+   (1 μg), 4.5 μl insert (9 μg), and 50 μl 
+   electrocompetent yeast cells. Add the mixture to a 
+   sterile 0.2-cm electroporation cuvette (Bio-Rad).  
+   Incubate on ice 5 min. Prepare additional cuvettes 
+   until all of the DNA is used.
 
-9.  Set gene pulser settings to 25 μF (capacitance) and 0.54 kV (voltage), 
-    which gives an electric field strength of 2.7 kV⧸cm with 0.2-cm cuvettes; 
-    the time constant should be about 18 ms with 55 μl volumes. The pulse 
-    controller accessory is not used.
+9. Set gene pulser settings to 25 μF (capacitance) 
+   and 0.54 kV (voltage), which gives an electric 
+   field strength of 2.7 kV⧸cm with 0.2-cm cuvettes; 
+   the time constant should be about 18 ms with 55 μl 
+   volumes.  The pulse controller accessory is not 
+   used.
 
-10.  Carry out pulsing at room temperature. Insert the cuvette into the slide 
-     chamber. Push both red buttons simultaneously until a pulsing tone is 
-     heard and then release.
+10. Carry out pulsing at room temperature. Insert the 
+    cuvette into the slide chamber. Push both red 
+    buttons simultaneously until a pulsing tone is 
+    heard and then release.
 
-11.  After pulsing, immediately add 1 ml of room temperature YPD media to the 
-     cuvette. Incubate at 30° for 1 h in 15-ml round-bottom Falcon tubes with 
-     shaking (250 rpm).
+11. After pulsing, immediately add 1 ml of room 
+    temperature YPD media to the cuvette. Incubate at 
+    30° for 1 h in 15-ml round-bottom Falcon tubes 
+    with shaking (250 rpm).
 
-12.  Spin down cells at 3500 rpm in a microcentrifuge. Resuspend in selective 
-     media (SD+CAA,8 50 ml⧸electroporation reaction). Plate out serial 10-fold 
-     dilutions to determine transformation efficiency. The library may be 
-     propagated directly in liquid culture without significant bias due to the 
-     repression of scFv expression in glucose-containing medium such as 
-     SD+CAA.7
+12. Spin down cells at 3500 rpm in a microcentrifuge. 
+    Resuspend in selective media (SD+CAA,8 
+    50 ml⧸electroporation reaction). Plate out serial 
+    10-fold dilutions to determine transformation 
+    efficiency. The library may be propagated 
+    directly in liquid culture without significant 
+    bias due to the repression of scFv expression in 
+    glucose-containing medium such as SD+CAA.7
 
-Transformation efficiency should be at least 10⁵⧸μg, but is typically around 
-10⁶⧸μg. In addition to the electroporation mixture described here, one should 
-perform a control where no insert is added and determine the transformation 
-efficiency. This is the background efficiency and should be less than ∼1% of 
+Transformation efficiency should be at least 10⁵⧸μg, 
+but is typically around 10⁶⧸μg. In addition to the 
+electroporation mixture described here, one should 
+perform a control where no insert is added and 
+determine the transformation efficiency. This is the 
+background efficiency and should be less than ∼1% of 
 that obtained in the presence of insert DNA.
+
+vim: tw=53
