@@ -2,10 +2,13 @@ Reagents
 ========
 - 100 mL YPD
 - water (chilled)
-- 50 mL 1M sorbitol, 1 mM CaCl₂ (electroporation buffer) (chilled)
+- 120 mL 1M sorbitol, 1 mM CaCl₂ (electroporation buffer) (chilled)
 - 20 mL 100 mM LiOAc, 10 mM DTT (conditioning buffer)
 - 10 mL 1:1 mix of 1M sorbitol and YPD media
 - 1 SD-Leu plate
+
+- 2 3 50 mL pipets (chilled)
+- 1000 uL tips (chilled)
 
 Protocol
 ========
