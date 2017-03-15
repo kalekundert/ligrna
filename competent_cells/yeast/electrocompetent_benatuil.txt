@@ -2,7 +2,8 @@ Reagents
 ========
 - 100 mL YPD
 - water (chilled)
-- 120 mL 1M sorbitol, 1 mM CaCl₂ (electroporation buffer) (chilled)
+- 120 mL 1M sorbitol, 1 mM CaCl₂ (electroporation 
+  buffer) (chilled)
 - 20 mL 100 mM LiOAc, 10 mM DTT (conditioning buffer)
 - 10 mL 1:1 mix of 1M sorbitol and YPD media
 - 1 SD-Leu plate
@@ -12,44 +13,60 @@ Reagents
 
 Protocol
 ========
-1. Saccharomyces cerevisiae were grown overnight to stationary phase (OD600 of 
-   ∼3). 
+1. Saccharomyces cerevisiae were grown overnight to 
+   stationary phase (OD600 of ∼3). 
    
-2. An aliquot of the culture was inoculated into 100 ml of YPD media (10 g/l 
-   yeast nitrogen base, 20 g/l peptone and 20 g/l d-(+)-glucose) to reach OD600 
-   of ∼0.3.  
+2. An aliquot of the culture was inoculated into 100 
+   ml of YPD media (10 g/l yeast nitrogen base, 20 
+   g/l peptone and 20 g/l d-(+)-glucose) to reach 
+   OD600 of ∼0.3.  
    
-3. The cells were grown until OD600 reached ∼1.6 before collecting by 
-   centrifugation. 
+3. The cells were grown until OD600 reached ∼1.6 
+   before collecting by centrifugation. 
    
-4. The cells pellet was washed twice with 50 ml of cold water, and once with 50 
-   ml [cold] electroporation buffer (1 M sorbitol, 1 mM CaCl2).
+4. The cells pellet was washed twice with 50 ml of 
+   cold water, and once with 50 ml [cold] 
+   electroporation buffer (1 M sorbitol, 1 mM CaCl2).
    
-5. Cells were conditioned in 20 ml of 100 mM LiAc/10 mM DTT by incubation in 
-   culture flask with shaking (225 rpm) for 30 min at 30°C, washed once more 
-   time with 50 ml of electroporation buffer, then suspended in 100–200 µl of 
-   the same buffer to reach 1 ml volume.  This corresponds to ∼1.6×10⁹ 
-   cells/ml.  The scale up of culture and washes volumes should be proportional 
-   if more electrocompetent yeast suspension is needed. 
+5. Cells were conditioned in 20 ml of 100 mM LiAc/10 
+   mM DTT by incubation in culture flask with shaking 
+   (225 rpm) for 30 min at 30°C, washed once more 
+   time with 50 ml of electroporation buffer, then 
+   suspended in 100–200 µl of the same buffer to 
+   reach 1 ml volume.  This corresponds to ∼1.6×10⁹ 
+   cells/ml.  The scale up of culture and washes 
+   volumes should be proportional if more 
+   electrocompetent yeast suspension is needed. 
    
-6. 100, 200, 300 or 400 µl of cell suspension were used for electroporation per 
-   cuvette and 1, 2, 3 or 4 µg linearized vector with corresponding 3, 6, 9 or 
-   12 µg DNA insert (vector to insert ratio = 1:3) were used. 
+6. 100, 200, 300 or 400 µl of cell suspension were 
+   used for electroporation per cuvette and 1, 2, 3 
+   or 4 µg linearized vector with corresponding 3, 6, 
+   9 or 12 µg DNA insert (vector to insert ratio = 
+   1:3) were used. 
     
-7. Cells were electroporated at 2.5 kV and 25 µF in a BioRad GenePulser cuvette 
-   (0.2 cm electrode gap). Typical electroporation time constant ranged from 
+7. Cells were electroporated at 2.5 kV and 25 µF in a 
+   BioRad GenePulser cuvette (0.2 cm electrode gap).  
+   Typical electroporation time constant ranged from 
    3.0 to 4.5 ms. 
    
-8. After electroporation, cells were suspended in 10 ml of 1:1 mix of 1 M 
-   sorbitol:YPD media and incubated at 30°C for 1h.  
+8. After electroporation, cells were suspended in 10 
+   ml of 1:1 mix of 1 M sorbitol:YPD media and 
+   incubated at 30°C for 1h.  
    
-9. Finally, the cells were collected and cultured in SD-UT media (-ura, -trp) 
-   which contained 20 g/l glucose, 6.7 g/l yeast nitrogen base without amino 
-   acids, 5.4 g/l Na2HPO4, 8.6 g/l NaH2PO4·H2O and 5 g/l casamino acids.  
+9. Finally, the cells were collected and cultured in 
+   SD-UT media (-ura, -trp) which contained 20 g/l 
+   glucose, 6.7 g/l yeast nitrogen base without amino 
+   acids, 5.4 g/l Na2HPO4, 8.6 g/l NaH2PO4·H2O and 5 
+   g/l casamino acids.  
 
-10. Number of transformants was determined by plating 10-fold serial dilutions 
-    of transformed cells at 30°C on selective SD-UT plates and counting 
-    colonies after 3 days.  The transformation efficiencies (A) were expressed 
-    as transformants/µg vector DNA (mean ± standard deviation). The yields (B) 
-    were expressed as total number of transformants per cuvette (mean ± 
+10. Number of transformants was determined by plating 
+    10-fold serial dilutions of transformed cells at 
+    30°C on selective SD-UT plates and counting 
+    colonies after 3 days.  The transformation 
+    efficiencies (A) were expressed as 
+    transformants/µg vector DNA (mean ± standard 
+    deviation). The yields (B) were expressed as 
+    total number of transformants per cuvette (mean ± 
     standard deviation).
+    
+vim: tw=53
