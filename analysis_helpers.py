@@ -81,7 +81,7 @@ class AnalyzedWell (fcmcmp.Well):
         # Create the x-axis based on the user-specified limits.  The limits 
         # can't be picked automatically because it's important that they be the 
         # same for every plot.
-        N = 100 if self.loc_metric != 'mode' else 500
+        N = 100 if self.loc_metric != 'mode' else 100 #500
         self.x = np.linspace(*xlim, num=N)
 
         # Estimate the distribution underlying the measurements.  By default 
@@ -278,11 +278,11 @@ def pick_color(experiment):
     return pick_ucsf_color(experiment)
 
 
-control = re.compile('(on|off|wt|dead)[ (]')
+control = re.compile('(on|off|wt|dead)')
 upper_stem = re.compile('(us|.u.?)[ (]')
 lower_stem = re.compile('(ls|.l.?)[ (]')
 bulge = re.compile('.b.?[ (]')
-nexus = re.compile('(nx|.x.?)[ (]')
+nexus = re.compile('(nx|.x.?|[wm]11)[ (]')
 hairpin = re.compile('.h.?[( ]')
 
 def pick_tango_color(experiment):
@@ -363,7 +363,7 @@ def pick_ucsf_color(experiment):
     else:
         return navy[0]
 
-def pick_style(experiment, condition):
+def pick_style(experiment, condition='holo'):
     if 'colors' in experiment and condition in experiment['colors']:
         color = experiment['colors'][condition]
     elif 'color' in experiment:
@@ -408,6 +408,13 @@ def pick_channel(experiment, users_choice=None):
         else:
             return channel
 
+    # If the experiment specifies a spacer, use the corresponding channel.
+    if 'spacer' in experiment:
+        if 'gfp' in experiment['spacer']:
+            return 'FITC-A'
+        if 'rfp' in experiment['spacer']:
+            return 'Red-A'
+
     # If a channel can be inferred from the name of the experiment, use it. 
     if 'gfp' in experiment['label'].lower():
         return 'FITC-A'
@@ -416,6 +423,10 @@ def pick_channel(experiment, users_choice=None):
 
     # Default to the red channel, if nothing else is specified.
     return 'Red-A'
+
+def get_ligand(experiments):
+    ligands = {expt.get('ligand', 'ligand') for expt in experiments}
+    return ligands.pop() if len(ligands) == 1 else 'ligand'
 
 def get_duration(experiments):
     min_time = float('inf')
