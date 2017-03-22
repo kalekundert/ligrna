@@ -58,10 +58,10 @@ Options:
         really high throughput experiments.
 
     -u --quality-filter <level>         [default: good]
-        Only show experiments of the indicated quality or better.  Understood quality 
-        levels are 'all', 'good', and 'bad'.  All data is assumed to be good by 
-        default, but certain data point can marked as bad by setting `discard: 
-        True` in the *.yml file.
+        Only show experiments of the indicated quality or better.  Understood 
+        quality levels are 'all', 'good', and 'bad'.  All data is assumed to be 
+        good by default, but certain data points can marked as bad by setting 
+        `discard: True` in the *.yml file.
 
     -i --indices <selection>
         Only show experiments with the given indices (counting from 1).  The 
@@ -99,10 +99,15 @@ Options:
         are thus PDFs.  By default, the area of each curve reflects the number 
         of cells that were counted from that well.
 
-    -f --fold-change-xlim <xlim>
+    -f --fold-change-xlim <xmax>
         Set the extent of the x-axis for the fold-change plot.  By default this 
         axis is automatically scaled to fit the data, but this option is useful 
         if you want to compare different plots.
+
+    -d --distribution-xlim <xmin,xmax>
+        Set the range of the x-axis for the cell distribution plots.  By 
+        default this is based on the minimum and maximum data points, but 
+        sometimes it can be useful to zoom in a little more closely.
 
     -l --log-toggle
         Plot the data on a linear scale if it would normally be plotted on a 
@@ -142,6 +147,7 @@ class FoldChange:
         self.output_size = None
         self.title = None
         self.fold_change_xlim = None
+        self.distribution_xlim = None
 
         # Internally used plot attributes.
         self.figure = None
@@ -237,12 +243,14 @@ class FoldChange:
         Decide what the x-limits should be for the distributions plot.  This 
         has to be decided before the distributions themselves are calculated.
         """
-        x_min = x_01 = np.inf
-        x_max = x_99 = -np.inf
-
-        for _, _, well in self._yield_analyzed_wells():
-            x_min = min(x_min, np.min(well.measurements))
-            x_max = max(x_max, np.max(well.measurements))
+        if self.distribution_xlim:
+            x_min, x_max = self.distribution_xlim
+        else:
+            x_min = x_01 = np.inf
+            x_max = x_99 = -np.inf
+            for _, _, well in self._yield_analyzed_wells():
+                x_min = min(x_min, np.min(well.measurements))
+                x_max = max(x_max, np.max(well.measurements))
 
         self.axes[0].set_xlim(x_min, x_max)
 
@@ -481,7 +489,8 @@ class FoldChange:
 def fold_change(yml_path, *, time_gate=0, size_gate=0, expression_gate=1e3,
         channel=None, normalize_by=None, sort_by=None, label_filter=None,
         log_toggle=None, histogram=None, pdf=None, loc_metric=None, title=None,
-        indices=None, fold_change_xlim=None, output_size=None):
+        indices=None, fold_change_xlim=None, distribution_xlim=None, 
+        output_size=None):
 
     experiments = fcmcmp.load_experiments(yml_path)
 
@@ -504,6 +513,7 @@ def fold_change(yml_path, *, time_gate=0, size_gate=0, expression_gate=1e3,
     analysis.loc_metric = loc_metric
     analysis.output_size = output_size
     analysis.fold_change_xlim = fold_change_xlim
+    analysis.distribution_xlim = distribution_xlim
     analysis.plot()
 
 
@@ -536,6 +546,8 @@ if __name__ == '__main__':
         analysis.output_size = map(float, args['--output-size'].split('x'))
     if args['--fold-change-xlim']:
         analysis.fold_change_xlim = float(args['--fold-change-xlim'])
+    if args['--distribution-xlim']:
+        analysis.distribution_xlim = map(float, args['--distribution-xlim'].split(','))
 
     with analysis_helpers.plot_or_savefig(args['--output'], args['<yml_path>']):
         analysis.plot()
