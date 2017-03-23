@@ -14,7 +14,7 @@ fluorescence_controls = {
 class AnalyzedWell (fcmcmp.Well):
 
     def __init__(self, experiment, well, channel=None, normalize_by=None, 
-            log_toggle=False, histogram=False, pdf=False, loc_metric='median'):
+            log_toggle=False, pdf=False, loc_metric='median'):
 
         super().__init__(well.label, well.meta, well.data)
 
@@ -22,7 +22,6 @@ class AnalyzedWell (fcmcmp.Well):
         self.channel_override = channel
         self.normalize_by = normalize_by
         self.log_toggle = log_toggle
-        self.calc_histogram = histogram
         self.calc_pdf = pdf
         self.loc_metric = loc_metric
 
@@ -84,18 +83,22 @@ class AnalyzedWell (fcmcmp.Well):
         N = 100 if self.loc_metric != 'mode' else 100 #500
         self.x = np.linspace(*xlim, num=N)
 
-        # Estimate the distribution underlying the measurements.  By default 
-        # use a Gaussian kernel density estimate (KDE), or use a histogram if 
-        # the user requests it.  A Gaussian KDE gives smoother results, depends 
-        # on fewer tunable parameters, and handles the log-scaling better, but 
-        # can be significantly slower for large data sets.
-        if self.calc_histogram:
-            self.y, bins = np.histogram(self.measurements, self.x)
-            self.x = (bins[:-1] + bins[1:]) / 2
-        else:
-            from scipy.stats import gaussian_kde
-            kernel = gaussian_kde(self.measurements)
-            self.y = kernel.evaluate(self.x)
+        # Approximate the distribution underlying the measurements using a 
+        # Gaussian kernel density estimate (KDE).  Because each evaluation the 
+        # KDE is relatively expensive, focus most of the evaluations in a 
+        # narrow range (10% of the x-axis) around the median.  This focus is 
+        # especially important for accurately calculating the mode, but it also 
+        # makes the plots look nice and smooth.
+        N = 100
+        x = np.median(self.measurements)
+        dx = 0.05 * (xlim[1] - xlim[0])
+        x_dense = np.linspace(x - dx, x + dx, num=N//2)
+        x_sparse = np.linspace(*xlim, num=N//2)
+
+        from scipy.stats import gaussian_kde
+        kernel = gaussian_kde(self.measurements)
+        self.x = np.sort(np.hstack((x_sparse, x_dense)))
+        self.y = kernel.evaluate(self.x)
 
         # Scale the distribution to make it's area meaningful.  By default, the 
         # area will be proportional to the amount of data.  If the user wants 
@@ -225,6 +228,9 @@ class ExperimentPlot:
                 sharex=True, sharey=True, squeeze=False,
         )
         
+        # Don't show that ugly dark grey border around the plot.
+        self.figure.patch.set_alpha(0)
+
         # Make the axes square if the user asked for it.  What this really 
         # means is that pixels on the x-axis and the y-axis will have the same 
         # size in axis units.  This relationship is maintained even as the user 

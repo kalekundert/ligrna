@@ -111,6 +111,10 @@ class TitrationCurve:
     def _setup_figure(self):
         self.figure, self.axes = plt.subplots(1, 1)
 
+        # Don't show that ugly dark grey border around the plot.
+        self.figure.patch.set_alpha(0)
+
+
     def _find_concentrations(self, experiment):
 
         def conc_from_label(label):

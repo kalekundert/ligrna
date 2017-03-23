@@ -86,14 +86,6 @@ Options:
         cells that weren't expressing much fluorescent protein, for whatever 
         reason.  Note that this gate is in absolute units, not log units.
 
-    -H --histogram
-        Display the cell distributions using histograms rather than Gaussian 
-        kernel density estimates.  Histograms are faster to compute, but are 
-        sensitive to the choice of bin size.  This is especially true for weak 
-        fluorescence signals, which have smaller bins due to the logarithmic 
-        scaling of the data.  Smaller bins are noisier and make the modes less 
-        reliable (see --loc-metric).  Larger bins may hide features.  
-        
     -p --pdf
         Normalize the cell distributions such they all have the same area, and 
         are thus PDFs.  By default, the area of each curve reflects the number 
@@ -120,8 +112,7 @@ Options:
         cell distributions for the purpose of calculating the fold change in 
         signal.  By default the median is used for this calculation.  Note that 
         the mean and the mode will both change depending on whether or not the 
-        data has been log-transformed (see --log-toggle).  The mode will also 
-        change based on how data is histogrammed (see --histogram).
+        data has been log-transformed (see --log-toggle).
 """
 
 import fcmcmp, analysis_helpers, nonstdlib, re
@@ -141,7 +132,6 @@ class FoldChange:
         self.quality_filter = None
         self.show_indices = None
         self.log_toggle = None
-        self.histogram = None
         self.pdf = None
         self.loc_metric = None
         self.output_size = None
@@ -192,10 +182,14 @@ class FoldChange:
                 1, 2,
                 sharey=True,
                 figsize=self.output_size,
+                facecolor='y',
                 gridspec_kw=dict(
                     width_ratios=(0.65, 0.35),
                 ),
         )
+
+        # Don't show that ugly dark grey border around the plot.
+        self.figure.patch.set_alpha(0)
 
         if self.title:
             self.figure.suptitle(self.title)
@@ -220,7 +214,6 @@ class FoldChange:
                         channel=self.channel,
                         normalize_by=self.normalize_by,
                         log_toggle=self.log_toggle,
-                        histogram=self.histogram,
                         pdf=self.pdf,
                         loc_metric=self.loc_metric,
                     )
@@ -488,7 +481,7 @@ class FoldChange:
 
 def fold_change(yml_path, *, time_gate=0, size_gate=0, expression_gate=1e3,
         channel=None, normalize_by=None, sort_by=None, label_filter=None,
-        log_toggle=None, histogram=None, pdf=None, loc_metric=None, title=None,
+        log_toggle=None, pdf=None, loc_metric=None, title=None,
         indices=None, fold_change_xlim=None, distribution_xlim=None, 
         output_size=None):
 
@@ -508,7 +501,6 @@ def fold_change(yml_path, *, time_gate=0, size_gate=0, expression_gate=1e3,
     analysis.label_filter = label_filter
     analysis.show_indices = indices
     analysis.log_toggle = log_toggle
-    analysis.histogram = histogram
     analysis.pdf = pdf
     analysis.loc_metric = loc_metric
     analysis.output_size = output_size
@@ -535,7 +527,6 @@ if __name__ == '__main__':
     analysis.label_filter = args['--query']
     analysis.quality_filter = args['--quality-filter']
     analysis.log_toggle = args['--log-toggle']
-    analysis.histogram = args['--histogram']
     analysis.pdf = args['--pdf']
     analysis.loc_metric = args['--loc-metric']
     analysis.title = args['--title']
