@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # encoding: utf-8
 
 from .sequence import *
@@ -15,6 +15,8 @@ from .helpers import *
 # u: unbalance
 # d: diversify (also 'm')
 # q: sequence logo
+# o: OBSTRUCT
+# b: buttress (or brace)
 
 ## Domain Abbreviations
 # u: upper stem
@@ -1777,3 +1779,158 @@ def liu_sgrna(target='none', ligand='theo'):
 
     return sgrna
 
+@design('ux')
+def thiamine_nexus(N, M, target='none', ligand='theo', pam=None):
+    """
+    James says:
+
+    I'm going to try the uracil sequestering strategy and randomize positions I
+    think are important from my inspection of the crystal structure 4UN3. The
+    thiamine aptamer will replace the nexus/o sequence.
+
+    I ultimately decided to insert the thiamine aptamer into the nexus hairpin and randomize positions in the nexus
+    stem region. The uracil that flips out in the functional sgRNA remains as WT. I added a variable number of random
+    nucleotides between the end of the stem region and the beginning of the aptamer to serve as a connector. Hopefully
+    this will also promote base pairing with other parts of the sgRNA to form alternative stable non-funcitonal
+    conformations that can be escaped through binding of TPP.
+
+    :param target:
+    :param ligand:
+    :return:
+    """
+    sgrna = on(pam=pam, target=target)
+
+    # Randomize the nexus base pairing
+    sgrna['nexus/5'].seq = N * "N"
+    sgrna['nexus/5'].style = 'white', 'bold'
+    sgrna['nexus/3'].seq = 'NN'
+    sgrna['nexus/3'].style = 'white', 'bold'
+
+    # Insert the aptamer in the nexus hairpin loop
+    sgrna['nexus/o'].seq = 'CUAG' + (M - 2) * 'N' +'U'
+    sgrna['nexus/o'].style = 'white', 'bold'
+    sgrna['nexus/o'].attachment_sites = 0,4
+    sgrna.attach(aptamer(ligand), 'nexus/o', 0, 'nexus/o', 4)
+
+    return sgrna
+
+@design('bu')
+def MS2_forwards_upperstem(N, M, target='none', ligand='theo', pam=None):
+    """
+    James says:
+
+    Referencing the crystal structure of the aptamer-MS2 complex (PDB 1ZDI)
+
+    Another useful paper:
+
+    HORN, WILF T. et al. “The Crystal Structure of a High Affinity RNA Stem-
+    Loop Complexed with the Bacteriophage MS2 Capsid: Further Challenges in
+    the Modeling of ligand–RNA Interactions.” RNA 10.11 (2004)
+
+    Observations from the crystal structure (PDB 1ZDI):
+
+    The aptamer binds the surface created by the dimerization of two MS2
+    subunits (better seen in PDB 2C50) where aptamer forms a mitt (looking at
+    the back of my hand, 5' would be my thumb and 3' my pinkie). Since we do
+    not expect a conformational change upon binding of MS2 to the aptamer, I
+    want to think of ways that binding will either 1) sterically hinder sgRNA
+    from being bound by Cas9 (backwards designs) or 2) induce refolding of the
+    sgRNA from a non-functional state into a functional fold state (forward
+    design).
+
+    Here I outline my strategy for designing a library to generate a forward
+    design sgRNA (hairpin/stem substitution). This borrows from your ph design (or
+    at least what I remember from talking to you and looking at it before, I
+    don't want to look at it now that I'm trying to design my own design
+    strategy :P)
+
+    The two locations in the sgRNA where we could feasibly insert the MS2
+    aptamer without causing any obvious clashing is the upper stem and
+    hairpin region. Considering the orientation of the aptamer after it is
+    inserted into either of these sites, the upper stem region seems to be
+    more feasible. The hairpin, and as the aptamer would after insertion, folds
+    in towards Cas9, meaning that MS2 would be pressed right up against Cas9 if
+    it is even able to bind at all. Where the same is true for the upper stem
+    to an extent, it is more solvent accessible and an additional linker
+    sequence would allow for more
+
+    To get an idea of where to start, I am going to insert the MS2 aptamer in
+    appropriate regions in the sgRNA and increment the number of base pairs to act
+    as a spacer between the aptamer and the rest of the sgRNA.
+
+    Trying: nexus, hairpin, upper stem
+
+    :param target:
+    :param ligand:
+    :param pam:
+    :return:
+    """
+
+    sgrna = on(pam=pam, target=target)
+
+
+    assert N <= len(sgrna['upper_stem/5'].seq)
+    assert M <= len(sgrna['upper_stem/3'].seq)
+
+    sgrna['upper_stem/o'].attachment_sites = 0, 4
+    sgrna.attach(aptamer(ligand), 'upper_stem/o', 0, 'upper_stem/o', 4)
+    sgrna['upper_stem/5'].seq = 'GCUAUGCUG'[:N]
+    sgrna['upper_stem/3'].seq = 'CAGCAUAGC'[9-M:]
+
+    return sgrna
+
+@design('bx')
+def MS2_forwards_nexus(N, M, target='none', ligand='theo', pam=None):
+
+    sgrna = on(pam=pam, target=target)
+
+    assert N <= len(sgrna['nexus/5'].seq)
+    assert M <= len(sgrna['nexus/3'].seq)
+
+    sgrna['nexus/o'].attachment_sites = 0, 4
+    sgrna.attach(aptamer(ligand), 'nexus/o', 0, 'nexus/o', 4)
+    sgrna['nexus/5'].seq = 'GG'[:N]
+    sgrna['nexus/3'].seq = 'CC'[2-M:]
+
+    return sgrna
+
+
+@design('bh')
+def MS2_forwards_hairpin(N, M, target='none', ligand='theo', pam=None):
+
+    sgrna = on(pam=pam, target=target)
+
+    assert N <= len(sgrna['hairpin/5'].seq)
+    assert M <= len(sgrna['hairpin/3'].seq)
+
+    sgrna['hairpin/o'].attachment_sites = 0, 4
+    sgrna.attach(aptamer(ligand), 'hairpin/o', 0, 'hairpin/o', 4)
+    sgrna['hairpin/5'].seq = 'ACUU'[:N]
+    sgrna['hairpin/3'].seq = 'AAGU'[4-M:]
+
+    return sgrna
+
+
+@design('ox')
+def MS2_backwards_nexus(N, M, target='none', ligand='theo', pam=None):
+    """
+    Reference designs.MS2_forwards() for my library design rationale.
+
+    Here I outline my strategy for designing a library to generate a backwards
+    design sgRNA (nexus occlusion).
+
+    My idea is that binding of MS2 to the aptamer/sgRNA complex will sterically
+    occlude Cas9 from binding in a productive manner.
+
+    Insertion of the aptamer into the nexus would place the bound MS2 in a
+    clash with the basic alpha helix that runs through the folded sgRNA.
+
+    :param target:
+    :param ligand:
+    :param pam:
+    :return:
+    """
+
+    sgrna = on(pam=pam, target=target)
+
+    # Literally the same strategy as ux...
