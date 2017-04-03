@@ -11,12 +11,12 @@ from .helpers import *
 # s: serpentine
 # c: circle
 # h: hammerhead
-# r: root
-# u: unbalance
+# r: randomize
 # d: diversify (also 'm')
 # q: sequence logo
-# o: OBSTRUCT
-# b: buttress (or brace)
+# u: sequester uracil 59
+# w: strand swap
+# m: modulate
 
 ## Domain Abbreviations
 # u: upper stem
@@ -25,6 +25,11 @@ from .helpers import *
 # x: nexus
 # r: ruler
 # h: hairpin
+
+## Design Abbreviations
+# 11: rxb 11,1
+# 30: mhf 30
+# 37: mhf 37
 
 
 def design(abbreviation, *legacy_abbreviations):
@@ -110,6 +115,21 @@ def dead_sgrna(target='none'):
     sgrna['nexus'].mutate(2, 'C')
     sgrna['nexus'].mutate(3, 'C')
     sgrna['nexus'].mutable = False
+
+    return sgrna
+
+@design('liu')
+def liu_sgrna(target='none', ligand='theo'):
+    spacer_seq = spacer(target).rna
+    stem_5 = rna_reverse_complement(spacer_seq[:15])
+    stem_3 = rna_reverse_complement(stem_5[-9:])
+
+    sgrna = wt(target=target)
+    sgrna.remove('tail')
+    sgrna += Domain('stem/5', stem_5)
+    sgrna += aptamer(ligand, liu=True)
+    sgrna += Domain('stem/3', stem_3)
+    sgrna += Domain('tail', 'TTTTTT')
 
     return sgrna
 
@@ -991,7 +1011,7 @@ def hammerhead_hairpin(mode, A=1, target='none', ligand='theo'):
     return sgrna
 
 @design('rb')
-def root_bulge(N, M, A=1, target='none', ligand='theo'):
+def randomize_bulge(N, M, A=1, target='none', ligand='theo'):
     sgrna = wt_sgrna(target)
     sgrna.attach(
             random_insert(ligand, N, M),
@@ -1001,7 +1021,7 @@ def root_bulge(N, M, A=1, target='none', ligand='theo'):
     return sgrna
 
 @design('rbf')
-def root_bulge_forward(i, target='none', ligand='theo'):
+def randomize_bulge_forward(i, target='none', ligand='theo'):
     """
     rbf(6):
         The 5' link can base pair with the aptamer and the 3' linker can base 
@@ -1111,7 +1131,7 @@ def root_bulge_forward(i, target='none', ligand='theo'):
     return sgrna
 
 @design('rbb')
-def root_bulge_backward(i, target='none', ligand='theo'):
+def randomize_bulge_backward(i, target='none', ligand='theo'):
     """
     rbb(4):
       Linkers are complementary to each other, but are predicted to be fully 
@@ -1199,7 +1219,7 @@ def root_bulge_backward(i, target='none', ligand='theo'):
     return sgrna
 
 @design('rx')
-def root_nexus(N, M, A=1, target='none', ligand='theo'):
+def randomize_nexus(N, M, A=1, target='none', ligand='theo'):
     """
     Flank the aptamer with a random sequence on either side and insert it into 
     the nexus.
@@ -1243,7 +1263,7 @@ def root_nexus(N, M, A=1, target='none', ligand='theo'):
     return sgrna
 
 @design('rxb')
-def root_nexus_backwards(i, dang_sgrna=False, target='none', ligand='theo', pam=None):
+def randomize_nexus_backwards(i, dang_sgrna=False, target='none', ligand='theo', pam=None):
     """
     Most of these designs are not predicted to fold correctly in either 
     condition.  The exception is rxb(51), for which the lower stem is predicted 
@@ -1266,7 +1286,11 @@ def root_nexus_backwards(i, dang_sgrna=False, target='none', ligand='theo', pam=
             # Cas9 or sequestered in a base pair.  Swapping the GU base pair 
             # tests this hypothesis by changing the position of the U without 
             # changing the strength of the stem.
-            '11u': ('GTTGG', 'CCGAC'),
+            '11a': ('cTGGG', 'CCTAg'),
+            '11b': ('GaGGG', 'CCTtC'),
+            '11c': ('GTtGG', 'CCgAC'),
+            '11d': ('GTGcG', 'CgTAC'),
+            '11e': ('GTGGc', 'gCTAC'),
     }
     aliases = {
             19: 14,
@@ -1280,15 +1304,16 @@ def root_nexus_backwards(i, dang_sgrna=False, target='none', ligand='theo', pam=
             70: 2,
             88: 11,
             93: 51,
+            '11u': '11c'
     }
     if i in aliases:
         raise ValueError("rxb({}) is the same as rxb({})".format(i, aliases[i]))
     if i not in linkers:
         raise ValueError("no sequence for rxb({})".format(i))
 
-    linker_5 = Domain("linker/5'", linkers[i][0])
+    linker_5 = Domain('linker/5', linkers[i][0])
     linker_5.style = 'red'
-    linker_3 = Domain("linker/3'", linkers[i][1])
+    linker_3 = Domain('linker/3', linkers[i][1])
     linker_3.style = 'red'
 
     sequenced_insert = aptamer(ligand)
@@ -1315,7 +1340,7 @@ def root_nexus_backwards(i, dang_sgrna=False, target='none', ligand='theo', pam=
     return sgrna
 
 @design('rh')
-def root_hairpin(N, M, dang_sgrna=False, target='none', ligand='theo'):
+def randomize_hairpin(N, M, dang_sgrna=False, target='none', ligand='theo'):
     """
     Flank the aptamer with a random sequence on either side and insert it into 
     the first hairpin.
@@ -1355,7 +1380,7 @@ def root_hairpin(N, M, dang_sgrna=False, target='none', ligand='theo'):
     return sgrna
 
 @design('rhf')
-def root_hairpin_forward(i, expected_only=False, target='none', ligand='theo'):
+def randomize_hairpin_forward(i, expected_only=False, target='none', ligand='theo'):
     """
     rhf(6):
         The 3' link can base pair with the 'GUC' motif in the nexus, while the 
@@ -1764,173 +1789,180 @@ def sequester_uracil_59(N, M, target='none', ligand='theo', pam=None):
 
     return sgrna
 
-@design('liu')
-def liu_sgrna(target='none', ligand='theo'):
-    spacer_seq = spacer(target).rna
-    stem_5 = rna_reverse_complement(spacer_seq[:15])
-    stem_3 = rna_reverse_complement(stem_5[-9:])
+@design('uhf')
+def sequester_uracil_59_forward(i, expected_only=False, target='none', ligand='theo', pam=None):
+    """
+    uhf 37:
+        No predicted response to ligand.
 
-    sgrna = wt(target=target)
-    sgrna.remove('tail')
-    sgrna += Domain('stem/5', stem_5)
-    sgrna += aptamer(ligand, liu=True)
-    sgrna += Domain('stem/3', stem_3)
-    sgrna += Domain('tail', 'TTTTTT')
+    uhf 49:
+        No predicted response to ligand.
+
+    uhf 84:
+        This design has strongly predicted differences in 2° structure between 
+        apo and holo, although it's a little hard to rationalize why the holo 
+        form is functional.  The nexus is predicted to form, except the 5' side 
+        pairs with the ruler instead of the 3' side.  The stem is 5 bp long and 
+        has two GU pairs in the middle, one of which probably has to be flipped 
+        out.  In the apo fold, the nexus basically pairs with the terminator.
+
+    uhf 135:
+    """
+    linkers = {
+            8:   ('CGCAG',  'GTCCCT'),  # First try
+            30:  ('CCTG',   'GTGATCA'),
+            37:  ('GCAGG',  'GTTCCCA'),
+            49:  ('CTAGG',  'GTTCCCG'),
+            66:  ('CAGAGG', 'GTTCCT'),
+            71:  ('TTCAC',  'GTTCCCA'),
+            84:  ('GCGAG',  'GTTCCCA'),
+            132: ('CGCCAG', 'GTTCCT'),  # Second try
+            135: ('TTTGA',  'GTTCAGG'),
+            160: ('CCCTG',  'GCGATCA'),
+            174: ('CTTG',   'GCGCTG'),
+    }
+    aliases = {
+            57: 8,
+            62: 37,
+            89: 84,
+            137: 132,
+            170: 132,
+            172: 132,
+            173: 160,
+            179: 160,
+            182: 132,
+    }
+    unexpected_muts = {
+            8:   ('upper_stem/o', 0, 'T'),
+            66:  ('upper_stem/5', 3, 'T'),
+            132: ('upper_stem/5', 8, 'T'),
+            135: ('upper_stem/5', 3, ''),
+            160: ('upper_stem/o', 0, 'T'),
+            174: ('upper_stem/5', 8, 'T'),
+    }
+
+    if i in aliases:
+        raise ValueError("uhf({}) is the same as uhf({})".format(i, aliases[i]))
+    if i not in linkers:
+        raise ValueError("no sequence for uhf({})".format(i))
+    if expected_only and i not in unexpected_muts:
+        raise ValueError("uhf({}) doesn't have any unexpected mutations.".format(i))
+
+    sgrna = uh(0, 0, ligand=ligand, target=target, pam=pam)
+    sgrna['nexus/o'].seq  = linkers[i][0] + 'U'
+    sgrna['nexus/gu'].seq = linkers[i][1][0:2]
+    sgrna['ruler'].seq    = linkers[i][1][2:]
+
+    if not expected_only and i in unexpected_muts:
+        domain, idx, nuc = unexpected_muts[i]
+        sgrna[domain].mutate(idx, nuc)
 
     return sgrna
 
-@design('ux')
-def thiamine_nexus(N, M, target='none', ligand='theo', pam=None):
+@design('m11')
+def modulate_rxb_11_1(seq='', target='none', ligand='theo'):
     """
-    James says:
+    Attempt to modulate the leakiness of rxb 11,1 by changing the strength of 
+    the base-pairs above U94.
 
-    I'm going to try the uracil sequestering strategy and randomize positions I
-    think are important from my inspection of the crystal structure 4UN3. The
-    thiamine aptamer will replace the nexus/o sequence.
+    This design strategy is based off the hypothesis that rxb 11,1 works by 
+    controlling the ability of U94 (which corresponds to U59 in wt sgRNA) to 
+    flip out and interact with Cas9.  In turn, this hypothesis is based on the 
+    claim made by Kyle Watters (citing unpublished data) that wildtype sgRNA 
+    can only bind Cas9 if U59 is unpaired.
 
-    I ultimately decided to insert the thiamine aptamer into the nexus hairpin and randomize positions in the nexus
-    stem region. The uracil that flips out in the functional sgRNA remains as WT. I added a variable number of random
-    nucleotides between the end of the stem region and the beginning of the aptamer to serve as a connector. Hopefully
-    this will also promote base pairing with other parts of the sgRNA to form alternative stable non-funcitonal
-    conformations that can be escaped through binding of TPP.
+    In rxb 11,1, U94 forms a wobble base pair in the middle of a 5 bp stem:
 
-    :param target:
-    :param ligand:
-    :return:
+        [aptamer]
+           G=C
+           G=C
+           G·U ←94
+           U-A
+        5' G=C 3'
+
+    The hypothesis is that when no ligand is present, the base of the aptamer 
+    comes apart and allows the top of the stem to melt, which allows U94 to 
+    flip out and interact with Cas9.  When ligand is present, the base of the 
+    aptamer comes together, locks the stem in place, and prevents U94 from 
+    flipping out.
+
+    If this hypothesis is correct, we should be able to modulate how well rxb 
+    11,1 turns on or off by increasing or decreasing, respectively, the 
+    strength of the base pairs above it.  For example, replacing one or both of 
+    the GC base pairs with AU base pairs should allow the top of the stem to 
+    melt more easily, which should create a sensor that turns on better.  
+    Likewise, increasing the length of the stem should make it harder for U59 
+    to flip out, which should create a sensor that turns off better.
+
+    Parameters
+    ==========
+    seq: str
+        The sequence to install on the 5' side of the nexus above U94.  The 
+        usual base pairs can be specified with "a", "c", "g", and "u".  Wobble 
+        base pairs can be specified with "h" (GU pair) and "v" (UG pair).  The 
+        sequence is case-insensitive.  The value corresponding to the original 
+        rxb 11,1 sequence is "gg".
     """
-    sgrna = on(pam=pam, target=target)
+    sgrna = rxb(11, 1, target=target, ligand=ligand)
 
-    # Randomize the nexus base pairing
-    sgrna['nexus/5'].seq = N * "N"
-    sgrna['nexus/5'].style = 'white', 'bold'
-    sgrna['nexus/3'].seq = 'NN'
-    sgrna['nexus/3'].style = 'white', 'bold'
+    trans_5 = str.maketrans('THVthv', 'UGUugu')
+    trans_3 = str.maketrans('ACGUTHVacguthv', 'UGCAAUGugcaaug')
 
-    # Insert the aptamer in the nexus hairpin loop
-    sgrna['nexus/o'].seq = 'CUAG' + (M - 2) * 'N' +'U'
-    sgrna['nexus/o'].style = 'white', 'bold'
-    sgrna['nexus/o'].attachment_sites = 0,4
-    sgrna.attach(aptamer(ligand), 'nexus/o', 0, 'nexus/o', 4)
+    seq_5 = seq.translate(trans_5)
+    seq_3 = seq.translate(trans_3)[::-1]
+    
+    sgrna['linker/5'].replace(3, 5, seq_5)
+    sgrna['linker/3'].replace(0, 2, seq_3)
 
     return sgrna
 
-@design('bu')
-def MS2_forwards_upperstem(N, M, target='none', ligand='theo', pam=None):
+@design('w11')
+def strand_swap_rxb_11_1(N, target='none', ligand='theo'):
     """
-    James says:
+    Make strand-swapping mutations to test my proposed mechanism for rxb 11,1.
 
-    Referencing the crystal structure of the aptamer-MS2 complex (PDB 1ZDI)
+    The hypothesis I want to test is that rxb 11,1 works by controlling the 
+    ability of U94 (which corresponds to U59 in wt sgRNA) to flip out and 
+    interact with Cas9.  This hypothesis is based on the claim made by Kyle 
+    Watters (citing unpublished data) that wildtype sgRNA can only bind Cas9 if 
+    U59 is unpaired.  
+    
+    In rxb 11,1, U94 forms a wobble base pair in the middle of a 5 bp stem:
 
-    Another useful paper:
+        [aptamer]
+           G=C
+           G=C
+       64→ G·U ←94
+           U-A
+        5' G=C 3'
 
-    HORN, WILF T. et al. “The Crystal Structure of a High Affinity RNA Stem-
-    Loop Complexed with the Bacteriophage MS2 Capsid: Further Challenges in
-    the Modeling of ligand–RNA Interactions.” RNA 10.11 (2004)
+    The hypothesis is that when no ligand is present, the base of the aptamer 
+    comes apart and allows the top of the stem to melt, which allows U94 to 
+    flip out and interact with Cas9.  When ligand is present, the base of the 
+    aptamer comes together, locks the stem in place, and prevents U94 from 
+    flipping out.
 
-    Observations from the crystal structure (PDB 1ZDI):
+    If this hypothesis is correct, swapping G64 and U94 should have a severe 
+    detrimental effect on the sensor, because U94 will no longer be in a 
+    position to interact with Cas9 (despite the fact that this mutation does 
+    not change the strength of the nexus stem).  But swapping any of the other 
+    base pairs in the nexus stem should have no effect.
 
-    The aptamer binds the surface created by the dimerization of two MS2
-    subunits (better seen in PDB 2C50) where aptamer forms a mitt (looking at
-    the back of my hand, 5' would be my thumb and 3' my pinkie). Since we do
-    not expect a conformational change upon binding of MS2 to the aptamer, I
-    want to think of ways that binding will either 1) sterically hinder sgRNA
-    from being bound by Cas9 (backwards designs) or 2) induce refolding of the
-    sgRNA from a non-functional state into a functional fold state (forward
-    design).
-
-    Here I outline my strategy for designing a library to generate a forward
-    design sgRNA (hairpin/stem substitution). This borrows from your ph design (or
-    at least what I remember from talking to you and looking at it before, I
-    don't want to look at it now that I'm trying to design my own design
-    strategy :P)
-
-    The two locations in the sgRNA where we could feasibly insert the MS2
-    aptamer without causing any obvious clashing is the upper stem and
-    hairpin region. Considering the orientation of the aptamer after it is
-    inserted into either of these sites, the upper stem region seems to be
-    more feasible. The hairpin, and as the aptamer would after insertion, folds
-    in towards Cas9, meaning that MS2 would be pressed right up against Cas9 if
-    it is even able to bind at all. Where the same is true for the upper stem
-    to an extent, it is more solvent accessible and an additional linker
-    sequence would allow for more
-
-    To get an idea of where to start, I am going to insert the MS2 aptamer in
-    appropriate regions in the sgRNA and increment the number of base pairs to act
-    as a spacer between the aptamer and the rest of the sgRNA.
-
-    Trying: nexus, hairpin, upper stem
-
-    :param target:
-    :param ligand:
-    :param pam:
-    :return:
+    Parameters
+    ==========
+    N: int
+        The position in the nexus stem to swap.  Positions 1 and 5 correspond 
+        to the base pairs furthest and closest to the aptamer, respectively.
     """
+    if N < 1 or N > 5:
+        raise ValueError('N must be between 1 and 5, not {}'.format(N))
 
-    sgrna = on(pam=pam, target=target)
+    sgrna = rxb(11, 1, target=target, ligand=ligand)
 
+    linker_5 = sgrna['linker/5'].seq
+    linker_3 = sgrna['linker/3'].seq
 
-    assert N <= len(sgrna['upper_stem/5'].seq)
-    assert M <= len(sgrna['upper_stem/3'].seq)
-
-    sgrna['upper_stem/o'].attachment_sites = 0, 4
-    sgrna.attach(aptamer(ligand), 'upper_stem/o', 0, 'upper_stem/o', 4)
-    sgrna['upper_stem/5'].seq = 'GCUAUGCUG'[:N]
-    sgrna['upper_stem/3'].seq = 'CAGCAUAGC'[9-M:]
+    sgrna['linker/5'].mutate(N-1, linker_3[5-N])
+    sgrna['linker/3'].mutate(5-N, linker_5[N-1])
 
     return sgrna
-
-@design('bx')
-def MS2_forwards_nexus(N, M, target='none', ligand='theo', pam=None):
-
-    sgrna = on(pam=pam, target=target)
-
-    assert N <= len(sgrna['nexus/5'].seq)
-    assert M <= len(sgrna['nexus/3'].seq)
-
-    sgrna['nexus/o'].attachment_sites = 0, 4
-    sgrna.attach(aptamer(ligand), 'nexus/o', 0, 'nexus/o', 4)
-    sgrna['nexus/5'].seq = 'GG'[:N]
-    sgrna['nexus/3'].seq = 'CC'[2-M:]
-
-    return sgrna
-
-
-@design('bh')
-def MS2_forwards_hairpin(N, M, target='none', ligand='theo', pam=None):
-
-    sgrna = on(pam=pam, target=target)
-
-    assert N <= len(sgrna['hairpin/5'].seq)
-    assert M <= len(sgrna['hairpin/3'].seq)
-
-    sgrna['hairpin/o'].attachment_sites = 0, 4
-    sgrna.attach(aptamer(ligand), 'hairpin/o', 0, 'hairpin/o', 4)
-    sgrna['hairpin/5'].seq = 'ACUU'[:N]
-    sgrna['hairpin/3'].seq = 'AAGU'[4-M:]
-
-    return sgrna
-
-
-@design('ox')
-def MS2_backwards_nexus(N, M, target='none', ligand='theo', pam=None):
-    """
-    Reference designs.MS2_forwards() for my library design rationale.
-
-    Here I outline my strategy for designing a library to generate a backwards
-    design sgRNA (nexus occlusion).
-
-    My idea is that binding of MS2 to the aptamer/sgRNA complex will sterically
-    occlude Cas9 from binding in a productive manner.
-
-    Insertion of the aptamer into the nexus would place the bound MS2 in a
-    clash with the basic alpha helix that runs through the folded sgRNA.
-
-    :param target:
-    :param ligand:
-    :param pam:
-    :return:
-    """
-
-    sgrna = on(pam=pam, target=target)
-
-    # Literally the same strategy as ux...

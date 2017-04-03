@@ -214,7 +214,7 @@ def predict_fold(design, constraints=False):
 
             aptamer_seq = theo_match.group()
             aptamer_fold = '(...((.(((....)))....))...)'
-            aptamer_kd = 0.0324  # μM
+            aptamer_kd = 0.32  # μM
 
         # Calculate the free energy of aptamer folding.
         rt_37 = 1.9858775e-3 * 310  # kcal/mol at 37°C

@@ -230,6 +230,9 @@ def aptamer(ligand, piece='whole', liu=False):
         # Nomura, Zhou, Miu, Yokobayashi. Controlling mammalian gene expression 
         # by allosteric Hepatitis Delta Virus ribozymes. ACS Synth. Biol.  
         # (2013) 2:684-689.
+
+        # Nomura et al. used guanine at 500 μM, but I still see toxicity at 
+        # this concentration.  I think I'm going to use 250 μM instead.
         sequence_pieces   = 'UAUAAUCGCGUGGAUAUGGCACGCAAGUUUCUACCGGGCACCGUAAAUGUCCGACUA',
         constraint_pieces = '((...(.(((((.......))))).)........((((((.......))))))..))',
         affinity_uM = 0.005
