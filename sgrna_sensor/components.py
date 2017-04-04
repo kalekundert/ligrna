@@ -279,19 +279,36 @@ def aptamer(ligand, piece='whole', liu=False):
         raise NotImplementedError
 
     elif ligand in ('tc', 'tet', 'tetracycline'):
-        # Weigand, Suess. Tetracycline aptamer-controlled regulation of pre- 
-        # mRNA splicing in yeast. Nucl. Acids Res. (2007) 35 (12): 4179-4185.
+        # Wittmann and Suess.  Selection of tetracycline inducible 
+        # self-cleaving ribozymes as synthetic devices for gene regulation in 
+        # yeast.  Mol BioSyst (2011) 7:2419-2427.
 
-        # Win, Smolke. A modular and extensible RNA-based gene-regulatory 
-        # platform for engineering cellular function. PNAS (2007) 104 (36): 
-        # 14283-14288.
+        # The authors used 100 μM tetracycline in yeast.  I've seen other 
+        # papers that used as much as 250 μM.
+        sequence_pieces   = 'AAAACAUACCAGAUUUCGAUCUGGAGAGGUGAAGAAUACGACCACCU',
+        constraint_pieces = '(.......((((((....))))))...((((...........)))))',
 
-        # Win & Smolke use a truncated tet aptamer to actually affect gene 
-        # expression in vivo.  The Weigand & Suess aptamer has a stem on the 
-        # end, which makes me skeptical that it would work for the purposes of 
-        # this project.  
-        sequence_pieces   = 'AAAACAUACCAGAUUUCGAUCUGGAGAAGGUGAAGAAUUCGACCACCU',
-        constraint_pieces = '........((((((....))))))...(((((...........)))))',
+        # Müller, Weigand, Weichenrieder, Suess. Thermodynamic characterization 
+        # of an engineered tetracycline-binding riboswitch. Nucleic Acids 
+        # Research (2006) 34:9:2607-2617.
+        affinity_uM = 0.00077 # 770 pM
+
+    elif ligand in ('neo', 'neomycin'):
+        # Weigand, Sanchez, Gunnesch, Zeiher, Schroeder, Suess. Screening for 
+        # engineered neomycin riboswitches that control translation initiation.  
+        # RNA (2008) 14:89-97.
+
+        # The authors show that the aptamer consists of two domains: one that 
+        # binds neomycin and one which is just a stem.  Both are important for 
+        # regulating gene expression in their system, which is the 5'-UTR of an 
+        # mRNA.  However, here I only include the ligand-binding domain.  The 
+        # length and composition of the stem domain is probably application 
+        # dependent, and that's what I need to pull out of directed evolution.
+        #
+        # The authors used 100 μM neomycin.  Yeast were grown at 28°C for 48h 
+        # in 5 mL minimal media.
+        sequence_pieces   = 'GCUUGUCCUUUAAUGGUCC',
+        constraint_pieces = '(.....((......))..)',
 
     elif ligand in ('asp', 'aspartame'):
         # Ferguson et al. A novel strategy for selection of allosteric 
