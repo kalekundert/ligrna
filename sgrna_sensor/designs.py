@@ -1707,8 +1707,60 @@ def protein_binding_hairpin(N, target='none', ligand='theo', pam=None):
 
     return sgrna
 
+@design('ux')
+def sequester_u59_nexus(N, M, keep_bottom_gc=False, target='none', ligand='theo', pam=None):
+    """
+    James says:
+
+    I'm going to try the uracil sequestering strategy and randomize positions I
+    think are important from my inspection of the crystal structure 4UN3. The
+    thiamine aptamer will replace the nexus/o sequence.
+
+    I ultimately decided to insert the thiamine aptamer into the nexus hairpin and randomize positions in the nexus
+    stem region. The uracil that flips out in the functional sgRNA remains as WT. I added a variable number of random
+    nucleotides between the end of the stem region and the beginning of the aptamer to serve as a connector. Hopefully
+    this will also promote base pairing with other parts of the sgRNA to form alternative stable non-funcitonal
+    conformations that can be escaped through binding of TPP.
+
+    :param target:
+    :param ligand:
+    :return:
+    """
+    sgrna = on(pam=pam, target=target)
+
+    # Work out what to do with the bottom-most base pair.  This base pair can't 
+    # be strand-swapped, so it seems important in a way I don't understand.  
+    # For this reason, the library provides an option to keep it as is.
+    if keep_bottom_gc == 'g':
+        bottom_5 = 'G'
+        bottom_3 = 'C'
+        n = N + 1
+        m = M - 1
+    else:
+        bottom_5 = ''
+        bottom_3 = 'N'
+        n = N
+        m = M - 2
+
+    # Check arguments.
+    if n < 2: raise ValueError("N must be ≥ 2 (or ≥ 1 if the bottom base pair is being kept)")
+    if m < 0: raise ValueError("M must be ≥ 2 (or ≥ 1 if the bottom base pair is being kept)")
+
+    # Randomize the nexus base pairing
+    sgrna['nexus/5'].seq = bottom_5 + ('N' * N)
+    sgrna['nexus/5'].style = 'white', 'bold'
+    sgrna['nexus/3'].seq = ('N' * m) + 'UN' + bottom_3
+    sgrna['nexus/3'].style = 'white', 'bold'
+
+    # Insert the aptamer in the nexus hairpin loop
+    sgrna['nexus/o'].style = 'white', 'bold'
+    sgrna['nexus/o'].attachment_sites = 0,5
+    sgrna.attach(aptamer(ligand), 'nexus/o', 0, 'nexus/o', 5)
+
+    return sgrna
+
 @design('uh')
-def sequester_uracil_59(N, M, target='none', ligand='theo', pam=None):
+def sequester_u59_hairpin(N, M, target='none', ligand='theo', pam=None):
     """
     Parameters
     ==========
@@ -1792,7 +1844,7 @@ def sequester_uracil_59(N, M, target='none', ligand='theo', pam=None):
     return sgrna
 
 @design('uhf')
-def sequester_uracil_59_forward(i, expected_only=False, target='none', ligand='theo', pam=None):
+def sequester_u59_hairpin_forward(i, expected_only=False, target='none', ligand='theo', pam=None):
     """
     uhf 37:
         No predicted response to ligand.
@@ -1969,41 +2021,6 @@ def strand_swap_rxb_11_1(N, target='none', ligand='theo'):
 
     return sgrna
 
-@design('ux')
-def thiamine_nexus(N, M, target='none', ligand='theo', pam=None):
-    """
-    James says:
-
-    I'm going to try the uracil sequestering strategy and randomize positions I
-    think are important from my inspection of the crystal structure 4UN3. The
-    thiamine aptamer will replace the nexus/o sequence.
-
-    I ultimately decided to insert the thiamine aptamer into the nexus hairpin and randomize positions in the nexus
-    stem region. The uracil that flips out in the functional sgRNA remains as WT. I added a variable number of random
-    nucleotides between the end of the stem region and the beginning of the aptamer to serve as a connector. Hopefully
-    this will also promote base pairing with other parts of the sgRNA to form alternative stable non-funcitonal
-    conformations that can be escaped through binding of TPP.
-
-    :param target:
-    :param ligand:
-    :return:
-    """
-    sgrna = on(pam=pam, target=target)
-
-    # Randomize the nexus base pairing
-    sgrna['nexus/5'].seq = N * "N"
-    sgrna['nexus/5'].style = 'white', 'bold'
-    sgrna['nexus/3'].seq = 'NN'
-    sgrna['nexus/3'].style = 'white', 'bold'
-
-    # Insert the aptamer in the nexus hairpin loop
-    sgrna['nexus/o'].seq = 'CUAG' + (M - 2) * 'N' +'U'
-    sgrna['nexus/o'].style = 'white', 'bold'
-    sgrna['nexus/o'].attachment_sites = 0,4
-    sgrna.attach(aptamer(ligand), 'nexus/o', 0, 'nexus/o', 4)
-
-    return sgrna
-
 @design('bu')
 def MS2_forwards_upperstem(N, M, target='none', ligand='theo', pam=None):
     """
@@ -2058,7 +2075,6 @@ def MS2_forwards_upperstem(N, M, target='none', ligand='theo', pam=None):
 
     sgrna = on(pam=pam, target=target)
 
-
     assert N <= len(sgrna['upper_stem/5'].seq)
     assert M <= len(sgrna['upper_stem/3'].seq)
 
@@ -2084,7 +2100,6 @@ def MS2_forwards_nexus(N, M, target='none', ligand='theo', pam=None):
 
     return sgrna
 
-
 @design('bh')
 def MS2_forwards_hairpin(N, M, target='none', ligand='theo', pam=None):
 
@@ -2099,7 +2114,6 @@ def MS2_forwards_hairpin(N, M, target='none', ligand='theo', pam=None):
     sgrna['hairpin/3'].seq = 'AAGU'[4-M:]
 
     return sgrna
-
 
 @design('ox')
 def MS2_backwards_nexus(N, M, target='none', ligand='theo', pam=None):
