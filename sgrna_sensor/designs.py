@@ -1370,7 +1370,7 @@ def randomize_hairpin(N, M, dang_sgrna=False, target='none', ligand='theo'):
         N being between 6 and 8, where 8 is the wildtype length.
         
     M: int
-        The number of random base pairs to put 5' of the aptamer.  I anticipate 
+        The number of random base pairs to put 3' of the aptamer.  I anticipate 
         N being between 4 and 6, where 4 is the wildtype length.
     """
     sgrna = wt_sgrna(target)
@@ -1378,6 +1378,46 @@ def randomize_hairpin(N, M, dang_sgrna=False, target='none', ligand='theo'):
             random_insert(ligand, N, M),
             'hairpins', 1,
             'hairpins', 17,
+    )
+    return sgrna
+
+@design('rhi')
+def randomize_hairpin_i(N, M=None, target='none', ligand='theo'):
+    """
+    Flank the aptamer with a random sequence on either side and insert it into 
+    the first hairpin.
+
+    This is a variant of the rh library.  Unlike rh, this library focuses 
+    exclusively on the stem connecting the sgRNA to the aptamer and does not 
+    randomize the ruler at all.*  This is change in focus is based on two 
+    things.  First, I want to screen the library in yeast.  Because yeast are 
+    much less competent than bacteria, I need to make my libraries smaller to 
+    compensate.  Second, the mutations in the ruler didn't play a part in the 
+    ``rhf 6`` mechanism, as predicted by RNAfold.  RNAfold has been wrong 
+    before, but in this case I think it's reasonable to prioritize the actual 
+    communication module.
+
+    * This library also exclusively uses the Dang scaffold.
+
+    Parameters
+    ----------
+    N: int
+        The number of random base pairs to put 5' of the aptamer.  I anticipate 
+        N being between 4 and 6, where 4 is the wildtype length.
+        
+    M: int [optional]
+        The number of random base pairs to put 3' of the aptamer.  I anticipate 
+        M being between 4 and 6, where 4 is the wildtype length.  By default, M 
+        will be the same as N.
+    """
+    if M is None: M = N
+    sgrna = on(target)
+    sgrna['hairpin/5'].attachment_sites = 0,
+    sgrna['hairpin/3'].attachment_sites = 4,
+    sgrna.attach(
+            random_insert(ligand, N, M),
+            'hairpin/5', 0,
+            'hairpin/3', 4,
     )
     return sgrna
 
@@ -1404,9 +1444,9 @@ def randomize_hairpin_forward(i, expected_only=False, target='none', ligand='the
             73: 6,
     }
     if i in aliases:
-        raise ValueError("rbf({}) is the same as rbf({})".format(i, aliases[i]))
+        raise ValueError("rhf({}) is the same as rhf({})".format(i, aliases[i]))
     if i not in linkers:
-        raise ValueError("no sequence for rbf({})".format(i))
+        raise ValueError("no sequence for rhf({})".format(i))
 
     sequenced_insert = aptamer(ligand)
     sequenced_insert.prepend(Domain("linker/5'", linkers[i][0]))
@@ -1959,19 +1999,14 @@ def modulate_rxb_11_1(seq='', target='none', ligand='theo'):
     """
     sgrna = rxb(11, 1, target=target, ligand=ligand)
 
-    trans_5 = str.maketrans('THVthv', 'UGUugu')
-    trans_3 = str.maketrans('ACGUTHVacguthv', 'UGCAAUGugcaaug')
-
-    seq_5 = seq.translate(trans_5)
-    seq_3 = seq.translate(trans_3)[::-1]
-    
+    seq_5, seq_3 = base_pair(seq)
     sgrna['linker/5'].replace(3, 5, seq_5)
     sgrna['linker/3'].replace(0, 2, seq_3)
 
     return sgrna
 
 @design('w11')
-def strand_swap_rxb_11_1(N, target='none', ligand='theo'):
+def strand_swap_rxb_11_1(N, nuc=None, target='none', ligand='theo'):
     """
     Make strand-swapping mutations to test my proposed mechanism for rxb 11,1.
 
@@ -2016,8 +2051,13 @@ def strand_swap_rxb_11_1(N, target='none', ligand='theo'):
     linker_5 = sgrna['linker/5'].seq
     linker_3 = sgrna['linker/3'].seq
 
-    sgrna['linker/5'].mutate(N-1, linker_3[5-N])
-    sgrna['linker/3'].mutate(5-N, linker_5[N-1])
+    if nuc is not None:
+        swap_5, swap_3 = base_pair(nuc)
+    else:
+        swap_5, swap_3 = linker_3[5-N], linker_5[N-1]
+
+    sgrna['linker/5'].mutate(N-1, swap_5)
+    sgrna['linker/3'].mutate(5-N, swap_3)
 
     return sgrna
 

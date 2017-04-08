@@ -53,6 +53,30 @@ def find_middlemost(seq, pattern, num_matches=1):
     indices.sort(key=dist_to_middle)
     return [(i, len(seq) - i - 1) for i in indices[:num_matches]]
 
+def base_pair(seq):
+    """
+    Return the two RNA strands (as a tuple) represented by the given string of 
+    one-letter codes.  The code is as follows (this is not a standard, and was 
+    created because I needed a way to indicate wobble pairs):
+
+           Output
+    Input  5'  3'
+    =====  ======
+    A      A   U
+    U      U   A
+    C      C   G
+    G      G   C
+    H      G   U
+    V      U   G
+    """
+    trans_5 = str.maketrans('THVthv', 'UGUugu')
+    trans_3 = str.maketrans('ACGUTHVacguthv', 'UGCAAUGugcaaug')
+
+    return seq.translate(trans_5), seq.translate(trans_3)[::-1]
+
+
+
+
 def clamp(x, low, hi):
     return min(max(x, low), hi)
 
