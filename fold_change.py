@@ -113,14 +113,17 @@ Options:
         signal.  By default the median is used for this calculation.  Note that 
         the mean and the mode will both change depending on whether or not the 
         data has been log-transformed (see --log-toggle).
+
+    -e --export-dataframe
+        Exports a dataframe with the values used to generate the figure
 """
 
 import fcmcmp, analysis_helpers, nonstdlib, re
 import numpy as np, matplotlib.pyplot as plt
 from pprint import pprint
 
-class FoldChange:
 
+class FoldChange:
     def __init__(self, experiments):
         # Settings configured by the user.
         self.experiments = experiments
@@ -179,13 +182,13 @@ class FoldChange:
         Make two subplots with a shared y-axis.
         """
         self.figure, self.axes = plt.subplots(
-                1, 2,
-                sharey=True,
-                figsize=self.output_size,
-                facecolor='y',
-                gridspec_kw=dict(
-                    width_ratios=(0.65, 0.35),
-                ),
+            1, 2,
+            sharey=True,
+            figsize=self.output_size,
+            facecolor='y',
+            gridspec_kw=dict(
+                width_ratios=(0.65, 0.35),
+            ),
         )
 
         # Don't show that ugly dark grey border around the plot.
@@ -204,25 +207,25 @@ class FoldChange:
 
     def _analyze_wells(self):
         """
-        Create a data structure that mirrors ``self.experiments'', but holds 
+        Create a data structure that mirrors ``self.experiments'', but holds
         more specific information on the distribution of cells in each well.
         """
         self.analyzed_wells = [{
-                condition: [
-                    analysis_helpers.AnalyzedWell(
-                        experiment, well,
-                        channel=self.channel,
-                        normalize_by=self.normalize_by,
-                        log_toggle=self.log_toggle,
-                        pdf=self.pdf,
-                        loc_metric=self.loc_metric,
-                    )
-                    for well in experiment['wells'][condition]
-                ]
-                for condition in experiment['wells']
-            }
-            for experiment in self.experiments
-        ]
+                                   condition: [
+                                       analysis_helpers.AnalyzedWell(
+                                           experiment, well,
+                                           channel=self.channel,
+                                           normalize_by=self.normalize_by,
+                                           log_toggle=self.log_toggle,
+                                           pdf=self.pdf,
+                                           loc_metric=self.loc_metric,
+                                       )
+                                       for well in experiment['wells'][condition]
+                                       ]
+                                   for condition in experiment['wells']
+                                   }
+                               for experiment in self.experiments
+                               ]
         self.reference_well = next(iter(self.analyzed_wells[0].values()))[0]
 
     def _yield_analyzed_wells(self):
@@ -233,7 +236,7 @@ class FoldChange:
 
     def _pick_xlim(self):
         """
-        Decide what the x-limits should be for the distributions plot.  This 
+        Decide what the x-limits should be for the distributions plot.  This
         has to be decided before the distributions themselves are calculated.
         """
         if self.distribution_xlim:
@@ -249,7 +252,7 @@ class FoldChange:
 
     def _estimate_distributions(self):
         """
-        Once the x-limits have been picked, estimate the distribution of cells 
+        Once the x-limits have been picked, estimate the distribution of cells
         along the channel of interest for each well.
         """
         for _, _, well in self._yield_analyzed_wells():
@@ -257,7 +260,7 @@ class FoldChange:
 
     def _rescale_distributions(self):
         """
-        Scale all the distributions such that the tallest one has the desired 
+        Scale all the distributions such that the tallest one has the desired
         height.
         """
         max_height = 0
@@ -288,14 +291,14 @@ class FoldChange:
 
         elif self.sort_by.lower() in {'w', 'most-wt'}:
             key = lambda expt: min(
-                    np.mean([w.loc for w in expt['apo']]),
-                    np.mean([w.loc for w in expt['holo']]))
+                np.mean([w.loc for w in expt['apo']]),
+                np.mean([w.loc for w in expt['holo']]))
             reverse = False
 
         elif self.sort_by.lower() in {'d', 'most-dead'}:
             key = lambda expt: max(
-                    np.mean([w.loc for w in expt['apo']]),
-                    np.mean([w.loc for w in expt['holo']]))
+                np.mean([w.loc for w in expt['apo']]),
+                np.mean([w.loc for w in expt['holo']]))
             reverse = True
 
         self.analyzed_wells.sort(key=key, reverse=reverse)
@@ -304,36 +307,36 @@ class FoldChange:
         # Filter out data points that are marked as being high or low quality.
         if self.quality_filter == 'good' or self.quality_filter is None:
             self.analyzed_wells = [
-                    expt for expt in self.analyzed_wells
-                    if not expt['apo'][0].experiment.get('discard')
-            ]
+                expt for expt in self.analyzed_wells
+                if not expt['apo'][0].experiment.get('discard')
+                ]
         elif self.quality_filter == 'bad':
             self.analyzed_wells = [
-                    expt for expt in self.analyzed_wells
-                    if expt['apo'][0].experiment.get('discard')
-            ]
+                expt for expt in self.analyzed_wells
+                if expt['apo'][0].experiment.get('discard')
+                ]
         elif self.quality_filter == 'all':
             pass
         else:
             raise ValueError("unknown quality filter '{}'".format(self.quality_filter))
 
-        # Filter out experiments with labels that don't match the user given 
+        # Filter out experiments with labels that don't match the user given
         # regular expression.
         if self.label_filter is not None:
             label_filter = re.compile(self.label_filter)
             self.analyzed_wells = [
-                    expt for expt in self.analyzed_wells
-                    if label_filter.search(expt['apo'][0].experiment['label'])
-            ]
+                expt for expt in self.analyzed_wells
+                if label_filter.search(expt['apo'][0].experiment['label'])
+                ]
 
-        # Filter out experiments that aren't in the user given list of indices.  
-        # This filter is applied after the regex filter, so if the user wants 
+        # Filter out experiments that aren't in the user given list of indices.
+        # This filter is applied after the regex filter, so if the user wants
         # to use both, the indices will be relative to what appears in the GUI.
         if self.show_indices is not None:
             self.analyzed_wells = [
-                    expt for i, expt in enumerate(self.analyzed_wells)
-                    if i in self.show_indices
-            ]
+                expt for i, expt in enumerate(self.analyzed_wells)
+                if i in self.show_indices
+                ]
 
     def _get_label(self, experiment):
         return experiment['apo'][0].experiment['label']
@@ -341,15 +344,15 @@ class FoldChange:
     def _get_fold_change(self, experiment):
 
         def get_fold_change(apo, holo):
-            # We don't care which direction the fold change is in, so invert 
+            # We don't care which direction the fold change is in, so invert
             # the fold change if it's less than 1 (e.g. for a backward design).
             x = holo.linear_loc / apo.linear_loc
-            return x if x > 1 else 1/x
+            return x if x > 1 else 1 / x
 
         fold_changes = np.array([
-                get_fold_change(apo, holo)
-                for apo, holo in zip(experiment['apo'], experiment['holo'])
-        ])
+                                    get_fold_change(apo, holo)
+                                    for apo, holo in zip(experiment['apo'], experiment['holo'])
+                                    ])
         if fold_changes.size > 0:
             return fold_changes.mean(), fold_changes
         else:
@@ -360,41 +363,41 @@ class FoldChange:
         Plot the given distributions of cells on the same axis, for comparison.
         """
         self.axes[0].plot(well.x, well.y + i,
-                **analysis_helpers.pick_style(well.experiment, condition))
+                          **analysis_helpers.pick_style(well.experiment, condition))
 
     def _plot_location(self, i, well, condition):
         """
-        Mark the location on each distribution that will be used to calculate a 
+        Mark the location on each distribution that will be used to calculate a
         fold change.
         """
         location_styles = {
-                'apo': {
-                    'marker': '+',
-                    'markeredgecolor': 'black',
-                    'markerfacecolor': 'none',
-                    'markeredgewidth': 1,
-                    'linestyle': ' ',
-                    'zorder': 1,
-                },
-                'holo': {
-                    'marker': '+',
-                    'markeredgecolor': analysis_helpers.pick_color(well.experiment),
-                    'markerfacecolor': 'none',
-                    'markeredgewidth': 1,
-                    'linestyle': ' ',
-                    'zorder': 2,
-                },
+            'apo': {
+                'marker': '+',
+                'markeredgecolor': 'black',
+                'markerfacecolor': 'none',
+                'markeredgewidth': 1,
+                'linestyle': ' ',
+                'zorder': 1,
+            },
+            'holo': {
+                'marker': '+',
+                'markeredgecolor': analysis_helpers.pick_color(well.experiment),
+                'markerfacecolor': 'none',
+                'markeredgewidth': 1,
+                'linestyle': ' ',
+                'zorder': 2,
+            },
         }
         self.axes[0].plot(
-                well.loc,
-                i - self.location_depth,
-                **location_styles[condition])
+            well.loc,
+            i - self.location_depth,
+            **location_styles[condition])
 
     def _plot_fold_change(self, i, experiment):
-        # I really don't think this function is comparing distributions or 
-        # calculating error bars in the right way.  I think it might be best to 
-        # do some sort of resampling technique.  That would allow me to 
-        # incorporate knowledge of the underlying distributions into the 
+        # I really don't think this function is comparing distributions or
+        # calculating error bars in the right way.  I think it might be best to
+        # do some sort of resampling technique.  That would allow me to
+        # incorporate knowledge of the underlying distributions into the
         # standard deviation.
 
         fold_change, fold_changes = self._get_fold_change(experiment)
@@ -403,24 +406,24 @@ class FoldChange:
         if fold_changes.size == 0:
             return
 
-        # Plot the fold-change with standard-error error-bars.  I use plot() 
-        # and not barh() to draw the bar plots because I don't want the width 
-        # of the bars to change with the y-axis (either as more bars are added 
+        # Plot the fold-change with standard-error error-bars.  I use plot()
+        # and not barh() to draw the bar plots because I don't want the width
+        # of the bars to change with the y-axis (either as more bars are added
         # or as the user zooms in).
         experiment = next(iter(experiment.values()))[0].experiment
         color = analysis_helpers.pick_color(experiment)
 
         self.axes[1].plot(
-                [0, fold_change], [i, i],
-                color=color,
-                linewidth=self.fold_change_bar_width,
-                solid_capstyle='butt',
+            [0, fold_change], [i, i],
+            color=color,
+            linewidth=self.fold_change_bar_width,
+            solid_capstyle='butt',
         )
         self.axes[1].errorbar(
-                fold_change, i,
-                xerr=fold_changes.std(),
-                ecolor=color,
-                capsize=self.fold_change_bar_width / 2,
+            fold_change, i,
+            xerr=fold_changes.std(),
+            ecolor=color,
+            capsize=self.fold_change_bar_width / 2,
         )
 
     def _pick_xlabels(self):
@@ -428,7 +431,7 @@ class FoldChange:
             x1_label = 'fluorescence'
         else:
             x1_label = 'size'
-        
+
         if self.reference_well.control_channel is not None:
             x1_label = 'normalized {}'.format(x1_label)
 
@@ -443,15 +446,16 @@ class FoldChange:
         max_fold_change_ticks = self.max_fold_change_ticks
 
         class FoldChangeLocator(MaxNLocator):
-
             def __init__(self):
                 super().__init__(
-                        nbins=max_fold_change_ticks-1,
-                        steps=[0.5, 1, 2, 5, 10, 50, 100],
+                    nbins=max_fold_change_ticks - 1,
+                    steps=[0.5, 1, 2, 5, 10, 50, 100],
                 )
+
             def tick_values(self, vmin, vmax):
                 ticks = set(super().tick_values(vmin, vmax))
-                ticks.add(1); ticks.discard(0)
+                ticks.add(1);
+                ticks.discard(0)
                 return sorted(ticks)
 
         if self.fold_change_xlim is not None:
@@ -477,14 +481,64 @@ class FoldChange:
         self.axes[0].set_yticks(y_ticks)
         self.axes[0].set_yticklabels(y_tick_labels)
 
+    def export_df(self):
+        import pandas as pd
+        df = pd.DataFrame()
+
+        columns = ["Design",
+                   "Spacer",
+                   "Aptamer_Ligand",
+                   "Assayed_Ligand",
+                   "Fold_Change"
+                   ]
+
+        for experiment in self.analyzed_wells:
+            label_components = re.split("_|-", self._get_label(experiment))
+            # print(label_components)
+            if len(label_components) == 2:
+                for fold_change in self._get_fold_change(experiment)[1]:
+                    temp_series = pd.Series(data={"Design": label_components[0],
+                                                  "Spacer": label_components[0].split('.')[0],
+                                                  "Aptamer_Ligand": "None",
+                                                  "Assayed_Ligand": label_components[1],
+                                                  "Fold_Change": fold_change
+                                                  }
+                                            )
+                    # print (temp_series)
+                    df = df.append(temp_series, ignore_index=True)
+            elif len(label_components) == 3:
+                for fold_change in self._get_fold_change(experiment)[1]:
+                    temp_series = pd.Series(data={"Design": label_components[0],
+                                                  "Spacer": label_components[1],
+                                                  "Aptamer_Ligand": "THEO",
+                                                  "Assayed_Ligand": label_components[2],
+                                                  "Fold_Change": fold_change
+                                                  }
+                                            )
+                    # print (temp_series)
+                    df = df.append(temp_series, ignore_index=True)
+
+
+            elif len(label_components) == 4:
+                for fold_change in self._get_fold_change(experiment)[1]:
+                    temp_series = pd.Series(data={"Design": label_components[0],
+                                                  "Spacer": label_components[1],
+                                                  "Aptamer_Ligand": label_components[2],
+                                                  "Assayed_Ligand": label_components[3],
+                                                  "Fold_Change": fold_change
+                                                  }
+                                            )
+                    # print (temp_series)
+                    df = df.append(temp_series, ignore_index=True)
+
+        df.to_csv("Fold_Change_df-LATEST.csv")
 
 
 def fold_change(yml_path, *, time_gate=0, size_gate=0, expression_gate=1e3,
-        channel=None, normalize_by=None, sort_by=None, label_filter=None,
-        log_toggle=None, pdf=None, loc_metric=None, title=None,
-        indices=None, fold_change_xlim=None, distribution_xlim=None, 
-        output_size=None):
-
+                channel=None, normalize_by=None, sort_by=None, label_filter=None,
+                log_toggle=None, pdf=None, loc_metric=None, title=None,
+                indices=None, fold_change_xlim=None, distribution_xlim=None,
+                output_size=None):
     experiments = fcmcmp.load_experiments(yml_path)
 
     shared_steps = analysis_helpers.SharedProcessingSteps()
@@ -511,6 +565,7 @@ def fold_change(yml_path, *, time_gate=0, size_gate=0, expression_gate=1e3,
 
 if __name__ == '__main__':
     import docopt
+
     args = docopt.docopt(__doc__)
     experiments = fcmcmp.load_experiments(args['<yml_path>'])
 
@@ -543,3 +598,5 @@ if __name__ == '__main__':
     with analysis_helpers.plot_or_savefig(args['--output'], args['<yml_path>']):
         analysis.plot()
 
+    if args['--export-dataframe']:
+        analysis.export_df()
