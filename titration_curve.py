@@ -114,7 +114,6 @@ class TitrationCurve:
         # Don't show that ugly dark grey border around the plot.
         self.figure.patch.set_alpha(0)
 
-
     def _find_concentrations(self, experiment):
 
         def conc_from_label(label):
@@ -168,6 +167,8 @@ class TitrationCurve:
         self.axes.plot(concs, means, **style)
         self.axes.set_xscale('symlog')
         self.axes.xaxis.set_minor_locator(MinorSymLogLocator())
+
+        style.pop('label', None)
 
         min_num_data = min(len(data) for data in locs.values())
         if min_num_data > 1:
