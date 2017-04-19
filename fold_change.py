@@ -122,11 +122,12 @@ import fcmcmp, analysis_helpers, nonstdlib, re
 import numpy as np, matplotlib.pyplot as plt
 from pprint import pprint
 
-
 class FoldChange:
+
     def __init__(self, experiments):
         # Settings configured by the user.
         self.experiments = experiments
+        self.reference_condition = 'apo'
         self.channel = None
         self.control_channel = None
         self.normalize_by = None
@@ -145,7 +146,7 @@ class FoldChange:
         # Internally used plot attributes.
         self.figure = None
         self.axes = None
-        self.analyzed_wells = None
+        self.comparisons = None
         self.max_dist_height = 0.7
         self.location_depth = 0.2
         self.dist_line_width = 1
@@ -162,12 +163,16 @@ class FoldChange:
         self._sort_wells()
         self._filter_wells()
 
-        for i, experiment in enumerate(reversed(self.analyzed_wells)):
-            self._plot_fold_change(i, experiment)
-            for condition in experiment:
-                for well in experiment[condition]:
-                    self._plot_distribution(i, well, condition)
-                    self._plot_location(i, well, condition)
+        for i, comparison in enumerate(reversed(self.comparisons)):
+            self._plot_fold_change(i, comparison)
+
+            for well in comparison.reference_wells:
+                self._plot_distribution(i, comparison, well, True)
+                self._plot_location(i, comparison, well, True)
+
+            for well in comparison.condition_wells:
+                self._plot_distribution(i, comparison, well, False)
+                self._plot_location(i, comparison, well, False)
 
         self._pick_xlabels()
         self._pick_xticks()
@@ -206,33 +211,21 @@ class FoldChange:
             ax.set_axisbelow(True)
 
     def _analyze_wells(self):
-        """
-        Create a data structure that mirrors ``self.experiments'', but holds
-        more specific information on the distribution of cells in each well.
-        """
-        self.analyzed_wells = [{
-                                   condition: [
-                                       analysis_helpers.AnalyzedWell(
-                                           experiment, well,
-                                           channel=self.channel,
-                                           normalize_by=self.normalize_by,
-                                           log_toggle=self.log_toggle,
-                                           pdf=self.pdf,
-                                           loc_metric=self.loc_metric,
-                                       )
-                                       for well in experiment['wells'][condition]
-                                       ]
-                                   for condition in experiment['wells']
-                                   }
-                               for experiment in self.experiments
-                               ]
-        self.reference_well = next(iter(self.analyzed_wells[0].values()))[0]
+        analysis_helpers.analyze_wells(
+                self.experiments,
+                channel=self.channel,
+                normalize_by=self.normalize_by,
+                log_toggle=self.log_toggle,
+                pdf=self.pdf,
+                loc_metric=self.loc_metric,
+        )
+        self.comparisons = list(analysis_helpers.yield_related_wells(
+                self.experiments,
+                self.reference_condition,
+        ))
 
-    def _yield_analyzed_wells(self):
-        for experiment in self.analyzed_wells:
-            for condition in experiment:
-                for well in experiment[condition]:
-                    yield well.experiment, condition, well
+    def _yield_wells(self):
+        yield from fcmcmp.yield_wells(self.experiments)
 
     def _pick_xlim(self):
         """
@@ -244,7 +237,7 @@ class FoldChange:
         else:
             x_min = x_01 = np.inf
             x_max = x_99 = -np.inf
-            for _, _, well in self._yield_analyzed_wells():
+            for _, _, well in self._yield_wells():
                 x_min = min(x_min, np.min(well.measurements))
                 x_max = max(x_max, np.max(well.measurements))
 
@@ -255,7 +248,7 @@ class FoldChange:
         Once the x-limits have been picked, estimate the distribution of cells
         along the channel of interest for each well.
         """
-        for _, _, well in self._yield_analyzed_wells():
+        for _, _, well in self._yield_wells():
             well.estimate_distribution(self.axes[0])
 
     def _rescale_distributions(self):
@@ -267,14 +260,14 @@ class FoldChange:
 
         # Find the distribution with the tallest peak.
 
-        for _, _, well in self._yield_analyzed_wells():
+        for _, _, well in self._yield_wells():
             max_height = max(max_height, np.max(well.y))
 
         # Scale each distribution relative to the one with the tallest peak.
 
         scale_factor = self.max_dist_height / max_height
 
-        for _, _, well in self._yield_analyzed_wells():
+        for _, _, well in self._yield_wells():
             well.y *= scale_factor
 
     def _sort_wells(self):
@@ -282,39 +275,39 @@ class FoldChange:
             return
 
         if self.sort_by.lower() in {'n', 'name'}:
-            key = lambda expt: self._get_label(expt)
+            key = lambda comp: (comp.label, comp.condition)
             reverse = self.sort_by[0].isupper()
 
         elif self.sort_by.lower() in {'f', 'fold-change'}:
-            key = lambda expt: self._get_fold_change(expt)[0]
+            key = lambda comp: self._get_fold_change(comp)[0]
             reverse = not self.sort_by[0].isupper()
 
         elif self.sort_by.lower() in {'w', 'most-wt'}:
-            key = lambda expt: min(
-                np.mean([w.loc for w in expt['apo']]),
-                np.mean([w.loc for w in expt['holo']]))
+            key = lambda comp: min(
+                np.mean([w.loc for w in comp.condition_wells]),
+                np.mean([w.loc for w in comp.reference_wells]))
             reverse = False
 
         elif self.sort_by.lower() in {'d', 'most-dead'}:
-            key = lambda expt: max(
-                np.mean([w.loc for w in expt['apo']]),
-                np.mean([w.loc for w in expt['holo']]))
+            key = lambda comp: max(
+                np.mean([w.loc for w in comp.condition_wells]),
+                np.mean([w.loc for w in comp.reference_wells]))
             reverse = True
 
-        self.analyzed_wells.sort(key=key, reverse=reverse)
+        self.comparisons.sort(key=key, reverse=reverse)
 
     def _filter_wells(self):
         # Filter out data points that are marked as being high or low quality.
         if self.quality_filter == 'good' or self.quality_filter is None:
-            self.analyzed_wells = [
-                expt for expt in self.analyzed_wells
-                if not expt['apo'][0].experiment.get('discard')
-                ]
+            self.comparisons = [
+                comp for comp in self.comparisons
+                if not comp.experiment.get('discard')
+            ]
         elif self.quality_filter == 'bad':
-            self.analyzed_wells = [
-                expt for expt in self.analyzed_wells
-                if expt['apo'][0].experiment.get('discard')
-                ]
+            self.comparisons = [
+                comp for comp in self.comparisons
+                if comp.experiment.get('discard')
+            ]
         elif self.quality_filter == 'all':
             pass
         else:
@@ -324,24 +317,29 @@ class FoldChange:
         # regular expression.
         if self.label_filter is not None:
             label_filter = re.compile(self.label_filter)
-            self.analyzed_wells = [
-                expt for expt in self.analyzed_wells
-                if label_filter.search(expt['apo'][0].experiment['label'])
-                ]
+            self.comparisons = [
+                comp for comp in self.comparisons
+                if label_filter.search(comp.label)
+            ]
 
         # Filter out experiments that aren't in the user given list of indices.
         # This filter is applied after the regex filter, so if the user wants
         # to use both, the indices will be relative to what appears in the GUI.
         if self.show_indices is not None:
-            self.analyzed_wells = [
-                expt for i, expt in enumerate(self.analyzed_wells)
+            self.comparisons = [
+                comp for i, comp in enumerate(self.comparisons)
                 if i in self.show_indices
-                ]
+            ]
 
-    def _get_label(self, experiment):
-        return experiment['apo'][0].experiment['label']
+    def _get_label(self, comparison):
+        if comparison.solo:
+            label = comparison.label
+        else:
+            label = comparison.label + '\n' + comparison.condition
 
-    def _get_fold_change(self, experiment):
+        return label.replace('//', '\n')
+
+    def _get_fold_change(self, comparison):
 
         def get_fold_change(apo, holo):
             # We don't care which direction the fold change is in, so invert
@@ -350,57 +348,22 @@ class FoldChange:
             return x if x > 1 else 1 / x
 
         fold_changes = np.array([
-                                    get_fold_change(apo, holo)
-                                    for apo, holo in zip(experiment['apo'], experiment['holo'])
-                                    ])
-        if fold_changes.size > 0:
+            get_fold_change(apo, holo) for apo, holo in zip(
+                comparison.condition_wells, comparison.reference_wells)
+        ])
+        
+        if len(fold_changes) > 0:
             return fold_changes.mean(), fold_changes
         else:
             return 0, fold_changes
 
-    def _plot_distribution(self, i, well, condition):
-        """
-        Plot the given distributions of cells on the same axis, for comparison.
-        """
-        self.axes[0].plot(well.x, well.y + i,
-                          **analysis_helpers.pick_style(well.experiment, condition))
-
-    def _plot_location(self, i, well, condition):
-        """
-        Mark the location on each distribution that will be used to calculate a
-        fold change.
-        """
-        location_styles = {
-            'apo': {
-                'marker': '+',
-                'markeredgecolor': 'black',
-                'markerfacecolor': 'none',
-                'markeredgewidth': 1,
-                'linestyle': ' ',
-                'zorder': 1,
-            },
-            'holo': {
-                'marker': '+',
-                'markeredgecolor': analysis_helpers.pick_color(well.experiment),
-                'markerfacecolor': 'none',
-                'markeredgewidth': 1,
-                'linestyle': ' ',
-                'zorder': 2,
-            },
-        }
-        self.axes[0].plot(
-            well.loc,
-            i - self.location_depth,
-            **location_styles[condition])
-
-    def _plot_fold_change(self, i, experiment):
+    def _plot_fold_change(self, i, comparison):
         # I really don't think this function is comparing distributions or
         # calculating error bars in the right way.  I think it might be best to
         # do some sort of resampling technique.  That would allow me to
         # incorporate knowledge of the underlying distributions into the
         # standard deviation.
-
-        fold_change, fold_changes = self._get_fold_change(experiment)
+        fold_change, fold_changes = self._get_fold_change(comparison)
 
         # If there isn't enough data to calculate a fold change, bail out here.
         if fold_changes.size == 0:
@@ -410,8 +373,7 @@ class FoldChange:
         # and not barh() to draw the bar plots because I don't want the width
         # of the bars to change with the y-axis (either as more bars are added
         # or as the user zooms in).
-        experiment = next(iter(experiment.values()))[0].experiment
-        color = analysis_helpers.pick_color(experiment)
+        color = analysis_helpers.pick_color(comparison.experiment)
 
         self.axes[1].plot(
             [0, fold_change], [i, i],
@@ -426,7 +388,41 @@ class FoldChange:
             capsize=self.fold_change_bar_width / 2,
         )
 
+    def _plot_distribution(self, i, comparison, well, is_reference):
+        """
+        Plot the given distributions of cells on the same axis, for comparison.
+        """
+        style = analysis_helpers.pick_style(comparison.experiment, is_reference)
+        self.axes[0].plot(well.x, well.y + i, **style)
+
+    def _plot_location(self, i, comparison, well, is_reference):
+        """
+        Mark the location on each distribution that will be used to calculate a
+        fold change.
+        """
+        if is_reference:
+            style = {
+                'marker': '+',
+                'markeredgecolor': 'black',
+                'markerfacecolor': 'none',
+                'markeredgewidth': 1,
+                'linestyle': ' ',
+                'zorder': 1,
+            }
+        else:
+            style = {
+                'marker': '+',
+                'markeredgecolor': analysis_helpers.pick_color(comparison.experiment),
+                'markerfacecolor': 'none',
+                'markeredgewidth': 1,
+                'linestyle': ' ',
+                'zorder': 2,
+            }
+
+        self.axes[0].plot(well.loc, i - self.location_depth, **style)
+
     def _pick_xlabels(self):
+        return
         if self.reference_well.channel in analysis_helpers.fluorescence_controls:
             x1_label = 'fluorescence'
         else:
@@ -466,16 +462,15 @@ class FoldChange:
     def _pick_ylim(self):
         margin = 0.3
         y_min = 0 - self.location_depth - margin
-        y_max = len(self.analyzed_wells) - 1 + self.max_dist_height + margin
+        y_max = len(self.comparisons) - 1 + self.max_dist_height + margin
         self.axes[0].set_ylim(y_min, y_max)
 
     def _pick_yticks(self):
         y_ticks = []
         y_tick_labels = []
 
-        for i, experiment in enumerate(reversed(self.analyzed_wells)):
-            label = self._get_label(experiment).replace('//', '\n')
-            y_tick_labels.append(label)
+        for i, comparison in enumerate(reversed(self.comparisons)):
+            y_tick_labels.append(self._get_label(comparison))
             y_ticks.append(i)
 
         self.axes[0].set_yticks(y_ticks)
@@ -492,11 +487,11 @@ class FoldChange:
                    "Fold_Change"
                    ]
 
-        for experiment in self.analyzed_wells:
-            label_components = re.split("_|-", self._get_label(experiment))
+        for comparison in self.comparisons:
+            label_components = re.split("_|-", self._get_label(comparison))
             # print(label_components)
             if len(label_components) == 2:
-                for fold_change in self._get_fold_change(experiment)[1]:
+                for fold_change in self._get_fold_change(comparison)[1]:
                     temp_series = pd.Series(data={"Design": label_components[0],
                                                   "Spacer": label_components[0].split('.')[0],
                                                   "Aptamer_Ligand": "None",
@@ -507,7 +502,7 @@ class FoldChange:
                     # print (temp_series)
                     df = df.append(temp_series, ignore_index=True)
             elif len(label_components) == 3:
-                for fold_change in self._get_fold_change(experiment)[1]:
+                for fold_change in self._get_fold_change(comparison)[1]:
                     temp_series = pd.Series(data={"Design": label_components[0],
                                                   "Spacer": label_components[1],
                                                   "Aptamer_Ligand": "THEO",
@@ -518,9 +513,8 @@ class FoldChange:
                     # print (temp_series)
                     df = df.append(temp_series, ignore_index=True)
 
-
             elif len(label_components) == 4:
-                for fold_change in self._get_fold_change(experiment)[1]:
+                for fold_change in self._get_fold_change(comparison)[1]:
                     temp_series = pd.Series(data={"Design": label_components[0],
                                                   "Spacer": label_components[1],
                                                   "Aptamer_Ligand": label_components[2],
@@ -533,34 +527,6 @@ class FoldChange:
 
         df.to_csv("Fold_Change_df-LATEST.csv")
 
-
-def fold_change(yml_path, *, time_gate=0, size_gate=0, expression_gate=1e3,
-                channel=None, normalize_by=None, sort_by=None, label_filter=None,
-                log_toggle=None, pdf=None, loc_metric=None, title=None,
-                indices=None, fold_change_xlim=None, distribution_xlim=None,
-                output_size=None):
-    experiments = fcmcmp.load_experiments(yml_path)
-
-    shared_steps = analysis_helpers.SharedProcessingSteps()
-    shared_steps.early_event_threshold = time_gate
-    shared_steps.small_cell_threshold = size_gate
-    shared_steps.low_fluorescence_threshold = expression_gate
-    shared_steps.process(experiments)
-
-    analysis = FoldChange(experiments)
-    analysis.title = title
-    analysis.channel = channel
-    analysis.normalize_by = normalize_by
-    analysis.sort_by = sort_by
-    analysis.label_filter = label_filter
-    analysis.show_indices = indices
-    analysis.log_toggle = log_toggle
-    analysis.pdf = pdf
-    analysis.loc_metric = loc_metric
-    analysis.output_size = output_size
-    analysis.fold_change_xlim = fold_change_xlim
-    analysis.distribution_xlim = distribution_xlim
-    analysis.plot()
 
 
 if __name__ == '__main__':

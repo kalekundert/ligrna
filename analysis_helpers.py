@@ -135,6 +135,36 @@ class AnalyzedWell(fcmcmp.Well):
             self.y *= len(self.measurements)
 
 
+def analyze_wells(experiments, **kwargs):
+    for experiment in experiments:
+        for condition in experiment['wells']:
+            experiment['wells'][condition] = [
+                    AnalyzedWell(experiment, well, **kwargs)
+                    for well in experiment['wells'][condition]
+            ]
+
+def yield_related_wells(experiments, reference='apo'):
+
+    class RelatedWells:
+
+        def __init__(self, experiment, condition, reference, i):
+            self.experiment = experiment
+            self.label = experiment['label']
+            self.condition = condition
+            self.condition_wells = experiment['wells'][condition]
+            self.reference = reference
+            self.reference_wells = experiment['wells'][reference]
+            self.solo = len(experiment['wells']) == 2
+            self.i = i
+
+
+    i = 0
+    for experiment in experiments:
+        for condition in experiment['wells']:
+            if condition == reference: continue
+            yield RelatedWells(experiment, condition, reference, i)
+            i += 1
+    
 class CachedGaussianKde:
 
     def __init__(self, measurements):
@@ -314,9 +344,10 @@ def pick_color(experiment):
 
     The return value is a hex string suitable for use with matplotlib.
     """
-    # I made this a wrapper function so that I could easily change the color 
-    # scheme, if I want to, down the road.
-    return pick_ucsf_color(experiment)
+    if 'color' in experiment:
+        return experiment['color']
+    else:
+        return pick_ucsf_color(experiment)
 
 
 control = re.compile('(on|off|wt|dead)')
@@ -404,26 +435,17 @@ def pick_ucsf_color(experiment):
     else:
         return navy[0]
 
-def pick_style(experiment, condition='holo'):
-    if 'colors' in experiment and condition in experiment['colors']:
-        color = experiment['colors'][condition]
-    elif 'color' in experiment:
-        color = experiment['color']
-    elif condition == 'apo':
-        color = 'black'
-    else:
-        color = pick_color(experiment)
-    
-    if condition == 'apo':
+def pick_style(experiment, is_reference=False):
+    if is_reference:
         return {
-                'color': color,
+                'color': 'black',
                 'dashes': [5,2],
                 'linewidth': 1,
                 'zorder': 1,
         }
     else:
         return {
-                'color': color,
+                'color': pick_color(experiment),
                 'linestyle': '-',
                 'linewidth': 1,
                 'zorder': 2,
