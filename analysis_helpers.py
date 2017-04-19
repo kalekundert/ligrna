@@ -100,12 +100,12 @@ class AnalyzedWell(fcmcmp.Well):
         self.mode = result.x
 
         # Store the "location" (i.e. median, mean or mode) that the user wants 
-        # to use to calculate fold change.
-        if self.loc_metric is None or self.loc_metric == 'median':
+        # to use to calculate fold change.  The default is the mode.
+        if self.loc_metric == 'median':
             self.loc = self.median
         elif self.loc_metric == 'mean':
             self.loc = self.mean
-        elif self.loc_metric == 'mode':
+        elif self.loc_metric == 'mode' or self.loc_metric is None:
             self.loc = self.mode
         else:
             raise ValueError("No such metric '{}'".format(self.loc_metric))

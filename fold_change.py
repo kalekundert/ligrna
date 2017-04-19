@@ -37,14 +37,12 @@ Options:
     -n --normalize-by <channel>
         Normalize the channel of interest (see --channel) by the given channel.
         For example, you might specify "FSC-A", "SSC-A", or "FSC-A + m * SSC-A" 
-        to normalize by cell size.  By default no normalization is done.
+        to normalize by cell size.  By default the data is normalized by FITC-A 
+        (GFP expression) if the channel of interest is PE-Texas Red-A or 
+        DsRed-A (RFP expression) and vice versa.
 
-    -N --normalize-by-internal-control
-        Normalize by FITC-A (GFP expression) if the channel of interest is 
-        PE-Texas Red-A or DsRed-A (RFP expression) and vice versa.  This 
-        assumes that the fluorescent protein that isn't of interest is being 
-        constitutively expressed, and therefore can be used as an internal 
-        control for cell size and expression level.
+    -N --no-normalize
+        Show raw, unnormalized data.
 
     -s --sort-by <attribute>
         Sort the traces by the specified attribute.  The following attributes 
@@ -110,7 +108,7 @@ Options:
     -m --loc-metric <median|mean|mode>
         Specify which metric should be used to determine the "centers" of the 
         cell distributions for the purpose of calculating the fold change in 
-        signal.  By default the median is used for this calculation.  Note that 
+        signal.  By default the mode is used for this calculation.  Note that 
         the mean and the mode will both change depending on whether or not the 
         data has been log-transformed (see --log-toggle).
 
@@ -543,7 +541,7 @@ if __name__ == '__main__':
 
     analysis = FoldChange(experiments)
     analysis.channel = args['--channel']
-    analysis.normalize_by = args['--normalize-by'] or args['--normalize-by-internal-control']
+    analysis.normalize_by = args['--normalize-by'] or not args['--no-normalize']
     analysis.sort_by = args['--sort-by']
     analysis.label_filter = args['--query']
     analysis.quality_filter = args['--quality-filter']
