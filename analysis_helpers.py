@@ -11,7 +11,7 @@ fluorescence_controls = {
 }
 
 
-class AnalyzedWell (fcmcmp.Well):
+class AnalyzedWell(fcmcmp.Well):
 
     def __init__(self, experiment, well, channel=None, normalize_by=None, 
             log_toggle=False, pdf=False, loc_metric='median'):
@@ -26,11 +26,16 @@ class AnalyzedWell (fcmcmp.Well):
         self.loc_metric = loc_metric
 
         self.measurements = None
+        self.linear_measurements = None
         self.log_scale = None
         self.channel = None
         self.control_channel = None
         self.x = self.y = None
+        self.mean = None
+        self.median = None
+        self.mode = None
         self.loc = None
+        self.linear_loc = None
 
         self._find_measurements()
 
@@ -77,28 +82,50 @@ class AnalyzedWell (fcmcmp.Well):
             self.measurements = np.log10(self.linear_measurements)
 
     def _find_distribution(self, xlim):
-        # Create the x-axis based on the user-specified limits.  The limits 
-        # can't be picked automatically because it's important that they be the 
-        # same for every plot.
-        N = 100 if self.loc_metric != 'mode' else 100 #500
-        self.x = np.linspace(*xlim, num=N)
+        # Calculate the median, mean, and mode of the data.  The advantage of 
+        # the median is that it's unaffected by whether or not the data has 
+        # been log-transformed.  The advantage of the mode is that it's 
+        # unaffected by the shoulders that seem to be caused by intermittent 
+        # plasmid loss.
+        self.median = np.median(self.measurements)
+        self.mean = np.mean(self.measurements)
 
-        # Approximate the distribution underlying the measurements using a 
-        # Gaussian kernel density estimate (KDE).  Because each evaluation the 
-        # KDE is relatively expensive, focus most of the evaluations in a 
-        # narrow range (10% of the x-axis) around the median.  This focus is 
-        # especially important for accurately calculating the mode, but it also 
-        # makes the plots look nice and smooth.
+        # Calculate the mode by finding the maximum of the Gaussian kernel 
+        # density estimate (KDE) of the measured cell population.  We use the 
+        # default scipy optimization algorithm (which at this time is BFGS) to 
+        # find the maximum as accurately and as quickly as possible.
+        from scipy.optimize import minimize
+        kernel = CachedGaussianKde(self.measurements)
+        result = minimize(kernel.objective, self.median)
+        self.mode = result.x
+
+        # Store the "location" (i.e. median, mean or mode) that the user wants 
+        # to use to calculate fold change.
+        if self.loc_metric is None or self.loc_metric == 'median':
+            self.loc = self.median
+        elif self.loc_metric == 'mean':
+            self.loc = self.mean
+        elif self.loc_metric == 'mode':
+            self.loc = self.mode
+        else:
+            raise ValueError("No such metric '{}'".format(self.loc_metric))
+
+        self.linear_loc = 10**self.loc if self.log_scale else self.loc
+
+        # Evaluate the Gaussian KDE across the whole x-axis for visualization 
+        # purposes.  Because each evaluation of the KDE is relatively expensive 
+        # and we want the plot to be nice and smooth, we focus most of the 
+        # evaluations in a narrow range (10% of the x-axis) around the mode.  
+        # The points that were evaluated in the calculation of the mode are 
+        # also included in the plot.
         N = 100
-        x = np.median(self.measurements)
         dx = 0.05 * (xlim[1] - xlim[0])
-        x_dense = np.linspace(x - dx, x + dx, num=N//2)
+        x_dense = np.linspace(self.mode - dx, self.mode + dx, num=N//2)
         x_sparse = np.linspace(*xlim, num=N//2)
 
-        from scipy.stats import gaussian_kde
-        kernel = gaussian_kde(self.measurements)
-        self.x = np.sort(np.hstack((x_sparse, x_dense)))
-        self.y = kernel.evaluate(self.x)
+        kernel.evaluate(x_dense)
+        kernel.evaluate(x_sparse)
+        self.x, self.y = kernel.xy
 
         # Scale the distribution to make it's area meaningful.  By default, the 
         # area will be proportional to the amount of data.  If the user wants 
@@ -107,20 +134,28 @@ class AnalyzedWell (fcmcmp.Well):
         if not self.calc_pdf:
             self.y *= len(self.measurements)
 
-        # Calculate the median, mean, or mode of the data, as requested.  The 
-        # problem with the mean and the mode is that they change if the data is 
-        # log-transformed.  The mode also depends on the resolution of the 
-        # x-axis.  In general, I think the median is the best metric.
-        if self.loc_metric is None or self.loc_metric == 'median':
-            self.loc = np.median(self.measurements)
-        elif self.loc_metric == 'mean':
-            self.loc = np.mean(self.measurements)
-        elif self.loc_metric == 'mode':
-            self.loc = self.x[np.argmax(self.y)]
-        else:
-            raise ValueError("No such metric '{}'".format(self.loc_metric))
 
-        self.linear_loc = 10**self.loc if self.log_scale else self.loc
+class CachedGaussianKde:
+
+    def __init__(self, measurements):
+        from scipy.stats import gaussian_kde
+        self.kernel = gaussian_kde(measurements)
+        self.memo = {}
+
+    def evaluate(self, x):
+        y = self.kernel.evaluate(x)
+        for i, _ in np.ndenumerate(x):
+            self.memo[x[i]] = y[i]
+        return y
+
+    def objective(self, x):
+        return -self.evaluate(x)
+
+    @property
+    def xy(self):
+        k, v = map(np.array, zip(*self.memo.items()))
+        i = np.argsort(k)
+        return k[i], v[i]
 
 
 class GateLowFluorescence(fcmcmp.GatingStep):
