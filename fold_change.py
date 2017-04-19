@@ -420,16 +420,37 @@ class FoldChange:
         self.axes[0].plot(well.loc, i - self.location_depth, **style)
 
     def _pick_xlabels(self):
-        return
-        if self.reference_well.channel in analysis_helpers.fluorescence_controls:
-            x1_label = 'fluorescence'
-        else:
-            x1_label = 'size'
+        from more_itertools import one
 
-        if self.reference_well.control_channel is not None:
+        channels = set(x.channel for _, _, x in self._yield_wells())
+        control_channels = set(x.control_channel for _, _, x in self._yield_wells())
+        control_channels.discard(None)
+        log_scale = one(set(x.log_scale for _, _, x in self._yield_wells()))
+
+        channel_labels = {
+                'FSC-A': 'FSC',
+                'SSC-A': 'SSC',
+                'FITC-A': 'GFP',
+                'Red-A': 'RFP',
+        }
+
+        if len(channels) == 1:
+            channel = next(iter(channels))
+            x1_label = channel_labels[channel]
+        elif channels.issubset(analysis_helpers.fluorescence_controls):
+            x1_label = 'fluorescence'
+        elif channels.issubset(['FSC-A', 'SSC-A']):
+            x1_label = 'size'
+        else:
+            raise ValueError("inconsistent x-axes: {}".format(','.join(channels)))
+
+        if len(control_channels) == 1:
+            channel = next(iter(control_channels))
+            x1_label = '{} / {}'.format(x1_label, channel_labels[channel])
+        elif len(control_channels) > 1:
             x1_label = 'normalized {}'.format(x1_label)
 
-        if self.reference_well.log_scale:
+        if log_scale:
             x1_label = 'log({})'.format(x1_label)
 
         self.axes[0].set_xlabel(x1_label)
