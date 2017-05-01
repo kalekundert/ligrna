@@ -1,0 +1,28 @@
+1. Setup a restriction digest reaction:
+
+    Reagent                Conc      Vol
+    ────────────────────────────────────
+    pCR21 DNA        ≈500 ng/μL  43.5 μL
+    CutSmart buffer        10 x   5.0 μL
+    XmnI                20 U/μL   1.5 μL
+
+    (approximately 1U XmnI per 1 μg DNA)
+
+2. Incubate at 37°C for 2h, then 65°C for 20 min (to 
+   heat-inactivate the enzyme).
+
+3. Purify the DNA using a PCR cleanup kit.  You can 
+   also do a gel extraction if you want to be extra 
+   sure that the DNA is clean (and you don't mind the 
+   potential yield hit).  
+   
+   If you're doing a large scale prep (e.g. 1 mL), 
+   you can't do a PCR cleanup because you'll exceed
+   the 10 μg capacity of the spin columns.  Instead, 
+   either do an ethanol precipitation or a miraprep- 
+   style PCR cleanup.
+
+4. Measure the concentration on the nanodrop and 
+   dilute to 30 nM.
+
+vim: tw=53
