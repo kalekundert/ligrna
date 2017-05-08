@@ -13,16 +13,17 @@
 
 3. Purify the DNA using a PCR cleanup kit.  You can 
    also do a gel extraction if you want to be extra 
-   sure that the DNA is clean (and you don't mind the 
-   potential yield hit).  
+   sure that the DNA is clean (and you can afford the 
+   yield hit).  
    
    If you're doing a large scale prep (e.g. 1 mL), 
    you can't do a PCR cleanup because you'll exceed
    the 10 μg capacity of the spin columns.  Instead, 
-   either do an ethanol precipitation or a miraprep- 
-   style PCR cleanup.
+   either do an ethanol precipitation.  A miraprep- 
+   style PCR cleanup might also work, but I haven't 
+   tried it.
 
 4. Measure the concentration on the nanodrop and 
-   dilute to 30 nM.
+   dilute to 30 nM (80.5 ng/μL for pCR21).
 
 vim: tw=53
