@@ -32,8 +32,15 @@ import os
 
 args = docopt.docopt(__doc__)
 
-def process_sample(sgrna, initial_ng_uL, args):
-    initial_nM = initial_ng_uL * 1e6 / sgrna.mass('rna')
+def get_molecular_weight(name):
+    if name.startswith('pcr21'):
+        return 2686183.94
+    else:
+        sgrna = sgrna_sensor.from_name(name.lower())
+        return sgrna.mass('rna')
+
+def process_sample(name, initial_ng_uL, args):
+    initial_nM = initial_ng_uL * 1e6 / get_molecular_weight(name)
 
     if args['--target-conc'].endswith('x'):
         target_nM = 300 * float(args['--target-conc'][:-1])
@@ -70,10 +77,10 @@ def process_sample(sgrna, initial_ng_uL, args):
         -p, --print-nM
     """)
 
-    print('{:>6.2f} μL {:.1f} ng/uL {}'.format(sgrna_to_add, initial_ng_uL, sgrna.name))
+    print('{:>6.2f} μL {:.1f} ng/uL {}'.format(sgrna_to_add, initial_ng_uL, name))
     print('{:>6.2f} μL nuclease-free water'.format(water_to_add))
     print(30 * '─')
-    print('{:>6.2f} μL {:.1f} nM {}'.format(sgrna_to_add + water_to_add, target_nM, sgrna.name))
+    print('{:>6.2f} μL {:.1f} nM {}'.format(sgrna_to_add + water_to_add, target_nM, name))
 
 
 # Figure out if name is filename or sgRNA name
@@ -85,12 +92,10 @@ if args['<tsv>']:
         try: conc = row[1]['Nucleic Acid']
         except KeyError: conc = row[1]['Nucleic Acid(ng/uL)']
 
-        sgrna = sgrna_sensor.from_name(name.lower())
-        process_sample(sgrna, float(conc), args)
+        process_sample(name, float(conc), args)
         print()
 
 elif args['<name>']:
-    sgrna = sgrna_sensor.from_name(args['<name>'])
     initial_ng_uL = float(args['<ng_uL>'])
-    process_sample(sgrna, initial_ng_uL, args)
+    process_sample(args['<name>'], initial_ng_uL, args)
 
