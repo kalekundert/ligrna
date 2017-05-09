@@ -1,6 +1,6 @@
 Day 1
 =====
-1. Make 1L SOB:
+1. Make 1L "low salt" SOB:
 
    - 20g bacto-tryptone (2% w/v final)
    - 5g bacto-yeast extract (0.5% w/v final)

@@ -1,18 +1,63 @@
 Reagents
 ========
 - 100 mL YPD
-- water (chilled)
+- 120 mL water (chilled)
 - 120 mL 1M sorbitol, 1 mM CaCl₂ (electroporation 
   buffer) (chilled)
 - 20 mL 100 mM LiOAc, 10 mM DTT (conditioning buffer)
 - 10 mL 1:1 mix of 1M sorbitol and YPD media
 - 1 SD-Leu plate
 
-- 2 3 50 mL pipets (chilled)
+- 4 50 mL pipets (chilled)
 - 1000 uL tips (chilled)
+
+Reagents
+========
+- YPD
+
+  - 50.0 g YPD Broth (powder, Fisher BP2469-2)
+  - ~900 mL water
+  - stir until well dissolved (30 min)
+  - sterile filter
+
+  Note that this is "non-caramelized YPD" because 
+  it's sterile-filtered rather than autoclaved.  
+  Yeast don't grow quite as well in "caramelized 
+  YPD", but it might work for this protocol; I 
+  haven't tried it.
+
+- electroporation buffer
+
+Day 1
+=====
+1. Prepare a overnight culture from a fresh colony of 
+   the S. cerevisiae strain you want to transform in 
+   5 mL YPD.
+
+2. Prepare 120 mL 1M sorbitol:
+
+    - 21.86 g sorbitol (182.17 g/mol)
+    - water to 120 mL
+
+3. Reserve 5 mL of the 1M sorbitol, then use the rest 
+   to prepare 115 mL "electroporation buffer":
+
+    - 115 mL 1M sorbitol
+    - 115 μL 1M CaCl₂
+    - sterile filter
+
+4. Put the following reagents and supplies at 4°C:
+
+    - 120 mL milliQ water
+    - 115 mL "electroporation buffer" (1M sorbitol, 1 
+      mM CaCl₂)
+    - 4 50 mL pipets
+    - 1 box 1000 μL tips
 
 Protocol
 ========
+1. Inoculate 100 mL YPD 
+
 1. Saccharomyces cerevisiae were grown overnight to 
    stationary phase (OD600 of ∼3). 
    
@@ -68,5 +113,17 @@ Protocol
     deviation). The yields (B) were expressed as 
     total number of transformants per cuvette (mean ± 
     standard deviation).
+
+Notes
+=====
+- I've only uses non-caramelized YPD for this 
+  protocol, but caramelized YPD might work too.
+
+Reference
+=========
+Benatuil, Perez, Belk, Hsieh. An improved yeast 
+transformation method for the generation of very 
+large human antibody libraries.  Protein Engineering, 
+Design & Selection 23:4:155-159 (2010).
     
 vim: tw=53

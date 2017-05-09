@@ -2,7 +2,7 @@ Reagents
 ========
 - 1 mL 2.5M DTT, 1M Tris, pH 8.0 (freshly prepared, 
   room temp)
-- 30 mL 10 mM Tris, 270 mM sucrose, 1 mM MgCl2, pH 
+- 50 mL 10 mM Tris, 270 mM sucrose, 1 mM MgCl2, pH 
   7.5 (E buffer) (room temp)
 - 1 mL YPD (room temp)
 - 1 selective plate
