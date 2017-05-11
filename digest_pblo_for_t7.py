@@ -10,7 +10,12 @@ Usage:
     digest_pblo_for_t7.py <reactions> [options]
 
 Options:
-    -x --extra PERCENT      [default: 20]
+    -d --dna <μL>           [default: 4]
+        How much DNA to digest.  The default is 4 μL, which should be about
+        1 μg with ≈250 ng/μL miniprep yields.  You might want to add more if
+        you have significantly less than that.
+
+    -x --extra <percent>    [default: 10]
         How much extra master mix to create.
 """
 
@@ -32,6 +37,8 @@ DNA              250 ng/μL    4.0 μL
 
 digest.num_reactions = eval(args['<reactions>'])
 digest.extra_master_mix = float(args['--extra'])
+digest['DNA'].std_volume = eval(args['--dna'])
+digest['water'].std_volume = 10 - digest['DNA'].std_volume
 
 protocol += """\
 Setup {:? restriction digest reaction/s} by mixing
