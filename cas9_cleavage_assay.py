@@ -219,7 +219,7 @@ else:
 
 protocol += """\
 Load {} μL on a {}% agarose/TAE/GelRed gel and run 
-at 130V for 45 min.""".format(gel_load, gel_percent)
+at 8 V/cm for 45 min.""".format(gel_load, gel_percent)
 
 ## Print the protocol.
 
