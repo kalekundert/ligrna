@@ -8,8 +8,9 @@
 
     (approximately 1U XmnI per 1 μg DNA)
 
-2. Incubate at 37°C for 2h, then 65°C for 20 min (to 
-   heat-inactivate the enzyme).
+2. Incubate at 37°C until no uncleaved plasmid is 
+   visible on a gel (1-2h).  Then incubate at 65°C 
+   for 20 min to heat-inactivate the enzyme.
 
 3. Purify the DNA using a PCR cleanup kit.  You can 
    also do a gel extraction if you want to be extra 
