@@ -50,7 +50,7 @@ order given.
 
 protocol += """\
 Incubate at 37°C for 1h, then at 80°C for 20 min 
-(to heat-inactivate the enzyme)."""
+(to heat-inactivate the enzymes)."""
 
 protocol += """\
 Setup the in vitro transcription {:reaction/s} 
