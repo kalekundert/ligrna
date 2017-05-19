@@ -25,7 +25,7 @@ Options:
         Include a step for preparing fresh theophylline, if you've run out of
         frozen stocks.
 
-    -C --cas9-stock-conc <μM>           [default: 1.0]
+    -C --cas9-stock-conc <μM>           [default: 20.0]
         The stock Cas9 concentration (in μM).
 
     -c --cas9-conc <fold>               [default: 1.0]
