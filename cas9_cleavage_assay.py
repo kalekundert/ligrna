@@ -8,9 +8,6 @@ Usage:
     ./cas9_master_mix.py <reactions> [options]
 
 Options:
-    -x --extra <percent>                [default: 10]
-        How much extra master mix to create.
-
     -r --robot
         Display the protocol for having the Eppendorf liquid handling robot
         setup and carry out the Cas9 reaction.
@@ -44,6 +41,8 @@ Options:
         The working concentration of DNA will be the standard amount times 
         this argument.
 
+    -x --extra <percent>                [default: 10]
+        How much extra master mix to create.
 """
 
 import docopt
@@ -88,7 +87,7 @@ Proteinase K  200x   0.18 μL         yes
 kag_rxn.num_reactions = num_reactions
 kag_rxn.show_each_rxn = False
 kag_rxn.show_totals = False
-kag_rxn.extra_master_mix = 2 * float(args['--extra'])
+kag_rxn.extra_master_mix = 3 * float(args['--extra'])
 
 if not args['--big-rxns'] and not args['--short-dna']:
     cas9_rxn.volume /= 2
@@ -107,14 +106,8 @@ Reagent        Amount
 theophylline   x≈5 mg
 water         185x μL
 
-Vortex and incubate at 37°C to dissolve.  Use 
-immediately or store at -20°C."""
-
-protocol += """\
-Thaw the water, theophylline, 10x Cas9 buffer, 
-and target DNA on the 37°C heat block.  Thaw the 
-sgRNAs at room temperature, then refold them by
-incubating at 95°C for 3 min then 4°C for 1 min."""
+Stir on a hot plate (but keep below boiling) to 
+dissolve."""
 
 ## Setup the Cas9 reactions (using the robot).
 
@@ -186,6 +179,9 @@ Setup {num_reactions} Cas9 reactions:
 
 - Add {cas9_rxn[sgRNA].volume_str} sgRNA to each reaction.
 
+- Refold the sgRNA by incubating at 95°C for 3 min 
+  then 4°C for 1 min.
+
 - Add {cas9_rxn[master mix].volume_str} Cas9 master mix to each reaction.
 
 - Incubate at room temperature for 10 min.
@@ -219,7 +215,7 @@ else:
 
 protocol += """\
 Load {} μL on a {}% agarose/TAE/GelRed gel and run 
-at 8 V/cm for 45 min.""".format(gel_load, gel_percent)
+at 6 V/cm for 45 min.""".format(gel_load, gel_percent)
 
 ## Print the protocol.
 
