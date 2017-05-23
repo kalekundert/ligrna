@@ -43,6 +43,9 @@ Options:
 
     -x --extra <percent>                [default: 10]
         How much extra master mix to create.
+
+    -n --notes
+        Print notes on miscellaneous details of the protocol.
 """
 
 import docopt
@@ -214,11 +217,29 @@ else:
     gel_percent = 1
 
 protocol += """\
-Load {} μL on a {}% agarose/TAE/GelRed gel and run 
-at 6 V/cm for 45 min.""".format(gel_load, gel_percent)
+Load the entire reaction ({} μL) on a {}% agarose 
+gel and run at 6 V/cm for 45 min.""".format(gel_load, gel_percent)
 
 ## Print the protocol.
 
 print(protocol)
+
+## Notes
+
+if args['--notes']:
+    print("""\
+
+Notes
+─────
+1. It really is important to load most of the 
+   reaction on the gel and to use a comb that 
+   makes thick wells.  I tried loading only 6 μL 
+   with the idea that I could use a finer comb and 
+   get sharper bands, but the bands were hard to 
+   quantify because they were so faint.
+
+   For doing lots of reactions, the best option is 
+   to use the Owl EasyCast B2 gel tray with the 
+   25-tooth comb.""")
 
 # vim: tw=50
