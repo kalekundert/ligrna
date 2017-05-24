@@ -240,6 +240,7 @@ Notes
 
    For doing lots of reactions, the best option is 
    to use the Owl EasyCast B2 gel tray with the 
-   25-tooth comb.""")
+   25-tooth comb.  The gel should be 160 mL, and
+   2 μL is a good amount of ladder.""")
 
 # vim: tw=50
