@@ -6,7 +6,7 @@ Usage:
     library_prep.py <num_libraries> <annealing_temp> [options]
 
 Options:
-    -r --reaction-volume <μL>       [default: 100]
+    -r --reaction-volume <μL>       [default: 50]
         The volume of each PCR reaction.
 
     -p --primer-conc <μM>           [default: 200]
