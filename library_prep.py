@@ -12,6 +12,9 @@ Options:
     -p --primer-conc <μM>           [default: 200]
         The concentration of the primers.
 
+    -t --top10-only
+        Stop after the Top10 electrotransformation.
+
     -v --verbose
         Include extra steps such as how to order primers.
 """
@@ -136,6 +139,10 @@ electroporation.  For each transformation:
   
 - Add 4 volumes LB + 5/4x Carb and grow overnight 
   at 37°C."""
+
+if args['--top10-only']:
+    print(protocol)
+    raise SystemExit
 
 ## Miniprep
 
