@@ -67,12 +67,13 @@ protocol += """\
 Add 1 μL (20 units) DpnI to each reaction and 
 incubate at 37°C for 1h."""
 
-## Gel extraction
+## PCR cleanup
 
 protocol += """\
 Run a gel to confirm that the product is clean.  
-If it's not you can either optimize the reaction 
-or gel extract the desired band."""
+If it is, purify it using a PCR cleanup kit.  If 
+it isn't, either optimize the reaction or (for 
+small libraries) gel extract the desired band."""
 
 ## Ligation
 
