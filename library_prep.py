@@ -3,7 +3,20 @@
 
 """\
 Usage:
-    library_prep.py <num_libraries> <annealing_temp> [options]
+    library_prep.py <num_libraries> <annealing_temp> [<vector>] [options]
+
+Arguments:
+    <num_libraries>
+        The number of libraries to construct.  This affects the master mix 
+        volumes calculated at various steps.
+
+    <annealing_temp>
+        The annealing temperature for the inverse PCR reaction.
+
+    <vector>                        [default: pBLO]
+        The vector that you're cloning the library into.  This affects default 
+        values for some of the other parameters, most notably the extension 
+        time (for the inverse PCR reaction).
 
 Options:
     -r --reaction-volume <μL>       [default: 50]
@@ -11,6 +24,10 @@ Options:
 
     -p --primer-conc <μM>           [default: 200]
         The concentration of the primers.
+
+    -x --extension-time <secs>
+        The length of the annealing step in seconds.  The rule of thumb is 30 
+        sec/kb, perhaps longer if you're amplifying a whole plasmid.
 
     -t --top10-only
         Stop after the Top10 electrotransformation.
@@ -23,10 +40,19 @@ import docopt
 import dirty_water
 import nonstdlib
 
-args = docopt.docopt(__doc__)
 protocol = dirty_water.Protocol()
+
+## Parse arguments
+
+args = docopt.docopt(__doc__)
 num = int(eval(args['<num_libraries>']))
 N = nonstdlib.plural(num)
+
+if args['<vector>'] in ('pan', 'pAN'):
+    args['--extension-time'] = args['--extension-time'] or '4:00'
+    args['--top10-only'] = True
+else: # pBLO
+    args['--extension-time'] = args['--extension-time'] or '2:00'
 
 ## Primer design
 
@@ -53,9 +79,18 @@ Design primers to assemble the {N:/library/libraries} with.
 
 ## Inverse PCR
 
+def time_to_secs(time): #
+    if ':' in time:
+        min, sec = map(int, time.split(':'))
+        return 60 * min + sec
+    else:
+        # Assume the time is just a number of seconds.
+        return int(time)
+
 pcr = dirty_water.Pcr()
 pcr.num_reactions = num
 pcr.annealing_temp = args['<annealing_temp>']
+pcr.extension_time = time_to_secs(args['--extension-time'])
 pcr.make_primer_mix = True
 pcr.reaction.volume = eval(args['--reaction-volume'])
 
