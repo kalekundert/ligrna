@@ -93,9 +93,14 @@ class PrimerDesigner:
 
         # Design the part of the primers that will contain the insert.
 
-        dlen = len(overlap_5) - len(overlap_3)
-        default_cut = (len(insert) - dlen) // 2
-        cut = self.cut or default_cut
+        if self.cut is not None:
+            cut = self.cut
+        elif '/' in insert:
+            cut = insert.find('/')
+            insert = insert[:cut] + insert[cut+1:]
+        else:
+            dlen = len(overlap_5) - len(overlap_3)
+            cut = (len(insert) - dlen) // 2
 
         if self.verbose:
             print("cut point:", cut)
@@ -297,10 +302,9 @@ def consolidate_duplicate_primers(primers, term_sep='_'):
 
     return unique_primers
     
-def report_primers_for_elim(primers):
+def report_primers_for_elim(primers, key=None):
     from natsort import natsorted
     print("Number of oligos:", len(primers))
-    print("Primer lengths:", ', '.join(str(len(x)) for x in primers.values()))
     print()
     print("Primer names (ready to copy into Elim form):")
     for name in natsorted(primers):
