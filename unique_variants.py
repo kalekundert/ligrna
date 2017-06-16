@@ -305,7 +305,6 @@ def steps_from_yaml(path):
                 num_picked = items_sorted_by_counts(num_collected, 1)
 
             elif percent_syntax:
-                name += '{0:>{1}s}'.format('(planned)', 33 - len(name))
                 percent_kept = cast_to_number(percent_syntax.group(1)) / 100
                 sort_time = cast_to_minutes(percent_syntax.group(2))
                 event_rate = cast_to_number(percent_syntax.group(3))
