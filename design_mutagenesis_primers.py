@@ -313,6 +313,15 @@ def report_primers_for_elim(primers, key=None):
     print("Primer sequences (ready to copy into Elim form):")
     for name in natsorted(primers):
         print(primers[name])
+    print()
+
+    # Make a ruler so you can tell how long the primers are.
+    for i in range(1, 80):
+        print(i % 10, end='')
+    print()
+    for i in range(1, 80):
+        print(i // 10 if i % 10 == 0 else ' ', end='')
+    print()
 
 def pick_primer_with_best_tm(seqs, tm):
     import primer3
