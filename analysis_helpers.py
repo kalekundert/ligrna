@@ -143,7 +143,7 @@ def analyze_wells(experiments, **kwargs):
                     for well in experiment['wells'][condition]
             ]
 
-def yield_related_wells(experiments, reference='apo'):
+def yield_related_wells(experiments, default_reference='apo'):
 
     class RelatedWells:
 
@@ -160,6 +160,7 @@ def yield_related_wells(experiments, reference='apo'):
 
     i = 0
     for experiment in experiments:
+        reference = experiment.get('reference', default_reference)
         for condition in experiment['wells']:
             if condition == reference: continue
             yield RelatedWells(experiment, condition, reference, i)
@@ -195,7 +196,7 @@ class GateLowFluorescence(fcmcmp.GatingStep):
 
     def gate(self, experiment, well):
         channel = fluorescence_controls.get(pick_channel(experiment))
-        if channel is not None:
+        if channel in well.data.columns:
             return well.data[channel] < self.threshold
 
 
@@ -217,7 +218,7 @@ class RenameRedChannel(fcmcmp.ProcessingStep):
         elif 'mCherry-A' in well.data.columns:
             red_channel = 'mCherry-A'
         else:
-            raise ValueError('No red channel found!')
+            return
 
         well.data.rename(columns={red_channel: 'Red-A'}, inplace=True)
 
@@ -234,7 +235,6 @@ class SharedProcessingSteps:
         rename_red_channel(experiments)
 
         gate_nonpositive_events = fcmcmp.GateNonPositiveEvents()
-        gate_nonpositive_events.channels = 'FITC-A', 'Red-A'
         gate_nonpositive_events(experiments)
 
         gate_early_events = fcmcmp.GateEarlyEvents()
@@ -274,11 +274,8 @@ class ExperimentPlot:
 
     def _create_axes(self, square=False):
         """
-        Work out how many wells need to be shown.
-        
-        There will be two rows and as many columns as necessary to show all the 
-        wells.  The first row is for the "apo" wells and the second row is 
-        for the "holo" ones.
+        Work out how many wells need to be shown.  There will be a column for 
+        each well and row for each condition.
         """
         self.num_rows = len(self.experiment['wells'])
         self.num_cols = max(
@@ -316,7 +313,7 @@ class ExperimentPlot:
             for col in range(self.num_cols):
                 well = self._get_well(row, col)
                 condition = self._get_condition(row)
-                title = '{} ({})'.format(well.label, condition)
+                title = '{} ({})'.format(condition, well.label)
                 self.axes[row, col].set_title(title, size=12)
 
     def _set_labels(self, x_label, y_label):
@@ -338,26 +335,27 @@ class ExperimentPlot:
 
 
 
-def pick_color(experiment):
+def pick_color(experiment, lightness=0):
     """
     Pick a color for the given experiment.
 
     The return value is a hex string suitable for use with matplotlib.
     """
     if 'color' in experiment:
-        return experiment['color']
+        return experiment['color'] if lightness == 0 else '#dddddd'
     else:
-        return pick_ucsf_color(experiment)
+        return pick_ucsf_color(experiment, lightness)
 
 
-control = re.compile('(on|off|wt|dead)')
-upper_stem = re.compile('(us|.u.?)[ (]')
-lower_stem = re.compile('(ls|.l.?)[ (]')
-bulge = re.compile('.b.?[ (]')
-nexus = re.compile('(nx|.x.?|[wm]11)[ (]')
-hairpin = re.compile('.h.?[( ]')
+p = r'\b(%s)(\b|[(])'
+control = re.compile(p % '[w]?(on|off|wt|dead)')
+upper_stem = re.compile(p % 'us|.u.?')
+lower_stem = re.compile(p % 'ls|.l.?')
+bulge = re.compile(p % '.b.?')
+nexus = re.compile(p % 'nx|.x.?|[wm]11')
+hairpin = re.compile(p % '.h.?')
 
-def pick_tango_color(experiment):
+def pick_tango_color(experiment, lightness=0):
     """
     Pick a color from the Tango color scheme for the given experiment.
 
@@ -376,26 +374,28 @@ def pick_tango_color(experiment):
     purple = '#ad7fa8', '#75507b', '#5c3566'
     brown =  '#e9b96e', '#c17d11', '#8f5902'
 
-    if 'rfp' in experiment['label'].lower():
-        return red[1]
-    elif 'gfp' in experiment['label'].lower():
-        return green[2]
-    elif control.match(experiment['label']):
-        return grey[4]
-    elif lower_stem.match(experiment['label']):
-        return purple[1]
-    elif upper_stem.match(experiment['label']):
-        return blue[1]
-    elif bulge.match(experiment['label']):
-        return green[1]
-    elif nexus.match(experiment['label']):
-        return red[1]
-    elif hairpin.match(experiment['label']):
-        return orange[1]
-    else:
-        return brown[2]
+    i = lambda x: max(x - lightness, 0)
 
-def pick_ucsf_color(experiment):
+    if 'rfp' in experiment['label'].lower():
+        return red[i(1)]
+    elif 'gfp' in experiment['label'].lower():
+        return green[i(2)]
+    elif control.search(experiment['label']):
+        return grey[i(4)]
+    elif lower_stem.search(experiment['label']):
+        return purple[i(1)]
+    elif upper_stem.search(experiment['label']):
+        return blue[i(1)]
+    elif bulge.search(experiment['label']):
+        return green[i(1)]
+    elif nexus.search(experiment['label']):
+        return red[i(1)]
+    elif hairpin.search(experiment['label']):
+        return orange[i(1)]
+    else:
+        return brown[i(2)]
+
+def pick_ucsf_color(experiment, lightness=0):
     """
     Pick a color from the official UCSF color scheme for the given experiment.
 
@@ -416,24 +416,27 @@ def pick_ucsf_color(experiment):
     dark_grey = ['#b4b9bf', '#cbced2', '#e1e3e6', '#f8f8f9']
     light_grey = ['#d1d3d3', '#dfe0e0', '#ededee', '#fafbfb'] 
 
-    if 'rfp' in experiment['label'].lower():
-        return red[0]
-    elif 'gfp' in experiment['label'].lower():
-        return olive[0]
-    elif control.match(experiment['label']):
-        return dark_grey[0]
-    elif lower_stem.match(experiment['label']):
-        return purple[0]
-    elif upper_stem.match(experiment['label']):
-        return blue[0]
-    elif bulge.match(experiment['label']):
-        return olive[0]
-    elif nexus.match(experiment['label']):
-        return red[0]
-    elif hairpin.match(experiment['label']):
-        return orange[0]
+    i = lambda x: min(x + lightness, 3)
+    label = experiment.get('family', experiment['label']).lower()
+
+    if 'rfp' in label:
+        return red[i(0)]
+    elif 'gfp' in label:
+        return olive[i(0)]
+    elif control.search(label):
+        return dark_grey[i(0)]
+    elif lower_stem.search(label):
+        return purple[i(0)]
+    elif upper_stem.search(label):
+        return blue[i(0)]
+    elif bulge.search(label):
+        return olive[i(0)]
+    elif nexus.search(label):
+        return red[i(0)]
+    elif hairpin.search(label):
+        return orange[i(0)]
     else:
-        return navy[0]
+        return navy[i(0)]
 
 def pick_style(experiment, is_reference=False):
     if is_reference:
@@ -542,7 +545,9 @@ def plot_or_savefig(output_path=None, substitution_path=None):
     if fate == 'print':
         temp_file = NamedTemporaryFile(prefix='fcm_analysis_', suffix='.ps')
         plt.savefig(temp_file.name, dpi=300)
-        subprocess.call(['lpr', '-o', 'number-up=4', temp_file.name])
+        # Add ['-o', 'number-up=4'] to get plots that will fit in a lab 
+        # notebook.
+        subprocess.call(['lpr', temp_file.name])
 
     if fate == 'save':
         if substitution_path:

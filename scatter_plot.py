@@ -86,6 +86,7 @@ Options:
 import collections, docopt, fcmcmp, analysis_helpers
 import numpy as np, matplotlib.pyplot as plt
 from pprint import pprint
+from debugtools import p, pp, pv
 
 class ScatterPlot(analysis_helpers.ExperimentPlot):
     Histogram = collections.namedtuple('Histogram', 'x y z')
@@ -133,6 +134,9 @@ class ScatterPlot(analysis_helpers.ExperimentPlot):
         if self.show_sizes:
             self.x_channel = 'FSC-A'
             self.y_channel = 'SSC-A'
+        elif 'cerevisiae' in self.experiment['species']:
+            self.x_channel = 'FSC-A'
+            self.y_channel = 'FITC-A'
         else:
             self.x_channel = 'FITC-A'
             self.y_channel = 'Red-A'
@@ -151,7 +155,7 @@ class ScatterPlot(analysis_helpers.ExperimentPlot):
         be square.
         """
         self.min_coord = 1
-        self.max_coord = 5 if not self.show_sizes else 100000
+        self.max_coord = 6
 
         self.axes[0,0].set_xlim(self.min_coord, self.max_coord)
         self.axes[0,0].set_ylim(self.min_coord, self.max_coord)
@@ -231,7 +235,7 @@ class ScatterPlot(analysis_helpers.ExperimentPlot):
                 histogram.y,
                 histogram.z,
                 levels=self.contour_levels,
-                colors='white',
+                colors=analysis_helpers.pick_color(self.experiment, lightness=2),
                 zorder=2,
         )
 
@@ -251,7 +255,7 @@ if __name__ == '__main__':
     shared_steps.process([experiment])
 
     log_transformation = fcmcmp.LogTransformation()
-    log_transformation.channels = ['FITC-A', 'Red-A']
+    log_transformation.channels = ['FITC-A', 'Red-A', 'FSC-A', 'SSC-A']
     log_transformation([experiment])
 
     analysis = ScatterPlot(experiment)
