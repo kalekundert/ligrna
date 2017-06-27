@@ -81,6 +81,9 @@ Options:
         these points (but not the lines or the text that make up the rest of 
         the figure) would be rasterized.  This option makes the resulting file 
         much larger and makes exporting and viewing that file take much longer.  
+
+    -v --verbose
+        Print out information on all the processing steps.
 """
 
 import collections, docopt, fcmcmp, analysis_helpers
@@ -134,7 +137,7 @@ class ScatterPlot(analysis_helpers.ExperimentPlot):
         if self.show_sizes:
             self.x_channel = 'FSC-A'
             self.y_channel = 'SSC-A'
-        elif 'cerevisiae' in self.experiment['species']:
+        elif 'cerevisiae' in self.experiment.get('species', 'E. coli'):
             self.x_channel = 'FSC-A'
             self.y_channel = 'FITC-A'
         else:
@@ -248,7 +251,7 @@ if __name__ == '__main__':
     args = docopt.docopt(__doc__)
     experiment = fcmcmp.load_experiment(args['<yml_path>'], args['<experiment>'])
 
-    shared_steps = analysis_helpers.SharedProcessingSteps()
+    shared_steps = analysis_helpers.SharedProcessingSteps(args['--verbose'])
     shared_steps.early_event_threshold = float(args['--time-gate'])
     shared_steps.small_cell_threshold = float(args['--size-gate'])
     shared_steps.low_fluorescence_threshold = float(args['--expression-gate'])
@@ -256,6 +259,7 @@ if __name__ == '__main__':
 
     log_transformation = fcmcmp.LogTransformation()
     log_transformation.channels = ['FITC-A', 'Red-A', 'FSC-A', 'SSC-A']
+    log_transformation.verbose = args['--verbose']
     log_transformation([experiment])
 
     analysis = ScatterPlot(experiment)

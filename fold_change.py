@@ -114,6 +114,9 @@ Options:
 
     -e --export-dataframe
         Exports a dataframe with the values used to generate the figure
+
+    -v --verbose
+        Print out information on all the processing steps.
 """
 
 import fcmcmp, analysis_helpers, nonstdlib, re
@@ -554,7 +557,7 @@ if __name__ == '__main__':
     args = docopt.docopt(__doc__)
     experiments = fcmcmp.load_experiments(args['<yml_path>'])
 
-    shared_steps = analysis_helpers.SharedProcessingSteps()
+    shared_steps = analysis_helpers.SharedProcessingSteps(args['--verbose'])
     shared_steps.early_event_threshold = float(args['--time-gate'])
     shared_steps.small_cell_threshold = float(args['--size-gate'])
     shared_steps.low_fluorescence_threshold = float(args['--expression-gate'])

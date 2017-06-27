@@ -225,29 +225,35 @@ class RenameRedChannel(fcmcmp.ProcessingStep):
 
 class SharedProcessingSteps:
 
-    def __init__(self):
+    def __init__(self, verbose=False):
+        self.verbose = verbose
         self.early_event_threshold = 0
         self.small_cell_threshold = 0
         self.low_fluorescence_threshold = 1e3
 
     def process(self, experiments):
         rename_red_channel = RenameRedChannel()
+        rename_red_channel.verbose = self.verbose
         rename_red_channel(experiments)
 
         gate_nonpositive_events = fcmcmp.GateNonPositiveEvents()
+        gate_nonpositive_events.verbose = self.verbose
         gate_nonpositive_events(experiments)
 
         gate_early_events = fcmcmp.GateEarlyEvents()
         gate_early_events.throwaway_secs = self.early_event_threshold
+        gate_early_events.verbose = self.verbose
         gate_early_events(experiments)
 
         gate_small_cells = fcmcmp.GateSmallCells()
         gate_small_cells.save_size_col = True
         gate_small_cells.threshold = self.small_cell_threshold
+        gate_small_cells.verbose = self.verbose
         gate_small_cells(experiments)
 
         gate_low_fluorescence = GateLowFluorescence()
         gate_low_fluorescence.threshold = self.low_fluorescence_threshold
+        gate_low_fluorescence.verbose = self.verbose
         gate_low_fluorescence(experiments)
 
 
