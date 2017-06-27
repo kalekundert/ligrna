@@ -8,9 +8,7 @@ sfGFP               485       510  Pédelacq (2006)
 mRFP                557       592  Campbell (2002)
 
 Below are the laser settings I use on the Lim Lab BD 
-LSRII.  They don't really match the fluorescent 
-proteins that well, so it might make sense to use 
-different settings on different cytometers:
+LSRII:
 
 Channel  Laser  Filter  Voltage  Threshold
 ───────────────────────────────────────────
@@ -18,8 +16,6 @@ FSC        488              400
 SSC        488  488/10      250
 GFP        488  530/30      600       5000
 RFP        561  610/10      500        500
-
-I should try the "PE (YG)" filter (595/40) for mRFP.
 
 Below are the loader settings I use on the Lim Lab BD 
 LSRII.  I use the lowest flow rate possible because 
