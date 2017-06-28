@@ -28,8 +28,8 @@ protocol = dirty_water.Protocol()
 digest = dirty_water.Reaction('''\
 Reagent               Conc  Each Rxn  Master Mix
 ===============  =========  ========  ==========
-water                         6.0 μL         yes
-CutSmart Buffer        10x    0.8 μL         yes
+water                         4.8 μL         yes
+CutSmart Buffer        10x    1.0 μL         yes
 EcoRI-HF           20 U/μL    0.1 μL         yes
 HindIII-HF         20 U/μL    0.1 μL         yes
 DNA              250 ng/μL    4.0 μL
@@ -37,8 +37,9 @@ DNA              250 ng/μL    4.0 μL
 
 digest.num_reactions = eval(args['<reactions>'])
 digest.extra_master_mix = float(args['--extra'])
-digest['DNA'].std_volume = eval(args['--dna'])
-digest['water'].std_volume = 10 - digest['DNA'].std_volume
+extra_dna = eval(args['--dna']) - digest['DNA'].std_volume
+digest['DNA'].std_volume += extra_dna
+digest['water'].std_volume -= extra_dna
 
 protocol += """\
 Setup {:? restriction digest reaction/s} by mixing
