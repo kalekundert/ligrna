@@ -162,7 +162,7 @@ class FoldChange:
 
     def plot(self):
         self._setup_figure()
-        self._setup_grid_lines()
+        self._setup_axes()
         self._analyze_wells()
         self._pick_xlim()
         self._estimate_distributions()
@@ -205,14 +205,15 @@ class FoldChange:
 
         # Don't show that ugly dark grey border around the plot.
         self.figure.patch.set_alpha(0)
-
         if self.title:
             self.figure.suptitle(self.title)
 
-    def _setup_grid_lines(self):
+    def _setup_axes(self):
         """
         Turn on grid lines, but put them behind everything else.
         """
+        self.axes[0].set_xscale('log')
+
         for ax in self.axes:
             ax.xaxis.grid(True)
             ax.set_axisbelow(True)
@@ -249,7 +250,7 @@ class FoldChange:
                 x_min = min(x_min, np.min(well.measurements))
                 x_max = max(x_max, np.max(well.measurements))
 
-        self.axes[0].set_xlim(x_min, x_max)
+        self.axes[0].set_xlim(10**x_min, 10**x_max)
 
     def _estimate_distributions(self):
         """
@@ -257,7 +258,8 @@ class FoldChange:
         along the channel of interest for each well.
         """
         for _, _, well in self._yield_wells():
-            well.estimate_distribution(self.axes[0])
+            xlim = self.axes[0].get_xlim()
+            well.estimate_distribution(np.log10(xlim))
 
     def _rescale_distributions(self):
         """
@@ -401,7 +403,7 @@ class FoldChange:
         Plot the given distributions of cells on the same axis, for comparison.
         """
         style = analysis_helpers.pick_style(comparison.experiment, is_reference)
-        self.axes[0].plot(well.x, well.y + i, **style)
+        self.axes[0].plot(10**well.x, well.y + i, **style)
 
     def _plot_location(self, i, comparison, well, is_reference):
         """
@@ -427,7 +429,7 @@ class FoldChange:
                 'zorder': 2,
             }
 
-        self.axes[0].plot(well.loc, i - self.location_depth, **style)
+        self.axes[0].plot(10**well.loc, i - self.location_depth, **style)
 
     def _pick_xlabels(self):
         from more_itertools import one
@@ -435,7 +437,6 @@ class FoldChange:
         channels = set(x.channel for _, _, x in self._yield_wells())
         control_channels = set(x.control_channel for _, _, x in self._yield_wells())
         control_channels.discard(None)
-        log_scale = one(set(x.log_scale for _, _, x in self._yield_wells()))
 
         channel_labels = {
                 'FSC-A': 'FSC',
@@ -459,9 +460,6 @@ class FoldChange:
             x1_label = '{} / {}'.format(x1_label, channel_labels[channel])
         elif len(control_channels) > 1:
             x1_label = 'normalized {}'.format(x1_label)
-
-        if log_scale:
-            x1_label = 'log({})'.format(x1_label)
 
         self.axes[0].set_xlabel(x1_label)
         self.axes[1].set_xlabel('fold change')
