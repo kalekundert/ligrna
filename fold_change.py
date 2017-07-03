@@ -112,6 +112,11 @@ Options:
         the mean and the mode will both change depending on whether or not the 
         data has been log-transformed (see --log-toggle).
 
+    -Q --trace-quality <samples>        [default: 100]
+        Set the number of points to evaluate along each trace.  More points 
+        will make the traces smoother, while fewer points will make the plot 
+        render faster.
+
     -e --export-dataframe
         Exports a dataframe with the values used to generate the figure
 
@@ -143,6 +148,7 @@ class FoldChange:
         self.title = None
         self.fold_change_xlim = None
         self.distribution_xlim = None
+        self.trace_quality = None
 
         # Internally used plot attributes.
         self.figure = None
@@ -219,6 +225,7 @@ class FoldChange:
                 log_toggle=self.log_toggle,
                 pdf=self.pdf,
                 loc_metric=self.loc_metric,
+                num_samples=self.trace_quality,
         )
         self.comparisons = list(analysis_helpers.yield_related_wells(
                 self.experiments,
@@ -573,6 +580,7 @@ if __name__ == '__main__':
     analysis.pdf = args['--pdf']
     analysis.loc_metric = args['--loc-metric']
     analysis.title = args['--title']
+    analysis.trace_quality = int(args['--trace-quality'])
 
     if args['--indices']:
         analysis.show_indices = nonstdlib.indices_from_str(args['--indices'], start=1)

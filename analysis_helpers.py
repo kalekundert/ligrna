@@ -14,7 +14,7 @@ fluorescence_controls = {
 class AnalyzedWell(fcmcmp.Well):
 
     def __init__(self, experiment, well, channel=None, normalize_by=None, 
-            log_toggle=False, pdf=False, loc_metric='median'):
+            log_toggle=False, pdf=False, loc_metric='median', num_samples=None):
 
         super().__init__(well.label, well.meta, well.data)
 
@@ -24,6 +24,7 @@ class AnalyzedWell(fcmcmp.Well):
         self.log_toggle = log_toggle
         self.calc_pdf = pdf
         self.loc_metric = loc_metric
+        self.num_samples = num_samples
 
         self.measurements = None
         self.linear_measurements = None
@@ -118,7 +119,7 @@ class AnalyzedWell(fcmcmp.Well):
         # evaluations in a narrow range (10% of the x-axis) around the mode.  
         # The points that were evaluated in the calculation of the mode are 
         # also included in the plot.
-        N = 100
+        N = self.num_samples
         dx = 0.05 * (xlim[1] - xlim[0])
         x_dense = np.linspace(self.mode - dx, self.mode + dx, num=N//2)
         x_sparse = np.linspace(*xlim, num=N//2)
