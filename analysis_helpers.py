@@ -5,6 +5,8 @@ import numpy as np, matplotlib.pyplot as plt
 import warnings; warnings.simplefilter("error", FutureWarning)
 from pprint import pprint
 
+plt.rcParams['font.family'] = 'Liberation Sans'
+
 fluorescence_controls = {
         'FITC-A': 'Red-A',
         'Red-A': 'FITC-A', 
@@ -28,6 +30,7 @@ class AnalyzedWell(fcmcmp.Well):
 
         self.measurements = None
         self.linear_measurements = None
+        self.kde = None
         self.log_scale = None
         self.channel = None
         self.control_channel = None
@@ -39,6 +42,7 @@ class AnalyzedWell(fcmcmp.Well):
         self.linear_loc = None
 
         self._find_measurements()
+        self._find_locations()
 
     def estimate_distribution(self, axes_or_xlim=(1,5)):
         if isinstance(axes_or_xlim, plt.Axes):
@@ -82,7 +86,7 @@ class AnalyzedWell(fcmcmp.Well):
         if self.log_scale:
             self.measurements = np.log10(self.linear_measurements)
 
-    def _find_distribution(self, xlim):
+    def _find_locations(self):
         # Calculate the median, mean, and mode of the data.  The advantage of 
         # the median is that it's unaffected by whether or not the data has 
         # been log-transformed.  The advantage of the mode is that it's 
@@ -96,8 +100,8 @@ class AnalyzedWell(fcmcmp.Well):
         # default scipy optimization algorithm (which at this time is BFGS) to 
         # find the maximum as accurately and as quickly as possible.
         from scipy.optimize import minimize
-        kernel = CachedGaussianKde(self.measurements)
-        result = minimize(kernel.objective, self.median)
+        self.kde = CachedGaussianKde(self.measurements)
+        result = minimize(self.kde.objective, self.median)
         self.mode = result.x
 
         # Store the "location" (i.e. median, mean or mode) that the user wants 
@@ -113,20 +117,21 @@ class AnalyzedWell(fcmcmp.Well):
 
         self.linear_loc = 10**self.loc if self.log_scale else self.loc
 
+    def _find_distribution(self, xlim):
         # Evaluate the Gaussian KDE across the whole x-axis for visualization 
         # purposes.  Because each evaluation of the KDE is relatively expensive 
         # and we want the plot to be nice and smooth, we focus most of the 
         # evaluations in a narrow range (10% of the x-axis) around the mode.  
         # The points that were evaluated in the calculation of the mode are 
         # also included in the plot.
-        N = self.num_samples
+        N = self.num_samples or 100
         dx = 0.05 * (xlim[1] - xlim[0])
         x_dense = np.linspace(self.mode - dx, self.mode + dx, num=N//2)
         x_sparse = np.linspace(*xlim, num=N//2)
 
-        kernel.evaluate(x_dense)
-        kernel.evaluate(x_sparse)
-        self.x, self.y = kernel.xy
+        self.kde.evaluate(x_dense)
+        self.kde.evaluate(x_sparse)
+        self.x, self.y = self.kde.xy
 
         # Scale the distribution to make it's area meaningful.  By default, the 
         # area will be proportional to the amount of data.  If the user wants 
