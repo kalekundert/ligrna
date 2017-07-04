@@ -86,6 +86,7 @@ class TitrationCurve:
         self.normalize_by = None
         self.loc_metric = None
         self.legend_loc = 'upper left'
+        self.output_size = None
         self.ylim = None
 
         self.figure = None
@@ -107,7 +108,7 @@ class TitrationCurve:
         self.axes.legend(loc=self.legend_loc)
             
     def _setup_figure(self):
-        self.figure, self.axes = plt.subplots(1, 1)
+        self.figure, self.axes = plt.subplots(1, 1, figsize=self.output_size)
 
         # Don't show that ugly dark grey border around the plot.
         self.figure.patch.set_alpha(0)
@@ -141,14 +142,6 @@ class TitrationCurve:
                 ]
                 for conc, wells in experiment['wells'].items()
         }
-
-        # Calculate the "location" of each distribution.  Use very tight limits 
-        # to get a reliable value for the mode (if we're using that metric).
-        for wells in experiment['wells'].values():
-            for well in wells:
-                x_min = np.percentile(well.measurements, 10)
-                x_max = np.percentile(well.measurements, 90)
-                well.estimate_distribution((x_min, x_max))
 
     def _plot_experiment(self, experiment):
         locs = {
@@ -282,6 +275,9 @@ if __name__ == '__main__':
     analysis.channel = args['--channel']
     analysis.normalize_by = args['--normalize-by'] or not args['--no-normalize']
     analysis.loc_metric = args['--loc-metric']
+
+    if args['--output-size']:
+        analysis.output_size = map(float, args['--output-size'].split('x'))
 
     with analysis_helpers.plot_or_savefig(args['--output'], args['<yml_path>']):
         analysis.plot()
