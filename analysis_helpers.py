@@ -30,6 +30,11 @@ class AnalyzedWell(fcmcmp.Well):
 
         self.measurements = None
         self.linear_measurements = None
+        self.log_measurements = None
+        self.unnormalized_linear_measurements = None
+        self.unnormalized_log_measurements = None
+        self.normalized_linear_measurements = None
+        self.normalized_log_measurements = None
         self.kde = None
         self.log_scale = None
         self.channel = None
@@ -78,13 +83,14 @@ class AnalyzedWell(fcmcmp.Well):
 
         # Save the measurements, from the appropriate channel, with the 
         # appropriate normalization, and on the appropriate scale.
-        self.linear_measurements = self.data[self.channel]
-        if self.control_channel is not None:
-            self.linear_measurements /= self.data[self.control_channel]
+        self.linear_measurements = self.unnormalized_linear_measurements = self.data[self.channel]
+        self.log_measurements = self.unnormalized_log_measurements = np.log10(self.linear_measurements)
 
-        self.measurements = self.linear_measurements
-        if self.log_scale:
-            self.measurements = np.log10(self.linear_measurements)
+        if self.control_channel is not None:
+            self.linear_measurements = self.normalized_linear_measurements = self.unnormalized_linear_measurements / self.data[self.control_channel]
+            self.log_measurements = self.normalized_log_measurements = np.log10(self.normalized_linear_measurements)
+
+        self.measurements = self.log_measurements if self.log_scale else self.linear_measurements
 
     def _find_locations(self):
         # Calculate the median, mean, and mode of the data.  The advantage of 
@@ -121,13 +127,15 @@ class AnalyzedWell(fcmcmp.Well):
         # Evaluate the Gaussian KDE across the whole x-axis for visualization 
         # purposes.  Because each evaluation of the KDE is relatively expensive 
         # and we want the plot to be nice and smooth, we focus most of the 
-        # evaluations in a narrow range (10% of the x-axis) around the mode.  
+        # evaluations in a narrow range (30% of the x-axis) around the mode.  
         # The points that were evaluated in the calculation of the mode are 
         # also included in the plot.
-        N = self.num_samples or 100
-        dx = 0.05 * (xlim[1] - xlim[0])
-        x_dense = np.linspace(self.mode - dx, self.mode + dx, num=N//2)
-        x_sparse = np.linspace(*xlim, num=N//2)
+        n = self.num_samples or 100
+        n_dense = int(0.7 * n)
+        n_sparse = n - n_dense
+        dx = 0.20 * (xlim[1] - xlim[0])
+        x_dense = np.linspace(self.mode - dx, self.mode + dx, num=n_dense)
+        x_sparse = np.linspace(*xlim, num=n_sparse)
 
         self.kde.evaluate(x_dense)
         self.kde.evaluate(x_sparse)
