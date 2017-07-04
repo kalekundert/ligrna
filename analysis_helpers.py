@@ -444,17 +444,17 @@ def pick_ucsf_color(experiment, lightness=0):
     elif 'gfp' in label:
         return olive[i(0)]
     elif control.search(label):
-        return dark_grey[i(0)]
+        return light_grey[i(0)]
     elif lower_stem.search(label):
-        return purple[i(0)]
+        return olive[i(0)]
     elif upper_stem.search(label):
-        return blue[i(0)]
+        return olive[i(0)]
     elif bulge.search(label):
         return olive[i(0)]
     elif nexus.search(label):
         return red[i(0)]
     elif hairpin.search(label):
-        return orange[i(0)]
+        return blue[i(0)]
     else:
         return navy[i(0)]
 
