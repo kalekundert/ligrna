@@ -61,10 +61,7 @@ Options:
     -m --loc-metric <median|mean|mode>
         Specify which metric should be used to determine the "centers" of the 
         cell distributions for the purpose of calculating the fold change in 
-        signal.  By default the mode is used for this calculation.  Note that 
-        the mean and the mode will both change depending on whether or not the 
-        data has been log-transformed (see --log-toggle).  The mode will also 
-        change based on how data is histogrammed (see --histogram).
+        signal.  By default the mode is used for this calculation.
 
     -y --ylim <ymin,ymax>
         Set the y-axis limits.  By default this axis is automatically scaled to 
@@ -155,14 +152,13 @@ class TitrationCurve:
         if experiment['label'] not in ('on', 'off'):
             style.update({'label': experiment['label']})
 
-        self.axes.plot(concs, means, **style)
         self.axes.set_xscale('symlog')
         self.axes.xaxis.set_minor_locator(MinorSymLogLocator())
 
-        style.pop('label', None)
-
-        min_num_data = min(len(data) for data in locs.values())
-        if min_num_data > 1:
+        num_replicates = min(len(data) for data in locs.values())
+        if num_replicates == 1:
+            self.axes.plot(concs, means, **style)
+        elif num_replicates > 1:
             stdevs = [stdev(locs[x]) for x in concs]
             self.axes.errorbar(concs, means, stdevs, **style)
 
