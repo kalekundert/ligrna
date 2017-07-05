@@ -22,6 +22,10 @@ Options:
 
     -p --print-nM
         Print the initial concentration in units of nM.
+
+    -e --encoding <utf>  [default: utf-16le]
+        The encoding of <tsv>.  The nanodrop outputs UTF-16le by default, but 
+        if you use gnumeric to input the names, it exports as UTF-8.
 """
 
 import docopt
@@ -85,7 +89,7 @@ def process_sample(name, initial_ng_uL, args):
 
 # Figure out if name is filename or sgRNA name
 if args['<tsv>']:
-    df = pd.read_csv(args['<tsv>'], sep='\t', encoding='utf-16le')
+    df = pd.read_csv(args['<tsv>'], sep='\t', encoding=args['--encoding'])
     for row in df.iterrows():
         try: name = row[1]['Sample ID']
         except KeyError: name = row[1]['Sample Name']
