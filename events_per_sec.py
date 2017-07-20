@@ -61,15 +61,17 @@ class EventsPerSec:
             for i, x in enumerate(time_coord):
                 time_range = x - self.time_window/2, x + self.time_window/2
                 a, b = np.searchsorted(times, time_range)
-                b -= 1 # keep ``b`` in bounds.
-                dt = times.iloc[b] - times.iloc[a]
-                events_per_sec[i] = (b - a) / dt
+                try:
+                    dt = times.iloc[b] - times.iloc[a]
+                    events_per_sec[i] = (b - a) / dt
+                except IndexError:
+                    pass
 
             plt.plot(
                     time_coord,
                     events_per_sec,
                     label='{} ({})'.format(well.label, condition),
-                    **analysis_helpers.pick_style(experiment, condition)
+                    **analysis_helpers.pick_style(experiment)
             )
 
         plt.xlim(min_time, max_time)
