@@ -212,7 +212,7 @@ class BarChart:
         import matplotlib.transforms as transforms
 
         label_x = (x0 + x -self.condition_padding) / 2  # data coords
-        label_y =  -0.12                                # axes coords
+        label_y =  1.01                                 # axes coords
 
         self.axes.text(
                 label_x, label_y, experiment['label'],
