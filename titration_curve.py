@@ -67,6 +67,11 @@ Options:
         Set the y-axis limits.  By default this axis is automatically scaled to 
         fit the data, but this option is useful is you want to compare 
         different plots.
+
+    -L --no-legend
+        Don't include a legend in the plot.  This might be useful if the legend 
+        is covering something up (and the colors of the lines are clear enough) 
+        or if you're preparing a figure for a paper.
 """
 
 import fcmcmp, analysis_helpers, nonstdlib
@@ -83,6 +88,7 @@ class TitrationCurve:
         self.normalize_by = None
         self.loc_metric = None
         self.legend_loc = 'upper left'
+        self.legend = True
         self.output_size = None
         self.ylim = None
 
@@ -102,7 +108,8 @@ class TitrationCurve:
         self._pick_ylim()
         self._pick_labels()
 
-        self.axes.legend(loc=self.legend_loc)
+        if self.legend:
+            self.axes.legend(loc=self.legend_loc)
             
     def _setup_figure(self):
         self.figure, self.axes = plt.subplots(1, 1, figsize=self.output_size)
@@ -271,6 +278,7 @@ if __name__ == '__main__':
     analysis.channel = args['--channel']
     analysis.normalize_by = args['--normalize-by'] or not args['--no-normalize']
     analysis.loc_metric = args['--loc-metric']
+    analysis.legend = not args['--no-legend']
 
     if args['--output-size']:
         analysis.output_size = map(float, args['--output-size'].split('x'))
