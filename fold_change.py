@@ -76,7 +76,7 @@ Options:
         Exclude the smallest cells from the analysis.  Size is defined as 
         ``FSC + m * SSC``, where ``m`` is the slope of the linear regression 
         relating the two scatter channels.  The given percentile specifies how 
-        many cells are excluded.
+        many cells are excluded.  The default is to include all cells.
 
     -x --expression-gate <signal>       [default: 1e3]
         Exclude cells where the signal on the fluorescence control channel is 
@@ -386,16 +386,16 @@ class FoldChange:
         color = analysis_helpers.pick_color(comparison.experiment)
 
         self.axes[1].plot(
-            [0, fold_change], [i, i],
-            color=color,
-            linewidth=self.fold_change_bar_width,
-            solid_capstyle='butt',
+                [0, fold_change], [i, i],
+                color=color,
+                linewidth=self.fold_change_bar_width,
+                solid_capstyle='butt',
         )
         self.axes[1].errorbar(
-            fold_change, i,
-            xerr=fold_changes.std(),
-            ecolor=color,
-            capsize=self.fold_change_bar_width / 2,
+                fold_change, i,
+                xerr=fold_changes.std(),
+                ecolor=color,
+                capsize=self.fold_change_bar_width / 2,
         )
 
     def _plot_distribution(self, i, comparison, well, is_reference):
@@ -432,36 +432,8 @@ class FoldChange:
         self.axes[0].plot(10**well.loc, i - self.location_depth, **style)
 
     def _pick_xlabels(self):
-        from more_itertools import one
-
-        channels = set(x.channel for _, _, x in self._yield_wells())
-        control_channels = set(x.control_channel for _, _, x in self._yield_wells())
-        control_channels.discard(None)
-
-        channel_labels = {
-                'FSC-A': 'FSC',
-                'SSC-A': 'SSC',
-                'FITC-A': 'GFP',
-                'Red-A': 'RFP',
-        }
-
-        if len(channels) == 1:
-            channel = next(iter(channels))
-            x1_label = channel_labels[channel]
-        elif channels.issubset(analysis_helpers.fluorescence_controls):
-            x1_label = 'fluorescence'
-        elif channels.issubset(['FSC-A', 'SSC-A']):
-            x1_label = 'size'
-        else:
-            raise ValueError("inconsistent x-axes: {}".format(','.join(channels)))
-
-        if len(control_channels) == 1:
-            channel = next(iter(control_channels))
-            x1_label = '{} / {}'.format(x1_label, channel_labels[channel])
-        elif len(control_channels) > 1:
-            x1_label = 'normalized {}'.format(x1_label)
-
-        self.axes[0].set_xlabel(x1_label)
+        label = analysis_helpers.get_channel_label(self.experiments)
+        self.axes[0].set_xlabel(label)
         self.axes[1].set_xlabel('fold change')
 
     def _pick_xticks(self):

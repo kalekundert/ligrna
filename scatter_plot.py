@@ -40,7 +40,7 @@ Options:
         Exclude the smallest cells from the analysis.  Size is defined as 
         ``FSC + m * SSC``, where ``m`` is the slope of the linear regression 
         relating the two scatter channels.  The given percentile specifies how 
-        many cells are excluded.
+        many cells are excluded.  The default is to include all cells.
 
     -x --expression-gate <signal>       [default: 1e3]
         Exclude cells where the signal on the fluorescence control channel is 

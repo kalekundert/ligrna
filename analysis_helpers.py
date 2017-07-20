@@ -7,22 +7,18 @@ from pprint import pprint
 
 plt.rcParams['font.family'] = 'Liberation Sans'
 
-fluorescence_controls = {
-        'FITC-A': 'Red-A',
-        'Red-A': 'FITC-A', 
-}
-
-
 class AnalyzedWell(fcmcmp.Well):
 
     def __init__(self, experiment, well, channel=None, normalize_by=None, 
-            log_toggle=False, pdf=False, loc_metric='median', num_samples=None):
+            log_scale=None, log_toggle=False, pdf=False, loc_metric='median', 
+            num_samples=None):
 
         super().__init__(well.label, well.meta, well.data)
 
         self.experiment = experiment
         self.channel_override = channel
         self.normalize_by = normalize_by
+        self.log_scale = log_scale
         self.log_toggle = log_toggle
         self.calc_pdf = pdf
         self.loc_metric = loc_metric
@@ -36,7 +32,6 @@ class AnalyzedWell(fcmcmp.Well):
         self.normalized_linear_measurements = None
         self.normalized_log_measurements = None
         self.kde = None
-        self.log_scale = None
         self.channel = None
         self.control_channel = None
         self.x = self.y = None
@@ -62,24 +57,15 @@ class AnalyzedWell(fcmcmp.Well):
         # properties of the experiment if nothing was asked for.
         self.channel = pick_channel(self.experiment, self.channel_override)
 
-        # If normalization is requested but no particular channel is given, try 
-        # to find a default fluorescent control channel.
-        if self.normalize_by is True:
-            try: self.control_channel = fluorescence_controls[self.channel]
-            except KeyError: raise fcmcmp.UsageError("No internal control for '{}'".format(channel))
-
-        # If no normalization is requested, don't set a control channel.
-        elif not self.normalize_by:
-            self.control_channel = None
-
-        # If the user manually specifies a channel to normalize with, use it.
-        else:
-            self.control_channel = self.normalize_by
+        # Pick the channel that will be used to normalize the data.
+        self.control_channel = pick_control_channel(
+                self.experiment, self.channel, self.normalize_by)
 
         # Decide whether or not the data should be presented on a log-axis. 
-        self.log_scale = self.channel in fluorescence_controls
-        if self.log_toggle:
-            self.log_scale = not self.log_scale
+        if self.log_scale is None:
+            self.log_scale = is_fluorescent_channel(self.channel)
+            if self.log_toggle:
+                self.log_scale = not self.log_scale
 
         # Save the measurements, from the appropriate channel, with the 
         # appropriate normalization, and on the appropriate scale.
@@ -105,6 +91,9 @@ class AnalyzedWell(fcmcmp.Well):
         # density estimate (KDE) of the measured cell population.  We use the 
         # default scipy optimization algorithm (which at this time is BFGS) to 
         # find the maximum as accurately and as quickly as possible.
+        if self.measurements.empty:
+            raise ValueError("no measurements for {}, well {}".format(self.experiment['label'], self.well.label))
+
         from scipy.optimize import minimize
         self.kde = CachedGaussianKde(self.measurements)
         result = minimize(self.kde.objective, self.median)
@@ -122,6 +111,7 @@ class AnalyzedWell(fcmcmp.Well):
             raise ValueError("No such metric '{}'".format(self.loc_metric))
 
         self.linear_loc = 10**self.loc if self.log_scale else self.loc
+        self.log_loc = self.loc if self.log_scale else np.log10(self.loc)
 
     def _find_distribution(self, xlim):
         # Evaluate the Gaussian KDE across the whole x-axis for visualization 
@@ -209,9 +199,10 @@ class GateLowFluorescence(fcmcmp.GatingStep):
         self.threshold = threshold
 
     def gate(self, experiment, well):
-        channel = fluorescence_controls.get(pick_channel(experiment))
-        if channel in well.data.columns:
-            return well.data[channel] < self.threshold
+        channel = pick_channel(experiment)
+        control_channel = pick_control_channel(experiment, channel)
+        if control_channel in well.data.columns:
+            return well.data[control_channel] < self.threshold
 
 
 class RenameRedChannel(fcmcmp.ProcessingStep):
@@ -510,6 +501,69 @@ def pick_channel(experiment, users_choice=None):
     # Default to the red channel, if nothing else is specified.
     return 'Red-A'
 
+def pick_control_channel(experiment, channel, users_choice=None):
+    # If the user didn't specify a normalization, see if there's a default 
+    # associated with the experiment.
+    if users_choice is None:
+        users_choice = experiment.get('normalize_by')
+
+    # If normalization is requested but no particular channel is given, try to 
+    # find a default fluorescent control channel.
+    if users_choice is True:
+        species = experiment.get('species', 'E. coli')
+        size_controls = {
+                'e. coli': {
+                    'FITC-A': 'Red-A',
+                    'Red-A': 'FITC-A', 
+                },
+                's. cerevisiae': {
+                    'FITC-A': 'SSC-A',
+                    'Red-A': 'SSC-A',
+                }
+        }
+        try:
+            return size_controls[species.lower()][channel]
+        except KeyError:
+            raise fcmcmp.UsageError("No default control channel for '{}' in {}".format(channel, species))
+
+    # If no normalization is requested, don't set a control channel.
+    elif not users_choice:
+        return None
+
+    # If the user manually specifies a channel to normalize with, use it.
+    else:
+        return users_choice
+
+def get_channel_label(experiments):
+    channels = set(x.channel for _, _, x in fcmcmp.yield_wells(experiments))
+    control_channels = set(x.control_channel for _, _, x in fcmcmp.yield_wells(experiments))
+    control_channels.discard(None)
+
+    channel_labels = {
+            'FSC-A': 'FSC',
+            'SSC-A': 'SSC',
+            'FITC-A': 'GFP',
+            'Red-A': 'RFP',
+    }
+
+    if len(channels) == 1:
+        channel = next(iter(channels))
+        label = channel_labels[channel]
+    elif channels.issubset(fluorescence_controls):
+        label = 'fluorescence'
+    elif channels.issubset(['FSC-A', 'SSC-A']):
+        label = 'size'
+    else:
+        raise ValueError("inconsistent channels: {}".format(','.join(channels)))
+
+    if len(control_channels) == 1:
+        channel = next(iter(control_channels))
+        label = '{} / {}'.format(label, channel_labels[channel])
+    elif len(control_channels) > 1:
+        label = 'normalized {}'.format(label)
+
+    return label
+
 def get_ligand(experiments):
     ligands = {expt.get('ligand', 'ligand') for expt in experiments}
     return ligands.pop() if len(ligands) == 1 else 'ligand'
@@ -526,6 +580,12 @@ def get_duration(experiments):
                 max_time = max(max_time, max(well.data['Time'] * dt))
 
     return min_time, max_time
+
+def is_fluorescent_channel(channel):
+    return any(
+            channel.startswith(x)
+            for x in ['FITC', 'Red']
+    )
 
 @contextlib.contextmanager
 def plot_or_savefig(output_path=None, substitution_path=None):
