@@ -1,33 +1,3 @@
-Reagents
-========
-- 100 mL YPD
-- 120 mL water (chilled)
-- 120 mL 1M sorbitol, 1 mM CaCl₂ (electroporation 
-  buffer) (chilled)
-- 20 mL 100 mM LiOAc, 10 mM DTT (conditioning buffer)
-- 10 mL 1:1 mix of 1M sorbitol and YPD media
-- 1 SD-Leu plate
-
-- 4 50 mL pipets (chilled)
-- 1000 uL tips (chilled)
-
-Reagents
-========
-- YPD
-
-  - 50.0 g YPD Broth (powder, Fisher BP2469-2)
-  - ~900 mL water
-  - stir until well dissolved (30 min)
-  - sterile filter
-
-  Note that this is "non-caramelized YPD" because 
-  it's sterile-filtered rather than autoclaved.  
-  Yeast don't grow quite as well in "caramelized 
-  YPD", but it might work for this protocol; I 
-  haven't tried it.
-
-- electroporation buffer
-
 Day 1
 =====
 1. Prepare a overnight culture from a fresh colony of 
@@ -56,8 +26,6 @@ Day 1
 
 Protocol
 ========
-1. Inoculate 100 mL YPD 
-
 1. Saccharomyces cerevisiae were grown overnight to 
    stationary phase (OD600 of ∼3). 
    
