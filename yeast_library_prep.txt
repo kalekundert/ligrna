@@ -1,0 +1,173 @@
+Day 1
+=====
+1. Prepare 120 mL 1M sorbitol:
+   - 21.86 g sorbitol
+   - water to 120 mL
+   
+2. Reserve 5 mL 1M sorbitol (in a 15 mL falcon tube)
+
+3. Prepare 115 mL "electroporation buffer" with the 
+   remaining 1M sorbitol:
+
+   - 115 mL 1M sorbitol
+   - 115 uL 1M CaCl2
+   - sterile filter
+
+4. Chill the following reagents overnight in the cold 
+   room:
+
+   - 5 50 mL pipets
+   - 1 box 1000 uL pipet tips
+   - 200 mL milliQ water
+   - 115 mL "electroporation buffer"
+
+Day 2
+=====
+- Setup a NotI digestion to linearize 80 μg of your 
+  library.
+
+  We're doing 10 transformations, and the actual 
+  insert is only about half of the plasmid, so this 
+  corresponds to 4 μg/rxn.  Benatuil tested insert 
+  concentrations from 4 μg/rxn to 16 μg/rxn and found 
+  that they all gave similar transformation 
+  efficiencies, so we're sticking to the low end of 
+  that range.
+
+  Reagent             Conc       Vol
+  ──────────────────────────────────
+  Water                     to 20 uL
+  Plasmid DNA                  80 μg
+  CutSmart Buffer      10x      2 μL
+  NotI             20 U/μL      2 μL
+
+  - Incubate 1h at 37°C, then 20 min at 65°C, then 
+    hold at 12°C.
+
+- Inoculate 400 mL non-caramelized YPD with all of 
+  the overnight culture.  The OD should be near 0.3.  
+   
+- Incubate the cells at 30°C with shaking at 225 rpm 
+  in a 1L baffled flask until they reach OD 1.6.  
+  This should take about 5h.
+
+- Once the NotI digestion is complete, desalt the DNA 
+  using drop dialysis.
+
+  - Fill a petri dish about halfway (~20 mL) with 
+    milliQ water.
+
+  - Float a nitrocellulose membrane shiny-side up on 
+    the water.  Use tweezers to handle the membrane 
+    and make sure no air gets caught underneath it.  
+
+    The reason for having the shiny-side up is 
+    explained on the Millipore website.  It's 
+    helpful but not crucial, so don't worry if you 
+    can't really tell which side is the shiny one:
+
+      Most researchers may not even notice that 
+      there is a "sidedness" to filters, and, for 
+      most applications, orientation will not affect 
+      filter performance.  However, membranes do 
+      have a slightly asymmetric pore structure: the 
+      shiny side of the membrane is the "tighter" 
+      side.  In some applications, you can take 
+      advantage of this difference by selecting a 
+      specific filter orientation.  Membranes should 
+      always be used shiny side up for drop dialysis 
+      (a buffer exchange technique in which a few 
+      drops of DNA or protein are placed in a 0.05 
+      or 0.025 um filter and floated on a buffer 
+      solution).  Apply the sample to the shiny side 
+      of the filter and float the filter dull side 
+      to the buffer.  This measure will enhance 
+      buffer exchange and discourage sample loss.  
+
+  - Let the membrane sit for 5 min to allow it to 
+    completely soak with water.
+
+  - Pipet the entire NotI digestion reaction (20 uL) 
+    onto the center of the membrane.
+
+  - Dialyze for 4h.
+
+  - Pipet the droplet off the membrane and into a 
+    clean tube.
+   
+- Wash the cells with water and "electroporation 
+  buffer" once they finish growing:
+
+  - Pellet 3270g, 4°C, 5 min.
+  - Resuspend in 50 mL chilled water.
+
+  - Pellet 3270g, 4°C, 5 min.
+  - Resuspend in 50 mL chilled water again.
+
+  - Pellet 3270g, 4°C, 5 min.
+  - Resuspend in 50 mL "electroporation buffer"
+  
+- Prepare 20 mL "conditioning buffer":
+
+  Reagent       Conc       Vol
+  ────────────────────────────
+  milliQ water        to 20 mL
+  LiOAc           1M      2 mL
+  DTT             1M    200 uL
+  
+- Resuspend the cells in 20 mL conditioning buffer, 
+  then incubate them at 30°C for 30 min with shaking 
+  at 225 rpm.
+
+- Prepare 10 mL "recovery media":
+
+  Reagent   Conc   Vol
+  ────────────────────
+  YPD             5 mL
+  sorbitol    1M  5 mL
+
+  - Sterile filter the media using a syringe.
+  - Pre-warm the media to 30°C.
+
+- Chill the DNA and 10 electroporation cuvettes (with 
+  2 mm gaps).
+
+- Wash the cells with "electroporation buffer" and 
+  make aliquots for 10 transformations.
+
+  - Pellet 3270g, 4C, 5 min.
+  - Resuspend in 50 mL "electroporation buffer"
+
+  - Pellet 3270g, 4C, 5 min.
+  - Add "electroporation buffer" to a final volume 
+    of 4 mL.
+
+  - Make 10 400 μL aliquots of cells.
+  - Keep on ice.
+
+- Pipet once to mix each aliquot of cells with 2 μL 
+  of DNA, then transfer to a chilled cuvette.
+    
+- Electroporate the cells with the following 
+  parameters:
+
+  - Voltage: 2500 V
+  - Capacitance: 25 uF
+  - Resistance: 200 Ω
+  - Gap length: 2 mm
+
+  The Benatuil reference didn't specify a 
+  resistance, so I took the 200 Ω parameter from 
+  the preset S. cerevisiae protocol on the 
+  electroporator.
+  
+- Immediately suspend the cells in 10 mL "recovery 
+  media".  Prepare five 5x serial dilutions to 
+  measure transformation efficiency:
+
+  - Dilute 10 uL cells into 40 μL YPD.
+  - Plate 20 μL of each dilution.
+
+- Incubate at 30°C for 1h with shaking at 225 rpm.
+
+vim: tw=53 ts=2 sts=2 sw=2
