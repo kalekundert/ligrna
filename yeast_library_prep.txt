@@ -22,13 +22,13 @@ Day 1
   - 200 mL milliQ water
   - 115 mL "electroporation buffer"
 
-- Start a 10 mL overnight culture in YPD from a fresh 
+- Start a 12 mL overnight culture in YPD from a fresh 
   colony.
 
 Day 2
 =====
-- Inoculate 400 mL non-caramelized YPD with all of 
-  the overnight culture.  The OD should be near 0.3.  
+- Inoculate 400 mL YPD with all of the overnight 
+  culture.  The OD should be near 0.3.  
    
 - Incubate the cells at 30°C with shaking at 225 rpm 
   in a 1L baffled flask until they reach OD 1.6.  
@@ -99,8 +99,13 @@ Day 2
   - Pipet the droplet off the membrane and into a 
     clean tube.
    
-- Wash the cells with water and "electroporation 
-  buffer" once they finish growing:
+- Prepare 20 mL "conditioning buffer":
+
+  - 2 mL 1M LiOAc
+  - 200 μL 1 M DTT
+  - water to 20 mL
+  
+- Wash the cells:
 
   - Pellet 3270g, 4°C, 5 min.
   - Resuspend in 50 mL chilled water.
@@ -110,15 +115,11 @@ Day 2
 
   - Pellet 3270g, 4°C, 5 min.
   - Resuspend in 50 mL "electroporation buffer".
-  
-- Prepare 20 mL "conditioning buffer":
 
-  - 2 mL 1M LiOAc
-  - 200 μL 1 M DTT
-  - water to 20 mL
+  - Pellet 3270g, 4°C, 5 min.
+  - Resuspend in 20 mL "conditioning buffer".
   
-- Resuspend the cells in 20 mL conditioning buffer, 
-  then incubate them at 30°C for 30 min with shaking 
+- Incubate the cells at 30°C for 30 min with shaking 
   at 225 rpm.
 
 - Prepare 10 mL "recovery media":
@@ -128,11 +129,12 @@ Day 2
   - Sterile filter using a syringe.
   - Pre-warm to 30°C.
 
-- Make 10 2 μL aliquots of DNA, then chill the DNA on 
-  ice along with 10 electroporation cuvettes (with 2 
-  mm gaps).
+- Make 10 aliquots of DNA (the volume of the DNA 
+  changes during dialysis), then chill the DNA on ice 
+  along with 10 electroporation cuvettes (with 2 mm 
+  gaps).
 
-- Wash the cells with "electroporation buffer":
+- Wash the cells again:
 
   - Pellet 3270g, 4C, 5 min.
   - Resuspend in 50 mL "electroporation buffer".
@@ -144,8 +146,7 @@ Day 2
 - Pipet once to mix 400 uL of cells with each aliquot 
   of DNA, then transfer to a chilled cuvette.
     
-- Electroporate each cuvette with the following 
-  parameters:
+- Electroporate each cuvette as follows:
 
   - Voltage: 2500 V
   - Capacitance: 25 uF
