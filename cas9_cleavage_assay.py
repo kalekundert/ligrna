@@ -41,6 +41,10 @@ Options:
         The working concentration of DNA will be the standard amount times 
         this argument.
 
+    -Z --dna-stock-conc <nM>            [default: 30]
+        The concentration of the DNA stock solutions, in nM.  This option is 
+        provided so you can accommodate DNA stocks that are too dilute.
+
     -x --extra <percent>                [default: 10]
         How much extra master mix to create.
 
@@ -78,6 +82,7 @@ cas9_rxn['Cas9'].conc *= float(args['--cas9-conc'])
 cas9_rxn['ligand'].conc *= float(args['--ligand-conc'])
 cas9_rxn['sgRNA'].conc *= float(args['--sgrna-conc'])
 cas9_rxn['DNA'].conc *= float(args['--dna-conc'])
+cas9_rxn['DNA'].stock_conc = float(args['--dna-stock-conc'])
 
 kag_rxn = dirty_water.Reaction('''\
 Reagent       Conc  Each Rxn  Master Mix
