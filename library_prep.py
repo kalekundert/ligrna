@@ -93,6 +93,8 @@ pcr.annealing_temp = args['<annealing_temp>']
 pcr.extension_time = time_to_secs(args['--extension-time'])
 pcr.make_primer_mix = True
 pcr.reaction.volume = eval(args['--reaction-volume'])
+pcr.primer_mix['forward primer'].stock_conc = float(args['--primer-conc'])
+pcr.primer_mix['reverse primer'].stock_conc = float(args['--primer-conc'])
 
 protocol += pcr
 
