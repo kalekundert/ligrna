@@ -1,11 +1,11 @@
 Day 1
 =====
-- Prepare 120 mL 1M sorbitol:
+- Prepare 165 mL 1M sorbitol:
 
-  - 21.86 g sorbitol
-  - water to 120 mL
+  - 30.06 g sorbitol
+  - water to 165 mL
    
-- Reserve 5 mL 1M sorbitol (in a 15 mL falcon tube)
+- Reserve 50 mL 1M sorbitol (in a falcon tube).
 
 - Prepare 115 mL "electroporation buffer" with the 
   remaining 1M sorbitol:
@@ -14,8 +14,8 @@ Day 1
   - 115 uL 1M CaCl2
   - sterile filter
 
-- Chill the following reagents overnight in the cold 
-  room:
+- Chill the following items and reagents overnight in 
+  the cold room:
 
   - 5 50 mL pipets
   - 1 box 1000 uL pipet tips
@@ -27,23 +27,15 @@ Day 1
 
 Day 2
 =====
-- Inoculate 400 mL YPD with all of the overnight 
-  culture.  The OD should be near 0.3.  
+- Inoculate 400 mL YPD with all 12 mL of the 
+  overnight culture.  The OD should be near 0.3.  
    
 - Incubate the cells at 30°C with shaking at 225 rpm 
   in a 1L baffled flask until they reach OD 1.6.  
   This should take about 5h.
 
 - Setup a NotI digestion to linearize 80 μg of your 
-  library.
-
-  We're doing 10 transformations, and the actual 
-  insert is only about half of the plasmid, so this 
-  corresponds to 4 μg/rxn.  Benatuil tested insert 
-  concentrations from 4 μg/rxn to 16 μg/rxn and found 
-  that they all gave similar transformation 
-  efficiencies, so we're sticking to the low end of 
-  that range.
+  library [1]:
 
   Reagent             Conc       Vol
   ──────────────────────────────────
@@ -61,32 +53,9 @@ Day 2
   - Fill a petri dish about halfway (~20 mL) with 
     milliQ water.
 
-  - Float a nitrocellulose membrane shiny-side up on 
-    the water.  Use tweezers to handle the membrane 
+  - Float a nitrocellulose membrane shiny-side up [2]
+    on the water.  Handle the membrane with tweezers 
     and make sure no air gets caught underneath it.  
-
-    The reason for having the shiny-side up is 
-    explained on the Millipore website.  It's 
-    helpful but not crucial, so don't worry if you 
-    can't really tell which side is the shiny one:
-
-      Most researchers may not even notice that 
-      there is a "sidedness" to filters, and, for 
-      most applications, orientation will not affect 
-      filter performance.  However, membranes do 
-      have a slightly asymmetric pore structure: the 
-      shiny side of the membrane is the "tighter" 
-      side.  In some applications, you can take 
-      advantage of this difference by selecting a 
-      specific filter orientation.  Membranes should 
-      always be used shiny side up for drop dialysis 
-      (a buffer exchange technique in which a few 
-      drops of DNA or protein are placed in a 0.05 
-      or 0.025 um filter and floated on a buffer 
-      solution).  Apply the sample to the shiny side 
-      of the filter and float the filter dull side 
-      to the buffer.  This measure will enhance 
-      buffer exchange and discourage sample loss.  
 
   - Let the membrane sit for 5 min to allow it to 
     completely soak with water.
@@ -122,11 +91,11 @@ Day 2
 - Incubate the cells at 30°C for 30 min with shaking 
   at 225 rpm.
 
-- Prepare 10 mL "recovery media":
+- Prepare 100 mL "recovery media":
 
-  - 5 mL YPD
-  - 5 mL 1M sorbitol
-  - Sterile filter using a syringe.
+  - 50 mL YPD
+  - 50 mL 1M sorbitol
+  - Sterile filter.
   - Pre-warm to 30°C.
 
 - Make 10 aliquots of DNA (the volume of the DNA 
@@ -150,17 +119,12 @@ Day 2
 
   - Voltage: 2500 V
   - Capacitance: 25 uF
-  - Resistance: 200 Ω
+  - Resistance: 200 Ω [3]
   - Gap length: 2 mm
 
-  The Benatuil reference didn't specify a 
-  resistance, so I took the 200 Ω parameter from 
-  the preset S. cerevisiae protocol on the 
-  electroporator.
-  
-- Immediately suspend the cells in 10 mL "recovery 
-  media".  Prepare a 5x serial dilution to measure 
-  transformation efficiency:
+- Immediately suspend the cells in 100 mL "recovery 
+  media".  Prepare a series of 5x dilutions to 
+  measure transformation efficiency:
 
   - Pipet 40 μL YPD into each of 5 tubes.
   - Dilute 10 μL cells into the first tube and mix 
@@ -172,6 +136,52 @@ Day 2
 
 - Incubate at 30°C for 1h with shaking at 225 rpm.
 
-- Transfer to selective media and grow overnight.
+- Transfer to selective media.
+
+Footnotes
+=========
+[1] We're doing 10 transformations, and the actual 
+    insert is only about half of the plasmid, so this 
+    corresponds to 4 μg/rxn.  Benatuil et al. tested 
+    insert concentrations from 4 μg/rxn to 16 μg/rxn 
+    and found that they all gave similar numbers of 
+    transformants, so we're sticking to the low end 
+    of that range.
+
+[2] The reason for using the nitrocellulose membrane 
+    shiny-side up is explained on the Millipore 
+    website.  It's helpful but not crucial, so don't 
+    worry if you can't really tell which side is the 
+    shiny one:
+
+       Most researchers may not even notice that 
+       there is a "sidedness" to filters, and, for 
+       most applications, orientation will not affect 
+       filter performance.  However, membranes do 
+       have a slightly asymmetric pore structure: the 
+       shiny side of the membrane is the "tighter" 
+       side.  In some applications, you can take 
+       advantage of this difference by selecting a 
+       specific filter orientation.  Membranes should 
+       always be used shiny side up for drop dialysis 
+       (a buffer exchange technique in which a few 
+       drops of DNA or protein are placed in a 0.05 
+       or 0.025 um filter and floated on a buffer 
+       solution).  Apply the sample to the shiny side 
+       of the filter and float the filter dull side 
+       to the buffer.  This measure will enhance 
+       buffer exchange and discourage sample loss.  
+
+[3] Benatuil et al. didn't specify a resistance, so I 
+    took the 200 Ω resistance parameter from the 
+    preset S. cerevisiae protocol on the BioRad 
+    electroporator.
+  
+Reference
+=========
+Benatuil, Perez, Belk, Hsieh.  An improved yeast 
+transformation method for the generation of very 
+large human antibody libraries.  Protein Eng Des Sel 
+(2010) 23:4:155–159.
 
 vim: tw=53 ts=2 sts=2 sw=2
