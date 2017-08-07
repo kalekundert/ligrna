@@ -3,7 +3,7 @@
     Reagent                Conc      Vol
     ────────────────────────────────────
     pCR21 DNA        ≈500 ng/μL  43.5 μL
-    CutSmart buffer        10 x   5.0 μL
+    CutSmart buffer         10x   5.0 μL
     XmnI                20 U/μL   1.5 μL
 
     (approximately 1U XmnI per 1 μg DNA)
@@ -12,10 +12,11 @@
    visible on a gel (1-2h).  Then incubate at 65°C 
    for 20 min to heat-inactivate the enzyme.
 
-3. Purify the DNA using a PCR cleanup kit.  You can 
-   also do a gel extraction if you want to be extra 
-   sure that the DNA is clean (and you can afford the 
-   yield hit).  
+3. Purify the DNA using a PCR cleanup kit.  Use a 
+   miniprep column to avoid losing too much DNA.  You 
+   can also do a gel extraction if you want to be 
+   extra sure that the DNA is clean (and you can 
+   afford the yield hit).  
    
    If you're doing a large scale prep (e.g. 1 mL), 
    you can't do a PCR cleanup because you'll exceed
