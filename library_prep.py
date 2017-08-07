@@ -175,8 +175,8 @@ electroporation.  For each transformation:
 
 - Recover at 37°C for 1h.
   
-- Add 4 volumes LB + 5/4x Carb and grow overnight 
-  at 37°C."""
+- Transfer cells to 50 mL selective media and 
+  grow overnight at 37°C."""
 
 if args['--top10-only']:
     print(protocol)
@@ -210,14 +210,14 @@ protocol += """\
 Transform the combined library into MG1655 cells 
 by electroporation.
 
+- Use the same transformation protocol described
+  above.
+
 - It's best to do the transformation immediately, 
   so as much of the DNA as possible will be 
   supercoiled.  With MG1655 (but not Top10)
   cells, I find that supercoiled DNA gives 100x
-  more transformants than relaxed DNA.
-
-- Use the transformation protocol described
-  above, but use Carb + Chlor instead of Carb."""
+  more transformants than relaxed DNA."""
 
 ## Glycerol stock
 
