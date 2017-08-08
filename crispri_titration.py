@@ -60,7 +60,7 @@ Grow at 37°C with shaking at 225 rpm for {hours}.
 """
 
 protocol += """\
-Dilute 0.5 μL of each culture into 200 μL PBS.
+Dilute 0.5 μL of each culture into 250 μL PBS.
 """
 
 protocol += """\
