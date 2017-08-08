@@ -50,6 +50,12 @@ Inoculate each well with 4 μL overnight culture.
 """
 
 protocol += """\
+Transfer the cultures to a 24 well block.  The 
+improved shaking and aeration is important for 
+getting consistent results.
+"""
+
+protocol += """\
 Grow at 37°C with shaking at 225 rpm for {hours}.
 """
 
@@ -68,3 +74,5 @@ if args['--verbose']:
     import lsrii_params
     print()
     print(lsrii_params.__doc__)
+
+# vim: tw=53
