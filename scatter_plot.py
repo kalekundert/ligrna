@@ -26,6 +26,10 @@ Options:
         be sent to the printer via 'lpr'.  By default, no output is generated 
         and the plot is shown in the GUI.
 
+    -O --output-size <width "x" height>
+        Specify what the width and height of the resulting figure should be, in 
+        inches.  The two numbers must be separated by an "x".
+
     -C --size-channels
         Show forward scatter vs. side scatter plots (which reflect the size of 
         the particles passing the detector) rather than red fluorescence vs. 
@@ -80,7 +84,7 @@ Options:
         to represent each individual point as a vector object.  By default, 
         these points (but not the lines or the text that make up the rest of 
         the figure) would be rasterized.  This option makes the resulting file 
-        much larger and makes exporting and viewing that file take much longer.  
+        much larger and makes exporting and viewing that file take much longer.
 
     -v --verbose
         Print out information on all the processing steps.
@@ -138,11 +142,11 @@ class ScatterPlot(analysis_helpers.ExperimentPlot):
             self.x_channel = 'FSC-A'
             self.y_channel = 'SSC-A'
         elif 'cerevisiae' in self.experiment.get('species', 'E. coli'):
-            self.x_channel = 'FSC-A'
-            self.y_channel = 'FITC-A'
+            self.x_channel = 'SSC-A'
+            self.y_channel = 'GFP-A'
         else:
-            self.x_channel = 'FITC-A'
-            self.y_channel = 'Red-A'
+            self.x_channel = 'GFP-A'
+            self.y_channel = 'RFP-A'
 
         # Label the axes with the chosen channel names.
 
@@ -258,7 +262,7 @@ if __name__ == '__main__':
     shared_steps.process([experiment])
 
     log_transformation = fcmcmp.LogTransformation()
-    log_transformation.channels = ['FITC-A', 'Red-A', 'FSC-A', 'SSC-A']
+    log_transformation.channels = ['GFP-A', 'RFP-A', 'FSC-A', 'SSC-A']
     log_transformation.verbose = args['--verbose']
     log_transformation([experiment])
 
@@ -270,6 +274,9 @@ if __name__ == '__main__':
     analysis.contour_steps = int(args['--contour-steps'])
     analysis.cell_alpha = float(args['--cell-alpha'])
     analysis.rasterize_cells = not args['--force-vector']
+
+    if args['--output-size']:
+        analysis.output_size = map(float, args['--output-size'].split('x'))
 
     with analysis_helpers.plot_or_savefig(args['--output'], args['<yml_path>']):
         analysis.plot()

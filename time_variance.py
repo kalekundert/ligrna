@@ -101,7 +101,7 @@ if __name__ == '__main__':
     rename_red_channel([experiment])
 
     log_transformation = fcmcmp.LogTransformation()
-    log_transformation.channels = 'FITC-A', 'Red-A'
+    log_transformation.channels = 'GFP-A', 'RFP-A'
     log_transformation([experiment])
 
     analysis = TimeChannel(experiment)

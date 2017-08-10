@@ -34,7 +34,7 @@ Options:
     -n --normalize-by <channel>
         Normalize the channel of interest (see --channel) by the given channel.
         For example, you might specify "FSC-A", "SSC-A", or "FSC-A + m * SSC-A" 
-        to normalize by cell size.  By default the data is normalized by FITC-A 
+        to normalize by cell size.  By default the data is normalized by GFP-A 
         (GFP expression) if the channel of interest is PE-Texas Red-A or 
         DsRed-A (RFP expression) and vice versa.
 

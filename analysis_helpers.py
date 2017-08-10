@@ -205,27 +205,30 @@ class GateLowFluorescence(fcmcmp.GatingStep):
             return well.data[control_channel] < self.threshold
 
 
-class RenameRedChannel(fcmcmp.ProcessingStep):
+class RenameFluorescentChannels(fcmcmp.ProcessingStep):
     """
     I use different red channels on different cytometers.  In particular, I use 
     the "PE-Texas Red" channel on the BD LSRII and the "DsRed" channel on the 
     BD FACSAriaII.  To allow my scripts to work on data from either machine, I 
-    rename the red channel to "Red".  I have to be slightly careful because 
+    rename the red channel to "RFP".  I have to be slightly careful because 
     some of my data from the FACSAriaII also has data in the "PE-Texas Red" 
     channel, so the "DsRed" channel has to take priority if both are present.
     """
 
     def process_well(self, experiment, well):
-        if 'DsRed-A' in well.data.columns:
-            red_channel = 'DsRed-A'
-        elif 'PE-Texas Red-A' in well.data.columns:
-            red_channel = 'PE-Texas Red-A'
-        elif 'mCherry-A' in well.data.columns:
-            red_channel = 'mCherry-A'
-        else:
-            return
+        new_channel_names = {}
 
-        well.data.rename(columns={red_channel: 'Red-A'}, inplace=True)
+        if 'DsRed-A' in well.data.columns:
+            new_channel_names['DsRed-A'] = 'RFP-A'
+        elif 'PE-Texas Red-A' in well.data.columns:
+            new_channel_names['PE-Texas Red-A'] = 'RFP-A'
+        elif 'mCherry-A' in well.data.columns:
+            new_channel_names['mCherry-A'] = 'RFP-A'
+
+        if 'FITC-A' in well.data.columns:
+            new_channel_names['FITC-A'] = 'GFP-A'
+
+        well.data.rename(columns=new_channel_names, inplace=True)
 
 
 class SharedProcessingSteps:
@@ -237,9 +240,9 @@ class SharedProcessingSteps:
         self.low_fluorescence_threshold = 1e3
 
     def process(self, experiments):
-        rename_red_channel = RenameRedChannel()
-        rename_red_channel.verbose = self.verbose
-        rename_red_channel(experiments)
+        rename_channels = RenameFluorescentChannels()
+        rename_channels.verbose = self.verbose
+        rename_channels(experiments)
 
         gate_nonpositive_events = fcmcmp.GateNonPositiveEvents()
         gate_nonpositive_events.verbose = self.verbose
@@ -273,6 +276,7 @@ class ExperimentPlot:
     def __init__(self, experiment):
         # Settings configured by the user.
         self.experiment = experiment
+        self.output_size = None
 
         # Internally used plot attributes.
         self.figure = None
@@ -299,6 +303,7 @@ class ExperimentPlot:
         self.figure, self.axes = plt.subplots(
                 self.num_rows, self.num_cols,
                 sharex=True, sharey=True, squeeze=False,
+                figsize=self.output_size,
         )
         
         # Don't show that ugly dark grey border around the plot.
@@ -471,35 +476,31 @@ def pick_channel(experiment, users_choice=None):
 
     The channel can either be set directly by the user (typically via the 
     command line) or can be inferred from the name of the experiment.  If 
-    nothing else is specified, it will default to the "Red-A" channel.
+    nothing else is specified, it will default to the "RFP-A" channel.
     """
     # If the user manually specified a channel to view, use it.
     if users_choice:
-        return users_choice
+        return get_channel_alias(users_choice)
 
     # If a particular channel is associated with this experiment, use it.
     if 'channel' in experiment:
-        channel = experiment['channel']
-        if channel in ('PE-Texas Red-A', 'DsRed-A'):
-            return 'Red-A'
-        else:
-            return channel
+        return get_channel_alias(experiment['channel'])
 
     # If the experiment specifies a spacer, use the corresponding channel.
     if 'spacer' in experiment:
         if 'gfp' in experiment['spacer']:
-            return 'FITC-A'
+            return 'GFP-A'
         if 'rfp' in experiment['spacer']:
-            return 'Red-A'
+            return 'RFP-A'
 
     # If a channel can be inferred from the name of the experiment, use it. 
     if 'gfp' in experiment['label'].lower():
-        return 'FITC-A'
+        return 'GFP-A'
     if 'rfp' in experiment['label'].lower():
-        return 'Red-A'
+        return 'RFP-A'
 
     # Default to the red channel, if nothing else is specified.
-    return 'Red-A'
+    return 'RFP-A'
 
 def pick_control_channel(experiment, channel, users_choice=None):
     # If the user didn't specify a normalization, see if there's a default 
@@ -513,12 +514,20 @@ def pick_control_channel(experiment, channel, users_choice=None):
         species = experiment.get('species', 'E. coli')
         size_controls = {
                 'e. coli': {
-                    'FITC-A': 'Red-A',
-                    'Red-A': 'FITC-A', 
+                    'GFP-A': 'RFP-A',
+                    'RFP-A': 'GFP-A', 
+                    'GFP-H': 'RFP-H',
+                    'RFP-H': 'GFP-H', 
+                    'GFP-W': 'RFP-W',
+                    'RFP-W': 'GFP-W', 
                 },
                 's. cerevisiae': {
-                    'FITC-A': 'SSC-A',
-                    'Red-A': 'SSC-A',
+                    'GFP-A': 'SSC-A',
+                    'RFP-A': 'SSC-A',
+                    'GFP-H': 'SSC-H',
+                    'GFP-H': 'SSC-H',
+                    'RFP-W': 'SSC-W',
+                    'RFP-W': 'SSC-W',
                 }
         }
         try:
@@ -532,23 +541,26 @@ def pick_control_channel(experiment, channel, users_choice=None):
 
     # If the user manually specifies a channel to normalize with, use it.
     else:
-        return users_choice
+        return get_channel_alias(users_choice)
 
-def get_channel_label(experiments):
+def get_channel_alias(channel):
+    if channel in ('RFP-A', 'PE-Texas Red-A', 'DsRed-A', 'mCherry-A'):
+        return 'RFP-A'
+    if channel in ('GFP-A', 'FITC-A'):
+        return 'GFP-A'
+    else:
+        return channel
+
+def get_channel_label(experiments, baseline=False):
     channels = set(x.channel for _, _, x in fcmcmp.yield_wells(experiments))
     control_channels = set(x.control_channel for _, _, x in fcmcmp.yield_wells(experiments))
     control_channels.discard(None)
 
-    channel_labels = {
-            'FSC-A': 'FSC',
-            'SSC-A': 'SSC',
-            'FITC-A': 'GFP',
-            'Red-A': 'RFP',
-    }
+    get_label = lambda x: x.split('-')[0]
 
     if len(channels) == 1:
         channel = next(iter(channels))
-        label = channel_labels[channel]
+        label = get_label(channel)
     elif channels.issubset(fluorescence_controls):
         label = 'fluorescence'
     elif channels.issubset(['FSC-A', 'SSC-A']):
@@ -557,8 +569,8 @@ def get_channel_label(experiments):
         raise ValueError("inconsistent channels: {}".format(','.join(channels)))
 
     if len(control_channels) == 1:
-        channel = next(iter(control_channels))
-        label = '{} / {}'.format(label, channel_labels[channel])
+        control_channel = next(iter(control_channels))
+        label = '{} / {}'.format(label, get_label(control_channel))
     elif len(control_channels) > 1:
         label = 'normalized {}'.format(label)
 
@@ -584,7 +596,7 @@ def get_duration(experiments):
 def is_fluorescent_channel(channel):
     return any(
             channel.startswith(x)
-            for x in ['FITC', 'Red']
+            for x in ['GFP', 'RFP']
     )
 
 @contextlib.contextmanager

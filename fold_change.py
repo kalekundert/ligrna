@@ -37,7 +37,7 @@ Options:
     -n --normalize-by <channel>
         Normalize the channel of interest (see --channel) by the given channel.
         For example, you might specify "FSC-A", "SSC-A", or "FSC-A + m * SSC-A" 
-        to normalize by cell size.  By default the data is normalized by FITC-A 
+        to normalize by cell size.  By default the data is normalized by GFP-A 
         (GFP expression) if the channel of interest is PE-Texas Red-A or 
         DsRed-A (RFP expression) and vice versa.
 
@@ -247,8 +247,8 @@ class FoldChange:
             x_min = x_01 = np.inf
             x_max = x_99 = -np.inf
             for _, _, well in self._yield_wells():
-                x_min = min(x_min, np.min(well.measurements))
-                x_max = max(x_max, np.max(well.measurements))
+                x_min = min(x_min, np.min(well.log_measurements))
+                x_max = max(x_max, np.max(well.log_measurements))
 
         self.axes[0].set_xlim(10**x_min, 10**x_max)
 
