@@ -97,7 +97,7 @@ class AnalyzedWell(fcmcmp.Well):
         from scipy.optimize import minimize
         self.kde = CachedGaussianKde(self.measurements)
         result = minimize(self.kde.objective, self.median)
-        self.mode = result.x
+        self.mode = result.x[0]
 
         # Store the "location" (i.e. median, mean or mode) that the user wants 
         # to use to calculate fold change.  The default is the mode.
@@ -147,21 +147,20 @@ def analyze_wells(experiments, **kwargs):
                     for well in experiment['wells'][condition]
             ]
 
+class RelatedWells:
+
+    def __init__(self, experiment, condition, reference, i):
+        self.experiment = experiment
+        self.label = experiment['label']
+        self.condition = condition
+        self.condition_wells = experiment['wells'][condition]
+        self.reference = reference
+        self.reference_wells = experiment['wells'][reference]
+        self.solo = len(experiment['wells']) == 2
+        self.i = i
+
+
 def yield_related_wells(experiments, default_reference='apo'):
-
-    class RelatedWells:
-
-        def __init__(self, experiment, condition, reference, i):
-            self.experiment = experiment
-            self.label = experiment['label']
-            self.condition = condition
-            self.condition_wells = experiment['wells'][condition]
-            self.reference = reference
-            self.reference_wells = experiment['wells'][reference]
-            self.solo = len(experiment['wells']) == 2
-            self.i = i
-
-
     i = 0
     for experiment in experiments:
         reference = experiment.get('reference', default_reference)
@@ -573,6 +572,9 @@ def get_channel_label(experiments, baseline=False):
         label = '{} / {}'.format(label, get_label(control_channel))
     elif len(control_channels) > 1:
         label = 'normalized {}'.format(label)
+
+    if baseline:
+        label += f' / {"baseline" if baseline is True else baseline}'
 
     return label
 

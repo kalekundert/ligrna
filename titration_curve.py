@@ -41,6 +41,16 @@ Options:
     -N --no-normalize
         Show raw, unnormalized data.
 
+    -q --query <regex>
+        Only show experiments if their label matches the given regular 
+        expression.  This option is meant to help show interesting subsets of 
+        really high throughput experiments.
+
+    -Q --exclude-query <regex>
+        Only show experiments if their label *doesn't* match the given regular 
+        expression.  This option is meant to help show interesting subsets of 
+        really high throughput experiments.
+
     -t --time-gate <secs>               [default: 0]
         Exclude the first cells recorded from each well if you suspect that 
         they may be contaminated with cells from the previous well.  The 
@@ -63,6 +73,15 @@ Options:
         cell distributions for the purpose of calculating the fold change in 
         signal.  By default the mode is used for this calculation.
 
+    -B --no-baseline
+        Don't normalize the curves by the average fluorescence values of the 
+        negative control.  The processing normally helps iron out slight 
+        variations in the relative levels of GFP and RFP between experiments.
+
+    -1 --combine-curves
+        Combine all the replicates for each titration into a single line with 
+        error bars.  The default is to show a separate line for each replicate.
+
     -y --ylim <ymin,ymax>
         Set the y-axis limits.  By default this axis is automatically scaled to 
         fit the data, but this option is useful is you want to compare 
@@ -74,6 +93,7 @@ Options:
         or if you're preparing a figure for a paper.
 """
 
+import re
 import fcmcmp, analysis_helpers, nonstdlib
 import numpy as np, matplotlib.pyplot as plt
 from matplotlib.ticker import Locator
@@ -87,22 +107,34 @@ class TitrationCurve:
         self.channel = None
         self.normalize_by = None
         self.loc_metric = None
+        self.label_filter = None
+        self.exclude_label_filter = None
+        self.combine_curves = True
         self.legend_loc = 'upper left'
         self.legend = True
         self.output_size = None
+        self.baseline_expt = 'off'
+        self.apply_baseline = True
         self.ylim = None
 
         self.figure = None
         self.axes = None
+        self.baseline = None
         self.y_max = None
         self.y_min = None
 
     def plot(self):
         self._setup_figure()
+        self._filter_experiments()
+        self._count_replicates()
 
         for experiment in self.experiments:
             self._find_concentrations(experiment)
             self._analyze_wells(experiment)
+
+        self._find_baseline()
+
+        for experiment in self.experiments:
             self._plot_experiment(experiment)
 
         self._pick_ylim()
@@ -116,6 +148,44 @@ class TitrationCurve:
 
         # Don't show that ugly dark grey border around the plot.
         self.figure.patch.set_alpha(0)
+
+        self.axes.set_yscale('log')
+        self.axes.set_xscale('symlog')
+        self.axes.xaxis.set_minor_locator(MinorSymLogLocator())
+
+    def _filter_experiments(self):
+        if self.label_filter is not None:
+            label_filter = re.compile(self.label_filter)
+
+            self.experiments = [
+                expt for expt in self.experiments
+                if label_filter.search(expt['label'])
+            ]
+
+        if self.exclude_label_filter is not None:
+            label_filter = re.compile(self.exclude_label_filter)
+
+            self.experiments = [
+                expt for expt in self.experiments
+                if not label_filter.search(expt['label'])
+            ]
+
+    def _count_replicates(self):
+        # If there are replicates, make sure each one has data for every 
+        # concentration of ligand.  If data is missing, there's no way to tell 
+        # which replicate it's missing from (this is a shortcoming of the 
+        # `fcmcmp` file format).
+
+        replicates = set(
+            len(expt['wells'][conc])
+            for expt in self.experiments
+            for conc in expt['wells']
+        )
+
+        if len(replicates) != 1:
+            raise ValueError(f"Inconsistent number of replicates for the '{experiment['label']}' experiment.")
+
+        self.num_replicates = replicates.pop()
 
     def _find_concentrations(self, experiment):
 
@@ -147,31 +217,55 @@ class TitrationCurve:
                 for conc, wells in experiment['wells'].items()
         }
 
+    def _find_baseline(self):
+        if not self.apply_baseline:
+            self.baseline = np.ones([self.num_replicates])
+
+        else:
+            expt_map = {x['label']: x for x in self.experiments}
+            baseline_expt = expt_map[self.baseline_expt]
+
+            self.baseline = np.array([
+                np.mean([
+                    baseline_expt['wells'][conc][i].linear_loc
+                    for conc in baseline_expt['wells']
+                ])
+                for i in range(self.num_replicates)
+            ])
+
     def _plot_experiment(self, experiment):
         locs = {
-                conc: [float(well.loc) for well in wells]
+                conc: np.array([w.linear_loc for w in wells]) / self.baseline
                 for conc, wells in experiment['wells'].items()
         }
         concs = sorted(experiment['wells'].keys())
-        means = [mean(locs[x]) for x in concs]
         style = analysis_helpers.pick_style(experiment)
 
         if experiment['label'] not in ('on', 'off'):
-            style.update({'label': experiment['label']})
+            label = experiment['label']
+        else:
+            label = ''
 
-        self.axes.set_xscale('symlog')
-        self.axes.xaxis.set_minor_locator(MinorSymLogLocator())
+        # Draw a single line with error bars.
+        if self.combine_curves and self.num_replicates > 1:
+            means = np.array([mean(locs[x]) for x in concs])
+            errors = np.array([stdev(locs[x]) for x in concs])
 
-        num_replicates = min(len(data) for data in locs.values())
-        if num_replicates == 1:
-            self.axes.plot(concs, means, **style)
-        elif num_replicates > 1:
-            stdevs = [stdev(locs[x]) for x in concs]
-            self.axes.errorbar(concs, means, stdevs, **style)
+            self.axes.errorbar(concs, means, errors, label=label, **style)
 
-        # Keep track of the lowest and highest data points.
-        y_max = max(means)
-        y_min = min(means)
+            y_max = np.amax(np.amax(means + errors))
+            y_min = np.amin(np.amin(means - errors))
+
+        # Draw separate lines for each titration.
+        else:
+            series = np.array([locs[x] for x in concs]).T
+
+            for i in range(self.num_replicates):
+                label_once = label if i == 0 else ''
+                self.axes.plot(concs, series[i], label=label_once, **style)
+
+            y_max = np.amax(series)
+            y_min = np.amin(series)
 
         self.y_max = max(y_max, self.y_max or y_max)
         self.y_min = min(y_min, self.y_min or y_min)
@@ -194,28 +288,9 @@ class TitrationCurve:
         unit = units.pop()
 
         # Decide how to label the y-axes
-        apo_wells = [expt['wells'][0][0] for expt in self.experiments]
-        channels = {w.channel for w in apo_wells}
-        control_channels = {w.control_channel for w in apo_wells}
-        log_scales = {w.log_scale for w in apo_wells}
-
-        if len(channels) != 1:
-            y_label = 'fluorescence'
-        else:
-            fluorophores = {'FITC-A': 'GFP', 'Red-A': 'RFP'}
-            channel = channels.pop()
-            if channel not in fluorophores:
-                raise ValueError(f"unexpected channel: {channel}")
-            y_label = fluorophores[channel]
-
-        control_channels.discard(None)
-        if control_channels:
-            y_label = f'normalized {y_label}'
-
-        if len(log_scales) > 1:
-            raise ValueError("can't plot multiple log scales")
-        if log_scales.pop():
-            y_label = 'log({})'.format(y_label)
+        y_label = analysis_helpers.get_channel_label(self.experiments)
+        if self.apply_baseline:
+            y_label += ' [relative to max]'
 
         self.axes.set_xlabel(f'{ligand} [{unit}]')
         self.axes.set_ylabel(y_label)
@@ -278,6 +353,10 @@ if __name__ == '__main__':
     analysis.channel = args['--channel']
     analysis.normalize_by = args['--normalize-by'] or not args['--no-normalize']
     analysis.loc_metric = args['--loc-metric']
+    analysis.apply_baseline = not args['--no-baseline']
+    analysis.label_filter = args['--query']
+    analysis.exclude_label_filter = args['--exclude-query']
+    analysis.combine_curves = args['--combine-curves']
     analysis.legend = not args['--no-legend']
 
     if args['--output-size']:
