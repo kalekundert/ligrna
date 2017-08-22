@@ -42,7 +42,7 @@ Prepare {115*N} mL "electroporation buffer" with the
 remaining 1M sorbitol:
 
 - {115*N} mL 1M sorbitol
-- {115*N} uL 1M CaCl₂
+- {115*N} μL 1M CaCl₂
 - sterile filter"""
 
 day_1 += f"""\
@@ -50,7 +50,7 @@ Chill the following items and reagents overnight
 in the cold room:
 
 - 5 50 mL pipets
-- 1 box 1000 uL pipet tips
+- 1 box 1000 μL pipet tips
 - {200*N} mL milliQ water
 - {115*N} mL "electroporation buffer"""
 
@@ -81,7 +81,7 @@ library [1]:
 
 Reagent             Conc       Vol
 ──────────────────────────────────
-Water                     to 20 uL
+Water                     to 20 μL
 Plasmid DNA               {N*8:>5d} μg
 CutSmart Buffer      10x      2 μL
 NotI             20 U/μL      2 μL
@@ -104,7 +104,7 @@ DNA using drop dialysis.
 - Let the membrane sit for 5 min to allow it to 
   completely soak with water.
 
-- Pipet the entire NotI digestion reaction (20 uL) 
+- Pipet the entire NotI digestion reaction (20 μL) 
   onto the center of the membrane.
 
 - Dialyze for 4h.
