@@ -46,8 +46,8 @@ remaining 1M sorbitol:
 - sterile filter"""
 
 day_1 += f"""\
-Chill the following items and reagents overnight in 
-the cold room:
+Chill the following items and reagents overnight 
+in the cold room:
 
 - 5 50 mL pipets
 - 1 box 1000 uL pipet tips
@@ -55,8 +55,8 @@ the cold room:
 - {115*N} mL "electroporation buffer"""
 
 day_1 += f"""\
-Start a {overnight_mL:.1f} mL overnight culture in YPD from a fresh 
-colony."""
+Start a {overnight_mL:.1f} mL overnight culture in YPD from a 
+fresh colony."""
 
 print(f"""\
 Day 1
@@ -90,15 +90,16 @@ NotI             20 U/μL      2 μL
   hold at 12°C."""
 
 day_2 += f"""\
-Once the NotI digestion is complete, desalt the DNA 
-using drop dialysis.
+Once the NotI digestion is complete, desalt the 
+DNA using drop dialysis.
 
 - Fill a petri dish about halfway (~20 mL) with 
   milliQ water.
 
-- Float a nitrocellulose membrane shiny-side up [2]
-  on the water.  Handle the membrane with tweezers 
-  and make sure no air gets caught underneath it.  
+- Float a nitrocellulose membrane shiny-side up 
+  on the water [2].  Handle the membrane with 
+  tweezers and make sure no air gets caught 
+  underneath it.  
 
 - Let the membrane sit for 5 min to allow it to 
   completely soak with water.
@@ -147,9 +148,9 @@ Prepare {10*N} mL "recovery media":
 
 day_2 += f"""\
 Make {N} aliquots of DNA (the volume of the DNA 
-changes during dialysis), then chill the DNA on ice 
-along with 10 electroporation cuvettes (with 2 mm 
-gaps)."""
+changes during dialysis), then chill the DNA on 
+ice along with {N} electroporation cuvettes (with 
+2 mm gaps)."""
 
 day_2 += f"""\
 Wash the cells again:
@@ -162,14 +163,15 @@ Wash the cells again:
   of {N*0.4} mL."""
 
 day_2 += f"""\
-Pipet once to mix 400 μL of cells with each aliquot 
-of DNA, then transfer to a chilled cuvette."""
+Pipet once to mix 400 μL of cells with each 
+aliquot of DNA, then transfer the mixed cells to 
+a chilled cuvette."""
   
 day_2 += f"""\
 Electroporate each cuvette as follows:
 
 - Voltage: 2500 V
-- Capacitance: 25 uF
+- Capacitance: 25 μF
 - Resistance: 200 Ω [3]
 - Gap length: 2 mm"""
 
@@ -190,7 +192,8 @@ day_2 += f"""\
 Incubate at 30°C for 1h with shaking at 225 rpm."""
 
 day_2 += f"""\
-Spread the tranformed yeast over 10 selective plates:
+Spread the transformed yeast across 10 selective 
+plates:
 
 - Pellet 3270g, 4C, 5 min.
 - Resuspend in 1000 μL selective media.
@@ -255,4 +258,4 @@ large human antibody libraries.  Protein Eng Des Sel
 (2010) 23:4:155–159.""")
 
 
-# vim: tw=53 ts=2 sts=2 sw=2
+# vim: tw=50 ts=2 sts=2 sw=2
