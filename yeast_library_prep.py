@@ -23,7 +23,7 @@ ypd_mL = 40 * N
 overnight_mL = 0.3 * ypd_mL / 10.0
 
 day_1 += f"""\
-Prepare 10 100 cm² selective plates."""
+Prepare 10 81 cm² selective plates [1]."""
 
 sorbitol_mL = N * (115 + 5)
 sorbitol_g = sorbitol_mL * 182.17 / 1000
@@ -77,7 +77,7 @@ This should take about 5h."""
 
 day_2 += f"""\
 Setup a NotI digestion to linearize {N*8} μg of your 
-library [1]:
+library [2]:
 
 Reagent             Conc       Vol
 ──────────────────────────────────
@@ -97,7 +97,7 @@ DNA using drop dialysis.
   milliQ water.
 
 - Float a nitrocellulose membrane shiny-side up 
-  on the water [2].  Handle the membrane with 
+  on the water [3].  Handle the membrane with 
   tweezers and make sure no air gets caught 
   underneath it.  
 
@@ -172,7 +172,7 @@ Electroporate each cuvette as follows:
 
 - Voltage: 2500 V
 - Capacitance: 25 μF
-- Resistance: 200 Ω [3]
+- Resistance: 200 Ω [4]
 - Gap length: 2 mm"""
 
 day_2 += f"""\
@@ -192,8 +192,8 @@ day_2 += f"""\
 Incubate at 30°C for 1h with shaking at 225 rpm."""
 
 day_2 += f"""\
-Spread the transformed yeast across 10 selective 
-plates:
+Spread the transformed yeast across 10 81 cm² 
+selective plates:
 
 - Pellet 3270g, 4C, 5 min.
 - Resuspend in 1000 μL selective media.
@@ -210,7 +210,17 @@ Day 2
 print(f"""\
 Footnotes
 =========
-[1] We're doing {plural(N):? transformation/s}, and the actual 
+[1] The specific number of plates you use isn't 
+    very important.  Usually people want to get 
+    individual colonies to minimize the bias due 
+    to growth competition, but that's not really 
+    practical for libraries bigger than 10⁵ (which 
+    require about 40 100 cm² plates to get 
+    individual colonies).  Since we're aiming for 
+    lawns, more plates means less bias but more 
+    effort.  I think 10 is a reasonable trade-off.
+
+[2] We're doing {plural(N):? transformation/s}, and the actual 
     insert is only about half of the plasmid, so this 
     corresponds to 4 μg/rxn.  Benatuil et al. tested 
     insert concentrations from 4 μg/rxn to 16 μg/rxn 
@@ -218,7 +228,7 @@ Footnotes
     transformants, so we're sticking to the low end 
     of that range.
 
-[2] The reason for using the nitrocellulose membrane 
+[3] The reason for using the nitrocellulose membrane 
     shiny-side up is explained on the Millipore 
     website.  It's helpful but not crucial, so don't 
     worry if you can't really tell which side is the 
@@ -242,7 +252,7 @@ Footnotes
        to the buffer.  This measure will enhance 
        buffer exchange and discourage sample loss.  
 
-[3] Benatuil et al. didn't specify a resistance, so I 
+[4] Benatuil et al. didn't specify a resistance, so I 
     took the 200 Ω resistance parameter from the 
     preset S. cerevisiae protocol on the BioRad 
     electroporator.
