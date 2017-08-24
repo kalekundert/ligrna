@@ -2061,6 +2061,26 @@ def strand_swap_rxb_11_1(N, nuc=None, target='none', ligand='theo'):
 
     return sgrna
 
+@design('won')
+def strand_swap_on(nuc=None, target='none'):
+    """
+    Strand-swap the first position in the nexus stem.
+    """
+    sgrna = on(target=target)
+
+    nexus_5 = sgrna['nexus/5'].seq
+    nexus_3 = sgrna['nexus/3'].seq
+
+    if nuc is not None:
+        swap_5, swap_3 = base_pair(nuc)
+    else:
+        swap_5, swap_3 = nexus_3[-1], nexus_5[0]
+
+    sgrna['nexus/5'].mutate(0, swap_5)
+    sgrna['nexus/3'].mutate(1, swap_3)
+
+    return sgrna
+
 @design('bu')
 def MS2_forwards_upperstem(N, M, target='none', ligand='theo', pam=None):
     """
