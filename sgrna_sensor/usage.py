@@ -77,6 +77,10 @@ Options:
         set for the names, automatically append the T7 sequence, and don't 
         display the "5'-" and "-3'" labels.
 
+    -T, --tsv
+        Print a tab-separated list of the names and RNA sequences of all the 
+        indicated designs.
+
     -f, --fasta
         Display (DNA) sequences in the FASTA format.  T7 promoters are not 
         appended unless the --t7 flag is also given.
@@ -314,6 +318,10 @@ def main():
 
         elif args['--batch']:
             print(header_template.format(design.underscore_name), end='\t')
+            design.show(labels=False, **format_args)
+
+        elif args['--tsv']:
+            print(header_template.format(design.name), end='\t')
             design.show(labels=False, **format_args)
 
         elif args['--fasta']:
