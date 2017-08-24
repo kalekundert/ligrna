@@ -74,6 +74,9 @@ def spacer(name='none'):
             'cf1':    'CCGGCAAGCTGCCCGTGCCC', # sgGFP9 (Christoff Fellman)
             'cf2':    'CAGGGTCAGCTTGCCGTAGG', # sgGFP8
             'cf3':    'CCTCGAACTTCACCTCGGCG', # sgGFP1
+            'tdh1':   'AATAAGTATATAAAGACGGT',
+            'tdh2':   'GACTAATAAGTATATAAAGA',
+            'tdh3':   'ATATACTTATTAGTCAAGTA',
     }
 
     try:
