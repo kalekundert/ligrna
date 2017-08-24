@@ -1944,8 +1944,11 @@ def sequester_u59_hairpin_forward(i, expected_only=False, target='none', ligand=
 
     sgrna = uh(0, 0, ligand=ligand, target=target, pam=pam)
     sgrna['nexus/o'].seq  = linkers[i][0] + 'U'
+    sgrna['nexus/o'].style = 'white'
     sgrna['nexus/gu'].seq = linkers[i][1][0:2]
+    sgrna['nexus/gu'].style = 'white'
     sgrna['ruler'].seq    = linkers[i][1][2:]
+    sgrna['ruler'].style = 'white'
 
     if not expected_only and i in unexpected_muts:
         domain, idx, nuc = unexpected_muts[i]

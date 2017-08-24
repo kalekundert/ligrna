@@ -74,9 +74,6 @@ def base_pair(seq):
 
     return seq.translate(trans_5), seq.translate(trans_3)[::-1]
 
-
-
-
 def clamp(x, low, hi):
     return min(max(x, low), hi)
 
