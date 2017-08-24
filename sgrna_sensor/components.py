@@ -79,6 +79,14 @@ def spacer(name='none'):
             'tdh3':   'ATATACTTATTAGTCAAGTA',
     }
 
+    # Include the Doench16 spacers
+    from os.path import join, dirname
+    doench_tsv = join(dirname(__file__), 'doench_spacers.tsv')
+    with open(doench_tsv) as file:
+        for line in file:
+            doench_name, spacer, score = line.split()
+            spacers[doench_name] = spacer[4:24]
+
     try:
         sequence = spacers[aliases.get(name, name)]
     except KeyError:
