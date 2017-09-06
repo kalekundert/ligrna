@@ -36,9 +36,9 @@ in the cold room:
 - 2 50 mL pipets
 - 1 box 1000 μL pipet tips
 - {round(50 * N * 1.25, 10)} mL milliQ water
-- {round(5 * N * 1.25, 5)} mL 100 mM LiOAc
-- {round(0.36 * N * 1.00, 5)} 1M LiOAc
-- {round(2.4 * N * 1.25, 5)} mL 50% PEG₃₅₀₀"""
+- {round(5 * N * 1.10, 5)} mL 100 mM LiOAc
+- {round(0.36 * N * 1.00, 5)} mL 1M LiOAc
+- {round(2.4 * N * 1.00, 5)} mL 50% PEG₃₅₀₀"""
 
 day_1 += f"""\
 Start a {1*N} mL overnight culture in YPD from a 
