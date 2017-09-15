@@ -14,39 +14,32 @@ Arguments:
 
 import docopt
 import dirty_water
-from nonstdlib import plural
+from nonstdlib import plural, round_up
 
 args = docopt.docopt(__doc__)
 protocol = dirty_water.Protocol()
-gel = dirty_water.Reaction("""\
-Reagent         Conc  Each Rxn  Master Mix
-==============  ====  ========  ==========
-urea                    4.2 g 
-TBE               5x    2.0 mL
-acrylamide/bis   30%   2.67 mL
-""")
-
-N = eval(args['<num>']) if args['<num>'] else 1
-gel.num_reactions = N
-gel.show_totals = False
-temed_uL = 10 * N
-aps_uL = 10 * N
-gels = 'gel' if N == 1 else 'gels'
-newline = '\n'
+M = eval(args['<num>']) if args['<num>'] else 1
+N = round_up(M * 7/10, 0.1)
+gels = f"{plural(M):gel/s}"
 
 protocol += f"""\
-Cast {N} 8% TBE/urea polyacrylamide {gels}.
+Cast {M} 8% TBE/urea polyacrylamide {gels}.
 
-- Setup the gel cast and make sure it doesn't leak.
+- Setup the gel cast and check for leaks.
   
 - Combine the following reagents in a Falcon tube 
   and mix until the urea dissolves (~5 min).
 
-{newline.join('  ' + x for x in str(gel).split(newline))}
+  Reagent         Conc       Amount
+  ─────────────────────────────────
+  urea                     {N*4.2:5.2f} g
+  TBE               5x     {N*2.0:5.2f} mL
+  acrylamide/bis   30%     {N*2.67:5.2f} mL
+  water                 to {N*10:5.2f} mL
 
-- Add {temed_uL} uL TEMED and {aps_uL} μL 0.4 mg/μL APS (freshly 
-  prepared), invert once or twice to mix, then 
-  immediately pipet into the gel cast.
+- Add {N*10:.2f} uL TEMED and {N*10:.2f} μL 0.4 mg/μL APS
+  (freshly prepared), invert once or twice to mix, 
+  then immediately pipet into the gel cast.
 
 - Let the {gels} set for 1h.
   
