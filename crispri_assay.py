@@ -5,7 +5,7 @@ Usage:
     crispri_assay.py [--time <hours>] [--time-course] [--verbose]
 
 Options:
-    -t --time <time>  [default: 9h]
+    -t --time <time>  [default: 8h]
         The number of hours to grow the cells for.
 
     -T --time-course
