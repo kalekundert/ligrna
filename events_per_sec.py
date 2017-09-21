@@ -35,6 +35,9 @@ Options:
         Specify how long of a time interval to consider when calculating the 
         number of events per second.  Longer time intervals will give smoother 
         plots, but will lag relative to shorter intervals.
+
+    -v --verbose
+        Print out the net event rate for each well.
 """
 
 import docopt, fcmcmp, analysis_helpers
@@ -48,6 +51,7 @@ class EventsPerSec:
         self.keyword = None
         self.show_legend = False
         self.time_window = 1
+        self.verbose = False
 
     def plot(self):
         data = fcmcmp.yield_unique_wells(self.experiments, self.keyword)
@@ -63,7 +67,7 @@ class EventsPerSec:
                 a, b = np.searchsorted(times, time_range)
                 try:
                     dt = times.iloc[b] - times.iloc[a]
-                    events_per_sec[i] = (b - a) / dt
+                    if dt: events_per_sec[i] = (b - a) / dt
                 except IndexError:
                     pass
 
@@ -73,6 +77,12 @@ class EventsPerSec:
                     label='{} ({})'.format(well.label, condition),
                     **analysis_helpers.pick_style(experiment)
             )
+
+            if self.verbose:
+                label = f"{experiment['label']} {condition} [{well.label}]"
+                net_time = times.iloc[-1] - times.iloc[0]
+                net_rate = len(times) / net_time
+                print(f"{label:40s}\t{net_rate:.2f} evt/sec")
 
         plt.xlim(min_time, max_time)
         plt.ylim(0, plt.ylim()[1])
@@ -93,6 +103,7 @@ if __name__ == '__main__':
     analysis.keyword = args['<keyword>']
     analysis.show_legend = args['--show-legend']
     analysis.time_window = float(args['--time-window'])
+    analysis.verbose = args['--verbose']
 
     with analysis_helpers.plot_or_savefig(args['--output'], args['<yml_path>']):
         analysis.plot()
