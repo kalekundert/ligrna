@@ -223,7 +223,7 @@ else:
 
 protocol += """\
 Load the entire reaction ({} μL) on a {}% agarose 
-gel and run at 6 V/cm for 45 min.""".format(gel_load, gel_percent)
+gel and run at 4.5 V/cm for 70 min [1].""".format(gel_load, gel_percent)
 
 ## Print the protocol.
 
@@ -245,7 +245,7 @@ Notes
 
    For doing lots of reactions, the best option is 
    to use the Owl EasyCast B2 gel tray with the 
-   25-tooth comb.  The gel should be 160 mL, and
-   2 μL is a good amount of ladder.""")
+   25-tooth comb.  Make the gel 140 mL and use 2 
+   μL of ladder.""")
 
 # vim: tw=50
