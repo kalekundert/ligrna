@@ -34,6 +34,11 @@ Options:
 
     -g --gel
         Print detailed instructions on how to do RNA PAGE.
+
+    -v --verbose
+        Print out more detailed tips and tricks related to various steps of the
+        protocol.
+
 """
 
 import docopt
@@ -194,6 +199,14 @@ else:
 protocol += """\
 Nanodrop to determine the RNA concentration."""
 
+## Aliquot
+
+protocol += """\
+Dilute (if desired) enough sgRNA to make several 
+15 μL aliquots and to run a gel.  Keep any left- 
+over RNA undiluted.  Flash-freeze in liquid N₂ and 
+store at -80°C."""
+
 ## Gel electrophoresis
 
 if not args['--gel']:
@@ -205,14 +218,15 @@ else:
     import tbe_urea_gel
     protocol += tbe_urea_gel.protocol
 
-## Aliquot
-
-protocol += """\
-Dilute (if desired) enough sgRNA to make several 
-15 μL aliquots.  Keep any left-over RNA undiluted.  
-Flash-freeze in liquid N₂ and store at -80°C."""
-
 
 print(protocol)
+
+if args['--verbose']:
+    print("""\
+Comments
+========
+- I've found that T7 kits which have been in the 
+  freezer for more than ≈4 weeks seem to produce 
+  more degraded RNA.""")
 
 # vim: tw=50
