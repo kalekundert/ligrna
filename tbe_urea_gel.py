@@ -4,12 +4,16 @@
 Cast an 8% TBE/urea gel.
 
 Usage:
-    tbe_urea_gel.py [<num>]
+    tbe_urea_gel.py [<num>] [-b]
     
 Arguments:
     <num>               [default: 1]
         The number of gels to cast.  Each gel has 15 lanes, which is enough for 
         14 samples and one ladder.
+
+Options:
+    -b --buffer
+        Include the recipe for TBE.
 """
 
 import docopt
@@ -21,6 +25,14 @@ protocol = dirty_water.Protocol()
 M = eval(args['<num>']) if args['<num>'] else 1
 N = round_up(M * 7/10, 0.1)
 gels = f"{plural(M):gel/s}"
+
+if args['--buffer']:
+    protocol += f"""\
+Prepare 1L 5x TBE:
+
+- 54 g Tris base
+- 27.5 g boric acid
+- 20 mL 0.5 M EDTA (pH=8.0)"""
 
 protocol += f"""\
 Cast {M} 8% TBE/urea polyacrylamide {gels}.

@@ -65,22 +65,31 @@ if 'hiscribe'.startswith(args['--kit'].lower()):
     # reaction, but maybe confusing unless you keep in mind that our final 
     # concentrations will be 0.75x.
 
-    ivtt['nuclease-free water'].std_volume = 11 - dna, 'μL'
+    ivtt['nuclease-free water'].std_volume = 20 - 9.5 - dna, 'μL'
     ivtt['nuclease-free water'].master_mix = True
+
     ivtt['reaction buffer'].std_volume = 1.5, 'μL'
     ivtt['reaction buffer'].std_stock_conc = '"10x"'
     ivtt['reaction buffer'].master_mix = True
+
+    ivtt['RNase inhibitor'].std_volume = 0.5, 'μL'
+    ivtt['RNase inhibitor'].master_mix = True
+    ivtt['RNase inhibitor'].std_stock_conc = 40, 'U/μL'
+    ivtt['RNase inhibitor'].product_number = 'NEB M0307S'
 
     if args['--no-rntp-mix']:
         ivtt['ATP'].std_volume = 1.5, 'μL'
         ivtt['ATP'].master_mix = True
         ivtt['ATP'].std_stock_conc = 100, 'mM'
+
         ivtt['CTP'].std_volume = 1.5, 'μL'
         ivtt['CTP'].master_mix = True
         ivtt['CTP'].std_stock_conc = 100, 'mM'
+
         ivtt['GTP'].std_volume = 1.5, 'μL'
         ivtt['GTP'].master_mix = True
         ivtt['GTP'].std_stock_conc = 100, 'mM'
+
         ivtt['UTP'].std_volume = 1.5, 'μL'
         ivtt['UTP'].master_mix = True
         ivtt['UTP'].std_stock_conc = 100, 'mM'
@@ -89,9 +98,11 @@ if 'hiscribe'.startswith(args['--kit'].lower()):
         ivtt['rNTP mix'].std_stock_conc = 100, 'mM'
         ivtt['rNTP mix'].master_mix = True
 
-    ivtt['HiScribe T7 (NEB)'].std_volume = 1.5, 'μL'
-    ivtt['HiScribe T7 (NEB)'].std_stock_conc = '"10x"'
-    ivtt['HiScribe T7 (NEB)'].master_mix = True
+    ivtt['HiScribe T7'].std_volume = 1.5, 'μL'
+    ivtt['HiScribe T7'].std_stock_conc = '"10x"'
+    ivtt['HiScribe T7'].master_mix = True
+    ivtt['HiScribe T7'].product_number = 'NEB E2040S'
+
     ivtt['DNA template'].std_volume = dna, 'μL'
     ivtt['DNA template'].std_stock_conc = 10, 'ng/μL'
 
