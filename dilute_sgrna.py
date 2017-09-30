@@ -17,6 +17,10 @@ Options:
     -r --target-sgrna <uL>
         The desired volume of sgRNA to dilute.
 
+    -R --max-sgrna <uL>
+        The maximum volume of sgRNA that can be diluted.  Any recipes that need 
+        more sgRNA than this will be scaled down.
+
     -w --target-water <uL>
         The desired volume of water to dilute with.
 
@@ -80,6 +84,12 @@ def process_sample(name, initial_ng_uL, args):
         -w, --target-water <uL>
         -p, --print-nM
     """)
+
+    max_sgrna = args['--max-sgrna']
+
+    if max_sgrna is not None and float(max_sgrna) < sgrna_to_add:
+        sgrna_to_add *= float(max_sgrna) / sgrna_to_add
+        water_to_add *= float(max_sgrna) / sgrna_to_add
 
     print('{:>6.2f} μL {:.1f} ng/uL {}'.format(sgrna_to_add, initial_ng_uL, name))
     print('{:>6.2f} μL nuclease-free water'.format(water_to_add))
