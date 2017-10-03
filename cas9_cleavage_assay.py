@@ -245,9 +245,14 @@ Notes
    get sharper bands, but the bands were hard to 
    quantify because they were so faint.
 
-   For doing lots of reactions, the best option is 
-   to use the Owl EasyCast B2 gel tray with the 
-   25-tooth comb.  Make the gel 140 mL and use 2 
-   μL of ladder.""")
+   For doing lots of reactions, cast a 140 mL 1% 
+   agarose/TAE/GelRed in the Owl EasyCast B2 tray 
+   with the 25-tooth comb.  Run at 100V for 70 
+   min.
+   
+   For geting publication quality images, cast a 
+   140 mL 1% agarose/TAE/GelRed gel in the Owl 
+   EasyCast B2 tray with the 20-tooth comb.  Use 2 
+   μL of ladder and run at 85V for 90 min.""")
 
 # vim: tw=50
