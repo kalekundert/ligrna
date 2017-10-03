@@ -194,7 +194,9 @@ Setup {num_reactions} Cas9 reactions:
 
 - Incubate at room temperature for 10 min.
 
-- Add {cas9_rxn[DNA].volume_str} DNA to each reaction."""
+- Add {cas9_rxn[DNA].volume_str} DNA to each reaction.
+  
+- Pipet to mix."""
 
 ## Run the Cas9 reactions.
 
