@@ -106,16 +106,16 @@ if not args['--big-rxns'] and not args['--short-dna']:
 protocol = dirty_water.Protocol()
 
 if args['--fresh-theo']:
-    protocol += """\
+    factor = 1e6 / 180.164 / 30
+    protocol += f"""\
 Prepare a 30 mM solution of theophylline:
 
-Reagent        Amount
-─────────────────────
-theophylline   x≈5 mg
-water         185x μL
+Reagent          Amount
+───────────────────────
+theophylline   x≈7.0 mg
+water         {factor:.1f}x μL
 
-Stir on a hot plate (but keep below boiling) to 
-dissolve."""
+Incubate at 50°C to dissolve."""
 
 ## Setup the Cas9 reactions (using the robot).
 
