@@ -194,7 +194,7 @@ Setup {num_reactions} Cas9 reactions:
 
 - Incubate at room temperature for 10 min.
 
-- Add {cas9_rxn[DNA].volume_str} DNA to each reaction.
+- Add {cas9_rxn[DNA].volume_str} DNA to each reaction [1].
   
 - Pipet to mix."""
 
@@ -225,7 +225,7 @@ else:
 
 protocol += """\
 Load the entire reaction ({} μL) on a {}% agarose 
-gel and run at 4.5 V/cm for 70 min [1].""".format(gel_load, gel_percent)
+gel and run at 4.5 V/cm for 70 min [2].""".format(gel_load, gel_percent)
 
 ## Print the protocol.
 
@@ -238,21 +238,27 @@ if args['--notes']:
 
 Notes
 ─────
-1. It really is important to load most of the 
-   reaction on the gel and to use a comb that 
-   makes thick wells.  I tried loading only 6 μL 
-   with the idea that I could use a finer comb and 
-   get sharper bands, but the bands were hard to 
-   quantify because they were so faint.
+[1] Be sure to mix the DNA (e.g. by flicking) 
+    after it thaws.  The DNA doesn't freeze 
+    evenly, so if you don't do this, you may get 
+    noticeably different amounts of DNA in 
+    different reactions.
 
-   For doing lots of reactions, cast a 140 mL 1% 
-   agarose/TAE/GelRed in the Owl EasyCast B2 tray 
-   with the 25-tooth comb.  Run at 100V for 70 
-   min.
+[2] It really is important to load most of the 
+    reaction on the gel and to use a comb that 
+    makes thick wells.  I tried loading only 6 μL 
+    with the idea that I could use a finer comb 
+    and get sharper bands, but the bands were hard 
+    to quantify because they were so faint.
+
+    For doing lots of reactions, cast a 140 mL 1% 
+    agarose/TAE/GelRed in the Owl EasyCast B2 tray 
+    with the 25-tooth comb.  Run at 100V for 70 
+    min.
    
-   For geting publication quality images, cast a 
-   140 mL 1% agarose/TAE/GelRed gel in the Owl 
-   EasyCast B2 tray with the 20-tooth comb.  Use 2 
-   μL of ladder and run at 85V for 90 min.""")
+    For geting publication quality images, cast a 
+    140 mL 1% agarose/TAE/GelRed gel in the Owl 
+    EasyCast B2 tray with the 20-tooth comb.  Use 
+    2 μL of ladder and run at 85V for 90 min.""")
 
 # vim: tw=50
