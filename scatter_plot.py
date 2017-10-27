@@ -86,6 +86,15 @@ Options:
         the figure) would be rasterized.  This option makes the resulting file 
         much larger and makes exporting and viewing that file take much longer.
 
+    -I --inkscape
+        Create an SVG output file that works well with inkscape by having 
+        matplotlib create a PDF, then converting it to SVG in a second step.  
+        For some reason the SVG files generated directly by matplotlib cause 
+        inkscape to run really slow and chew up a lot of memory.  I played 
+        around with one of these files a bit, and I think the problem might 
+        have to do with the use of clones.  In any case, generating PDF files 
+        and converting them to SVG seems to avoid the problem.
+
     -v --verbose
         Print out information on all the processing steps.
 """
@@ -278,5 +287,6 @@ if __name__ == '__main__':
     if args['--output-size']:
         analysis.output_size = map(float, args['--output-size'].split('x'))
 
-    with analysis_helpers.plot_or_savefig(args['--output'], args['<yml_path>']):
+    with analysis_helpers.plot_or_savefig(
+            args['--output'], args['<yml_path>'], args['--inkscape']):
         analysis.plot()

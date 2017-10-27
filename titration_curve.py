@@ -73,11 +73,6 @@ Options:
         cell distributions for the purpose of calculating the fold change in 
         signal.  By default the mode is used for this calculation.
 
-    -B --no-baseline
-        Don't normalize the curves by the average fluorescence values of the 
-        negative control.  The processing normally helps iron out slight 
-        variations in the relative levels of GFP and RFP between experiments.
-
     -1 --combine-curves
         Combine all the replicates for each titration into a single line with 
         error bars.  The default is to show a separate line for each replicate.
@@ -91,6 +86,18 @@ Options:
         Don't include a legend in the plot.  This might be useful if the legend 
         is covering something up (and the colors of the lines are clear enough) 
         or if you're preparing a figure for a paper.
+
+    -I --inkscape
+        Create an SVG output file that works well with inkscape by having 
+        matplotlib create a PDF, then converting it to SVG in a second step.  
+        For some reason the SVG files generated directly by matplotlib cause 
+        inkscape to run really slow and chew up a lot of memory.  I played 
+        around with one of these files a bit, and I think the problem might 
+        have to do with the use of clones.  In any case, generating PDF files 
+        and converting them to SVG seems to avoid the problem.
+
+    -v --verbose
+        Print out information on all the processing steps.
 """
 
 import re
@@ -105,7 +112,7 @@ class TitrationCurve:
     def __init__(self, experiments):
         self.experiments = experiments
         self.channel = None
-        self.normalize_by = None
+        self.control_channel = None
         self.loc_metric = None
         self.label_filter = None
         self.exclude_label_filter = None
@@ -113,13 +120,10 @@ class TitrationCurve:
         self.legend_loc = 'upper left'
         self.legend = True
         self.output_size = None
-        self.baseline_expt = 'off'
-        self.apply_baseline = True
         self.ylim = None
 
         self.figure = None
         self.axes = None
-        self.baseline = None
         self.y_max = None
         self.y_min = None
 
@@ -130,11 +134,10 @@ class TitrationCurve:
 
         for experiment in self.experiments:
             self._find_concentrations(experiment)
-            self._analyze_wells(experiment)
 
-        self._find_baseline()
+        self._analyze_wells()
 
-        for experiment in self.experiments:
+        for experiment in self.visible_experiments:
             self._plot_experiment(experiment)
 
         self._pick_ylim()
@@ -149,24 +152,28 @@ class TitrationCurve:
         # Don't show that ugly dark grey border around the plot.
         self.figure.patch.set_alpha(0)
 
+        # The y-axis has to be log-scaled because the variation in the data is 
+        # proportional to it magnitude.
         self.axes.set_yscale('log')
         self.axes.set_xscale('symlog')
         self.axes.xaxis.set_minor_locator(MinorSymLogLocator())
 
     def _filter_experiments(self):
+        self.visible_experiments = self.experiments[:]
+
         if self.label_filter is not None:
             label_filter = re.compile(self.label_filter)
 
-            self.experiments = [
-                expt for expt in self.experiments
+            self.visible_experiments = [
+                expt for expt in self.visible_experiments
                 if label_filter.search(expt['label'])
             ]
 
         if self.exclude_label_filter is not None:
             label_filter = re.compile(self.exclude_label_filter)
 
-            self.experiments = [
-                expt for expt in self.experiments
+            self.visible_experiments = [
+                expt for expt in self.visible_experiments
                 if not label_filter.search(expt['label'])
             ]
 
@@ -203,39 +210,17 @@ class TitrationCurve:
         if 0 not in experiment['wells']:
             raise ValueError("no apo well for '{}' experiment".format(experiment['label']))
 
-    def _analyze_wells(self, experiment):
-        experiment['wells'] = {
-                conc: [
-                    analysis_helpers.AnalyzedWell(
-                        experiment, well,
-                        channel=self.channel,
-                        normalize_by=self.normalize_by,
-                        loc_metric=self.loc_metric,
-                    )
-                    for well in wells
-                ]
-                for conc, wells in experiment['wells'].items()
-        }
-
-    def _find_baseline(self):
-        if not self.apply_baseline:
-            self.baseline = np.ones([self.num_replicates])
-
-        else:
-            expt_map = {x['label']: x for x in self.experiments}
-            baseline_expt = expt_map[self.baseline_expt]
-
-            self.baseline = np.array([
-                np.mean([
-                    baseline_expt['wells'][conc][i].linear_loc
-                    for conc in baseline_expt['wells']
-                ])
-                for i in range(self.num_replicates)
-            ])
+    def _analyze_wells(self):
+        analysis_helpers.analyze_wells(
+                self.experiments,
+                channel=self.channel,
+                control_channel=self.control_channel,
+                loc_metric=self.loc_metric,
+        )
 
     def _plot_experiment(self, experiment):
         locs = {
-                conc: np.array([w.linear_loc for w in wells]) / self.baseline
+                conc: np.array([w.linear_loc for w in wells])
                 for conc, wells in experiment['wells'].items()
         }
         concs = sorted(experiment['wells'].keys())
@@ -246,8 +231,44 @@ class TitrationCurve:
         else:
             label = ''
 
+        # Fit a logistic curve to the titration
+        if True:
+            from scipy.optimize import curve_fit
+
+            data = [(x, y) for x, ys in locs.items() for y in ys]
+            x_data, y_data = map(np.array, zip(*data))
+
+            def logistic_ec50(x, ec50, y_min, y_max):
+                y = np.empty(x.shape)
+                y[x != 0] = y_min + (y_max - y_min) / (1 + (ec50 / x[x != 0]))
+                y[x == 0] = y_min
+                return y
+
+            initial_guess = 100, min(y_data), max(y_data)
+            bounds = (0, 0, 0), (np.inf, np.inf, np.inf)
+
+            x_fit = np.geomspace(x_data[x_data > 0].min(), x_data.max())
+            x_fit = np.concatenate((np.zeros(1), x_fit))
+
+            fit_params, fit_cov = curve_fit(
+                    logistic_ec50, x_data, y_data,
+                    p0=initial_guess, bounds=bounds)
+
+            y_fit = logistic_ec50(x_fit, *fit_params)
+
+            data_style = style.copy()
+            data_style['marker'] = '+'
+            data_style['linestyle'] = 'none'
+            #data_style['markersize'] = np.sqrt(4)
+
+            self.axes.plot(x_data, y_data, label='_nolegend_', **data_style)
+            self.axes.plot(x_fit, y_fit, label=label, **style)
+
+            y_max = np.amax(y_data)
+            y_min = np.amin(y_data)
+
         # Draw a single line with error bars.
-        if self.combine_curves and self.num_replicates > 1:
+        elif self.combine_curves and self.num_replicates > 1:
             means = np.array([mean(locs[x]) for x in concs])
             errors = np.array([stdev(locs[x]) for x in concs])
 
@@ -274,23 +295,21 @@ class TitrationCurve:
         if self.ylim:
             self.axes.set_ylim(self.ylim)
         else:
-            padding = 0.05 * (self.y_max - self.y_min)
-            self.axes.set_ylim(self.y_min - padding, self.y_max + padding)
+            padding = 1 + 1e-3 * (self.y_max / self.y_min)
+            self.axes.set_ylim(self.y_min / padding, self.y_max * padding)
 
     def _pick_labels(self):
         # Decide which ligand to label.
-        ligand = analysis_helpers.get_ligand(self.experiments)
+        ligand = analysis_helpers.get_ligand(self.visible_experiments)
 
         # Decide which unit to label.
-        units = {expt.get('unit', '') for expt in self.experiments}
+        units = {expt.get('unit', '') for expt in self.visible_experiments}
         if len(units) > 1:
             raise ValueError(f"multiple units {units} specified in yaml file.")
         unit = units.pop()
 
         # Decide how to label the y-axes
-        y_label = analysis_helpers.get_channel_label(self.experiments)
-        if self.apply_baseline:
-            y_label += ' [relative to max]'
+        y_label = analysis_helpers.get_channel_label(self.visible_experiments)
 
         self.axes.set_xlabel(f'{ligand} [{unit}]')
         self.axes.set_ylabel(y_label)
@@ -343,7 +362,7 @@ if __name__ == '__main__':
     args = docopt.docopt(__doc__)
     experiments = fcmcmp.load_experiments(args['<yml_path>'])
 
-    shared_steps = analysis_helpers.SharedProcessingSteps()
+    shared_steps = analysis_helpers.SharedProcessingSteps(args['--verbose'])
     shared_steps.early_event_threshold = float(args['--time-gate'])
     shared_steps.small_cell_threshold = float(args['--size-gate'])
     shared_steps.low_fluorescence_threshold = float(args['--expression-gate'])
@@ -351,9 +370,8 @@ if __name__ == '__main__':
 
     analysis = TitrationCurve(experiments)
     analysis.channel = args['--channel']
-    analysis.normalize_by = args['--normalize-by'] or not args['--no-normalize']
+    analysis.control_channel = args['--normalize-by'] or not args['--no-normalize']
     analysis.loc_metric = args['--loc-metric']
-    analysis.apply_baseline = not args['--no-baseline']
     analysis.label_filter = args['--query']
     analysis.exclude_label_filter = args['--exclude-query']
     analysis.combine_curves = args['--combine-curves']
@@ -362,6 +380,7 @@ if __name__ == '__main__':
     if args['--output-size']:
         analysis.output_size = map(float, args['--output-size'].split('x'))
 
-    with analysis_helpers.plot_or_savefig(args['--output'], args['<yml_path>']):
+    with analysis_helpers.plot_or_savefig(
+            args['--output'], args['<yml_path>'], args['--inkscape']):
         analysis.plot()
 

@@ -34,6 +34,12 @@ Options:
         experiment.  It is an error if no channel is specified and no channel 
         can be deduced.
 
+    -b --baseline <expt>
+        Normalize all the experiments by the average fluorescence value of the 
+        this experiment over all concentrations tested.  This normalization  
+        helps iron out slight variations in the relative levels of GFP and RFP 
+        between experiments.
+
     -n --normalize-by <channel>
         Normalize the channel of interest (see --channel) by the given channel.
         For example, you might specify "FSC-A", "SSC-A", or "FSC-A + m * SSC-A" 
@@ -117,6 +123,15 @@ Options:
         will make the traces smoother, while fewer points will make the plot 
         render faster.
 
+    -I --inkscape
+        Create an SVG output file that works well with inkscape by having 
+        matplotlib create a PDF, then converting it to SVG in a second step.  
+        For some reason the SVG files generated directly by matplotlib cause 
+        inkscape to run really slow and chew up a lot of memory.  I played 
+        around with one of these files a bit, and I think the problem might 
+        have to do with the use of clones.  In any case, generating PDF files 
+        and converting them to SVG seems to avoid the problem.
+
     -e --export-dataframe
         Exports a dataframe with the values used to generate the figure
 
@@ -134,9 +149,10 @@ class FoldChange:
         # Settings configured by the user.
         self.experiments = experiments
         self.reference_condition = 'apo'
+        self.baseline_expt = 'off'
+        self.apply_baseline = True
         self.channel = None
         self.control_channel = None
-        self.normalize_by = None
         self.sort_by = None
         self.label_filter = None
         self.quality_filter = None
@@ -222,7 +238,7 @@ class FoldChange:
         analysis_helpers.analyze_wells(
                 self.experiments,
                 channel=self.channel,
-                normalize_by=self.normalize_by,
+                control_channel=self.control_channel,
                 log_toggle=self.log_toggle,
                 pdf=self.pdf,
                 loc_metric=self.loc_metric,
@@ -444,7 +460,8 @@ class FoldChange:
             def __init__(self):
                 super().__init__(
                     nbins=max_fold_change_ticks - 1,
-                    steps=[0.5, 1, 2, 5, 10, 50, 100],
+                    #steps=[0.5, 1, 2, 5, 10, 50, 100],
+                    steps=[1, 2, 5, 10],
                 )
 
             def tick_values(self, vmin, vmax):
@@ -542,7 +559,8 @@ if __name__ == '__main__':
 
     analysis = FoldChange(experiments)
     analysis.channel = args['--channel']
-    analysis.normalize_by = args['--normalize-by'] or not args['--no-normalize']
+    analysis.control_channel = args['--normalize-by'] or not args['--no-normalize']
+    analysis.apply_baseline = args['--baseline']
     analysis.sort_by = args['--sort-by']
     analysis.label_filter = args['--query']
     analysis.quality_filter = args['--quality-filter']
@@ -561,7 +579,8 @@ if __name__ == '__main__':
     if args['--distribution-xlim']:
         analysis.distribution_xlim = map(float, args['--distribution-xlim'].split(','))
 
-    with analysis_helpers.plot_or_savefig(args['--output'], args['<yml_path>']):
+    with analysis_helpers.plot_or_savefig(
+            args['--output'], args['<yml_path>'], args['--inkscape']):
         analysis.plot()
 
     if args['--export-dataframe']:

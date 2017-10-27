@@ -9,15 +9,19 @@ plt.rcParams['font.family'] = 'Liberation Sans'
 
 class AnalyzedWell(fcmcmp.Well):
 
-    def __init__(self, experiment, well, channel=None, normalize_by=None, 
-            log_scale=None, log_toggle=False, pdf=False, loc_metric='median', 
-            num_samples=None):
+    def __init__(self, experiments, experiment_idx, condition, condition_idx, 
+            channel=None, control_channel=None, log_scale=None, log_toggle=False,
+            pdf=False, loc_metric='median', num_samples=None):
 
+        well = experiments[experiment_idx]['wells'][condition][condition_idx]
         super().__init__(well.label, well.meta, well.data)
 
-        self.experiment = experiment
+        self.experiments = experiments
+        self.experiment = experiments[experiment_idx]
+        self.condition = condition
+        self.index = condition_idx
         self.channel_override = channel
-        self.normalize_by = normalize_by
+        self.control_channel_override = control_channel
         self.log_scale = log_scale
         self.log_toggle = log_toggle
         self.calc_pdf = pdf
@@ -34,6 +38,7 @@ class AnalyzedWell(fcmcmp.Well):
         self.kde = None
         self.channel = None
         self.control_channel = None
+        self.control_expt = None
         self.x = self.y = None
         self.mean = None
         self.median = None
@@ -42,6 +47,18 @@ class AnalyzedWell(fcmcmp.Well):
         self.linear_loc = None
 
         self._find_measurements()
+
+    def normalize(self, factor):
+        self.linear_measurements = self.normalized_linear_measurements = \
+                self.linear_measurements / factor
+        self.log_measurements = self.normalized_log_measurements = \
+                np.log10(self.linear_measurements)
+
+        self.measurements = \
+                self.log_measurements \
+                if self.log_scale else \
+                self.linear_measurements
+
         self._find_locations()
 
     def estimate_distribution(self, axes_or_xlim=(1,5)):
@@ -59,7 +76,7 @@ class AnalyzedWell(fcmcmp.Well):
 
         # Pick the channel that will be used to normalize the data.
         self.control_channel = pick_control_channel(
-                self.experiment, self.channel, self.normalize_by)
+                self.experiment, self.channel, self.control_channel_override)
 
         # Decide whether or not the data should be presented on a log-axis. 
         if self.log_scale is None:
@@ -69,14 +86,15 @@ class AnalyzedWell(fcmcmp.Well):
 
         # Save the measurements, from the appropriate channel, with the 
         # appropriate normalization, and on the appropriate scale.
-        self.linear_measurements = self.unnormalized_linear_measurements = self.data[self.channel]
-        self.log_measurements = self.unnormalized_log_measurements = np.log10(self.linear_measurements)
+        self.linear_measurements = self.unnormalized_linear_measurements = \
+                self.data[self.channel]
+        self.log_measurements = self.unnormalized_log_measurements = \
+                np.log10(self.linear_measurements)
 
-        if self.control_channel is not None:
-            self.linear_measurements = self.normalized_linear_measurements = self.unnormalized_linear_measurements / self.data[self.control_channel]
-            self.log_measurements = self.normalized_log_measurements = np.log10(self.normalized_linear_measurements)
-
-        self.measurements = self.log_measurements if self.log_scale else self.linear_measurements
+        if self.control_channel:
+            self.normalize(self.data[self.control_channel])
+        else:
+            self.normalize(1)
 
     def _find_locations(self):
         # Calculate the median, mean, and mode of the data.  The advantage of 
@@ -113,6 +131,19 @@ class AnalyzedWell(fcmcmp.Well):
         self.linear_loc = 10**self.loc if self.log_scale else self.loc
         self.log_loc = self.loc if self.log_scale else np.log10(self.loc)
 
+    def _find_location_for_data(self, measurements):
+        # Create a dummy object that has all the attributes needed by 
+        # _find_locations(), then call _find_locations() on it and return the 
+        # result.
+        from types import SimpleNamespace
+        dummy_well = SimpleNamespace()
+        dummy_well.measurements = measurements
+        dummy_well.loc_metric = self.loc_metric
+        dummy_well.log_scale = self.log_scale
+
+        AnalyzedWell._find_locations(dummy_well)
+        return dummy_well.loc
+
     def _find_distribution(self, xlim):
         # Evaluate the Gaussian KDE across the whole x-axis for visualization 
         # purposes.  Because each evaluation of the KDE is relatively expensive 
@@ -140,12 +171,38 @@ class AnalyzedWell(fcmcmp.Well):
 
 
 def analyze_wells(experiments, **kwargs):
-    for experiment in experiments:
+    control_expt_kwarg = kwargs.pop('control_expt', None)
+
+    # Convert all the normal wells to "analyzed" wells.
+    for i, experiment in enumerate(experiments):
         for condition in experiment['wells']:
             experiment['wells'][condition] = [
-                    AnalyzedWell(experiment, well, **kwargs)
-                    for well in experiment['wells'][condition]
+                    AnalyzedWell(experiments, i, condition, j, **kwargs)
+                    for j, _ in enumerate(experiment['wells'][condition])
             ]
+
+    # Normalize by the indicated control experiment(s).
+    wells = [w for _, _, w in fcmcmp.yield_wells(experiments)]
+    expt_map = {x['label']: x for x in experiments}
+    control_locs = []
+    control_labels = []
+
+    for well in wells:
+        control_label = pick_control_experiment(well.experiment, control_expt_kwarg)
+        if not control_label:
+            continue
+
+        control_expt = expt_map[control_label]
+        control_loc = np.mean([
+            control_expt['wells'][conc][well.index].linear_loc
+            for conc in control_expt['wells']
+        ])
+        control_locs.append(control_loc)
+        control_labels.append(control_label)
+
+    for well, label, loc in zip(wells, control_labels, control_locs):
+        well.control_expt = label
+        well.normalize(loc)
 
 class RelatedWells:
 
@@ -434,24 +491,24 @@ def pick_ucsf_color(experiment, lightness=0):
     i = lambda x: min(x + lightness, 3)
     label = experiment.get('family', experiment['label']).lower()
 
-    if 'rfp' in label:
-        return red[i(0)]
-    elif 'gfp' in label:
-        return olive[i(0)]
-    elif control.search(label):
+    if control.search(label):
         return light_grey[i(0)]
     elif lower_stem.search(label):
         return olive[i(0)]
     elif upper_stem.search(label):
-        return olive[i(0)]
-    elif bulge.search(label):
-        return olive[i(0)]
-    elif nexus.search(label):
-        return red[i(0)]
-    elif hairpin.search(label):
         return blue[i(0)]
-    else:
+    elif bulge.search(label):
+        return blue[i(0)]
+    elif nexus.search(label):
         return navy[i(0)]
+    elif hairpin.search(label):
+        return teal[i(0)]
+    elif 'rfp' in label:
+        return red[i(0)]
+    elif 'gfp' in label:
+        return olive[i(0)]
+    else:
+        return black[i(0)]
 
 def pick_style(experiment, is_reference=False):
     if is_reference:
@@ -502,13 +559,11 @@ def pick_channel(experiment, users_choice=None):
     return 'RFP-A'
 
 def pick_control_channel(experiment, channel, users_choice=None):
-    # If the user didn't specify a normalization, see if there's a default 
-    # associated with the experiment.
-    if users_choice is None:
-        users_choice = experiment.get('normalize_by')
-
     # If normalization is requested but no particular channel is given, try to 
     # find a default fluorescent control channel.
+    if users_choice is True:
+        users_choice = experiment.get('control_channel', True)
+
     if users_choice is True:
         species = experiment.get('species', 'E. coli')
         size_controls = {
@@ -542,6 +597,12 @@ def pick_control_channel(experiment, channel, users_choice=None):
     else:
         return get_channel_alias(users_choice)
 
+def pick_control_experiment(experiment, users_choice=None):
+    if users_choice is not None:
+        return users_choice
+
+    return experiment.get('control_expt')
+
 def get_channel_alias(channel):
     if channel in ('RFP-A', 'PE-Texas Red-A', 'DsRed-A', 'mCherry-A'):
         return 'RFP-A'
@@ -554,24 +615,30 @@ def get_channel_label(experiments, baseline=False):
     channels = set(x.channel for _, _, x in fcmcmp.yield_wells(experiments))
     control_channels = set(x.control_channel for _, _, x in fcmcmp.yield_wells(experiments))
     control_channels.discard(None)
+    control_expts = set(x.control_expt for _, _, x in fcmcmp.yield_wells(experiments))
+    control_expts.discard(None)
 
     get_label = lambda x: x.split('-')[0]
 
     if len(channels) == 1:
         channel = next(iter(channels))
         label = get_label(channel)
-    elif channels.issubset(fluorescence_controls):
+    elif channels.issubset(['GFP-A', 'RFP-A']):
         label = 'fluorescence'
     elif channels.issubset(['FSC-A', 'SSC-A']):
         label = 'size'
     else:
         raise ValueError("inconsistent channels: {}".format(','.join(channels)))
 
-    if len(control_channels) == 1:
-        control_channel = next(iter(control_channels))
-        label = '{} / {}'.format(label, get_label(control_channel))
-    elif len(control_channels) > 1:
+    if len(control_channels) > 1 or len(control_expts) > 1:
         label = 'normalized {}'.format(label)
+    else:
+        if len(control_channels) == 1:
+            control_channel = next(iter(control_channels))
+            label = '{} / {}'.format(label, get_label(control_channel))
+        if len(control_expts) == 1:
+            control_expt = next(iter(control_expts))
+            label = '{} / {}'.format(label, control_expt)
 
     if baseline:
         label += f' / {"baseline" if baseline is True else baseline}'
@@ -602,7 +669,7 @@ def is_fluorescent_channel(channel):
     )
 
 @contextlib.contextmanager
-def plot_or_savefig(output_path=None, substitution_path=None):
+def plot_or_savefig(output_path=None, substitution_path=None, inkscape_svg=False):
     """
     Either open the plot in the default matplotlib GUI or export the plot to a 
     file, depending on whether or not an output path is given.  If an output 
@@ -639,14 +706,28 @@ def plot_or_savefig(output_path=None, substitution_path=None):
     if fate == 'print':
         temp_file = NamedTemporaryFile(prefix='fcm_analysis_', suffix='.ps')
         plt.savefig(temp_file.name, dpi=300)
-        # Add ['-o', 'number-up=4'] to get plots that will fit in a lab 
+        # Add ['-o', 'number-up=4'] to get plots that will fit in a paper lab 
         # notebook.
         subprocess.call(['lpr', temp_file.name])
 
     if fate == 'save':
         if substitution_path:
             output_path = output_path.replace('$', Path(substitution_path).stem)
-        plt.savefig(output_path, dpi=300)
+
+        if not inkscape_svg:
+            plt.savefig(output_path, dpi=300)
+
+        else:
+            from tempfile import NamedTemporaryFile
+            prefix = Path(output_path).stem + '_'
+            with NamedTemporaryFile(prefix=prefix, suffix='.pdf') as pdf:
+                plt.savefig(pdf.name, dpi=300)
+                subprocess.call([
+                        'inkscape', 
+                        '--without-gui',
+                        '--file', pdf.name,
+                        '--export-plain-svg', output_path,
+                ])
 
     if fate == 'gui':
         plt.gcf().canvas.set_window_title(' '.join(sys.argv))

@@ -97,7 +97,7 @@ if __name__ == '__main__':
     args = docopt.docopt(__doc__)
     experiment = fcmcmp.load_experiment(args['<yml_path>'], args['<experiment>'])
 
-    rename_red_channel = analysis_helpers.RenameRedChannel()
+    rename_red_channel = analysis_helpers.RenameFluorescentChannels()
     rename_red_channel([experiment])
 
     log_transformation = fcmcmp.LogTransformation()

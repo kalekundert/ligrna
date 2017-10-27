@@ -79,6 +79,15 @@ Options:
         the mean and the mode will both change depending on whether or not the 
         data has been log-transformed (see --log-toggle).
 
+    -I --inkscape
+        Create an SVG output file that works well with inkscape by having 
+        matplotlib create a PDF, then converting it to SVG in a second step.  
+        For some reason the SVG files generated directly by matplotlib cause 
+        inkscape to run really slow and chew up a lot of memory.  I played 
+        around with one of these files a bit, and I think the problem might 
+        have to do with the use of clones.  In any case, generating PDF files 
+        and converting them to SVG seems to avoid the problem.
+
     -v --verbose
         Print out information on all the processing steps.
 """
@@ -98,7 +107,7 @@ class BarChart:
         self.title = None
         self.output_size = None
         self.channel = None
-        self.normalize_by = None
+        self.control_channel = None
         self.loc_metric = None
         self.label_filter = None
         self.ylim = None
@@ -160,7 +169,7 @@ class BarChart:
         analysis_helpers.analyze_wells(
                 self.experiments,
                 channel=self.channel,
-                normalize_by=self.normalize_by,
+                control_channel=self.control_channel,
                 loc_metric=self.loc_metric,
         )
 
@@ -226,8 +235,7 @@ class BarChart:
     def _plot_condition(self, x, experiment, condition, wells):
         # Plot the fluorescence data.
 
-        data = [x.linear_loc for x in wells]
-
+        data = np.array([x.linear_loc for x in wells])
         y = np.mean(data)
         err = np.std(data)
         color = analysis_helpers.pick_color(experiment)
@@ -266,7 +274,7 @@ if __name__ == '__main__':
     analysis = BarChart(experiments)
     analysis.title = args['--title']
     analysis.channel = args['--channel']
-    analysis.normalize_by = args['--normalize-by'] or not args['--no-normalize']
+    analysis.control_channel = args['--normalize-by'] or not args['--no-normalize']
     analysis.loc_metric = args['--loc-metric']
     analysis.label_filter = args['--query']
     analysis.verbose = args['--verbose']
@@ -276,6 +284,7 @@ if __name__ == '__main__':
     if args['--ylim']:
         analysis.ylim = float(args['--ylim'])
 
-    with analysis_helpers.plot_or_savefig(args['--output'], args['<yml_path>']):
+    with analysis_helpers.plot_or_savefig(
+            args['--output'], args['<yml_path>'], args['--inkscape']):
         analysis.plot()
 
