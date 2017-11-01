@@ -1,0 +1,27 @@
+- Pre-warm 1 mL SOC and an LB + Carb plate.
+
+- Chill an electroporation cuvette and 2 μL 
+  (≈250 ng) of DNA on ice.  
+
+- Thaw an aliquot of competent cells on ice for 
+  ~10 min.
+
+- Pipet once to mix the cells with the DNA, then 
+  load into the cuvette.  Tap to remove bubbles.
+
+- Shock at 1.8 kV with a 5 ms decay time (for 
+  cuvettes with a 1 mm gap).
+
+- Immediately add 1 mL pre-warmed SOC.  If you're 
+  transforming multiple aliquots of cells with the 
+  same DNA, combine them.
+
+- Before recovering, plate several 10x dilutions 
+  of cells (e.g. from 10⁻³ to 10⁻⁶) to count how 
+  many were transformed.
+
+- Recover at 37°C for 1h.
+
+- Transfer cells to 50 mL selective media and 
+  grow overnight at 37°C.
+
