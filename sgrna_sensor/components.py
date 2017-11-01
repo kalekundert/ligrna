@@ -97,7 +97,7 @@ def spacer(name='none'):
 
     return Construct(name, spacer)
 
-def repeat(name, length, pattern='UUUCCC'):
+def repeat(name, length, end, pattern='UUUCCC'):
     """
     Construct a repeating sequence using the given pattern.
 
@@ -406,15 +406,15 @@ def aptamer_insert(ligand, linker_len=0, splitter_len=0, repeat_factory=repeat,
     # If a splitter was requested, insert it into the middle of the aptamer.
 
     if splitter_len != 0:
-        insert.replace('aptamer/splitter', repeat_factory('aptamer/splitter', splitter_len))
+        insert.replace('aptamer/splitter', repeat_factory('aptamer/splitter', splitter_len, 'splitter'))
 
     # Add a linker between the aptamer and the sgRNA.
 
     try: linker_len_5, linker_len_3 = linker_len
     except TypeError: linker_len_5 = linker_len_3 = linker_len
 
-    insert.prepend(repeat_factory("linker/5'", linker_len_5))
-    insert.append(repeat_factory("linker/3'", linker_len_3))
+    insert.prepend(repeat_factory("linker/5'", linker_len_5, "5'"))
+    insert.append(repeat_factory("linker/3'", linker_len_3, "3'"))
 
     return insert
 
@@ -631,11 +631,21 @@ def hammerhead_insert(ligand, mode, stem_len=5, num_aptamers=1):
     domains += [hammerhead_3]
     return Construct('hammerhead', domains)
 
-def random_insert(ligand, linker_len_5, linker_len_3, num_aptamers=1):
+def random_insert(ligand, linker_len_5, linker_len_3, flags='', num_aptamers=1):
+    def linker_factory(name, len, end):
+        if 'g' not in flags:
+            seq = 'N' * len
+        else:
+            seq = 'N' * (len - 1)
+            if end == "5'": seq = seq + 'G'
+            if end == "3'": seq = 'C' + seq
+
+        return Domain(name, seq)
+
     return aptamer_insert(
             ligand,
             linker_len=(linker_len_5, linker_len_3),
-            repeat_factory=lambda name, len: Domain(name, 'N' * len),
+            repeat_factory=linker_factory,
             num_aptamers=num_aptamers,
     )
 

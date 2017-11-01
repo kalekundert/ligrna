@@ -347,7 +347,7 @@ def fold_nexus(linker_len=0, target='none', ligand='theo'):
             aptamer_insert(
                 ligand,
                 linker_len=linker_len,
-                repeat_factory=lambda name, length: repeat(name, length, 'U'),
+                repeat_factory=lambda name, length, end: repeat(name, length, end, 'U'),
             ),
             'nexus', 4,
             'nexus', 9,
@@ -1013,12 +1013,51 @@ def hammerhead_hairpin(mode, A=1, target='none', ligand='theo'):
     return sgrna
 
 @design('rb')
-def randomize_bulge(N, M, A=1, target='none', ligand='theo'):
+def randomize_bulge(N, M, flags='', A=1, target='none', ligand='theo'):
     sgrna = wt_sgrna(target)
     sgrna.attach(
-            random_insert(ligand, N, M),
+            random_insert(ligand, N, M, flags),
             'stem', 6,
             'stem', 24,
+    )
+    return sgrna
+
+@design('rbi')
+def randomize_bulge_i(N, M, bp='G', target='none', ligand='theo'):
+    """
+    Replace the upper stem with the aptamer and randomize the bulge to connect 
+    it to the lower stem.
+
+    This is a variant of the rb library with two small differences.  First, the 
+    nucleotides flanking the aptamer are not randomized and are instead 
+    guaranteed to base pair.  The default base pair is GC.  However, note that 
+    to be consistent with rb, this base pair is considered part of the linker, 
+    and is included in the N and M arguments.  So rbi/4/8 only randomizes 10 
+    positions.  Second, the library is based off the Dang scaffold.  Most 
+    extended upper stem is replaced with the aptamer, but the CG base pair in 
+    the lower stem remains.
+
+    Parameters
+    ----------
+    N: int
+        The length of the linker on the 5' side of the aptamer.  This length 
+        includes a non-randomized base pair immediately adjacent to the aptamer.
+
+    M: int
+        The length of the linker on the 3' side of the aptamer.  This length 
+        includes a non-randomized base pair immediately adjacent to the aptamer.
+
+    bp: 'ACGU'
+        Not implemented, but this would be a good interface for changing the 
+        static base pair.  Right now to base pair is hard-coded to be GC.
+    """
+    sgrna = on(target)
+    sgrna['bulge/5'].attachment_sites = 0,
+    sgrna['bulge/3'].attachment_sites = 4,
+    sgrna.attach(
+            random_insert(ligand, N, M, flags='g'),
+            'bulge/5', 0,
+            'bulge/3', 4,
     )
     return sgrna
 
@@ -1094,23 +1133,23 @@ def randomize_bulge_forward(i, target='none', ligand='theo'):
         strand displacement mechanism.
     """
     linkers = {
-            6: ('AAGG', 'CTTTAGC'),     # rb/4/7
-            8: ('CCCGA', 'TCTTCGC'),    # rb/5/7
-            13: ('ATCG', 'CGGCTT'),     # rb/4/6
-            26: ('TAGG', 'CTGCTCGC'),   # rb/4/8, ends with TCGC like rbf(8)
-            39: ('ACCTG', 'CTGTAGA'),   # rb/5/7
-            40: ('CCGAG', 'CCAGTCT'),   # rb/5/7
-            47: ('CCCG', 'CGAGAGCT'),   # rb/4/8
-            50: ('CGCGG', 'CCTAGG'),    # rb/5/6
-            51: ('GCTGA', 'TCGGGCT'),   # rb/5/7
-            53: ('CGTG', 'CTTATGC'),    # rb/4/7
-            56: ('TCGC', 'GCCTGC'),     # rb/4/6
-            68: ('CCAG', 'CTGCCAGC'),   # rb/4/8
-            74: ('ATCG', 'CGCTGCTT'),   # rb/4/8
-            99: ('GCGG', 'CCGGGCTT'),   # rb/4/8
-           109: ('ACGG', 'CCGGGCAT'),   # rb/4/8
-           134: ('ATAG', 'CAGCAGC'),    # rb/4/7
-           161: ('TGTGAG', 'CTCGGC'),   # rb/6/6
+            6:  (  'AAGG', 'CTTTAGC' ), # rb/4/7
+            8:  ( 'CCCGA', 'TCTTCGC' ), # rb/5/7
+            13: (  'ATCG', 'CGGCTT'  ), # rb/4/6
+            26: (  'TAGG', 'CTGCTCGC'), # rb/4/8, ends with TCGC like rbf(8)
+            39: ( 'ACCTG', 'CTGTAGA' ), # rb/5/7
+            40: ( 'CCGAG', 'CCAGTCT' ), # rb/5/7
+            47: (  'CCCG', 'CGAGAGCT'), # rb/4/8
+            50: ( 'CGCGG', 'CCTAGG'  ), # rb/5/6
+            51: ( 'GCTGA', 'TCGGGCT' ), # rb/5/7
+            53: (  'CGTG', 'CTTATGC' ), # rb/4/7
+            56: (  'TCGC', 'GCCTGC'  ), # rb/4/6
+            68: (  'CCAG', 'CTGCCAGC'), # rb/4/8
+            74: (  'ATCG', 'CGCTGCTT'), # rb/4/8
+            99: (  'GCGG', 'CCGGGCTT'), # rb/4/8
+           109: (  'ACGG', 'CCGGGCAT'), # rb/4/8
+           134: (  'ATAG', 'CAGCAGC' ), # rb/4/7
+           161: ('TGTGAG', 'CTCGGC'  ), # rb/6/6
     }
     aliases = {
         19: 8,
@@ -1177,14 +1216,14 @@ def randomize_bulge_backward(i, target='none', ligand='theo'):
     linkers = {
             # First screen
             4:  ('AAGCTG', 'CGGCGC'),   # rb/6/6
-            15: ('CCCTA',  'TGGGGT'),   # rb/5/6
+            15: ( 'CCCTA', 'TGGGGT'),   # rb/5/6
             27: ('GCGCTG', 'CGTCGC'),   # rb/6/6
 
             # Second screen
             29: ('GTCTGT', 'ATAGAT'),   # rb/6/6
             39: ('ACCTGC', 'GTAGGT'),   # rb/6/6
-            42: ('ACCTC',  'GTGGT'),    # rb/5/5
-            45: ('CCCCC',  'GGGGGT'),   # rb/5/6
+            42: ( 'ACCTC', 'GTGGT' ),   # rb/5/5
+            45: ( 'CCCCC', 'GGGGGT'),   # rb/5/6
 
     }
     aliases = {

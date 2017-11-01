@@ -37,13 +37,13 @@ def test_spacer():
     assert spacer('k2') == spacer('klein2') == 'GTCGCCCTCGAACTTCACCT'
 
 def test_repeat():
-    assert repeat('dummy', 1) == 'U'
-    assert repeat('dummy', 2) == 'UU'
-    assert repeat('dummy', 3) == 'UUU'
-    assert repeat('dummy', 4) == 'UUUC'
-    assert repeat('dummy', 5) == 'UUUCC'
-    assert repeat('dummy', 6) == 'UUUCCC'
-    assert repeat('dummy', 7) == 'UUUCCCU'
+    assert repeat('dummy', 1, "5'") == 'U'
+    assert repeat('dummy', 2, "5'") == 'UU'
+    assert repeat('dummy', 3, "5'") == 'UUU'
+    assert repeat('dummy', 4, "5'") == 'UUUC'
+    assert repeat('dummy', 5, "5'") == 'UUUCC'
+    assert repeat('dummy', 6, "5'") == 'UUUCCC'
+    assert repeat('dummy', 7, "5'") == 'UUUCCCU'
 
 def test_complementary_switch():
     assert complementary_switch('AUGC') == ('GCAU', 'AUGC', 'AUGC')
