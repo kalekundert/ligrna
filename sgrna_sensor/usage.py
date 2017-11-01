@@ -44,6 +44,9 @@ Arguments:
 
 Options:
     -v, --verbose
+        Print out the name of each design.
+
+    -V, --very-verbose
         Print out a description of the design goals behind each design, along 
         with their sequences.
 
@@ -164,9 +167,9 @@ def from_name(name, **kwargs):
         raise ValueError("No designs named '{}'.".format(tokens[0]))
 
     # All further tokens are arguments.  Arguments that look like integers need 
-    # to be casted to integers.
+    # to be cast as integers.
 
-    def cast_if_necessary(x):  # (no fold)
+    def cast_if_necessary(x): #
         try: return int(x)
         except: return x
 
@@ -210,7 +213,7 @@ def predict_fold(design, constraints=False):
         # condition isn't met, but it will give the wrong answer.
 
         except KeyError:
-            theo_pattern = re.compile('.AUACCAGCCGAAAGGCCCUUGGCAG.')
+            theo_pattern = re.compile('.AUACCAGCCGAAAGGCC.UUGGCAG.')
             theo_match = theo_pattern.search(design.rna)
 
             if not theo_match:
@@ -292,6 +295,8 @@ def main():
 
     for design in designs:
         if args['--verbose']:
+            print(design.name)
+        elif args['--very-verbose']:
             from textwrap import dedent
             header = "{}".format(design.name)
             print()
