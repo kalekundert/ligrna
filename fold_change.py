@@ -150,7 +150,6 @@ class FoldChange:
         self.experiments = experiments
         self.reference_condition = 'apo'
         self.baseline_expt = 'off'
-        self.apply_baseline = True
         self.channel = None
         self.control_channel = None
         self.sort_by = None
@@ -263,10 +262,10 @@ class FoldChange:
             x_min = x_01 = np.inf
             x_max = x_99 = -np.inf
             for _, _, well in self._yield_wells():
-                x_min = min(x_min, np.min(well.log_measurements))
-                x_max = max(x_max, np.max(well.log_measurements))
+                x_min = min(x_min, np.min(well.linear_measurements))
+                x_max = max(x_max, np.max(well.linear_measurements))
 
-        self.axes[0].set_xlim(10**x_min, 10**x_max)
+        self.axes[0].set_xlim(x_min, x_max)
 
     def _estimate_distributions(self):
         """
@@ -451,6 +450,7 @@ class FoldChange:
         label = analysis_helpers.get_channel_label(self.experiments)
         self.axes[0].set_xlabel(label)
         self.axes[1].set_xlabel('fold change')
+        self.axes[1].set_xlim(0, self.axes[1].get_xlim()[1])
 
     def _pick_xticks(self):
         from matplotlib.ticker import MaxNLocator
@@ -560,7 +560,6 @@ if __name__ == '__main__':
     analysis = FoldChange(experiments)
     analysis.channel = args['--channel']
     analysis.control_channel = args['--normalize-by'] or not args['--no-normalize']
-    analysis.apply_baseline = args['--baseline']
     analysis.sort_by = args['--sort-by']
     analysis.label_filter = args['--query']
     analysis.quality_filter = args['--quality-filter']
