@@ -41,7 +41,7 @@ if args['--time-course']:
     protocol += """\
 Take a time point every hour, starting at 6h:
 
-- Prepare plates with 200 μL PBS + Sp.  Keep at 
+- Prepare plates with 250 μL PBS + Sp.  Keep at 
   4°C.
 
 - If the cultures are totally transparent, dilute 
@@ -55,7 +55,7 @@ Take a time point every hour, starting at 6h:
 """
 
 protocol += """\
-Dilute 0.5 μL of each culture into 200 μL PBS.
+Dilute 0.5 μL of each culture into 250 μL PBS.
 """
 
 protocol += """\
