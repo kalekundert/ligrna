@@ -14,7 +14,7 @@ Options:
         Print some extra information explaining how the protocol was developed.
 """
 
-import sys; sys.path.append('../general')
+import os, sys; sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'general'))
 import docopt
 import dirty_water
 import electrotransformation
