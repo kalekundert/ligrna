@@ -1,0 +1,15 @@
+1. Prepare the media in a 1L glass beaker:
+
+   - 6.71 g YNB (Sunrise Science Products, #1501)
+   - 690 mg CSM-Leu (Sunrise Science Prod, #1011)
+   - 20 g dextrose
+   - 20 g agarose
+   - 1L water
+   - 1 stir bar
+
+2. Autoclave 50 min, 121°C (cycle #1).
+
+vim: tw=53
+
+
+
