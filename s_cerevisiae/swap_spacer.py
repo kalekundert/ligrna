@@ -26,6 +26,7 @@ from pprint import pprint
 
 args = docopt.docopt(__doc__)
 protocol = dirty_water.Protocol()
+enzyme = 'BsaI-HF' if not args['--btgzi'] else '5 U/μL BtgZI'
 backbone = 'pKBK017' if not args['--btgzi'] else 'pKBK027'
 
 protocol += """\
@@ -61,24 +62,13 @@ protocol += """\
 Do a PCR cleanup and elute in 25 μL water.
 """
 
-if args['--btgzi']:
-    protocol += """\
+protocol += """\
 Setup the restriction digest of the destination
 vector:
 
 - 7 μL ≈800 ng/μL {backbone}
 - 1 μL 10x CutSmart buffer
-- 2 μL 5 U/μL BtgZI
-"""
-else:
-    protocol += """\
-Setup the restriction digest of the destination
-vector:
-
-- 6 μL water
-- 2 μL ≈800 ng/μL {backbone}
-- 1 μL 10x CutSmart buffer
-- 1 μL BsaI-HF
+- 2 μL {enzyme}
 """
 
 protocol += """\
@@ -96,7 +86,7 @@ Setup a Golden Gate reaction:
 - 25.0 colony PCR product
 - 3.1 μL 10x T4 ligase buffer
 - 1.0 μL T4 ligase
-- 1.0 μL BsaI-HF
+- 1.0 μL {enzyme}
 """
 
 protocol += """\
