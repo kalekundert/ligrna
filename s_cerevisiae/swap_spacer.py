@@ -14,6 +14,10 @@ Options:
         Use BtgZI to swap the spacer for upper stem/bulge libraries, that are 
         too close to the spacer to use BsaI.
 
+    -B --skip-backbone-digest
+        Don't include the backbone digest step, for example if you have 
+        leftover backbone from a previous reaction.
+
     -v --verbose
         Print some extra information explaining how the protocol was developed.
 """
@@ -26,8 +30,37 @@ from pprint import pprint
 
 args = docopt.docopt(__doc__)
 protocol = dirty_water.Protocol()
-enzyme = 'BsaI-HF' if not args['--btgzi'] else '5 U/μL BtgZI'
-backbone = 'pKBK017' if not args['--btgzi'] else 'pKBK027'
+
+if args['--btgzi']:
+    enzyme = '5 U/μL BtgZI'
+    buffer = 'CutSmart buffer'
+    digest_temp = '60'
+    denature_temp = '80'
+    backbone = 'pKBK027'
+else:
+    enzyme = 'BsaI-HF'
+    buffer = 'CutSmart buffer'
+    digest_temp = '37'
+    denature_temp = '65'
+    backbone = 'pKBK017'
+
+if not args['--skip-backbone-digest']:
+    protocol += """\
+Setup the restriction digest of the destination
+vector:
+
+- 7 μL ≈800 ng/μL {backbone}
+- 1 μL 10x {buffer}
+- 2 μL {enzyme}
+"""
+
+    protocol += """\
+Incubate at {digest_temp}°C for 30 min, then {denature_temp}°C for 20 min.
+"""
+
+    protocol += """\
+Gel purify the entire reaction.
+"""
 
 protocol += """\
 Setup a zymolase reaction:
@@ -53,33 +86,47 @@ Setup a 50 μL PCR reaction:
 protocol += """\
 Run the PCR reaction:
 
-- 22 cycles
+- 35 cycles
 - 12s extension time
 - 60°C annealing temperature
 """
 
 protocol += """\
+Do a PCR cleanup and elute in 50 μL water.
+"""
+
+if args['--btgzi']:
+    protocol += """\
+Setup the restriction digest of the insert:
+
+- 50 μL ≈50 ng/μL {backbone}
+- 5.67 μL 10x CutSmart buffer
+- 1 μL {enzyme}
+"""
+
+    protocol += """\
+Incubate at {digest_temp}°C for 30 min, then {denature_temp}°C for 20 min.
+"""
+
+    protocol += """\
 Do a PCR cleanup and elute in 25 μL water.
 """
 
-protocol += """\
-Setup the restriction digest of the destination
-vector:
+    protocol += """\
+Setup a ligation reaction:
 
-- 7 μL ≈800 ng/μL {backbone}
-- 1 μL 10x CutSmart buffer
-- 2 μL {enzyme}
+- 1.0 μL ≈160 ng/μL {backbone} (linearized)
+- 25.0 ≈50 ng/μL insert (digested)
+- 3.0 μL 10x T4 ligase buffer
+- 1.0 μL T4 ligase
 """
 
-protocol += """\
-Incubate at 37°C for 30 min, then 65°C for 20 min.
+    protocol += """\
+Incubate at 16°C overnight.
 """
 
-protocol += """\
-Gel purify the entire reaction.
-"""
-
-protocol += """\
+else:
+    protocol += """\
 Setup a Golden Gate reaction:
 
 - 1.0 μL ≈160 ng/μL {backbone} (linearized)
@@ -89,7 +136,7 @@ Setup a Golden Gate reaction:
 - 1.0 μL {enzyme}
 """
 
-protocol += """\
+    protocol += """\
 Run the following thermocycler protocol:
 
 - 42°C for 5 min
