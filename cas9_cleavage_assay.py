@@ -65,14 +65,14 @@ num_sgrnas = num_reactions // 2
 ## Calculate how much of each reagent will be needed.
 
 cas9_rxn = dirty_water.Reaction('''\
-Reagent     Conc  Each Rxn  Master Mix
-=======  =======  ========  ==========
-water              10.1 μL         yes
-buffer       10x    3.0 μL         yes
-Cas9        1 μM    0.9 μL         yes
-ligand     30 mM   10.0 μL
-sgRNA    1500 nM    3.0 μL
-DNA        30 nM    3.0 μL
+Reagent        Conc  Each Rxn  Master Mix
+==========  =======  ========  ==========
+water                 10.1 μL         yes
+buffer [1]      10x    3.0 μL         yes
+Cas9 [1]       1 μM    0.9 μL         yes
+ligand        30 mM   10.0 μL
+sgRNA       1500 nM    3.0 μL
+DNA           30 nM    3.0 μL
 ''')
 
 cas9_rxn.num_reactions = eval(args['<reactions>'])
@@ -194,7 +194,7 @@ Setup {num_reactions} Cas9 reactions:
 
 - Incubate at room temperature for 10 min.
 
-- Add {cas9_rxn[DNA].volume_str} DNA to each reaction [1].
+- Add {cas9_rxn[DNA].volume_str} DNA to each reaction [2].
   
 - Pipet to mix."""
 
@@ -225,7 +225,7 @@ else:
 
 protocol += """\
 Load the entire reaction ({} μL) on a {}% agarose 
-gel and run at 4.5 V/cm for 70 min [2].""".format(gel_load, gel_percent)
+gel and run at 4.5 V/cm for 70 min [3].""".format(gel_load, gel_percent)
 
 ## Print the protocol.
 
@@ -238,13 +238,16 @@ if args['--notes']:
 
 Notes
 ─────
-[1] Be sure to mix the DNA (e.g. by flicking) 
+[1] Cas9: NEB M0386T
+    10x Cas9 buffer: NEB B0386A
+
+[2] Be sure to mix the DNA (e.g. by flicking) 
     after it thaws.  The DNA doesn't freeze 
     evenly, so if you don't do this, you may get 
     noticeably different amounts of DNA in 
     different reactions.
 
-[2] It really is important to load most of the 
+[3] It really is important to load most of the 
     reaction on the gel and to use a comb that 
     makes thick wells.  I tried loading only 6 μL 
     with the idea that I could use a finer comb 
