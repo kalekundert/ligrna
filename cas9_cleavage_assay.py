@@ -68,8 +68,8 @@ cas9_rxn = dirty_water.Reaction('''\
 Reagent        Conc  Each Rxn  Master Mix
 ==========  =======  ========  ==========
 water                 10.1 μL         yes
-buffer [1]      10x    3.0 μL         yes
-Cas9 [1]       1 μM    0.9 μL         yes
+buffer          10x    3.0 μL         yes
+Cas9           1 μM    0.9 μL         yes
 ligand        30 mM   10.0 μL
 sgRNA       1500 nM    3.0 μL
 DNA           30 nM    3.0 μL
@@ -123,7 +123,7 @@ if using_robot:
     # Prepare the Cas9 master mix.
 
     protocol += """\
-Prepare the Cas9 master mix:
+Prepare the Cas9 master mix [1]:
 
 {cas9_rxn}"""
 
@@ -179,7 +179,7 @@ else:
     # Setup the Cas9 reactions.
 
     protocol += """\
-Setup {num_reactions} Cas9 reactions:
+Setup {num_reactions} Cas9 reactions [1]:
 
 {cas9_rxn}
 
@@ -238,8 +238,9 @@ if args['--notes']:
 
 Notes
 ─────
-[1] Cas9: NEB M0386T
-    10x Cas9 buffer: NEB B0386A
+[1] Product numbers:
+    Cas9:   NEB M0386T
+    buffer: NEB B0386A
 
 [2] Be sure to mix the DNA (e.g. by flicking) 
     after it thaws.  The DNA doesn't freeze 
