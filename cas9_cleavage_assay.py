@@ -187,8 +187,9 @@ Setup {num_reactions} Cas9 reactions [1]:
 
 - Add {cas9_rxn[sgRNA].volume_str} sgRNA to each reaction.
 
-- Refold the sgRNA by incubating at 95°C for 3 min 
-  then 4°C for 1 min.
+- Refold the sgRNA by incubating:
+  - 95°C for 3 min
+  - 4°C for 1 min
 
 - Add {cas9_rxn[master mix].volume_str} Cas9 master mix to each reaction.
 
@@ -260,7 +261,7 @@ Notes
     with the 25-tooth comb.  Run at 100V for 70 
     min.
    
-    For geting publication quality images, cast a 
+    For getting publication quality images, cast a 
     140 mL 1% agarose/TAE/GelRed gel in the Owl 
     EasyCast B2 tray with the 20-tooth comb.  Use 
     2 μL of ladder and run at 85V for 90 min.""")
