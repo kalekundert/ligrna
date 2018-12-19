@@ -1,4 +1,19 @@
-"""\
+1. Make 1 mL overnight cultures of the designs you 
+   want to test.
+
+2. Grow each culture with and without ligand, 
+   while inducing Cas9:
+
+   - Subculture 4 μL of each overnight into 1 mL 
+     apo media and 1 mL holo media.
+
+   - Grow at 37°C for 8h
+
+3. Dilute 0.5 μL of each culture into 250 μL PBS.
+
+4. Measure the GFP and RFP fluorescence of each 
+   culture by flow cytometry.
+
 Below are the excitation and emission maxima for the 
 fluorescent proteins used in this assay:
 
@@ -51,9 +66,4 @@ at 180 μL/sec are enough that I don't need to mix the
 cells when diluting them into PBS.  I use the highest 
 possible wash volume, but it doesn't help anything as 
 far as I can tell (that why I need wash wells).
-"""
-
-
-
-# vim: tw=53
 

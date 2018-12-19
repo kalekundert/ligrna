@@ -3,3 +3,7 @@
 - 270.24 mg theophylline (Sigma T1633)
 - milliQ water to 50 mL
 - Stir and incubate at ≈85°C to dissolve
+
+Note: theophylline precipitates after a few days, so check for thin, 
+needle-like crystals before using.  If you see any, repeat the "stir and 
+incubate" step above.

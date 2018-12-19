@@ -6,6 +6,10 @@ chemicompetent transformation protocol.
 
 Usage:
     chemicompetent_dueber.py [<num_transformations>]
+
+Arguments:
+    <num_transformations>
+        The number of transformations to setup.
 """
 
 import docopt
@@ -153,8 +157,9 @@ Footnotes
     effort.  I think 10 is a reasonable trade-off.
 
 [2] The original protocol stresses this point, but 
-    doesn't explain why.  Autoclaving YPD does cause 
-    the sugars in it to caramelize, but it's not 
+    doesn't explain why.  Autoclaving YPD does 
+    cause the sugars in it to caramelize, which 
+    could slow down growth a bit, but it's not 
     clear why this would be a problem.
 """)
 
