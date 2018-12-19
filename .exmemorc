@@ -1,0 +1,25 @@
+[[data]]
+type = 'usb'
+src = '~/usb/gels/'
+dest = 'gels'
+mountpoint = '~/usb'
+
+[[data]]
+type = 'usb'
+src = '~/usb/plate_reader/'
+dest = 'plate_reader'
+mountpoint = '~/usb'
+
+[[data]]
+type = 'usb'
+src = '~/usb/fcm/'
+dest = 'facs'
+mountpoint = '~/usb'
+
+[[data]]
+type = 'usb'
+src = '~/usb/qpcr/'
+dest = 'qpcr'
+mountpoint = '~/usb'
+precmd = 'python ~/usb/qpcr/compact_biorad_data.py -q'
+
