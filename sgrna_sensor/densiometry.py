@@ -4,6 +4,7 @@ import re
 import shutil
 import functools
 import contextlib
+import numpy as np
 import pandas as pd
 from pathlib import Path
 from pprint import pprint
@@ -110,6 +111,23 @@ def natsort_spacers(df):
     return df.reindex(
             index=order_by_index(df.index, index_natsorted(df.spacer)),
     )
+
+def sort_spacers_by_activity(df, designs):
+    activities = np.vstack([
+        df[df.design == x].mean_change.values
+        for x in designs
+    ])
+    ranks = np.argsort(np.argsort(abs(activities)))
+    summed_ranks = np.sum(ranks, axis=0)
+    most_to_least_activity = np.argsort(summed_ranks)[::-1]
+
+    spacers = df['spacer'].unique()
+    return spacers[most_to_least_activity]
+
+def sort_by_activity(df, designs):
+    order = sort_spacers_by_activity(df, designs)
+    df['spacer'] = pd.Categorical(df['spacer'], order)
+    return df.sort_values('spacer')
 
 def drop_rejected_data(df):
     if 'reject' not in df:
@@ -218,7 +236,7 @@ def calc_mean_change(df):
             apply(mean_change).reset_index()
 
 def mean_change(group):
-    earliest = group.date.argmin()
+    earliest = group.date.idxmin()
 
     def most_extreme(x): #
         a, b = min(x), max(x)
@@ -287,7 +305,7 @@ def plot_or_savefig(output_path=None, substitution_path=None, inkscape_svg=False
     yield
 
     if fate == 'print':
-        temp_file = NamedTemporaryFile(prefix='fcm_analysis_', suffix='.ps')
+        temp_file = NamedTemporaryFile(prefix='sgrna_sensor_', suffix='.ps')
         plt.savefig(temp_file.name, dpi=300)
         # Add ['-o', 'number-up=4'] to get plots that will fit in a paper lab 
         # notebook.

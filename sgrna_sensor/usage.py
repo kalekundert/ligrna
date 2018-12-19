@@ -118,6 +118,7 @@ from __future__ import unicode_literals
 import docopt
 import math
 import re
+import subprocess
 
 from .components import *
 from .designs import *
@@ -139,11 +140,14 @@ def from_name(name, **kwargs):
     # second otherwise) matches the name of one of the known ligand, use that 
     # ligand's aptamer to build the design.
 
+    if tokens[0] in ('sa', 'sp', 'sap'):
+        kwargs['species'] = tokens.pop(0)
+
     if tokens[0] == 'pam':
         kwargs['pam'] = tokens.pop(0)
 
     try:
-        spacer(tokens[0])
+        spacer(tokens[0], species=kwargs.get('species'))
     except ValueError:
         pass
     else:
@@ -182,14 +186,15 @@ def from_name(name, **kwargs):
     known_kwargs = {k:v for k,v in kwargs.items() if k in argspec.args}
     return factory(*args, **known_kwargs)
 
-def predict_fold(design, constraints=False):
+def predict_fold(design, constraints=False, verbose=False):
     import shlex, re
     from subprocess import Popen, PIPE
 
-    if constraints:
-        cmd = 'RNAfold --noPS --MEA'
-        stdin = design.rna
+    cmd = 'RNAfold --partfunc --MEA'
+    stdin = design.rna
+    aptamer_display = None
 
+    if constraints:
         # Look for aptamer domains in the given design.
 
         try:
@@ -220,11 +225,11 @@ def predict_fold(design, constraints=False):
                 raise ValueError('No aptamer in {}.'.format(design.name))
 
             aptamer_seq = theo_match.group()
-            aptamer_fold = '(...((.(((....)))....))...)'
+            aptamer_fold = '(...((((((....)))...)))...)'
             aptamer_kd = 0.32  # μM
 
         # Calculate the free energy of aptamer folding.
-        rt_37 = 1.9858775e-3 * 310  # kcal/mol at 37°C
+        rt_37 = 1.987203611e-3 * 310  # kcal/mol at 37°C
         std_conc = 1e6  # 1M in μM
         aptamer_dg = rt_37 * math.log(aptamer_kd / std_conc)
 
@@ -234,20 +239,40 @@ def predict_fold(design, constraints=False):
 
         # Show the user how the aptamer is being scored.
         aptamer_start = design.rna.find(aptamer_seq)
-        print(' ' * aptamer_start, end='')
-        print(aptamer_fold, end='')
-        print(' ' * (len(design) - aptamer_start - len(aptamer_seq)), end=' ')
-        print("({:.2f} kcal/mol)".format(aptamer_dg))
+        aptamer_display = \
+                ' ' * aptamer_start + \
+                aptamer_fold + \
+                ' ' * (len(design) - aptamer_start - len(aptamer_seq)) + \
+                " ({:.2f} kcal/mol)".format(aptamer_dg)
 
-    else:
-        cmd = 'RNAfold --noPS --MEA'
-        stdin = design.rna
+    if verbose:
+        version = 'RNAfold --version'
+        print(f'$ {version}')
+        subprocess.run(shlex.split(version))
+        print(f'$ {cmd} <<< {stdin}')
 
     process = Popen(shlex.split(cmd), stdin=PIPE, stdout=PIPE, stderr=PIPE)
     stdout, stderr = process.communicate(stdin.encode())
-    return '\n'.join(
-        x for x in stdout.decode().split('\n')[1:]
-        if not x.startswith('WARNING')).strip()
+    predictions = stdout.decode().split('\n')
+    try:
+        results = {
+                'aptamer':  aptamer_display,
+                'mfe':      predictions[1],
+                'ensemble': predictions[2],
+                'centroid': predictions[3],
+                'mae':      predictions[4],
+                'summary':  predictions[5],
+        }
+        return results
+    except IndexError:
+        print('\n'.join(predictions))
+        raise
+
+    aptamer_display = None
+
+    return '\n'.join([
+        x for x in [aptamer_display, *predictions]
+        if x is not None and x != stdin]).rstrip()
 
 def molecular_weight(name, polymer='rna'):
     return from_name(name).mass(polymer)
@@ -344,13 +369,14 @@ def main():
             print(len(design))
 
         elif args['--rnafold']:
+            key = 'mfe'
             design.show(labels=False, rna=True, color=args['--color'])
-            print(predict_fold(design))
+            apo = predict_fold(design, verbose=args['--verbose'])
+            print(apo[key])
 
             if args['--constraints']:
-                print()
-                design.show(labels=False, rna=True, color=args['--color'])
-                print(predict_fold(design, True))
+                holo = predict_fold(design, True, verbose=args['--verbose'])
+                print(holo[key])
 
             if design is not designs[-1]:
                 print()

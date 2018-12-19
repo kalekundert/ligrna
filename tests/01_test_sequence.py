@@ -144,11 +144,11 @@ def test_construct_class():
     dave['T'].attachment_sites = 0, 3, 6
 
     with pytest.raises(ValueError):
-        dave.attach(bob, 'G', 0, 'T', 5)
+        dave.attach(bob, 'G', 0, 'T', 5, check_attachment_sites=True)
     with pytest.raises(ValueError):
-        dave.attach(bob, 'G', 1, 'T', 6)
+        dave.attach(bob, 'G', 1, 'T', 6, check_attachment_sites=True)
     with pytest.raises(KeyError):
-        dave.attach(bob, '?', 0, 'T', 6)
+        dave.attach(bob, '?', 0, 'T', 6, check_attachment_sites=True)
 
     dave.attach(bob, 'G', 0, 'G', 3)
 

@@ -42,18 +42,31 @@ def design(abbreviation, *legacy_abbreviations):
 
         prefix_args = []
         suffix_args = []
+        defaults = {}
 
         for i, value in enumerate(args):
             defaults_i = i - len(argspec.args) + len(argspec.defaults)
             if defaults_i < 0 or value != argspec.defaults[defaults_i]:
-                if argspec.args[i] in ('target', 'ligand'):
+                if argspec.args[i] in ('species', 'target', 'ligand'):
+                    defaults[argspec.args[i]] = str(value)
                     prefix_args.append(str(value))
                 else:
                     suffix_args.append(str(value))
 
         construct = factory(*args, **kwargs)
         assert construct is not None, 'Forgot to return a construct from {}'.format(factory.__name__)
-        construct.name = '/'.join(prefix_args + [abbreviation] + suffix_args)
+        tokens = prefix_args + [abbreviation] + suffix_args
+        construct.slash_name = construct.name = '/'.join(tokens)
+        construct.underscore_name = '_'.join(tokens)
+        construct.comma_name = '{} {} {}'.format(' '.join(prefix_args), abbreviation, ','.join(suffix_args))
+        construct.function_name = '{} {}({})'.format(' '.join(prefix_args), abbreviation, ','.join(suffix_args))
+        construct.flags = prefix_args
+        construct.abbrev = abbreviation
+        construct.args = suffix_args
+        construct.design = (abbreviation, *suffix_args)
+        construct.spacer = kwargs.get('target', defaults.get('target'))
+        construct.ligand = kwargs.get('ligand', defaults.get('ligand'))
+        construct.species = kwargs.get('species')
         construct.doc = factory.__doc__
 
         return construct
@@ -136,7 +149,7 @@ def liu_sgrna(target='none', ligand='theo'):
     return sgrna
 
 @design('on')
-def on(pam=None, target='none'):
+def on(pam=None, target='none', species='sp'):
     """
     Return an optimized sgRNA sequence.
 
@@ -152,6 +165,7 @@ def on(pam=None, target='none'):
     control.
     """
     sgrna = Construct('on')
+    sgrna += spacer(target, species)
 
     # Although this sequence is just an optimized version of ``wt``, it is 
     # constructed rather differently.  
@@ -172,46 +186,103 @@ def on(pam=None, target='none'):
     # update ``wt``, but I hope that what I'll lose here in interoperability 
     # I'll gain in ease-of-use.
 
-    sgrna += spacer(target)
-    sgrna += Domain('lower_stem/5', 'GUUUCA', 'green')
-    sgrna += Domain('bulge/5', 'GA', 'yellow')
-    sgrna += Domain('upper_stem/5', 'GCUAUGCUG', 'green')
-    sgrna += Domain('upper_stem/o', 'GAAA', 'green')
-    sgrna += Domain('upper_stem/3', 'CAGCAUAGC', 'green')
-    sgrna += Domain('bulge/3', 'AAGU', 'yellow')
-    sgrna += Domain('lower_stem/3', 'UGAAAU', 'green')
-    sgrna += Domain('nexus/aa', 'AA', 'red')
-    sgrna += Domain('nexus/5', 'GG', 'red')
-    sgrna += Domain('nexus/o', 'CUAGU', 'red')
-    sgrna += Domain('nexus/3', 'CC', 'red')
-    sgrna += Domain('nexus/gu', 'GU', 'red')
-    sgrna += Domain('ruler', 'UAUCA', 'magenta')
-    sgrna += Domain('hairpin/5', 'ACUU', 'blue')
-    sgrna += Domain('hairpin/o', 'GAAA', 'blue')
-    sgrna += Domain('hairpin/3', 'AAGU', 'blue')
-    sgrna += Domain('terminator/5', 'GGCACCG', 'blue')
-    sgrna += Domain('terminator/o', 'AGU', 'blue')
-    sgrna += Domain('terminator/3', 'CGGUGC', 'blue')
-    sgrna += Domain('terminator/u', 'UUUUUU', 'blue')
+    if species == 'sp':  # S. pyogenes
+        sgrna += Domain('lower_stem/5', 'GUUUCA', 'green')
+        sgrna += Domain('bulge/5', 'GA', 'yellow')
+        sgrna += Domain('upper_stem/5', 'GCUAUGCUG', 'green')
+        sgrna += Domain('upper_stem/o', 'GAAA', 'green')
+        sgrna += Domain('upper_stem/3', 'CAGCAUAGC', 'green')
+        sgrna += Domain('bulge/3', 'AAGU', 'yellow')
+        sgrna += Domain('lower_stem/3', 'UGAAAU', 'green')
+        sgrna += Domain('nexus/aa', 'AA', 'red')
+        sgrna += Domain('nexus/5', 'GG', 'red')
+        sgrna += Domain('nexus/o', 'CUAGU', 'red')
+        sgrna += Domain('nexus/3', 'CC', 'red')
+        sgrna += Domain('ruler', 'GUUAUCA', 'magenta')
+        sgrna += Domain('hairpin/5', 'ACUU', 'blue')
+        sgrna += Domain('hairpin/o', 'GAAA', 'blue')
+        sgrna += Domain('hairpin/3', 'AAGU', 'blue')
+        sgrna += Domain('terminator/5', 'GGCACCG', 'blue')
+        sgrna += Domain('terminator/o', 'AGU', 'blue')
+        sgrna += Domain('terminator/3', 'CGGUGC', 'blue')
+        sgrna += Domain('terminator/u', 'UUUUUU', 'blue')
 
-    if pam == 'pam':
-        sgrna['lower_stem/5'][1:3] = 'GG'
-        sgrna['lower_stem/3'][3:5] = 'CC'
+        if pam == 'pam':
+            sgrna['lower_stem/5'][1:3] = 'GG'
+            sgrna['lower_stem/3'][3:5] = 'CC'
+
+    elif species == 'sa':  # S. aureus
+        sgrna += Domain('lower_stem/5', 'GUUUUAGUA', 'green')
+        sgrna += Domain('bulge/5', 'C', 'yellow')
+        sgrna += Domain('upper_stem/5', 'UCUG', 'green')
+        sgrna += Domain('upper_stem/o', 'GAAA', 'green')
+        sgrna += Domain('upper_stem/3', 'CAGA', 'green')
+        sgrna += Domain('bulge/3', 'AUC', 'yellow')
+        sgrna += Domain('lower_stem/3', 'UACUAAAAC', 'green')
+        sgrna += Domain('nexus/aa', 'AA', 'red')
+        sgrna += Domain('nexus/g', 'G', 'red')  # Setup the scaffold so the 
+        sgrna += Domain('nexus/5', 'GC', 'red') # nexus stem is still 2 bp.
+        sgrna += Domain('nexus/o', 'AAAAU', 'red')
+        sgrna += Domain('nexus/3', 'GC', 'red')
+        sgrna += Domain('nexus/c', 'C', 'red')
+        sgrna += Domain('ruler', 'GUGUUU', 'magenta')
+        sgrna += Domain('hairpin/5', 'AUCUCGUCAA', 'blue')
+        sgrna += Domain('hairpin/o', 'CUUG', 'blue')
+        sgrna += Domain('hairpin/3', 'UUGGCGAGAU', 'blue')
+        sgrna += Domain('terminator/5', '', 'blue')
+        sgrna += Domain('terminator/o', '', 'blue')
+        sgrna += Domain('terminator/3', '', 'blue')
+        sgrna += Domain('terminator/u', 'UUUUUUU', 'blue')
+
+    # This is a hybrid sgRNA scaffold where the nexus comes from S. pyogenes 
+    # and everything else comes from S. aureus.  I don't have any evidence that 
+    # this scaffold actually works, but I made it because I think it might have 
+    # a better chance of accommodating the ligRNAs.
+    elif species == 'sap':
+        sgrna += Domain('lower_stem/5', 'GUUUUAGUA', 'green')
+        sgrna += Domain('bulge/5', 'C', 'yellow')
+        sgrna += Domain('upper_stem/5', 'UCUG', 'green')
+        sgrna += Domain('upper_stem/o', 'GAAA', 'green')
+        sgrna += Domain('upper_stem/3', 'CAGA', 'green')
+        sgrna += Domain('bulge/3', 'AUC', 'yellow')
+        sgrna += Domain('lower_stem/3', 'UACUAAAAC', 'green')
+        sgrna += Domain('nexus/aa', 'AA', 'red')
+        sgrna += Domain('nexus/5', 'GG', 'red')
+        sgrna += Domain('nexus/o', 'CUAGU', 'red')
+        sgrna += Domain('nexus/3', 'CC', 'red')
+        sgrna += Domain('ruler', 'GUGUUU', 'magenta')
+        sgrna += Domain('hairpin/5', 'AUCUCGUCAA', 'blue')
+        sgrna += Domain('hairpin/o', 'CUUG', 'blue')
+        sgrna += Domain('hairpin/3', 'UUGGCGAGAU', 'blue')
+        sgrna += Domain('terminator/5', '', 'blue')
+        sgrna += Domain('terminator/o', '', 'blue')
+        sgrna += Domain('terminator/3', '', 'blue')
+        sgrna += Domain('terminator/u', 'UUUUUUU', 'blue')
+
+    else:
+        raise ValueError('Unknown species: %s' % species)
 
     return sgrna
 
 @design('off')
-def off(pam=None, target='none'):
+def off(pam=None, target='none', species='sp'):
     """
     Return the sequence for the negative control sgRNA.
 
     This sequence has two mutations in the nexus region that prevent the sgRNA 
     from folding properly.  These mutations were described by Briner et al.
+
+    I don't know a priori that the negative control will work with SaCas9.
     """
-    sgrna = on(pam=pam, target=target)
+    sgrna = on(pam=pam, target=target, species=species)
     sgrna.name = 'off'
 
-    sgrna['nexus/5'].seq = 'CC'
+    sgrna['nexus/5'].seq = 'C' * len(sgrna['nexus/5'])
+    sgrna['nexus/3'].seq = 'C' * len(sgrna['nexus/3'])
+
+    if species == 'sa':
+        sgrna['nexus/g'].seq = 'C' * len(sgrna['nexus/g'])
+
 
     return sgrna
 
@@ -526,11 +597,12 @@ def replace_hairpins(N, target='none', ligand='theo'):
 def zipper_upper_stem(half, N, target='none', ligand='theo'):
     """
     Split the guide RNA into its two naturally occurring halves, and use the 
-    aptamer to bring those halves together in the presence of the ligand.  The 
-    aptamer replaces some or all of the upper stem.  We have already observed 
-    that an sgRNA with the upper stem fully replaced by the theophylline 
-    aptamer is fully functional, so the design should work if the ligand 
-    successfully induces dimerization.
+    aptamer to bring those halves together in the presence of the ligand.  This 
+    is known as the "zipper" strategy, because the two strands of RNA will be 
+    "zipped" together by the ligand.  The aptamer replaces some or all of the 
+    upper stem.  We have already observed that an sgRNA with the upper stem 
+    fully replaced by the theophylline aptamer is fully functional, so the 
+    design should work if the ligand successfully induces dimerization.
 
     Parameters
     ----------
@@ -641,7 +713,7 @@ def serpentine_lower_stem(tuning_strategy='', A=1, target='none', ligand='theo')
 
     2. That the lower stem can be modified to have some complementarity with 
        the nexus, because the exact sequence of the lower stem seems to be 
-       important, so long as it does actually form a stem.
+       unimportant, so long as it does actually form a stem.
     
     This design is named "serpentine_lower_stem" because it uses applies the 
     "serpentine" strategy to the lower stem region of the sgRNA.  A schematic 
@@ -1051,7 +1123,7 @@ def randomize_bulge_i(N, M, bp='G', target='none', ligand='theo'):
         Not implemented, but this would be a good interface for changing the 
         static base pair.  Right now to base pair is hard-coded to be GC.
     """
-    sgrna = on(target)
+    sgrna = on(target=target)
     sgrna['bulge/5'].attachment_sites = 0,
     sgrna['bulge/3'].attachment_sites = 4,
     sgrna.attach(
@@ -1304,7 +1376,7 @@ def randomize_nexus(N, M, A=1, target='none', ligand='theo'):
     return sgrna
 
 @design('rxb')
-def randomize_nexus_backwards(i, dang_sgrna=False, target='none', ligand='theo', pam=None):
+def randomize_nexus_backwards(i, dang_sgrna=False, keep_stem=0, target='none', ligand='theo', species='sp', pam=None):
     """
     Most of these designs are not predicted to fold correctly in either 
     condition.  The exception is rxb(51), for which the lower stem is predicted 
@@ -1362,13 +1434,16 @@ def randomize_nexus_backwards(i, dang_sgrna=False, target='none', ligand='theo',
     sequenced_insert.append(linker_3)
 
     if dang_sgrna:
-        sgrna = on(pam=pam, target=target)
-        sgrna['nexus/5'].attachment_sites = 0,
-        sgrna['nexus/3'].attachment_sites = 2,
+        sgrna = on(pam=pam, target=target, species=species)
+
+        Lx = len(sgrna['nexus/3'])
+        if keep_stem > Lx:
+            raise ValueError("nexus stem is {} bp, can't keep {}".format(Lx, keep_stem))
+
         sgrna.attach(
                 sequenced_insert,
-                'nexus/5', 0,
-                'nexus/3', 2,
+                'nexus/5', 0  + keep_stem,
+                'nexus/3', Lx - keep_stem,
         )
     else:
         sgrna = wt_sgrna(target)
@@ -1450,7 +1525,7 @@ def randomize_hairpin_i(N, M=None, target='none', ligand='theo'):
         will be the same as N.
     """
     if M is None: M = N
-    sgrna = on(target)
+    sgrna = on(target=target)
     sgrna['hairpin/5'].attachment_sites = 0,
     sgrna['hairpin/3'].attachment_sites = 4,
     sgrna.attach(
@@ -1550,12 +1625,11 @@ def modify_nexus(N, target='none', ligand='theo'):
     # Randomize the specified number of nucleotides 3' of the nexus.
     if N < 0 or N > 11:
         raise ValueError("dh: N must be between 0 and 11, not {}".format(N))
+    
+    Lr = len(sgrna['ruler'])
+    Nr = max(min(N, Lr), 0)
+    Nh = max(min(N - Lr, 4), 0)
 
-    Nx = max(min(N, 2), 0)
-    Nr = max(min(N - 2, 5), 0)
-    Nh = max(min(N - 7, 4), 0)
-
-    sgrna['nexus/gu'].seq = ('N' * Nx) + sgrna['nexus/gu'][Nx:]
     sgrna['ruler'].seq = ('N' * Nr) + sgrna['ruler'][Nr:]
     sgrna['hairpin/5'].seq = ('N' * Nh) + sgrna['hairpin/5'][Nh:]
     sgrna['hairpin/3'].seq = sgrna['hairpin/3'][:4-Nh] + ('N' * Nh)
@@ -1563,7 +1637,7 @@ def modify_nexus(N, target='none', ligand='theo'):
     return sgrna
 
 @design('mh')
-def modify_hairpin(N, A=1, target='none', ligand='theo', pam=None):
+def modify_hairpin(N, A=1, target='none', ligand='theo', species='sp', pam=None):
     """
     Insert the aptamer into the hairpin and build a library by randomizing 
     the positions that were most likely to mutate in Monte Carlo RNA design 
@@ -1603,20 +1677,19 @@ def modify_hairpin(N, A=1, target='none', ligand='theo', pam=None):
     """
 
     # Base this library on the optimized sgRNA described by Dang et al.
-    sgrna = on(pam=pam, target=target)
+    sgrna = on(pam=pam, target=target, species=species)
 
     # Randomize the top of the nexus.  This region is predicted to be important 
     # for allowing the sgRNA to work with multiple spacers.
     sgrna['nexus/o'].seq = 'NNNNN'
-    sgrna['nexus/gu'].seq = 'NN'
 
     # Randomize most of the nucleotides connecting the nexus to the hairpins.  
     # This region is also predicted to be important for allowing the sgRNA to 
     # work with multiple spacers.
     if N == 7:
-        sgrna['ruler'].seq = 'NAUNN'
+        sgrna['ruler'].seq = 'NNNAUNN'
     elif N == 6:
-        sgrna['ruler'].seq = 'AUNN'
+        sgrna['ruler'].seq = 'NNAUNN'
     else:
         raise ValueError("mh: N must be either 6 or 7")
 
@@ -1632,7 +1705,7 @@ def modify_hairpin(N, A=1, target='none', ligand='theo', pam=None):
     return sgrna
 
 @design('mhf')
-def modify_hairpin_forward(i, expected_only=False, target='none', ligand='theo', pam=None):
+def modify_hairpin_forward(i, expected_only=False, target='none', ligand='theo', species='sp', pam=None):
     linkers = {
             3:  ('CGGTC', 'GTC', 'CA'),
             4:  ('ACGAA', 'GTA', 'CC'),
@@ -1671,10 +1744,9 @@ def modify_hairpin_forward(i, expected_only=False, target='none', ligand='theo',
         raise ValueError("mhf({}) doesn't have any unexpected mutations.".format(i))
 
     N = len(''.join(linkers[i])) - 5 + 2
-    sgrna = mh(N, ligand=ligand, target=target, pam=pam)
+    sgrna = mh(N, ligand=ligand, target=target, pam=pam, species=species)
     sgrna['nexus/o'].seq = linkers[i][0]
-    sgrna['nexus/gu'].seq = linkers[i][1][0:2]
-    sgrna['ruler'].seq = linkers[i][1][2:3] + 'AU' + linkers[i][2]
+    sgrna['ruler'].seq = linkers[i][1] + 'AU' + linkers[i][2]
 
     if not expected_only and i in unexpected_muts:
         domain, idx, nuc = unexpected_muts[i]
@@ -1723,7 +1795,7 @@ def seqlogo_hairpin(N, target='none', ligand='theo', pam=None):
     sgrna = on(pam=pam, target=target)
 
     # Randomize the entire ruler.
-    sgrna['ruler'].seq = 'NNNNN'
+    sgrna['ruler'].seq = 'GU' + 'N' * (len(sgrna['ruler']) - 2)
 
     # Randomize the communication module.
     sgrna['hairpin/5'].seq = N * 'N'
@@ -1769,20 +1841,17 @@ def protein_binding_hairpin(N, target='none', ligand='theo', pam=None):
 
     # Randomize the specified number of nucleotides 5' of the hairpin.
     Lr  = len(sgrna['ruler'])
-    Lx3 = len(sgrna['nexus/gu'])
-    Lx5 = len(sgrna['nexus/o'])
-    L = Lr + Lx3 + Lx5
+    Lx = len(sgrna['nexus/o'])
+    L = Lr + Lx
 
     if N < 0 or N > L:
         raise ValueError("rh: N must be between 0 and {}, not {}".format(L, N))
 
-    Nr  = clamp(N,            0, Lr)
-    Nx3 = clamp(N - Lr,       0, Lx3)
-    Nx5 = clamp(N - Lr - Lx3, 0, Lx5)
+    Nr = clamp(N,      0, Lr)
+    Nx = clamp(N - Lr, 0, Lx)
 
     sgrna['ruler'].seq = sgrna['ruler'][:Lr-Nr] + ('N' * Nr)
-    sgrna['nexus/gu'].seq = sgrna['nexus/gu'][:Lx3-Nx3] + ('N' * Nx3)
-    sgrna['nexus/o'].seq = sgrna['nexus/o'][:Lx5-Nx5] + ('N' * Nx5)
+    sgrna['nexus/o'].seq = sgrna['nexus/o'][:Lx-Nx] + ('N' * Nx)
 
     return sgrna
 
@@ -1888,7 +1957,6 @@ def sequester_u59_hairpin(N, M, target='none', ligand='theo', pam=None):
 
     # Randomize the nexus.
     sgrna['nexus/o'].seq = N * 'N' + 'U'
-    sgrna['nexus/gu'].seq = min(M, 2) * 'N'
 
     # Randomize the ruler.  I think it's important to randomize this region 
     # because there are two roles I can imagine it fulfilling.  First, it could 
@@ -1898,7 +1966,7 @@ def sequester_u59_hairpin(N, M, target='none', ligand='theo', pam=None):
     # I also reduce the length of the ruler by one nucleotide relative to the 
     # positive control.  This mimics mhf/30 and reduces the complexity of the 
     # library.
-    sgrna['ruler'].seq = (M - 2) * 'N'
+    sgrna['ruler'].seq = M * 'N'
 
     # I have two options with regard to the first hairpin stem:
     # - Randomize it (in part or in full).
@@ -1984,9 +2052,7 @@ def sequester_u59_hairpin_forward(i, expected_only=False, target='none', ligand=
     sgrna = uh(0, 0, ligand=ligand, target=target, pam=pam)
     sgrna['nexus/o'].seq  = linkers[i][0] + 'U'
     sgrna['nexus/o'].style = 'white'
-    sgrna['nexus/gu'].seq = linkers[i][1][0:2]
-    sgrna['nexus/gu'].style = 'white'
-    sgrna['ruler'].seq    = linkers[i][1][2:]
+    sgrna['ruler'].seq    = linkers[i][1]
     sgrna['ruler'].style = 'white'
 
     if not expected_only and i in unexpected_muts:
@@ -1996,7 +2062,7 @@ def sequester_u59_hairpin_forward(i, expected_only=False, target='none', ligand=
     return sgrna
 
 @design('m11')
-def modulate_rxb_11_1(seq='', target='none', ligand='theo'):
+def modulate_rxb_11_1(seq='', target='none', ligand='theo', species='sp'):
     """
     Attempt to modulate the leakiness of rxb 11,1 by changing the strength of 
     the base-pairs above U94.
@@ -2039,7 +2105,7 @@ def modulate_rxb_11_1(seq='', target='none', ligand='theo'):
         sequence is case-insensitive.  The value corresponding to the original 
         rxb 11,1 sequence is "gg".
     """
-    sgrna = rxb(11, 1, target=target, ligand=ligand)
+    sgrna = rxb(11, 1, target=target, ligand=ligand, species=species)
 
     seq_5, seq_3 = base_pair(seq)
     sgrna['linker/5'].replace(3, 5, seq_5)
@@ -2047,8 +2113,28 @@ def modulate_rxb_11_1(seq='', target='none', ligand='theo'):
 
     return sgrna
 
+@design('won')
+def strand_swap_on(nuc=None, target='none'):
+    """
+    Strand-swap the first position in the nexus stem.
+    """
+    sgrna = on(target=target)
+
+    nexus_5 = sgrna['nexus/5'].seq
+    nexus_3 = sgrna['nexus/3'].seq
+
+    if nuc is not None:
+        swap_5, swap_3 = base_pair(nuc)
+    else:
+        swap_5, swap_3 = nexus_3[-1], nexus_5[0]
+
+    sgrna['nexus/5'].mutate(0, swap_5)
+    sgrna['nexus/3'].mutate(1, swap_3)
+
+    return sgrna
+
 @design('w11')
-def strand_swap_rxb_11_1(N, nuc=None, target='none', ligand='theo'):
+def strand_swap_rxb_11_1(N, nuc=None, target='none', ligand='theo', species='sp'):
     """
     Make strand-swapping mutations to test my proposed mechanism for rxb 11,1.
 
@@ -2088,7 +2174,7 @@ def strand_swap_rxb_11_1(N, nuc=None, target='none', ligand='theo'):
     if N < 1 or N > 5:
         raise ValueError('N must be between 1 and 5, not {}'.format(N))
 
-    sgrna = rxb(11, 1, target=target, ligand=ligand)
+    sgrna = rxb(11, 1, target=target, ligand=ligand, species=species)
 
     linker_5 = sgrna['linker/5'].seq
     linker_3 = sgrna['linker/3'].seq
@@ -2103,23 +2189,132 @@ def strand_swap_rxb_11_1(N, nuc=None, target='none', ligand='theo'):
 
     return sgrna
 
-@design('won')
-def strand_swap_on(nuc=None, target='none'):
+@design('w30')
+def strand_swap_mhf_30(N, model=None, target='none', ligand='theo'):
     """
-    Strand-swap the first position in the nexus stem.
+    Make strand-swapping mutations to probe the mechanism of mhf/30.
+
+    Our goal with these mutations is to determine the structure of mhf/30 in 
+    its apo (inactive) and holo (active) states.  For the active (holo) state, 
+    the hypothesis is clear: the ends of the aptamer come together to form the 
+    hairpin stem, and the GGG/CCC stem plays the role of the nexus.  For the 
+    inactive (apo) state, we have two models.  In one, the aptamer is mostly 
+    pre-ordered and the 5' half of the hairpin stem is sequestering the 
+    pseudo-nexus.  In the other, the aptamer is not pre-ordered and is instead 
+    base-pairing with the pseudo-nexus itself.
+
+    Because we believe that the apo and holo states are very different, and we 
+    are very unsure about the structure of the apo state, it's hard to design 
+    mutants that will have predictable effects.  The approach we're taking here 
+    is to strand-swap all the base-pairs in the active state (which we are 
+    fairly confident in) and to see how that affects the inactive state.  Most 
+    often (but not always), the predicted effect will be to weaken the inactive  
+    state.  It these cases, the two models often predict that the inactive 
+    state can be rescued by different compensatory mutations or strand-swaps, 
+    so we will test those too.
+
+    Parameters
+    ==========
+    N: int
+        The position to swap.  The allowed positions are: 63-65, 77-80.
+
+    model: int
+        If given, make a compensatory mutation according to the given model.  
+        Not all mutations have compensatory mutations.
     """
-    sgrna = on(target=target)
 
-    nexus_5 = sgrna['nexus/5'].seq
-    nexus_3 = sgrna['nexus/3'].seq
+    if not (63 <= N <= 65) and not (77 <= N <= 80):
+        raise ValueError('N must be between 63-65 or 77-80, not {}'.format(N))
 
-    if nuc is not None:
-        swap_5, swap_3 = base_pair(nuc)
-    else:
-        swap_5, swap_3 = nexus_3[-1], nexus_5[0]
+    sgrna = mhf(30, target=target, ligand=ligand)
 
-    sgrna['nexus/5'].mutate(0, swap_5)
-    sgrna['nexus/3'].mutate(1, swap_3)
+    def swap(i):
+        j = swaps[i]
+
+        i_nuc = get(i)
+        j_nuc = get(j)
+
+        mutate(i, j_nuc)
+        mutate(j, i_nuc)
+
+    def mutate(i, nuc):
+        domain, rel_i = key(i)
+        sgrna[domain.name][rel_i] = nuc.lower()
+
+    def get(i):
+        domain, rel_i = key(i)
+        return sgrna[domain.name][rel_i]
+
+    def key(i):
+        # We can't just use position i at face value, because we don't know if 
+        # there's a spacer or not.  So we'll first subtract 21 (20 for the 
+        # spacer, 1 for the 1-indexing) from the index and then add back the 
+        # index of the first position in the upper stem (20 if there is a 
+        # spacer, 0 if not).
+        i = i - 21 + sgrna.index_from_domain('lower_stem/5', 0)
+        return sgrna.domain_from_index(i)
+
+
+    swaps = {
+            63: 71,
+            64: 70,
+            65: 69,
+            77: 111,
+            78: 110,
+            79: 109,
+            80: 108,
+    }
+    models = {
+            1: {
+                63: None,
+                64: lambda: swap(80),
+                65: lambda: mutate(79, 'G'),
+                77: lambda: mutate(67, 'C'),
+                78: lambda: mutate(66, 'G'),
+                79: lambda: mutate(79, 'C'),
+                80: lambda: swap(64),
+            },
+            2: {
+                63: lambda: swap(78),
+                64: None,
+                65: None,
+                77: lambda: mutate(72, 'C'),
+                78: lambda: swap(63),
+                79: None,
+                80: None,
+            }
+    }
+
+    # Make the requested strand-swap.
+    swap(N)
+
+    # And make a mutation to test a particular model, if requested.
+    if model is not None:
+        if not models[model].get(N):
+            raise ValueError('Model {} does not have a compensatory mutation for swapping position {}'.format(model, N))
+        models[model][N]()
+
+    return sgrna
+
+@design('m30')
+def mutate_mhf_30(mut, target='none', ligand='theo'):
+    """
+    Test the hypothesis that mhf/30 works by switching between an inactive 
+    conformation in which C80 and G64 are base-paired, and an active 
+    conformation in which C80 and G108 are base-paired.
+
+    Parameter
+    ---------
+    mut: str
+        A string of length 3 where the first character indicates the nucleotide 
+        to install at position 64, the second indicates position 80, and the 
+        third indicates position 108.
+    """
+    sgrna = mhf(30, target=target, ligand=ligand)
+
+    sgrna['nexus/5'][1] = mut[0].upper()
+    sgrna['hairpin/5'][2] = mut[1].upper()
+    sgrna['hairpin/3'][1] = mut[2].upper()
 
     return sgrna
 

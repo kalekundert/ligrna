@@ -47,6 +47,7 @@ setup(
     entry_points={
         'console_scripts': [
             'sgrna_sensor = sgrna_sensor.usage:main',
+            'make_ligrna = sgrna_sensor.snapgene:main',
         ],
     },
     include_package_data=True,

@@ -45,7 +45,7 @@ def manual(*sequences):
         for seq, color in zip(sequences, cycle(colors))
     ])
 
-def spacer(name='none'):
+def spacer(name='none', species=None):
     """
     Return the specified spacer sequence.
 
@@ -53,39 +53,104 @@ def spacer(name='none'):
     ----------
     target: 'rfp', 'aavs', 'vegfa'
         The sequence to target.
-    """
-    aliases = {
-            'rfp1': 'rfp',
-            'gfp1': 'gfp',
-            'k1': 'klein1',
-            'k2': 'klein2',
-    }
-    spacers = {
-            'none':   '',
-            'n20':    'NNNNNNNNNNNNNNNNNNNN',
-            'rfp':    'AACTTTCAGTTTAGCGGTCT',
-            'rfp2':   'UGGAACCGUACUGGAACUGC',
-            'gfp':    'CATCTAATTCAACAAGAATT',
-            'gfp2':   'AGUAGUGCAAAUAAAUUUAA',
-            'aavs':   'GGGGCCACTAGGGACAGGAT',
-            'vegfa':  'GGGTGGGGGGAGTTTGCTCC',
-            'klein1': 'GGGCACGGGCAGCTTGCCCG',
-            'klein2': 'GTCGCCCTCGAACTTCACCT',
-            'cf1':    'CCGGCAAGCTGCCCGTGCCC', # sgGFP9 (Christoff Fellman)
-            'cf2':    'CAGGGTCAGCTTGCCGTAGG', # sgGFP8
-            'cf3':    'CCTCGAACTTCACCTCGGCG', # sgGFP1
-            'tdh1':   'AATAAGTATATAAAGACGGT',
-            'tdh2':   'GACTAATAAGTATATAAAGA',
-            'tdh3':   'ATATACTTATTAGTCAAGTA',
-    }
 
+    species:
+        The species of Cas9 in question.  Different species have different 
+        PAMs, which can lead to different target sequences.  The following 
+        species are recognized:
+
+        'sp': S. pyogenes
+        'sa': S. aureus
+    """
+    if species is None:
+        species = 'sp'
+
+    spacers = {
+            'sp': {
+                'none':   '',
+                'n20':    'NNNNNNNNNNNNNNNNNNNN',
+                'rfp':    'AACTTTCAGTTTAGCGGTCT',
+                'rfp2':   'UGGAACCGUACUGGAACUGC',
+                'gfp':    'CATCTAATTCAACAAGAATT',
+                'gfp2':   'AGUAGUGCAAAUAAAUUUAA',
+                'aavs':   'GGGGCCACTAGGGACAGGAT',
+                'vegfa':  'GGGTGGGGGGAGTTTGCTCC',
+                'klein1': 'GGGCACGGGCAGCTTGCCCG',
+                'klein2': 'GTCGCCCTCGAACTTCACCT',
+                'cf1':    'CCGGCAAGCTGCCCGTGCCC', # sgGFP9 (Christoff Fellman)
+                'cf2':    'CAGGGTCAGCTTGCCGTAGG', # sgGFP8
+                'cf3':    'CCTCGAACTTCACCTCGGCG', # sgGFP1
+                'tdh1':   'AATAAGTATATAAAGACGGT',
+                'tdh2':   'GACTAATAAGTATATAAAGA',
+                'tdh3':   'ATATACTTATTAGTCAAGTA',
+                'lacI':   'GCTGGCCTGGTTCACCACGC',
+                'lacZ':   'TTGGGAAGGGCGATCGGTGC',
+                'lacY':   'GTAGCCAAATCGGGAAAAAC',
+                'lacA':   'CGGTAAGCCTTCGCACATAT',
+                'crp':    'ACAAGAACCATTCGAGAGTC',
+                'cya':    'GTCAAGCAGCAGTATATGCT',
+                'A site': 'TGTGAGTTAGCTCACTCATT',
+                'P site': 'CTTCCGGCTCGTATGTTGTG',
+                'O site': 'ATGTTGTGTGGAATTGTGAG',
+            },
+            'sa': {                                 # GC%
+                'none':   '',
+                'n21':    'NNNNNNNNNNNNNNNNNNNNN',
+                'g1':     'AACATCACCATCTAATTCAAC',  # 33
+                'g2':     'GTAGTGCAAATAAATTTAAGG',  # 29
+                'g3':     'TCCAGTAGTGCAAATAAATTT',  # 29
+                'g4':     'AAAGCATTGAACACCATAGGT',  # 38
+                'g5':     'AGTCATGCCGTTTCATGTGAT',  # 43
+                'r1':     'GGTAACTTTCAGTTTAGCGGT',  # 43
+                'r2':     'ACCGTACTGGAACTGCGGGGA',  # 62
+                'r3':     'TCAGGTAGTCCGGGATGTCAG',  # 55
+                'r4':     'GAAGGACAGTTTCAGGTAGTC',  # 57
+            },
+    }
+    aliases = {
+            'sp': {
+                'gfp1': 'gfp',
+                'rfp1': 'rfp',
+                'g1': 'gfp',
+                'g2': 'gfp2',
+                'r1': 'rfp',
+                'r2': 'rfp2',
+                'k1': 'klein1',
+                'k2': 'klein2',
+                'li': 'lacI',
+                'lz': 'lacZ',
+                'la': 'A site',
+                'lp': 'P site',
+                'lo': 'O site',
+            },
+            'sa': {
+            },
+    }
+        
     # Include the Doench16 spacers
     from os.path import join, dirname
     doench_tsv = join(dirname(__file__), 'doench_spacers.tsv')
     with open(doench_tsv) as file:
         for line in file:
             doench_name, spacer, score = line.split()
-            spacers[doench_name] = spacer[4:24]
+            spacers['sp'][doench_name] = spacer[4:24]
+
+    # Include the FolA spacers
+    doench_tsv = join(dirname(__file__), 'folA_spacers.tsv')
+    with open(doench_tsv) as file:
+        for line in file:
+            folA_name, spacer, pam, orientation = line.split()
+            spacers['sp'][folA_name] = spacer
+
+    # The 'sap' scaffold has all the same spacers as the 'sa' scaffold.
+    spacers['sap'] = spacers['sa']
+    aliases['sap'] = aliases['sa']
+
+    try:
+        spacers = spacers[species]
+        aliases = aliases[species]
+    except KeyError:
+        raise ValueError("Unknown species: '{}'".format(species))
 
     try:
         sequence = spacers[aliases.get(name, name)]

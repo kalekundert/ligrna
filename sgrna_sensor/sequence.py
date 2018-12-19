@@ -145,8 +145,14 @@ class Construct (Sequence):
         else:
             return Sequence.__getitem__(self, key)
 
-    def __setitem__(self, key, construct):
-        self.attach(construct, *key)
+    def __setitem__(self, key, value):
+        if isinstance(key, int):
+            # value should be a char.
+            domain, rel_index = self.domain_from_index(key)
+            domain[rel_index] = value
+        else:
+            # Value should be a construct, key should be a tuple.
+            self.attach(value, *key)
 
     def __add__(self, other):
         construct = Construct()
@@ -157,16 +163,6 @@ class Construct (Sequence):
     def __iadd__(self, other):
         self.append(other)
         return self
-
-    @property
-    def underscore_name(self):
-        tokens = re.findall('[a-zA-Z0-9]+', self.name)
-        return '_'.join(tokens)
-
-    @property
-    def slash_name(self):
-        tokens = re.findall('[a-zA-Z0-9]+', self.name)
-        return '/'.join(tokens)
 
     @property
     def seq(self):
@@ -218,6 +214,8 @@ class Construct (Sequence):
         for iter in self._iterate_domains():
             if iter.domain.name == domain:
                 return iter.abs_index(rel_index)
+
+        raise KeyError('no domain {}'.format(domain))
 
     def format(self, dna=False, rna=False, start=None, end=None, pad=False, labels=False, color='auto'):
         sequence = ''
@@ -320,7 +318,7 @@ class Construct (Sequence):
         index = self._remove_sequence(domain)
         self._add_sequence(index, sequence)
 
-    def attach(self, construct, start_domain, start_index, end_domain, end_index):
+    def attach(self, construct, start_domain, start_index, end_domain, end_index, check_attachment_sites=False):
         """
         Insert a construct into one of the domains comprising this construct, 
         possibly replacing some of that domain.
@@ -370,14 +368,14 @@ class Construct (Sequence):
             start_index = 0
         if start_index < 0:
             start_index += len(start_domain)
-        if start_index not in start_domain.attachment_sites:
+        if check_attachment_sites and start_index not in start_domain.attachment_sites:
             raise ValueError("Position {} of domain {} is not an attachment site.".format(start_index, start_domain.name))
 
         if end_index == '...':
             end_index = len(end_domain)
         if end_index < 0:
             end_index += len(end_domain)
-        if end_index not in end_domain.attachment_sites:
+        if check_attachment_sites and end_index not in end_domain.attachment_sites:
             raise ValueError("Position {} of domain {} is not an attachment site.".format(end_index, end_domain.name))
 
         self._attachments[start_domain] = self.Attachment(
