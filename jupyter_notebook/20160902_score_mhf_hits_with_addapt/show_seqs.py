@@ -1,0 +1,1 @@
+../../scripts/show_seqs.py

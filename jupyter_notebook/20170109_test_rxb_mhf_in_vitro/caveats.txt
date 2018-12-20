@@ -1,0 +1,16 @@
+1. The transcription reactions weren't clean.  Originally I attributed this to 
+   old T7, but I saw the same problem with the new T7.  Now I concerned that I 
+   either have RNase contamination, or that gBlocks aren't as clean as they 
+   used to be.
+
+2. I used the Cas9 that I purified however long ago.  It's been sitting at 
+   -20°C in glycerol (liquid) the whole time.  It seemed to work fine, though.
+
+3. The mhf 37 in vitro transcription reaction didn't produce as much product as 
+   the others, and in the end I didn't get quite enough RNA to make 1500 nM 
+   aliquots.  I decided that compensating for this while setting up the 
+   reactions would've been too complicated, so the mhf 37 reaction just got 
+   slightly less sgRNA.  This may be why mhf 37 seems to turn off so well.
+
+4. These reactions all use 10 mM theophylline, which is 10x more than can be 
+   used in vivo.

@@ -1,0 +1,98 @@
+LOCUS       Exported                2594 bp ds-DNA     circular SYN 25-SEP-2016
+DEFINITION  synthetic circular DNA
+ACCESSION   .
+VERSION     .
+KEYWORDS    rfp2_on
+SOURCE      synthetic DNA construct
+  ORGANISM  synthetic DNA construct
+REFERENCE   1  (bases 1 to 2594)
+  AUTHORS   Kale Kundert
+  TITLE     Direct Submission
+  JOURNAL   Exported Friday, Oct 14, 2016 from SnapGene 3.2.2
+            http://www.snapgene.com
+FEATURES             Location/Qualifiers
+     source          1..2594
+                     /organism="synthetic DNA construct"
+                     /mol_type="other DNA"
+     promoter        16..50
+                     /label=J23119 (SpeI) promoter
+                     /note="J23119"
+     misc_feature    51..70
+                     /note="rfp2"
+     misc_feature    71..162
+                     /note="on"
+                     /note="Positive control sgRNA, with optimizations described
+                     in Dang et al. Genome Biology (2015)"
+     terminator      164..531
+                     /label=TrrnB
+                     /note="TrrnB terminator"
+     rep_origin      complement(735..1323)
+                     /direction=LEFT
+                     /note="ori"
+                     /note="high-copy-number ColE1/pMB1/pBR322/pUC origin of 
+                     replication"
+     CDS             complement(1494..2354)
+                     /codon_start=1
+                     /gene="bla"
+                     /product="beta-lactamase"
+                     /note="AmpR"
+                     /note="confers resistance to ampicillin, carbenicillin, and
+                     related antibiotics"
+                     /translation="MSIQHFRVALIPFFAAFCLPVFAHPETLVKVKDAEDQLGARVGYI
+                     ELDLNSGKILESFRPEERFPMMSTFKVLLCGAVLSRIDAGQEQLGRRIHYSQNDLVEYS
+                     PVTEKHLTDGMTVRELCSAAITMSDNTAANLLLTTIGGPKELTAFLHNMGDHVTRLDRW
+                     EPELNEAIPNDERDTTMPVAMATTLRKLLTGELLTLASRQQLIDWMEADKVAGPLLRSA
+                     LPAGWFIADKSGAGERGSRGIIAALGPDGKPSRIVVIYTTGSQATMDERNRQIAEIGAS
+                     LIKHW"
+     promoter        complement(2355..2459)
+                     /gene="bla"
+                     /note="AmpR promoter"
+     terminator      2549..2592
+                     /note="bacterial terminator"
+                     /note="putative bacterial transcription terminator"
+ORIGIN
+        1 gaattctaaa gatctttgac agctagctca gtcctaggta taatactagt tggaaccgta
+       61 ctggaactgc gtttcagagc tatgctggaa acagcatagc aagttgaaat aaggctagtc
+      121 cgttatcaac ttgaaaaagt ggcaccgagt cggtgctttt tttgaagctt gggcccgaac
+      181 aaaaactcat ctcagaagag gatctgaata gcgccgtcga ccatcatcat catcatcatt
+      241 gagtttaaac ggtctccagc ttggctgttt tggcggatga gagaagattt tcagcctgat
+      301 acagattaaa tcagaacgca gaagcggtct gataaaacag aatttgcctg gcggcagtag
+      361 cgcggtggtc ccacctgacc ccatgccgaa ctcagaagtg aaacgccgta gcgccgatgg
+      421 tagtgtgggg tctccccatg cgagagtagg gaactgccag gcatcaaata aaacgaaagg
+      481 ctcagtcgaa agactgggcc tttcgtttta tctgttgttt gtcggtgaac tggatcctta
+      541 ctcgagtcta gactgcaggc ttcctcgctc actgactcgc tgcgctcggt cgttcggctg
+      601 cggcgagcgg tatcagctca ctcaaaggcg gtaatacggt tatccacaga atcaggggat
+      661 aacgcaggaa agaacatgtg agcaaaaggc cagcaaaagg ccaggaaccg taaaaaggcc
+      721 gcgttgctgg cgtttttcca taggctccgc ccccctgacg agcatcacaa aaatcgacgc
+      781 tcaagtcaga ggtggcgaaa cccgacagga ctataaagat accaggcgtt tccccctgga
+      841 agctccctcg tgcgctctcc tgttccgacc ctgccgctta ccggatacct gtccgccttt
+      901 ctcccttcgg gaagcgtggc gctttctcat agctcacgct gtaggtatct cagttcggtg
+      961 taggtcgttc gctccaagct gggctgtgtg cacgaacccc ccgttcagcc cgaccgctgc
+     1021 gccttatccg gtaactatcg tcttgagtcc aacccggtaa gacacgactt atcgccactg
+     1081 gcagcagcca ctggtaacag gattagcaga gcgaggtatg taggcggtgc tacagagttc
+     1141 ttgaagtggt ggcctaacta cggctacact agaaggacag tatttggtat ctgcgctctg
+     1201 ctgaagccag ttaccttcgg aaaaagagtt ggtagctctt gatccggcaa acaaaccacc
+     1261 gctggtagcg gtggtttttt tgtttgcaag cagcagatta cgcgcagaaa aaaaggatct
+     1321 caagaagatc ctttgatctt ttctacgggg tctgacgctc agtggaacga aaactcacgt
+     1381 taagggattt tggtcatgag attatcaaaa aggatcttca cctagatcct tttaaattaa
+     1441 aaatgaagtt ttaaatcaat ctaaagtata tatgagtaaa cttggtctga cagttaccaa
+     1501 tgcttaatca gtgaggcacc tatctcagcg atctgtctat ttcgttcatc catagttgcc
+     1561 tgactccccg tcgtgtagat aactacgata cgggagggct taccatctgg ccccagtgct
+     1621 gcaatgatac cgcgagaccc acgctcaccg gctccagatt tatcagcaat aaaccagcca
+     1681 gccggaaggg ccgagcgcag aagtggtcct gcaactttat ccgcctccat ccagtctatt
+     1741 aattgttgcc gggaagctag agtaagtagt tcgccagtta atagtttgcg caacgttgtt
+     1801 gccattgcta caggcatcgt ggtgtcacgc tcgtcgtttg gtatggcttc attcagctcc
+     1861 ggttcccaac gatcaaggcg agttacatga tcccccatgt tgtgcaaaaa agcggttagc
+     1921 tccttcggtc ctccgatcgt tgtcagaagt aagttggccg cagtgttatc actcatggtt
+     1981 atggcagcac tgcataattc tcttactgtc atgccatccg taagatgctt ttctgtgact
+     2041 ggtgagtact caaccaagtc attctgagaa tagtgtatgc ggcgaccgag ttgctcttgc
+     2101 ccggcgtcaa tacgggataa taccgcgcca catagcagaa ctttaaaagt gctcatcatt
+     2161 ggaaaacgtt cttcggggcg aaaactctca aggatcttac cgctgttgag atccagttcg
+     2221 atgtaaccca ctcgtgcacc caactgatct tcagcatctt ttactttcac cagcgtttct
+     2281 gggtgagcaa aaacaggaag gcaaaatgcc gcaaaaaagg gaataagggc gacacggaaa
+     2341 tgttgaatac tcatactctt cctttttcaa tattattgaa gcatttatca gggttattgt
+     2401 ctcatgagcg gatacatatt tgaatgtatt tagaaaaata aacaaatagg ggttccgcgc
+     2461 acatttcccc gaaaagtgcc acctgacgtc taagaaacca ttattatcat gacattaacc
+     2521 tataaaaata ggcgtatcac gaggcagaat ttcagataaa aaaaatcctt agctttcgct
+     2581 aaggatgatt tctg
+//

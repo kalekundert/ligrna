@@ -1,0 +1,47 @@
+LOCUS       Liu_GFP                  207 bp ds-DNA     linear       17-NOV-2016
+DEFINITION  .
+ACCESSION   
+VERSION     
+SOURCE      .
+  ORGANISM  .
+COMMENT     
+COMMENT     ApEinfo:methylated:1
+FEATURES             Location/Qualifiers
+     misc_feature    1..32
+                     /label=Gibson Arm (Left)
+                     /ApEinfo_fwdcolor=#ff0000
+                     /ApEinfo_revcolor=#ff0000
+                     /ApEinfo_graphicformat=arrow_data {{0 1 2 0 0 -1} {} 0}
+                     width 5 offset 0
+     misc_feature    184..207
+                     /label=Gibson Arm (Right)
+                     /ApEinfo_fwdcolor=#ff0000
+                     /ApEinfo_revcolor=#ff0000
+                     /ApEinfo_graphicformat=arrow_data {{0 1 2 0 0 -1} {} 0}
+                     width 5 offset 0
+     misc_feature    33..52
+                     /label=GFP Spacer
+                     /ApEinfo_fwdcolor=cyan
+                     /ApEinfo_revcolor=green
+                     /ApEinfo_graphicformat=arrow_data {{0 1 2 0 0 -1} {} 0}
+                     width 5 offset 0
+     misc_feature    169..177
+                     /label=GFP Spacer(1)
+                     /ApEinfo_label=GFP Spacer
+                     /ApEinfo_fwdcolor=cyan
+                     /ApEinfo_revcolor=green
+                     /ApEinfo_graphicformat=arrow_data {{0 1 2 0 0 -1} {} 0}
+                     width 5 offset 0
+     misc_feature    complement(129..143)
+                     /label=GFP Spacer(2)
+                     /ApEinfo_label=GFP Spacer
+                     /ApEinfo_fwdcolor=cyan
+                     /ApEinfo_revcolor=green
+                     /ApEinfo_graphicformat=arrow_data {{0 1 2 0 0 -1} {} 0}
+                     width 5 offset 0
+ORIGIN
+        1 ACAGCTAGCT CAGTCCTAGG TATAATACTA GTCATCTAAT TCAACAAGAA TTGTTTTAGA
+       61 GCTAGAAATA GCAAGTTAAA ATAAGGCTAG TCCGTTATCA ACTTGAAAAA GTGGCACCGA
+      121 GTCGGTGCTT GTTGAATTAG ATGATACCAC GCGAAAGCGC CTTGGCAGCA TCTAATTTTT
+      181 TTTTGAAGCT TGGGCCCGAA CAAAAAC   
+//

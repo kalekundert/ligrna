@@ -1,0 +1,67 @@
+There are 6 nucleotides in the nexus (GGUGUC) that are complementary to the 
+first part of the aptamer (GAUACC).  When there is no ligand present, these 
+sequences can form a base-paired stem with no mismatches, only one wobble pair, 
+and a GC clamp on either end:
+
+   C=G
+   U-A
+   G.U
+   U-A
+   G=C
+5' G=C 3'
+
+There are several reasons why this stem could render the sgRNA nonfunctional:
+
+1. The stem sequesters the uracil that flips out and interacts with Cas9 in wt 
+   sgRNA.  In mhf/30, the nexus stem comprises three GC base-pairs instead of 
+   two, but there's still a uracil just before the 3' side of the stem.
+
+2. The stem effectively moves the first hairpin.  I know from Briner et al.  
+   that the spacing between the nexus and the hairpin can be important.  If you 
+   regard this decoy stem as the nexus, then the first hairpin is now separated 
+   from the nexus by 15 nucleotides, of which 5 are unpaired.  That may be too 
+   far.  Alternatively, if you regard the next stem that forms (which comes 
+   just one nucleotide after the decoy stem) as the "first hairpin", that may 
+   be too close.
+
+3. This stem makes the nexus stem so large that it doesn't fit in Cas9 anymore.  
+   This is a little dubious, because the nexus stem is pretty solvent exposed.
+
+According to ViennaRNA, the free energy of this stem is -6.20 kcal/mol:
+
+    $ RNAduplex
+    Input two sequences (one line each); @ to quit
+    ....,....1....,....2....,....3....,....4....,....5....,....6....,....7....,....8
+    GGUGUC
+    GAUACC
+    lengths = 6,6
+    ((((((&))))))   1,6   :   1,6   (-6.20)
+
+However, in the context of mhf/30, its free energy is only -5.70 kcal/mol:
+
+    $ RNAfold
+    Input string (upper or lower case); @ to quit
+    ....,....1....,....2....,....3....,....4....,....5....,....6....,....7....,....8
+    GGUGUCCCGUAUACGCCGAUACC
+    length = 23
+    GGUGUCCCGUAUACGCCGAUACC
+    ((((((.((....))..))))))
+     minimum free energy =  -5.70 kcal/mol
+
+For reference, the theophylline aptamer binds theophylline with 320 nM 
+affinity, which implies that its folding free energy is -9.21 kcal/mol.  The 
+folding free energy of the theophylline aptamer without ligand is:
+
+    $ RNAfold
+    Input string (upper or lower case); @ to quit
+    ....,....1....,....2....,....3....,....4....,....5....,....6....,....7....,....8
+    AUACCAGCCGAAAGGCCCUUGGCAG
+    length = 25
+    AUACCAGCCGAAAGGCCCUUGGCAG
+    ...((((((....)))...)))...
+     minimum free energy =  -6.20 kcal/mol
+
+Coincidentally, this is same as the two halves of the decoy stem on their own.  
+Especially since the decoy stem is slightly weaker in the context of the sgRNA, 
+I suspect that the off-state is delicately balanced between the functional and 
+non-functional folds.  

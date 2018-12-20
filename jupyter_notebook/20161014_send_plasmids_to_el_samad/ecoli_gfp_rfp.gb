@@ -1,0 +1,238 @@
+LOCUS       Exported                3657 bp ds-DNA     linear   SYN 14-OCT-2016
+DEFINITION  synthetic linear DNA
+ACCESSION   .
+VERSION     .
+KEYWORDS    e_coli_mg1655_gfp_rfp_kanr
+SOURCE      synthetic DNA construct
+  ORGANISM  synthetic DNA construct
+REFERENCE   1  (bases 1 to 3657)
+  AUTHORS   Kale Kundert
+  TITLE     Direct Submission
+  JOURNAL   Exported Friday, Oct 14, 2016 from SnapGene 3.2.2
+            http://www.snapgene.com
+FEATURES             Location/Qualifiers
+     source          1..3657
+                     /organism="synthetic DNA construct"
+                     /mol_type="other DNA"
+     promoter        1..78
+                     /gene="lacI (mutant)"
+                     /note="lacIq promoter"
+                     /note="Constitutive promoter.  In the lacIq allele, a 
+                     single base change in the promoter boosts expression of the
+                     lacI gene about 10-fold."
+     promoter        13..43
+                     /label=pLacIQ promoter
+                     /note="pLacIQ promoter"
+     misc_feature    79..113
+                     /label=J23119 (BglII) promoter
+                     /note="J23119 (BglII) promoter"
+                     /note="Constitutive promoter."
+     misc_feature    114..140
+                     /label=Bujard RBS (strong)
+                     /note="Bujard RBS (strong)"
+     RBS             123..134
+                     /label=RBS (strong)
+                     /note="RBS (strong)"
+     CDS             141..854
+                     /codon_start=1
+                     /product="superfolder GFP: folds robustly even when fused 
+                     to poorly folded proteins (Pedelacq et al., 2006)"
+                     /note="sfGFP"
+                     /translation="MSKGEELFTGVVPILVELDGDVNGHKFSVRGEGEGDATNGKLTLK
+                     FICTTGKLPVPWPTLVTTLTYGVQCFSRYPDHMKRHDFFKSAMPEGYVQERTISFKDDG
+                     TYKTRAEVKFEGDTLVNRIELKGIDFKEDGNILGHKLEYNFNSHNVYITADKQKNGIKA
+                     NFKIRHNVEDGSVQLADHYQQNTPIGDGPVLLPDNHYLSTQSVLSKDPNEKRDHMVLLE
+                     FVTAAGITHGMDELYK"
+     misc_feature    179..198
+                     /note="""gfp"" spacer"
+                     /note="5'-CAUCUAAUUCAACAAGAAUU-3'"
+     misc_feature    271..290
+                     /note="""gfp2"" spacer"
+                     /note="5'-AGUAGUGCAAAUAAAUUUAA-3'"
+     misc_feature    303..322
+                     /note="""gfp3"" spacer"
+                     /note="5'-ACAAGUGUUGGCCACGGAAC-3'"
+     misc_feature    358..377
+                     /note="""gfp4"" spacer"
+                     /note="5'-UUUCAUGUGAUCCGGAUAAC-3'"
+     misc_feature    408..427
+                     /note="""gfp5"" spacer"
+                     /note="5'-CGUUCCUGUACAUAACCUUC-3'"
+     misc_feature    496..515
+                     /note="""gfp6"" spacer"
+                     /note="5'-UAACUCGAUACGAUUAACAA-3'"
+     misc_feature    667..686
+                     /note="""gfp7"" spacer"
+                     /note="5'-AUAAUGGUCUGCUAGUUGAA-3'"
+     misc_feature    774..793
+                     /note="""gfp8"" spacer"
+                     /note="5'-AUGUGGUCACGCUUUUCGUU-3'"
+     terminator      882..1010
+                     /label=dblTerm
+                     /note="dblTerm terminator"
+     terminator      890..961
+                     /note="rrnB T1 terminator"
+                     /note="transcription terminator T1 from the E. coli rrnB 
+                     gene"
+     terminator      977..1004
+                     /note="T7Te terminator"
+                     /note="phage T7 early transcription terminator"
+     misc_feature    1106..1140
+                     /label=J23119 (BglII) promoter(1)
+                     /note="J23119 (BglII) promoter(1)"
+     misc_feature    1141..1167
+                     /label=Bujard RBS (strong)(1)
+                     /note="Bujard RBS (strong)(1)"
+     RBS             1150..1161
+                     /label=RBS (strong)(1)
+                     /note="RBS (strong)(1)"
+     CDS             1168..1845
+                     /codon_start=1
+                     /product="monomeric derivative of DsRed (Campbell et al., 
+                     2002)"
+                     /note="mRFP"
+                     /translation="MASSEDVIKEFMRFKVRMEGSVNGHEFEIEGEGEGRPYEGTQTAK
+                     LKVTKGGPLPFAWDILSPQFQYGSKAYVKHPADIPDYLKLSFPEGFKWERVMNFEDGGV
+                     VTVTQDSSLQDGEFIYKVKLRGTNFPSDGPVMQKKTMGWEASTERMYPEDGALKGEIKM
+                     RLKLKDGGHYDAEVKTTYMAKKPVQLPGAYKTDIKLDITSHNEDYTIVEQYERAEGRHS
+                     TGA"
+     misc_feature    1292..1311
+                     /note="""rfp"" spacer"
+                     /note="5'-AACUUUCAGUUUAGCGGUCU-3'
+                     227x repression (R1, Qi et al)"
+     misc_feature    1356..1375
+                     /note="""rfp2"" spacer"
+                     /note="5'-UGGAACCGUACUGGAACUGC-3'
+                     215x repression (R2, Qi et al)"
+     misc_feature    1395..1414
+                     /note="""rfp3"" spacer"
+                     /note="5'-GGUAGUCCGGGAUGUCAGCC-3'
+                     198x repression (R5, Qi et al)"
+     misc_feature    1407..1426
+                     /note="""rfp4"" spacer"
+                     /note="5'-AGGACAGUUUCAGGUAGUCC-3'
+                     158x repression (R6, Qi et al)"
+     misc_feature    1607..1626
+                     /note="weak spacer"
+                     /note="5'-UUCCGGGUACAUACGUUCGG-3'
+                     6x repression (R4, Qi et al)"
+     misc_feature    1778..1797
+                     /note="weak spacer"
+                     /note="5'-GAUGGUGUAGUCUUCGUUGU-3'
+                     8x repression (R3, Qi et al)"
+     terminator      1870..1998
+                     /label=dblTerm(1)
+                     /note="dblTerm(1) terminator"
+     terminator      1870..1937
+                     /label=sglTerm
+                     /note="sglTerm terminator"
+     terminator      1878..1949
+                     /note="rrnB T1 terminator"
+                     /note="transcription terminator T1 from the E. coli rrnB 
+                     gene"
+     terminator      1965..1992
+                     /note="T7Te terminator"
+                     /note="phage T7 early transcription terminator"
+     misc_recomb     complement(2088..2121)
+                     /label=FRT recombination site
+                     /note="FRT recombination site"
+     misc_feature    2088..2121
+                     /label=FRT
+                     /note="FRT"
+     protein_bind    complement(2088..2121)
+                     /bound_moiety="FLP recombinase from the Saccharomyces 
+                     cerevisiae 2u plasmid"
+                     /note="FRT (minimal)"
+                     /note="supports FLP-mediated excision but not integration 
+                     (Turan and Bode, 2011)"
+     misc_feature    2277..3092
+                     /label=KanR
+                     /note="KanR"
+     CDS             2277..3092
+                     /codon_start=1
+                     /product="aminoglycoside phosphotransferase"
+                     /note="KanR"
+                     /note="confers resistance to kanamycin in bacteria or G418 
+                     (Geneticin(R)) in eukaryotes"
+                     /translation="MSHIQRETSCSRPRLNSNMDADLYGYKWARDNVGQSGATIYRLYG
+                     KPDAPELFLKHGKGSVANDVTDEMVRLNWLTEFMPLPTIKHFIRTPDDAWLLTTAIPGK
+                     TAFQVLEEYPDSGENIVDALAVFLRRLHSIPVCNCPFNSDRVFRLAQAQSRMNNGLVDA
+                     SDFDDERNGWPVEQVWKEMHKLLPFSPDSVVTHGDFSLDNLIFDEGKLIGCIDVGRVGI
+                     ADRYQDLAILWNCLGEFSPSLQKRLFQKYGIDNPDMNKLQFHLMLDEFF"
+     misc_recomb     complement(3157..3190)
+                     /label=FRT recombination site(1)
+                     /note="FRT recombination site(1)"
+     misc_feature    3157..3190
+                     /label=FRT(1)
+                     /note="FRT(1)"
+     protein_bind    complement(3157..3190)
+                     /bound_moiety="FLP recombinase from the Saccharomyces 
+                     cerevisiae 2u plasmid"
+                     /note="FRT (minimal)"
+                     /note="supports FLP-mediated excision but not integration 
+                     (Turan and Bode, 2011)"
+     misc_feature    3196..3657
+                     /note="E coli nfsA 3UTR"
+ORIGIN
+        1 gacaccatcg aatggtgcaa aacctttcgc ggtatggcat gatagcgccc ggaagagagt
+       61 caattcaggg tggtgaattt gacagctagc tcagtcctag gtataataga tctgaattca
+      121 ttaaagagga gaaaggtacc atgagcaaag gagaagaact tttcactgga gttgtcccaa
+      181 ttcttgttga attagatggt gatgttaatg ggcacaaatt ttctgtccgt ggagagggtg
+      241 aaggtgatgc tacaaacgga aaactcaccc ttaaatttat ttgcactact ggaaaactac
+      301 ctgttccgtg gccaacactt gtcactactc tgacctatgg tgttcaatgc ttttcccgtt
+      361 atccggatca catgaaacgg catgactttt tcaagagtgc catgcccgaa ggttatgtac
+      421 aggaacgcac tatatctttc aaagatgacg ggacctacaa gacgcgtgct gaagtcaagt
+      481 ttgaaggtga tacccttgtt aatcgtatcg agttaaaggg tattgatttt aaagaagatg
+      541 gaaacattct tggacacaaa ctcgagtaca actttaactc acacaatgta tacatcacgg
+      601 cagacaaaca aaagaatgga atcaaagcta acttcaaaat tcgccacaac gttgaagatg
+      661 gttccgttca actagcagac cattatcaac aaaatactcc aattggcgat ggccctgtcc
+      721 ttttaccaga caaccattac ctgtcgacac aatctgtcct ttcgaaagat cccaacgaaa
+      781 agcgtgacca catggtcctt cttgagtttg taactgctgc tgggattaca catggcatgg
+      841 atgagctcta caaataagga tccaaactcg agtaaggatc tccaggcatc aaataaaacg
+      901 aaaggctcag tcgaaagact gggcctttcg ttttatctgt tgtttgtcgg tgaacgctct
+      961 ctactagagt cacactggct caccttcggg tgggcctttc tgcgtttata cctagggtac
+     1021 gggttttgct gccctctaga ggtgcaaaac ctttcgcggt atggcatgat agcgcccgga
+     1081 agagagtcaa ttcagggtgg tgaatttgac agctagctca gtcctaggta taatagatct
+     1141 gaattcatta aagaggagaa aggtaccatg gcgagtagcg aagacgttat caaagagttc
+     1201 atgcgtttca aagttcgtat ggaaggttcc gttaacggtc acgagttcga aatcgaaggt
+     1261 gaaggtgaag gtcgtccgta cgaaggtacc cagaccgcta aactgaaagt taccaaaggt
+     1321 ggtccgctgc cgttcgcttg ggacatcctg tccccgcagt tccagtacgg ttccaaagct
+     1381 tacgttaaac acccggctga catcccggac tacctgaaac tgtccttccc ggaaggtttc
+     1441 aaatgggaac gtgttatgaa cttcgaagac ggtggtgttg ttaccgttac ccaggactcc
+     1501 tccctgcaag acggtgagtt catctacaaa gttaaactgc gtggtaccaa cttcccgtcc
+     1561 gacggtccgg ttatgcagaa aaaaaccatg ggttgggaag cttccaccga acgtatgtac
+     1621 ccggaagacg gtgctctgaa aggtgaaatc aaaatgcgtc tgaaactgaa agacggtggt
+     1681 cactacgacg ctgaagttaa aaccacctac atggctaaaa aaccggttca gctgccgggt
+     1741 gcttacaaaa ccgacatcaa actggacatc acctcccaca acgaagacta caccatcgtt
+     1801 gaacagtacg aacgtgctga aggtcgtcac tccaccggtg cttaaggatc caaactcgag
+     1861 taaggatctc caggcatcaa ataaaacgaa aggctcagtc gaaagactgg gcctttcgtt
+     1921 ttatctgttg tttgtcggtg aacgctctct actagagtca cactggctca ccttcgggtg
+     1981 ggcctttctg cgtttatacc tagggtacgg gttttgctgc ccgcaaacgg gctgttctgg
+     2041 tgttgactag tggatgaact gtacaaatga ggatcctaaa gatctgcgaa gttcctatac
+     2101 tttctagaga ataggaactt cggatctgct gatccttcaa ctcagcaaaa gttcgattta
+     2161 ttcaacaaag ccacgttgtg tctcaaaatc tctgatgtta cattgcacaa gataaaaata
+     2221 tatcatcatg aacaataaaa ctgtctgctt acataaacag taatacaagg ggtgttatga
+     2281 gccatattca acgggaaacg tcttgctcca ggccgcgatt aaattccaac atggatgctg
+     2341 atttatatgg gtataaatgg gctcgcgata atgtcgggca atcaggtgcg acaatctatc
+     2401 gattgtatgg gaagcccgat gcgccagagt tgtttctgaa acatggcaaa ggtagcgttg
+     2461 ccaatgatgt tacagatgag atggtcagac taaactggct gacggaattt atgcctcttc
+     2521 cgaccatcaa gcattttatc cgtactcctg atgatgcatg gttactcacc actgcgatcc
+     2581 ccgggaaaac agcattccag gtattagaag aatatcctga ttcaggtgaa aatattgttg
+     2641 atgcgctggc agtgttcctg cgccggttgc attcgattcc tgtttgtaat tgtcctttta
+     2701 acagcgatcg cgtatttcgt ctcgctcagg cgcaatcacg aatgaataac ggtttggttg
+     2761 atgcgagtga ttttgatgac gagcgtaatg gctggcctgt tgaacaagtc tggaaagaaa
+     2821 tgcataagct tttgccattc tcaccggatt cagtcgtcac tcatggtgat ttctcacttg
+     2881 ataaccttat ttttgacgag gggaaattaa taggttgtat tgatgttgga cgagtcggaa
+     2941 tcgcagaccg ataccaggat cttgccatcc tatggaactg cctcggtgag ttttctcctt
+     3001 cattacagaa acggcttttt caaaaatatg gtattgataa tcctgatatg aataaattgc
+     3061 agtttcattt gatgctcgat gagtttttct aatcagaatt ggttaattgg ttgtaacact
+     3121 ggcagagcat tacgctgact tgacgggagg atctgcgaag ttcctatact ttctagagaa
+     3181 taggaacttc ggatctggcg gaatattacc tcacccgtgg cagcaataat cgccgggata
+     3241 cctggagcga tcatatccgc cgaacaatca ttaaagaaag ccgcccattt attctggatt
+     3301 atttgcacaa acagggttgg gcgacgcgct aaaaccgcca cgtcgatgta tgatacgcgg
+     3361 gcttttgacc aggtctgaca gagaggtgca gggtgaaaat tgccatattg tcccgggatg
+     3421 gaacgctcta ttcgtgtaag cggctgcgtg aagccgctat acagcgcggt cacctggttg
+     3481 aaattcttga tccgctttct tgctacatga acataaatcc tgcggcgtct tctattcact
+     3541 acaaaggccg caagttaccc cattttgacg cagtgatccc gcgtattggc accgccatta
+     3601 ccttttatgg gacggcggca ctgcgccagt tcgagatgct ggggagctat ccgctca
+//

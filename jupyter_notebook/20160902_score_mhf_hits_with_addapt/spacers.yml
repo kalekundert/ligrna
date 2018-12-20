@@ -1,0 +1,6 @@
+contexts:
+  none:  ['',                   '']
+  rfp:   [AACTTTCAGTTTAGCGGTCT, '']
+  gfp:   [CATCTAATTCAACAAGAATT, '']
+  aavs:  [GGGGCCACTAGGGACAGGAT, '']
+  vegfa: [GGGTGGGGGGAGTTTGCTCC, '']

@@ -1,0 +1,50 @@
+June 5, 2016
+============
+I think the best gating strategy is as follows:
+
+- For screens without ligand, draw gates to collect cells that are distributed 
+  like the control population.  If you will only see each library member once 
+  (i.e. 1x coverage), draw gates that encompass the entire control population.  
+  If you will see each library member ten times (i.e. 10x coverage), draw gates 
+  that include only the most extreme ≈50% of the library.  This still gives you 
+  a ≈99.99% chance (this value comes from a brute force simulation I hacked 
+  together using normal distributions) of collecting a design that has the same 
+  distribution as the wildtype population, but excludes as many other designs 
+  as possible.
+
+- For screens with ligand, draw gates to collect the most extreme part of the 
+  library that still exhibits ligand sensitivity, or a generous ≈10% if the 
+  library has not yet shown sensitivity.
+
+The reasoning behind this strategy is that my first priority is to find designs 
+that are either fully on or fully off without ligand, and my second priority is 
+to find designs with the biggest possible change in signal in response to 
+ligand.  The first priority is an absolute point of reference, so I can always 
+draw the gates based on nothing but the controls.  The second priority depends 
+on what's in the library, so I can make the gate more stringent as the most 
+extreme edge of the library becomes less obscured by constitutive designs.
+
+This strategy is in contrast to the other two strategies I've pursued so far.  
+These are, in the order I adopted them:
+
+- Always draw gates based on the control populations.  In the first rounds draw 
+  gates that fully encompass the controls, and in later rounds make the gates 
+  more extreme as your coverage improves.
+
+  The idea here was to be aggressive about screening for designs that worked 
+  really well.  From my preliminary screen, it seemed like functional designs 
+  were very common, so I thought I could afford to draw very stringent gates.  
+  This worked really well for the rbf library, but yielded nothing for the rxf 
+  library.  Adjusting the gate to fit the library in screens with ligand should 
+  be just as stringent, but also capable of keeping the best designs from 
+  weaker libraries.
+
+- Start by drawing broad gates (with and without ligand) until a large majority 
+  of the library becomes sensitive to the ligand.  Then draw more stringent 
+  gates (with and without ligand) to isolate the designs with the best fold 
+  change.
+  
+  The problem with this approach is that it takes ≈6-7 screens, as opposed to 
+  ≈4, because I colect a lot of cells in the earlier rounds that I know a 
+  priori that I'm going to get rid of later.  Thinking about the inefficiency 
+  of this strategy led me to adopt the strategy outlined above.

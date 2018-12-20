@@ -1,0 +1,10 @@
+Number of oligos:
+2
+
+Primer names (ready to copy into Elim form):
+AMM_QH_3_FOR
+AMM_QH_3_REV
+
+Primer sequences (ready to copy into Elim form):
+GGAGCTTCCACCAAGAGCCTTAAACTCTTGATTANNNggcaccgagtcgg
+CAAACCATATCATTAGGATTATANNNNNNNNacggactagccttatttca

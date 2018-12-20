@@ -1,0 +1,10 @@
+1. The in vitro transcription reactions weren't clean.  See:
+
+   20170110_transcribe_cf_sgrnas.xcf
+
+2. This was the first time I used the target DNA in question, so I can't really 
+   be sure there isn't some problem with it.
+
+3. I didn't have controls for any of the new spacers.
+
+4. The gfp/mhf 30 reaction didn't work.

@@ -1,0 +1,5 @@
+# mf/37 has a deletion in the lower stem, which the macrostate was adjusted to 
+# account for.
+sequence: guuucagagcaugcuggaaacagcauagcaaguugaaauaaggucuuccccgcauccgccgauaccagccgaaaggcccuuggcagcgacggcaccgagucggugcuuuuuu
+macrostates:
+  active: (.....................................)..................(...............................).(.............)......

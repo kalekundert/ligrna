@@ -1,0 +1,14 @@
+Number of oligos:
+4
+
+Primer names (ready to copy into Elim form):
+DX_9_FOR
+DX_9_REV
+RXB_11_1_FOR
+RXB_11_1_REV
+
+Primer sequences (ready to copy into Elim form):
+NTTGAAAAANNggcaccgagtcgg
+NNNNNNNNgtaggctgccaaggg
+AGGCCCTTGGCAGCCTAcgttatcaacttgaaaaagtgg
+TTCGGCTGGTATCCCActtatttcaacttgctatgctg

@@ -1,0 +1,49 @@
+In all five structure predictions, the GCCGA from the 5' side of the hairpin is 
+base-paired with a UUGGC motif towards the 3' end of the aptamer in the apo 
+state, and correctly base-paired with the 3' side of the hairpin in the holo 
+state.  According to ViennaRNA, the free energy of this stem is -4.80 kcal/mol:
+
+   $ RNAduplex
+   
+   Input two sequences (one line each); @ to quit
+   ....,....1....,....2....,....3....,....4....,....5....,....6....,....7....,....8
+   GCCGA
+   UUGGC
+   lengths = 5,5
+   (((((&)))))   1,5   :   1,5   (-4.80)
+
+In the context of mhf 37, the free energy of this stem is -8.20 kcal/mol, 
+although that includes a significant amount of RNA (including another hairpin) 
+between the stem:
+
+   $ RNAfold
+   
+   Input string (upper or lower case); @ to quit
+   ....,....1....,....2....,....3....,....4....,....5....,....6....,....7....,....8
+   GCCGAUACCAGCCGAAAGGCCCUUGGC
+   length = 27
+   GCCGAUACCAGCCGAAAGGCCCUUGGC
+   (((((.....(((....)))..)))))
+    minimum free energy =  -8.20 kcal/mol
+
+It's not clear to me how this hairpin stem affects the function of Cas9.  It 
+has no clear effect on the nexus or the ruler.  In the no-spacer case, the 
+base-pairing described above allows 3 nucleotides in the ruler to base pair 
+with the 3' side of what would be the hairpin, but this pattern is not seen for 
+3 of the 4 spacers.
+
+It's possible that there are sequence specific interactions in the hairpin 
+itself.  Briner et al. did not make any mutations in the hairpin that would 
+reveal sequence-specific interactions (and I think some people just regard the 
+hairpin as part of the terminator anyways).  That said, after taking another 
+look at the structure, the hairpin in completely solvent exposed.  It would be 
+pretty hard to believe that there are specific interactions happening there.
+
+If I wanted to dig into this a little more, I could probably try mutating the 
+5' side of the hairpin to see how important the base pairing is.  I could 
+probably also mutate the UU in the aptamer, and maybe even the GG if I make 
+compensatory mutations on the other side of its stem.  The last C has to stay, 
+though, because it's part of the aptamer binding motif.  Still, I could 
+strand-swap 4 of the 5 positions, and that might tell me something.
+
+

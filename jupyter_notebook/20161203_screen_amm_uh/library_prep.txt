@@ -1,0 +1,6 @@
+theoretical library    4.30×10⁷  100.00%  1.00x
+top10 transformation   4.30×10⁷  100.00%  1.00x
+mg1655 transformation  4.20×10⁷  97.80%   3.81x
+first sort             1.64×10⁶  90.48%   2.35x
+second sort            8.18×10⁴  99.99%   8.94x
+third sort             8.18×10⁴  100.00%  12.34x

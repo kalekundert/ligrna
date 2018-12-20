@@ -1,0 +1,43 @@
+Number of oligos: 2
+Max primer length: 26
+
+Primer names (ready to copy into Elim form):
+GFP_FOR
+GFP_REV
+
+Primer sequences (ready to copy into Elim form):
+AACAAGAATttggtgacagaaaagcc
+GAATTAGATGactgtggggtggagg
+
+Number of oligos: 2
+Max primer length: 26
+
+Primer names (ready to copy into Elim form):
+CF1_FOR
+CF1_REV
+
+Primer sequences (ready to copy into Elim form):
+CCCGTGCCCtggtgacagaaaagccc
+CAGCTTGCCGGactgtggggtggagg
+
+Number of oligos: 2
+Max primer length: 26
+
+Primer names (ready to copy into Elim form):
+CF2_FOR
+CF2_REV
+
+Primer sequences (ready to copy into Elim form):
+TGCCGTAGGtggtgacagaaaagccc
+AGCTGACCCTGactgtggggtggagg
+
+Number of oligos: 2
+Max primer length: 26
+
+Primer names (ready to copy into Elim form):
+CF3_FOR
+CF3_REV
+
+Primer sequences (ready to copy into Elim form):
+ACCTCGGCGtggtgacagaaaagccc
+GAAGTTCGAGGactgtggggtggagg

@@ -1,0 +1,22 @@
+Number of oligos: 8
+Max primer length: 56
+
+Primer names (ready to copy into Elim form):
+AAVS_MHF_37_PAM_FOR
+AAVS_MHF_37_PAM_REV
+MHF_30_PAM_FOR
+MHF_30_PAM_REV
+OFF_PAM_FOR
+OFF_PAM_REV
+RXB_11_1_PAM_FOR
+RXB_11_1_PAM_REV
+
+Primer sequences (ready to copy into Elim form):
+CCCCGCATCCGCCGATACCAGCCGAAAGGCCCTTGGCAGCGACggcaccgagtcgg
+AAGACCTTAGGTCAACTTGCTATGCTGTTTCCAGCATgctctgacccatcctgtc
+ACCAGCCGAAAGGCCCTTGGCAGCGACggcaccgagtcgg
+ATCGGCGTATACGGGACACccttaggtcaacttgctatg
+ctagtccgttatcaacttgaaaa
+GGttaggtcaacttgctatgctg
+GGCCCTTGGCAGCCTAcgttatcaacttgaaaaagtgg
+TTTCGGCTGGTATCCCActtaggtcaacttgctatgct

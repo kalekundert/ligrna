@@ -1,0 +1,17 @@
+Number of oligos: 7
+Max primer length: 64
+
+Primer names (ready to copy into Elim form):
+TPP_MHF_30_FOR
+TPP_MHF_30_REV
+TPP_UH_N_6_FOR
+TPP_UH_N_7_FOR
+
+Primer sequences (ready to copy into Elim form):
+TGAGAAATACCCGTATCACCTGATCTGGATAATGCCAGCGTAGGGAACGACggcaccgagtcgg
+GCCTTCACGCAGAAGGGCACCCCGACGGCGTATACGGGACACccttatttcaacttgctatgc
+NNNNNNgccgtcggggtg
+NNNNNNNgccgtcggggtg
+
+Don't need UN_REV primers because I can use the ones I ordered for the amm/uh 
+library.
