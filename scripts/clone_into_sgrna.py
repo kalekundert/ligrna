@@ -40,6 +40,9 @@ Options:
         for inverse PCR primers and 78°C for Quikchange.  (Note that Tm is 
         calculated differently for the two cloning strategies.)
 
+    -t, --table
+        Report the primers in a tab-separated table.
+
     -v, --verbose
         Show extra debugging output.
 """
@@ -47,7 +50,7 @@ Options:
 import docopt
 import shlex
 import sgrna_sensor
-import design_mutagenesis_primers as mut
+import sgrna_sensor.primers as mut
 
 args = docopt.docopt(__doc__)
 default_backbone_name = args['--backbone'] or 'on'
@@ -73,13 +76,18 @@ for name in args['<constructs>']:
         designer.verbose = sub_args['--verbose'] or default_verbose
 
         sgrna = sgrna_sensor.from_name(sub_name, target=designer.spacer)
+        after_sgrna = 'tgaagcttgggcccgaacaaaaactcatct'
         designer.name = sgrna.underscore_name
-        designer.construct = sgrna.dna
+        designer.construct = sgrna.dna + after_sgrna
         designer.backbone = sgrna_sensor.from_name(
                 sub_args['--backbone'] or default_backbone_name,
-                target=designer.spacer).dna
+                target=designer.spacer).dna + after_sgrna
 
         primers.update(designer.design_primers())
 
 primers = mut.consolidate_duplicate_primers(primers)
-mut.report_primers_for_elim(primers)
+
+if args['--table']:
+    mut.report_primers_to_table(primers)
+else:
+    mut.report_primers_for_elim(primers)

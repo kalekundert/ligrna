@@ -21,6 +21,28 @@ if [ "$round" = best ]; then
     )
 fi
 
+if [ "$round" = strategies ]; then
+    seqs+=(
+        wt
+        dead
+        us/4/6
+        ls/6/2
+        nx/2
+        hp/17
+        id/5/4
+        id/3/4
+        nxx/3/4
+        sb/5
+        sl
+        slx
+        sh/5
+        sh/7
+        cb
+        cl
+        ch/4                
+    )
+fi
+
 if [ "$round" = 0 ] || [ "$round" = all ]; then
     seqs+=(
         wt
@@ -221,4 +243,4 @@ if [ "$round" = rh ] || [ "$round" = all ]; then
     )
 fi
 
-./show_seqs.py "$@" $seqs
+sgrna_sensor "$@" $seqs

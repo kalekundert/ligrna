@@ -54,10 +54,12 @@ def discard_lawns(all_cfus, all_dilutions):
 
     return array(num_cfus), array(dilutions)
 
-def parse_library(library):
+def parse_library(library, size=None):
     import sgrna_sensor
 
-    if isinstance(library, str):
+    if size is not None:
+        return library, size
+    elif isinstance(library, str):
         library_name = library
         library_seq = sgrna_sensor.from_name(library_name).seq
         library_size = sgrna_sensor.library_size(library_seq)
