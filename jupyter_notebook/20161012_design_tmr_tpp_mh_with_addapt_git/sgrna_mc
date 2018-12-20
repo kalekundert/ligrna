@@ -22,16 +22,12 @@ fi
 
 # Specify where the output files will be created.
 output_dir=$(dirname $OUTPUT_PREFIX)
-commit_path=$(printf "./${OUTPUT_PREFIX}_%03d.commit" "$SGE_TASK_ID")
 tmp_traj_path=$(mktemp "/scratch/sgrna_mc.XXXXXXXX")
 traj_path=$(printf "./${OUTPUT_PREFIX}_%03d.tsv" "$SGE_TASK_ID")
 
 # Clean up files from previous runs.
 mkdir -p $output_dir
-rm -f $commit_path $traj_path
-
-# Make sure everything has been committed.
-. scripts/require_commit.sh > $commit_path
+rm -f $traj_path
 
 # Make sure the output file is copied from scratch when the program ends.
 trap "mv $tmp_traj_path $traj_path" EXIT
