@@ -1,0 +1,10 @@
+rfp-assay.pdf
+general
+*.aux
+*.log
+*.out
+*.toc
+.~lock*#
+.*.sw*
+*.ods
+__pycache__

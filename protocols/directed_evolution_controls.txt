@@ -1,0 +1,35 @@
+1. Transform positive and negative control pBPK764 
+   (Cas9+sgRNA+CamR) plasmids into BW25141 (λDE3) 
+   cells already harboring p11-LacY-wtx1 (ccdB+AmpR).
+
+   - Thaw two 50 μL aliquots of Acella competent 
+     cells, one for each target sequence.
+
+   - Mix 25 ng of each control plasmid with 25 μL of 
+     competent cells.
+
+   - Rest on ice for 30 min.
+
+   - Heat shock at 42°C for 45 sec.
+
+   - Rest on ice for 2 min.
+
+   - Add 200 μL SOC
+
+   - Recover at 37°C for 1h.
+
+2. Plate the 70 μL of each transformation on:
+
+   - LB + Chlor
+     To measure transformation efficiency.
+
+   - LB + Chlor + Carb
+     To assess negative selection.
+
+   - LB + Chlor + arabinose
+     To assess positive selection.
+
+3. Incubate overnight at 37°C and count colonies in 
+   the morning.
+
+vim: tw=53

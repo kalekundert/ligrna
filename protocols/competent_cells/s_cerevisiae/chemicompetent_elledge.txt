@@ -1,0 +1,63 @@
+1. Grow the recipient strain of yeast to mid-log 
+   (1×107). The better the media used the better the 
+   transformation efficiency, so use YPD when 
+   possible.
+
+2. Pellet the cells at 2000 rpm in 50 ml aliquots in 
+   the Sorvall bench top centrifuge (using 50 ml 
+   Falcon® tubes).
+
+3. Resuspend the cells in sterile water; the volume 
+   of water used is not important since your only 
+   washing the cells. (At this point I usually pool 
+   the cells in 2 Falcon® tubes).
+
+4. Repellet the cells as above and then resuspend the 
+   pellets in LiTE (100mM LiAc in TE); again, the 
+   volume is not critical.
+
+5. Pellet the cells once more and this time resuspend 
+   the cells in 5ml of LiSORB for every 200ml of 
+   culture (LiSORB is LiTE containing 1M Sorbitol).
+
+6. Incubate the cells for 1h at 30°C with shaking. 
+   (Try not to go too long, 1h is optimal 1.5h is 
+   dangerous)
+
+7. Pellet the cells as above and decant.; resuspend 
+   in 250 µl of Carrier Resuspen-sion Buffer per 
+   200ml of culture (CRB is prepared by diluting 20 
+   mg/ml carrier DNA in LiSORB to a concentration of 
+   4 mg/ml.)
+
+8. After removing 100µl of cells for a negative 
+   control, add 2µg of transforming DNA for every 
+   100µl of cells remaining.
+
+9. Mix well, then incubate for 30′ at 30°C without 
+   shaking.
+
+10. Add 900µl of LiPEG (LiTE containing 40% PEG 3350) 
+    for each 100µl of cells and mix well.
+
+11. Divide the cell suspension in Eppendorf™ tubes 
+    (≈1ml per tube); this is important because it 
+    takes too long a time to heat a large volume of 
+    PEG uniformly.
+
+12. Incubate the tubes at 30°C for 20 minutes.
+
+13. Mix the contents of each tube and then heat the 
+    tubes (in a heating block) for 10′ at 42°C.
+
+14. Immediately plate the cells or inoculate a second 
+    selective media with the cell suspension. Do not 
+    try to pellet the cells through the PEG since 
+    this will lessen the transformation frequency, 
+    and don’t wait too long to plate or grow up the 
+    transformants since the PEG is toxic to the 
+    cells. 20 μL of cell suspension can give you 
+    between 1000-2000 transformants for a healthy 
+    yeast strain.
+
+vim: tw=53

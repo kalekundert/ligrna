@@ -1,0 +1,68 @@
+Day 1
+=====
+1. Streak the cells on a fresh plate.
+
+Day 2
+=====
+1. Pick a colony and grow it overnight in 20 mL LB.
+
+2. Place the following items at 4°C overnight:
+
+   - 400 mL 10% glycerol (50 mL 80% glycerol, milliQ 
+     water to 400 mL, sterile filter)
+   - 2 50 mL falcon tubes
+   - 1 bag 50 mL pipets
+   - 1 box 1000 μL pipet tips
+   - 1 box 200 μL pipet tips
+   - 50 0.6 mL tubes (autoclaved)
+   - 1 tube rack
+
+3. Reserve a shaker.
+
+Day 3
+=====
+1. Inoculate two 1L LB cultures with 5 mL overnight 
+   culture each.
+
+2. Grow at 37°C with shaking at 300 rpm to an OD600 
+   of 0.25 (~2h).
+
+3. Place the cells in an ice bath for 10 min to 
+   quickly bring them to 4°C.
+
+For the rest of the prep, keep the cells at 4°C.
+
+4. Spin the cells at 3500g for 10 min.
+
+5. Rinse and resuspend each pellet in 50 mL pre- 
+   chilled 10% glycerol, then transfer the cells into 
+   two 50 mL falcon tubes.
+
+6. Spin the cells at 3500g for 10 min.
+
+7. Repeat steps 5 & 6 a second time.
+
+8. Repeat steps 5 & 6 a third time.
+
+9. Resuspend the cells in enough pre-chilled 10% 
+   glycerol to bring their volume to 4500 μL.
+
+10. Make 50 90 μL aliquots of competent cells.
+
+    This corresponds to 5×10⁹ cells/aliquot, assuming 
+    there are 5×10⁸ cells/mL at an OD600 of 1.0.
+
+11. Freeze immediately in N₂ (ℓ) and store at -80°C.
+
+Reference
+=========
+Wu, Matand, Kebede, Acquaah, and Williams.  Enhancing 
+DNA electrotransformation efficiency in Escherichia 
+coli DH10B electrocompetent cells.  Electronic 
+Journal of Biotechnology 13:5 (2010).
+
+I modified the original protocol to make the volumes 
+more convenient.
+
+vim: tw=53
+

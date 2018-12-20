@@ -1,0 +1,47 @@
+Purify Cas9
+===========
+Adapted from Jinek, Chylinski, Fonfara, Hauer, 
+Doudna, Charpentier. A Programmable Dual-RNA-Guided 
+DNA Endonuclease in Adaptive Bacterial Immunity.  
+Science (2012).
+
+1.  Thaw the cells if frozen.
+
+2.  Resuspend the cells in 10 mL lysis buffer (20mM 
+    Tris pH 8.0, 500 mM NaCl, 1mM TCEP).
+
+3.  Add one tablet of protease inhibitor cocktail 
+    (Roche) to the cell suspension.
+
+4.  Lyse the cells by sonication:
+    - 10 sec on, 30 sec off
+    - 100 sec total on time
+    - 35% tip amplitude
+
+5.  Bind clarified lysate in batch to Ni-NTA agarose 
+    (Qiagen).
+
+6.  Wash the bound resin extensively with 20 mM Tris 
+    pH 8.0, 500 mM NaCl.
+
+7.  Elute Cas9 in 20 mM Tris pH 8.0, 250 mM NaCl, 10% 
+    glycerol.
+
+8.  Remove the His6-MBP affinity tag by cleavage with 
+    TEV protease, while the protein is dialyzed 
+    overnight against 20 mM HEPES pH 7.5, 150 mM KCl, 
+    1 mM TCEP, 10% glycerol.
+
+9.  Separate the cleaved Cas9 from the fusion tag by 
+    purifying on a 5 ml SP Sepharose HiTrap column 
+    (GE Life Sciences) and eluting with a linear 
+    gradient of 100mM-1M KCl.
+
+10. Further purify Cas9 by size exclusion 
+    chromatography on a Superdex 200 16/60 column in 
+    20 mM HEPES pH 7.5, 150 mM KCl and 1 mM TCEP.
+
+11. Concentrate the eluted protein to ~8mg/ml, then 
+    freeze in liquid nitrogen and store at -80°C.
+
+vim: tw=53

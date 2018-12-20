@@ -1,0 +1,72 @@
+Day 1
+=====
+1. Make 1L "low salt" SOB:
+
+   - 20g bacto-tryptone (2% w/v final)
+   - 5g bacto-yeast extract (0.5% w/v final)
+   - 2 mL 5M NaCl (10 mM final)
+   - 833.3 μL 3M KCl (2.5 mM final)
+   - milliQ water to 1L
+   - pH to 7.0 with NaOH
+   - autoclave 30 min, 121°C (cycle #5)
+
+2. Reserve a shaker.
+
+3. Place the following items at 4°C overnight:
+
+   - 700 mL milliQ water
+   - 240 mL 10% glycerol (30 mL 80% glycerol, milliQ 
+     water to 240 mL, sterile filter)
+   - 8 50 mL falcon tubes
+   - >3 50 mL pipets
+   - 1 box 1000 μL pipet tips
+   - 1 box 200 μL pipet tips
+   - 60 0.6 mL tubes (autoclaved)
+   - tube rack
+
+4. Pick a colony and grow overnight in 10 mL SOB at 
+   37°C with shaking.
+
+Day 2
+=====
+1. Inoculate 1L SOB with 1 mL overnight culture.  
+   Keep 1 mL to use as a blank.
+
+2. Grow at 37°C with shaking at 225 rpm to an OD600 
+   of 0.4 (~4h).
+
+3. Distribute the cells between 4 250 mL centrifuge 
+   tubes and balance them.
+
+4. Place the cells in an ice bath for 10 min to 
+   quickly bring them to 4°C.
+
+For the rest of the prep, keep the cells at 4°C.
+
+5. Spin the cells at 3500g for 10 min.
+
+6. Rinse and resuspend each pellet in 100 mL 
+   pre-chilled water, then distribute the cells 
+   between 8 pre-chilled 50 mL falcon tubes.
+
+7. Spin the cells at 3500g for 10 min.
+
+8. Resuspend each pellet in 25 mL pre-chilled water, 
+   then consolidate the cells into 4 tubes.
+
+9. Spin the cells at 3500g for 10 min.
+
+10. Resuspend each pellet in 50 mL pre-chilled 10% 
+    glycerol.
+
+11. Spin the cells at 3500g for 10 min.
+
+12. Resuspend each pellet in 1 mL pre-chilled 10% 
+    glycerol.  The total volume will be ~6 mL.
+
+13. Aliquot 100 μL of the competent cells into ~60 
+    tubes.
+
+14. Freeze immediately in N₂ (ℓ) and store at -80°C.
+
+vim: tw=53

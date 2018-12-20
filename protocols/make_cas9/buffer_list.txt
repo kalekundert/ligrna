@@ -1,0 +1,45 @@
+Cas9/TTS-I20
+============
+ 10.0 mL 1M Tris        (20 mM final)
+ 50.0 mL 5M NaCl       (500 mM final)
+143.3 mg TCEP            (1 mM final)
+  2.0 mL 1M imidazole   (20 mM final)
+water to 500.0 mL
+pH 8.0
+
+Cas9/TS-I20
+===========
+  2.0 mL 1M Tris        (20 mM final)
+ 10.0 mL 5M NaCl       (500 mM final)
+  2.0 mL 1M imidazole   (20 mM final)
+water to 100.0 mL
+pH 8.0
+
+Cas9/TS-I45
+===========
+
+Cas9/TS-I250
+============
+  2.0 mL 1M Tris        (20 mM final)
+water to 100.0 mL
+pH 8.0
+
+Cas9/HTG-K150
+=============
+
+Cas9/HTG-K100
+=============
+
+Cas9/HTG-K1000
+==============
+
+Cas9/HT-K150
+============
+
+
+
+
+
+
+
+vim: tw=53

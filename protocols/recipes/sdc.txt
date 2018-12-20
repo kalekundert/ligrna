@@ -1,0 +1,87 @@
+1L SD*
+======
+- 20.0 g glucose ()
+- 6.71 g YNB (Sunrise #...)
+- CSM (e.g. 670 mg CSM -His -Leu)
+
+For 1L SDC we do 
+
+
+100ml 10xCSM
+
+100ml 10xYNB
+
+100ml 20% Glucose
+
+700ml milliq Water
+
+
+Filter sterilize.  
+
+
+The information for each of the components is below.  Let me know if you have 
+any questions. 
+
+Ben
+
+KBK: This looks like way to many stock solutions that probably 
+
+10X CSM
+=======
+Cat #1001-100
+
+Sunrise science products
+
+CSM dropouts 10X:
+
+Andres: Follow instructions on container for 1X, different dropouts require 
+different amounts. Scale up to 10X. (it's usually <0.8g/L for 1X so <8g per 
+liter ). This takes a long time to dissolve. Be patient and do not autoclave! 
+Filter instead.
+
+Sunrise container instructions for 1L says to add 0.79 g/L and autoclave at 
+121C
+
+So for 10x, we use 7.9g/L and do not autoclave per andres' instructions (why 
+not?)
+
+BMH:  Last time I made 10x CSM, it was over 1h and not dissolving so I turned 
+on some heat on the heat plate (up to level 4).  It then dissolved and was 
+clear in ~15 min.  
+
+10X YNB
+=======
+10x Stock (for 1L):
+
+Dissolve 68g YNB in a beaker filled to 800ml with Milliq H20.  Cover and stir 
+with heat at level 4 for approximately 25 min or until clear.   The media will 
+appear slighly yellow.  In a graduated cylinder add milliq H2O to 1L,  Filter 
+into 1L bottle and store in cold room. 
+
+Our YNB is from Sigma: 
+
+http://www.sigmaaldrich.com/catalog/product/sigma/y0626?lang=en&region=US
+
+Reconstitution
+--------------
+Make a 10x concentrated stock solution by stirring to suspend 6.8g yeast 
+nitrogen base powder , 5 g glucose, and 5-10 mg of appropriate amino acid in 
+100 mL water. Warm if necessary to aid solubilization. Filter sterilize and 
+store at 2-8°C.
+
+Dilute the 10x concentrated stock to a 1x working solution by adding 100mL 
+concentrated stock to 900mL sterile water.
+
+20% Glucose
+===========
+For 1 liter of 20% glucose:
+
+Add 200g Glucose (Sigma g7528) to 700ml of milliq water with constant stirring. 
+Add the water to the beaker first then sugar! If you are in a hurry you can 
+heat the beaker some (not hot, warm) but it should work at room temperature. 
+
+Top off to 1L
+Filter Sterilize or Autoclave
+
+ 
+

@@ -1,0 +1,6 @@
+1. Dissolve 50 g YPD broth (Fisher BP2469-2) in 1L 
+   milliQ water.
+
+2. Sterile filter.
+
+vim: tw=53

@@ -1,0 +1,80 @@
+8. Desalt and concentrate the library DNA using a 
+   Zymo spin column with the Qiagen buffers:
+
+   - Add 285 μL PB to the ligation reaction.
+
+   - Transfer to a Zymo spin column.
+
+   - Wash with 200 μL PE.
+
+   - Wash with 200 μL PE again.
+
+   - Elute in 10 μL water.
+
+9. Transform the library DNA into Top10 cells by 
+   electroporation.  For each transformation:
+
+   - Pre-warm 1 mL SOC and an LB + Carb plate.
+
+   - Chill an electroporation cuvette and 2 μL 
+     (≈250 ng) of DNA on ice.  
+
+   - Thaw an aliquot of competent cells on ice for 
+     ~10 min.
+
+   - Pipet once to mix the cells with the DNA, then 
+     load into the cuvette.  Tap to remove bubbles.
+
+   - Shock at 1.8 kV with a 5 ms decay time (for 
+     cuvettes with a 1 mm gap).
+
+   - Immediately add 1 mL pre-warmed SOC.  If you're 
+     transforming multiple aliquots of cells with the 
+     same DNA, combine them.
+
+   - Before recovering, plate several 10x dilutions 
+     of cells (e.g. from 10⁻³ to 10⁻⁶) to count how 
+     many were transformed.
+
+   - Recover at 37°C for 1h.
+  
+   - Transfer cells to 50 mL selective media and 
+     grow overnight at 37°C.  Alternatively, plate 
+     the cells on enough large plates to fit colonies 
+     for each expected transformant.
+
+10. Miniprep to isolate library plasmid.
+
+    - Make a glycerol stock.
+
+    - Miniprep 4 mL of overnight culture.
+
+    - Do a phenol-chloroform extraction on the lysate 
+      after pelleting the insoluble cell debris and 
+      before loading it onto the miniprep column.  
+      This extra step modestly improves transformation 
+      efficiency and isn't necessary for libraries 
+      with fewer than 11 randomized positions.
+
+    - Elute in 30 μL water.
+
+11. If necessary, combine libraries in proportion to 
+    the number of unique members in each.
+
+12. Transform the combined library into MG1655 cells 
+    by electroporation.
+
+    - Use the same transformation protocol described
+      above.
+
+    - It's best to do the transformation immediately, 
+      so as much of the DNA as possible will be 
+      supercoiled.  With MG1655 (but not Top10)
+      cells, I find that supercoiled DNA gives 100x
+      more transformants than relaxed DNA.
+
+13. Store the library as a glycerol stock.
+
+    - 333 μL 80% glycerol, 1 mL overnight culture.
+
+    - Place at -80°C without snap-freezing.
