@@ -1,0 +1,23 @@
+\begin{tabular}{llrrr}
+\toprule
+\bfseries Strategy &
+\bfseries Domain &
+\begin{tabular}{@{}r@{}}\bfseries \# Tested \\ \bfseries Designs\end{tabular} &
+\begin{tabular}{@{}r@{}}\bfseries \# Active \\ \bfseries Designs\end{tabular} &
+\begin{tabular}{@{}r@{}}\bfseries Best      \\ \bfseries Activity\end{tabular} \\
+\midrule
+{% for strategy, group in df.groupby(['strategy']) if not group.empty %}
+    {{ strategy }}
+    {% for domain, data in group.groupby(['domain']) if not data.empty %}
+        & {{ domain }} & {{ data.shape[0] }} & {{ data.active.sum() }} & {{ 
+            '%0.0f\\%%' % (
+                100 * data.mean_change[data.mean_change.abs().idxmax()])
+            if data.active.sum() > 0 
+            else ''}} \\
+    {% endfor %}
+    {% if not loop.last %}
+    \midrule
+    {% endif %}
+{% endfor %}
+\bottomrule
+\end{tabular}

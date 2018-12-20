@@ -1,0 +1,447 @@
+cmd: ./crispri_multiplex_timecourse.py
+repo: git@github.com:kalekundert/sgrna_sensor_protocols.git
+commit: 54c2f10935b64330a4663b1ea267d2194ca4d25f
+date: October 5, 2017
+
+- Prepare the following media:
+
+  apo media
+  ─────────
+  18.0 mL 2x EZ media
+  2.4 mL 72 mM NaOH
+  15.6 mL water
+  sterile filter
+
+  theo media
+  ──────────
+  24.0 mL 2x EZ media
+  1.6 mL 30 mM theo (in 72 mM NaOH)
+  1.6 mL 30 mM 72 mM NaOH
+  20.8 mL water
+  sterile filter
+
+  3mx media
+  ─────────
+  12.0 mL 2x EZ media
+  0.8 mL 30 mM 3mx (in 72 mM NaOH)
+  0.8 mL 30 mM 72 mM NaOH
+  10.4 mL water
+  sterile filter
+
+  theo+3mx media
+  ──────────────
+  12.0 mL 2x EZ media
+  0.8 mL 30 mM theo (in 72 mM NaOH)
+  0.8 mL 30 mM 3mx (in 72 mM NaOH)
+  10.4 mL water
+  sterile filter
+
+
+- Setup the following 24-well blocks:
+
+  block #1:
+    A1-A6: 1 mL apo media
+
+  block #2:
+    A1-A6: 1 mL theo media
+    B1-B6: 1 mL apo media
+
+  block #3:
+    A1-A3: 1 mL 3mx media
+    A4-A6: 1 mL theo+3mx media
+    B1-B6: 1 mL theo media
+    C1-C6: 1 mL apo media
+
+  block #4:
+    A1-A3: 1 mL theo media
+    A4-A6: 1 mL apo media
+    B1-B3: 1 mL 3mx media
+    B4-B6: 1 mL theo+3mx media
+    C1-C6: 1 mL theo media
+
+  block #5:
+    A1-A3: 1 mL 3mx media
+    A4-A6: 1 mL theo media
+    B1-B3: 1 mL theo media
+    B4-B6: 1 mL apo media
+    C1-C3: 1 mL 3mx media
+    C4-C6: 1 mL theo+3mx media
+
+  block #6:
+    A4-A6: 1 mL theo+3mx media
+    B1-B3: 1 mL 3mx media
+    B4-B6: 1 mL theo media
+    C1-C3: 1 mL theo media
+    C4-C6: 1 mL apo media
+
+  block #7:
+    B4-B6: 1 mL theo+3mx media
+    C1-C3: 1 mL 3mx media
+    C4-C6: 1 mL theo media
+
+  block #8:
+    C4-C6: 1 mL theo+3mx media
+
+  Keep each block at 4°C until needed.
+
+- Setup a plate with 250 μL PBS + Sp in each well of 
+  the first 6 rows.  Keep at 4°C until needed.
+
+
+- Start overnight cultures:
+
+  - Make 25 mL LB + Carb + Chlor and transfer 1 mL to 
+    each well in rows A-C of a 24-well block.
+
+  - Inoculate the indicated wells with MG1655 
+    colonies transformed with the indicated plasmid 
+    (within the last two weeks):
+
+    ─────────────────────────────────────
+    Wells         Strain
+    ─────────────────────────────────────
+    A1-C1, A4-C4  on/on (pKBK009)
+    A2-C2, A5-C5  off/off (pKBK010)
+    A3-C3, A6-C6  rxb 11/rxb 11 (pKBK007)
+    ─────────────────────────────────────
+
+  - Incubate at 37°C with shaking at 225 rpm 
+    overnight.
+
+
+Thursday, 8:00 AM
+=================
+- Start the cultures for the next timepoint:
+
+  Transfer 4 μL from the indicated row of each source 
+  block into the same row of block #1.
+
+  ────────────────────────────────
+  Row  Source          Destination
+  ────────────────────────────────
+  A    overnights      block #1   
+  ────────────────────────────────
+
+  Incubate at 37°C with shaking at 225 rpm.
+
+
+Thursday, 4:00 PM
+=================
+- Harvest cells for flow cytometry:
+
+  Pipet 0.5 μL from the indicated row in the source 
+  block to the indicated row in the destination plate 
+  (which should already contain 250 μL PBS + Sp).  
+  Leave an empty well between each sample on plate 
+  (to wash the cytometer).  The easiest way to do 
+  this is to use a 12-channel pipet with a tip on 
+  every other nozzle to transfer the cells.  
+  
+  ────────────────────────────────
+  Source             Destination  
+  Block     Row      Plate     Row
+  ────────────────────────────────
+  block #1  A        plate #1  A  
+  ────────────────────────────────
+
+- Wash out any ligands:
+
+  - Spin block #1 at 3500g for 10 min.
+  - Discard supernatant.
+  - Resuspend each well in 1 mL LB.
+
+- Start the cultures for the next timepoint:
+
+  Transfer 4 μL from the indicated row of each source 
+  block into the same row of block #2.
+
+  ────────────────────────────────
+  Row  Source          Destination
+  ────────────────────────────────
+  A    block #1        block #2   
+  B    overnights      block #2   
+  ────────────────────────────────
+
+  Incubate at 37°C with shaking at 225 rpm.
+
+
+Thursday, 12:00 AM
+==================
+- Harvest cells for flow cytometry:
+
+  Pipet 0.5 μL from the indicated row in the source 
+  block to the indicated row in the destination plate 
+  (which should already contain 250 μL PBS + Sp).  
+  Leave an empty well between each sample on plate 
+  (to wash the cytometer).  The easiest way to do 
+  this is to use a 12-channel pipet with a tip on 
+  every other nozzle to transfer the cells.  
+  
+  ────────────────────────────────
+  Source             Destination  
+  Block     Row      Plate     Row
+  ────────────────────────────────
+  block #2  A        plate #1  B  
+  block #2  B        plate #2  A  
+  ────────────────────────────────
+
+- Wash out any ligands:
+
+  - Spin block #2 at 3500g for 10 min.
+  - Discard supernatant.
+  - Resuspend each well in 1 mL LB.
+
+- Start the cultures for the next timepoint:
+
+  Transfer 4 μL from the indicated row of each source 
+  block into the same row of block #3.
+
+  ────────────────────────────────
+  Row  Source          Destination
+  ────────────────────────────────
+  A    block #2        block #3   
+  B    block #2        block #3   
+  C    overnights      block #3   
+  ────────────────────────────────
+
+  Incubate at 37°C with shaking at 225 rpm.
+
+- Measure fluorescence via flow cytometry.
+
+
+Friday, 8:00 AM
+===============
+- Harvest cells for flow cytometry:
+
+  Pipet 0.5 μL from the indicated row in the source 
+  block to the indicated row in the destination plate 
+  (which should already contain 250 μL PBS + Sp).  
+  Leave an empty well between each sample on plate 
+  (to wash the cytometer).  The easiest way to do 
+  this is to use a 12-channel pipet with a tip on 
+  every other nozzle to transfer the cells.  
+  
+  ────────────────────────────────
+  Source             Destination  
+  Block     Row      Plate     Row
+  ────────────────────────────────
+  block #3  A        plate #1  C  
+  block #3  B        plate #2  B  
+  block #3  C        plate #3  A  
+  ────────────────────────────────
+
+- Wash out any ligands:
+
+  - Spin block #3 at 3500g for 10 min.
+  - Discard supernatant.
+  - Resuspend each well in 1 mL LB.
+
+- Start the cultures for the next timepoint:
+
+  Transfer 4 μL from the indicated row of each source 
+  block into the same row of block #4.
+
+  ────────────────────────────────
+  Row  Source          Destination
+  ────────────────────────────────
+  A    block #3        block #4   
+  B    block #3        block #4   
+  C    block #3        block #4   
+  ────────────────────────────────
+
+  Incubate at 37°C with shaking at 225 rpm.
+
+
+Friday, 4:00 PM
+===============
+- Harvest cells for flow cytometry:
+
+  Pipet 0.5 μL from the indicated row in the source 
+  block to the indicated row in the destination plate 
+  (which should already contain 250 μL PBS + Sp).  
+  Leave an empty well between each sample on plate 
+  (to wash the cytometer).  The easiest way to do 
+  this is to use a 12-channel pipet with a tip on 
+  every other nozzle to transfer the cells.  
+  
+  ────────────────────────────────
+  Source             Destination  
+  Block     Row      Plate     Row
+  ────────────────────────────────
+  block #4  A        plate #1  D  
+  block #4  B        plate #2  C  
+  block #4  C        plate #3  B  
+  ────────────────────────────────
+
+- Wash out any ligands:
+
+  - Spin block #4 at 3500g for 10 min.
+  - Discard supernatant.
+  - Resuspend each well in 1 mL LB.
+
+- Start the cultures for the next timepoint:
+
+  Transfer 4 μL from the indicated row of each source 
+  block into the same row of block #5.
+
+  ────────────────────────────────
+  Row  Source          Destination
+  ────────────────────────────────
+  A    block #4        block #5   
+  B    block #4        block #5   
+  C    block #4        block #5   
+  ────────────────────────────────
+
+  Incubate at 37°C with shaking at 225 rpm.
+
+
+Friday, 12:00 AM
+================
+- Harvest cells for flow cytometry:
+
+  Pipet 0.5 μL from the indicated row in the source 
+  block to the indicated row in the destination plate 
+  (which should already contain 250 μL PBS + Sp).  
+  Leave an empty well between each sample on plate 
+  (to wash the cytometer).  The easiest way to do 
+  this is to use a 12-channel pipet with a tip on 
+  every other nozzle to transfer the cells.  
+  
+  ────────────────────────────────
+  Source             Destination  
+  Block     Row      Plate     Row
+  ────────────────────────────────
+  block #5  A        plate #1  E  
+  block #5  B        plate #2  D  
+  block #5  C        plate #3  C  
+  ────────────────────────────────
+
+- Wash out any ligands:
+
+  - Spin block #5 at 3500g for 10 min.
+  - Discard supernatant.
+  - Resuspend each well in 1 mL LB.
+
+- Start the cultures for the next timepoint:
+
+  Transfer 4 μL from the indicated row of each source 
+  block into the same row of block #6.
+
+  ────────────────────────────────
+  Row  Source          Destination
+  ────────────────────────────────
+  A    block #5        block #6   
+  B    block #5        block #6   
+  C    block #5        block #6   
+  ────────────────────────────────
+
+  Incubate at 37°C with shaking at 225 rpm.
+
+- Measure fluorescence via flow cytometry.
+
+
+Saturday, 8:00 AM
+=================
+- Harvest cells for flow cytometry:
+
+  Pipet 0.5 μL from the indicated row in the source 
+  block to the indicated row in the destination plate 
+  (which should already contain 250 μL PBS + Sp).  
+  Leave an empty well between each sample on plate 
+  (to wash the cytometer).  The easiest way to do 
+  this is to use a 12-channel pipet with a tip on 
+  every other nozzle to transfer the cells.  
+  
+  ────────────────────────────────
+  Source             Destination  
+  Block     Row      Plate     Row
+  ────────────────────────────────
+  block #6  A        plate #1  F  
+  block #6  B        plate #2  E  
+  block #6  C        plate #3  D  
+  ────────────────────────────────
+
+- Wash out any ligands:
+
+  - Spin block #6 at 3500g for 10 min.
+  - Discard supernatant.
+  - Resuspend each well in 1 mL LB.
+
+- Start the cultures for the next timepoint:
+
+  Transfer 4 μL from the indicated row of each source 
+  block into the same row of block #7.
+
+  ────────────────────────────────
+  Row  Source          Destination
+  ────────────────────────────────
+  A    block #6        block #7   
+  B    block #6        block #7   
+  C    block #6        block #7   
+  ────────────────────────────────
+
+  Incubate at 37°C with shaking at 225 rpm.
+
+
+Saturday, 4:00 PM
+=================
+- Harvest cells for flow cytometry:
+
+  Pipet 0.5 μL from the indicated row in the source 
+  block to the indicated row in the destination plate 
+  (which should already contain 250 μL PBS + Sp).  
+  Leave an empty well between each sample on plate 
+  (to wash the cytometer).  The easiest way to do 
+  this is to use a 12-channel pipet with a tip on 
+  every other nozzle to transfer the cells.  
+  
+  ────────────────────────────────
+  Source             Destination  
+  Block     Row      Plate     Row
+  ────────────────────────────────
+  block #7  B        plate #2  F  
+  block #7  C        plate #3  E  
+  ────────────────────────────────
+
+- Wash out any ligands:
+
+  - Spin block #7 at 3500g for 10 min.
+  - Discard supernatant.
+  - Resuspend each well in 1 mL LB.
+
+- Start the cultures for the next timepoint:
+
+  Transfer 4 μL from the indicated row of each source 
+  block into the same row of block #8.
+
+  ────────────────────────────────
+  Row  Source          Destination
+  ────────────────────────────────
+  A    block #7        block #8   
+  B    block #7        block #8   
+  C    block #7        block #8   
+  ────────────────────────────────
+
+  Incubate at 37°C with shaking at 225 rpm.
+
+
+Saturday, 12:00 AM
+==================
+- Harvest cells for flow cytometry:
+
+  Pipet 0.5 μL from the indicated row in the source 
+  block to the indicated row in the destination plate 
+  (which should already contain 250 μL PBS + Sp).  
+  Leave an empty well between each sample on plate 
+  (to wash the cytometer).  The easiest way to do 
+  this is to use a 12-channel pipet with a tip on 
+  every other nozzle to transfer the cells.  
+  
+  ────────────────────────────────
+  Source             Destination  
+  Block     Row      Plate     Row
+  ────────────────────────────────
+  block #8  C        plate #3  F  
+  ────────────────────────────────
+
+- Measure fluorescence via flow cytometry.

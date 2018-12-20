@@ -1,0 +1,46 @@
+cmd: ./cas9_cleavage_assay.py 19
+repo: git@github.com:kalekundert/sgrna_sensor_protocols.git
+commit: accc1f0cf7127f50f71551c6c96dbe4d02cee6a5
+date: September 25, 2017
+
+1. Setup 19 Cas9 reactions:
+
+   Reagent     Conc  Each Rxn  Master Mix
+   ──────────────────────────────────────
+   water              5.48 μL   114.48 μL
+   buffer       10x   1.50 μL    31.35 μL
+   Cas9       20 μM   0.02 μL     0.47 μL
+   ligand     30 mM   5.00 μL            
+   sgRNA    1500 nM   1.50 μL            
+   DNA        30 nM   1.50 μL            
+   ──────────────────────────────────────
+                     15.00 μL     7.00 μL/rxn
+
+   - Add 5.00 μL water or ligand to each reaction.
+
+   - Add 1.50 μL sgRNA to each reaction.
+
+   - Refold the sgRNA by incubating at 95°C for 3 min 
+     then 4°C for 1 min.
+
+   - Add 7.00 μL Cas9 master mix to each reaction.
+
+   - Incubate at room temperature for 10 min.
+
+   - Add 1.50 μL DNA to each reaction.
+
+2. Incubate at 37°C for 1 hour (thermocycler).
+
+3. Add 3.0 μL 6x KAG master mix to each reaction:
+    
+   Reagent       Conc  Master Mix
+   ──────────────────────────────
+   Orange G        6x    69.65 μL
+   RNase A       200x     2.22 μL
+   Proteinase K  200x     2.22 μL
+
+4. Incubate the reactions at 37°C for 20 min, then at 
+   55°C for 20 min, then hold at 12°C (thermocycler).
+
+5. Load the entire reaction (18 μL) on a 1% agarose 
+   gel and run at 4.5 V/cm for 70 min [1].

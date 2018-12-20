@@ -1,0 +1,14 @@
+.*
+!.gitignore
+*.ico
+*.png
+*.pdf
+*.svg
+*.xlsx
+*.aux
+*.log
+*.tif
+*.pse
+*.ps
+__pycache__
+/build

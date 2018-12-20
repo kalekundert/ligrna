@@ -1,0 +1,65 @@
+cmd: ./events_per_sec.py data/20170826_double_target_rfp.yml -v
+repo: git@github.com:kalekundert/sgrna_sensor_flow_cytometry.git
+commit: 20926972a0d4276417bbc4cfed3a24fe051ffe41
+date: September 21, 2017
+
+rfp on apo [0826/D01]                   	133.20 evt/sec
+rfp on holo [0826/D03]                  	130.41 evt/sec
+rfp off apo [0826/D05]                  	161.57 evt/sec
+rfp off holo [0826/D07]                 	119.98 evt/sec
+rfp rxb 11,1 apo [0826/D09]             	53.75 evt/sec
+rfp rxb 11,1 holo [0826/D11]            	31.71 evt/sec
+rfp mhf 30 apo [0826/E01]               	858.89 evt/sec
+rfp mhf 30 holo [0826/E03]              	870.55 evt/sec
+rfp mhf 37 apo [0826/E05]               	3037.67 evt/sec
+rfp mhf 37 holo [0826/E07]              	2294.63 evt/sec
+rfp2 on apo [0826/E09]                  	2527.81 evt/sec
+rfp2 on holo [0826/E11]                 	2370.79 evt/sec
+rfp2 off apo [0826/F01]                 	2767.78 evt/sec
+rfp2 off holo [0826/F03]                	2991.33 evt/sec
+rfp2 rxb 11,1 apo [0826/F05]            	1963.09 evt/sec
+rfp2 rxb 11,1 holo [0826/F07]           	1516.53 evt/sec
+rfp2 mhf 30 apo [0826/F09]              	2560.82 evt/sec
+rfp2 mhf 30 holo [0826/F11]             	2296.74 evt/sec
+rfp2 mhf 37 apo [0826/G01]              	2522.70 evt/sec
+rfp2 mhf 37 holo [0826/G03]             	1725.03 evt/sec
+rfp/rfp2 on apo [0826/G05]              	2334.27 evt/sec
+rfp/rfp2 on holo [0826/G07]             	1764.60 evt/sec
+rfp/rfp2 off apo [0826/G09]             	2224.69 evt/sec
+rfp/rfp2 off holo [0826/G11]            	1575.80 evt/sec
+rfp/rfp2 rxb 11,1 apo [0826/H01]        	2151.00 evt/sec
+rfp/rfp2 rxb 11,1 holo [0826/H03]       	1101.20 evt/sec
+rfp/rfp2 mhf 30 apo [0826/H05]          	1513.32 evt/sec
+rfp/rfp2 mhf 30 holo [0826/H07]         	1182.73 evt/sec
+rfp/rfp2 mhf 37 apo [0826/H09]          	2282.58 evt/sec
+rfp/rfp2 mhf 37 holo [0826/H11]         	1740.34 evt/sec
+rfp on apo [0920/D01]                   	179.93 evt/sec
+rfp on holo [0920/D03]                  	235.65 evt/sec
+rfp off apo [0920/D05]                  	177.13 evt/sec
+rfp off holo [0920/D07]                 	188.78 evt/sec
+rfp rxb 11,1 apo [0920/D09]             	265.15 evt/sec
+rfp rxb 11,1 holo [0920/D11]            	46.24 evt/sec
+rfp mhf 30 apo [0920/E01]               	628.46 evt/sec
+rfp mhf 30 holo [0920/E03]              	595.42 evt/sec
+rfp mhf 37 apo [0920/E05]               	2354.60 evt/sec
+rfp mhf 37 holo [0920/E07]              	1705.32 evt/sec
+rfp2 on apo [0920/E09]                  	2346.32 evt/sec
+rfp2 on holo [0920/E11]                 	1650.44 evt/sec
+rfp2 off apo [0920/F01]                 	2219.26 evt/sec
+rfp2 off holo [0920/F03]                	1799.21 evt/sec
+rfp2 rxb 11,1 apo [0920/F05]            	2518.26 evt/sec
+rfp2 rxb 11,1 holo [0920/F07]           	2508.15 evt/sec
+rfp2 mhf 30 apo [0920/F09]              	1634.79 evt/sec
+rfp2 mhf 30 holo [0920/F11]             	1562.74 evt/sec
+rfp2 mhf 37 apo [0920/G01]              	2571.36 evt/sec
+rfp2 mhf 37 holo [0920/G03]             	2039.57 evt/sec
+rfp/rfp2 on apo [0920/G05]              	2025.93 evt/sec
+rfp/rfp2 on holo [0920/G07]             	1700.05 evt/sec
+rfp/rfp2 off apo [0920/G09]             	1885.73 evt/sec
+rfp/rfp2 off holo [0920/G11]            	1448.86 evt/sec
+rfp/rfp2 rxb 11,1 apo [0920/H01]        	2046.66 evt/sec
+rfp/rfp2 rxb 11,1 holo [0920/H03]       	1072.50 evt/sec
+rfp/rfp2 mhf 30 apo [0920/H05]          	1553.76 evt/sec
+rfp/rfp2 mhf 30 holo [0920/H07]         	1309.76 evt/sec
+rfp/rfp2 mhf 37 apo [0920/H09]          	2243.66 evt/sec
+rfp/rfp2 mhf 37 holo [0920/H11]         	2493.14 evt/sec

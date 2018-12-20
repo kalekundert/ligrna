@@ -1,0 +1,59 @@
+[row.A]
+  tmp_ug_mL = 0
+[row.B]
+  tmp_ug_mL = 0
+[row.C]
+  tmp_ug_mL = 0
+[row.D]
+  tmp_ug_mL = 0
+[row.E]
+  tmp_ug_mL = 32
+[row.F]
+  tmp_ug_mL = 32
+[row.G]
+  tmp_ug_mL = 32
+[row.H]
+  tmp_ug_mL = 32
+
+[irow.A]
+  theo_mM = 0
+[irow.B]
+  theo_mM = 1
+[irow.C]
+  theo_mM = 0
+[irow.D]
+  theo_mM = 1
+[irow.E]
+  theo_mM = 0
+[irow.F]
+  theo_mM = 1
+[irow.G]
+  theo_mM = 0
+[irow.H]
+  theo_mM = 1
+
+[col.1]
+  sgrna = "on"
+[col.2]
+  sgrna = "on"
+[col.3]
+  sgrna = "on"
+[col.4]
+  sgrna = "pa14"
+[col.5]
+  sgrna = "pa14"
+[col.6]
+  sgrna = "pa14"
+[col.7]
+  sgrna = "rxb/11/1"
+[col.8]
+  sgrna = "rxb/11/1"
+[col.9]
+  sgrna = "rxb/11/1"
+[col.10]
+  sgrna = "mhf/30"
+[col.11]
+  sgrna = "mhf/30"
+[col.12]
+  sgrna = "mhf/30"
+

@@ -1,0 +1,82 @@
+cmd: ./cas9_cleavage_assay.py 19 -fn
+repo: git@github.com:kalekundert/sgrna_sensor_protocols.git
+commit: 4b67e0d38e06642978f5f879040b5da40834f9e1
+date: October 4, 2017
+
+1. Prepare a 30 mM solution of theophylline:
+
+   Reagent          Amount
+   ───────────────────────
+   theophylline   x≈7.0 mg
+   water         185.0x μL
+
+   Incubate at 50°C to dissolve.
+
+2. Setup 19 Cas9 reactions:
+
+   Reagent     Conc  Each Rxn  Master Mix
+   ──────────────────────────────────────
+   water              5.48 μL   114.48 μL
+   buffer       10x   1.50 μL    31.35 μL
+   Cas9       20 μM   0.02 μL     0.47 μL
+   ligand     30 mM   5.00 μL            
+   sgRNA    1500 nM   1.50 μL            
+   DNA        30 nM   1.50 μL            
+   ──────────────────────────────────────
+                     15.00 μL     7.00 μL/rxn
+
+   - Add 5.00 μL water or ligand to each reaction.
+
+   - Add 1.50 μL sgRNA to each reaction.
+
+   - Refold the sgRNA by incubating at 95°C for 3 min 
+     then 4°C for 1 min.
+
+   - Add 7.00 μL Cas9 master mix to each reaction.
+
+   - Incubate at room temperature for 10 min.
+
+   - Add 1.50 μL DNA to each reaction [1].
+  
+   - Pipet to mix.
+
+3. Incubate at 37°C for 1 hour (thermocycler).
+
+4. Add 3.0 μL 6x KAG master mix to each reaction:
+    
+   Reagent       Conc  Master Mix
+   ──────────────────────────────
+   Orange G        6x    69.65 μL
+   RNase A       200x     2.22 μL
+   Proteinase K  200x     2.22 μL
+
+5. Incubate the reactions at 37°C for 20 min, then at 
+   55°C for 20 min, then hold at 12°C (thermocycler).
+
+6. Load the entire reaction (18 μL) on a 1% agarose 
+   gel and run at 4.5 V/cm for 70 min [2].
+
+Notes
+─────
+[1] Be sure to mix the DNA (e.g. by flicking) 
+    after it thaws.  The DNA doesn't freeze 
+    evenly, so if you don't do this, you may get 
+    noticeably different amounts of DNA in 
+    different reactions.
+
+[2] It really is important to load most of the 
+    reaction on the gel and to use a comb that 
+    makes thick wells.  I tried loading only 6 μL 
+    with the idea that I could use a finer comb 
+    and get sharper bands, but the bands were hard 
+    to quantify because they were so faint.
+
+    For doing lots of reactions, cast a 140 mL 1% 
+    agarose/TAE/GelRed in the Owl EasyCast B2 tray 
+    with the 25-tooth comb.  Run at 100V for 70 
+    min.
+   
+    For geting publication quality images, cast a 
+    140 mL 1% agarose/TAE/GelRed gel in the Owl 
+    EasyCast B2 tray with the 20-tooth comb.  Use 
+    2 μL of ladder and run at 85V for 90 min.

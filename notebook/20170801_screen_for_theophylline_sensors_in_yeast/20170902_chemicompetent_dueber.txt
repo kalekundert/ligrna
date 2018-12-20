@@ -1,0 +1,119 @@
+cmd: competent_cells/s_cerevisiae/chemicompetent_dueber.txt
+repo: git@github.com:kalekundert/sgrna_sensor_protocols.git
+commit: 448cc4d14bb7a1553e1b54177bc86a44843f7245
+date: September 2, 2017
+
+Before starting
+===============
+- Make sure there are 10 μg of DNA
+
+- Make sure that your PEG is < 3 months old.
+
+- Make sure there is sterile water in the deli fridge
+
+- If you're using plates, make them a day ahead
+
+Grow to Midlog
+==============
+- Inoculate 5 mL YPD culture. Grow overnight 30°C 
+  shaking.
+        
+  DO NOT USE CARMELIZED YPD.
+
+- In the morning, dilute a new culture to OD600 ~0.2 
+  into 50 mL YPD. Usually 1 mL saturated culture. 
+  Grow to OD=1.0. Should be 4-6 hours.
+
+  I have had this take longer, like ~8h. Just check 
+  the OD frequently.
+
+Prepare ssDNA, water baths, and DNA
+===================================
+- Get an ice bucket.
+
+- Start the water bath, set to 42°C.
+
+- Set the centrifuge to 4°C.
+
+- If doing an integration, linearize DNA by cutting 
+  for 1h (30 min is ok if you're in a hurry).
+
+- Take ssDNA (2 aliquots) out of the freezer, thaw 
+  them, and then boil them at 100°C for 5 min. Then 
+  cool on ice.
+
+Wash and Resuspend in Lithium Acetate
+=====================================
+- Pellet cells 3000 rpm (2000g) for 5 min in 50 mL 
+  conicals (don't fill past 35 mL!)
+
+- Discard supernatant -- pour decently quickly 
+  because cells not well pelleted.
+
+- Wash with equal volume cold sterile water.
+
+- Pellet again at 3000 rpm (2000g) for 5 min. Discard 
+  supernatant -- (same thing).
+
+- Resuspend in 5 mL 100 mM lithium acetate.
+
+- Pellet again at 3000 rpm (2000g) for 5 min. Discard 
+  supernatant -- (same thing).
+
+Transformation Mix Prep
+=======================
+- Resuspend pellet in 500 μL cold, sterile water & 
+  vortexing
+
+  I find that pouring off the 100mM LiOAc usually 
+  leaves ~280 μL behind, so I just add 220 μL
+
+- Add 2.4mL PEG, vortex
+
+- Add 360uL 1M LiOAc, vortex
+
+- Add your DNA to 500 μL reboiled ssDNA, vortex to 
+  mix, then pipette onto cells & vortex.
+
+Heat Shock
+==========
+- Vortex tubes enough to homogenize everything.
+
+- Pre-incubate at 30°C with shaking for 30 min.
+
+- Heat shock in 42°C water bath for 45 min.
+
+Wash and Plate
+==============
+- Pellet at 3000 rpm (2000g) for 5min. Discard 
+  supernatant -- (same thing).
+
+- Gently resuspend in in the volume you want to 
+  plate, ≈975uL water (pellet will be ~35uL)
+
+- Use 10uL for a titering plate, then do a dilution 
+  series using 5uL into 45uL sterile water. Spot 3uL 
+  onto selective plate.
+
+- Plate or pour the remaining transformation (should 
+  be ~1mL) into selective media (50mL or library 
+  plate)
+
+- Yeast take 36-48 hrs to grow on a plate.
+
+Troubleshooting
+===============
+Some things that you could try to make 
+transformations/integrations work better:
+
+    YPD rescue for 1 hr after your transformation.
+    Use warm YPD and plates.
+    Use/keep the pellet and all reagents ice cold 
+    before incubation and heat shock.
+    Freshly boiling the ssDNA.
+    Making fresh PEG.
+    Adding PEG on top of the pellet instead of 
+    resuspending the pellet in water.
+
+
+vim: tw=53

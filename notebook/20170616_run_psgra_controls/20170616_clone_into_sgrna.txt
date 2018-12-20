@@ -1,0 +1,13 @@
+cmd: ../../scripts/clone_into_sgrna.py off
+repo: git@github.com:kalekundert/sgrna_sensor_scripts.git
+commit: 0969adfb1e5c6af5357feacc4b61933fa9d36403
+date: June 16, 2017
+Number of oligos: 2
+
+Primer names (ready to copy into Elim form):
+OFF_TM_59_REV
+OFF_TM_60_FOR
+
+Primer sequences (ready to copy into Elim form):
+Gttatttcaacttgctatgctgt
+Cctagtccgttatcaacttgaaaa

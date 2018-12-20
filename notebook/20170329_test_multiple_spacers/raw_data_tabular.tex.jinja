@@ -1,0 +1,69 @@
+{%- macro percent_or_null(x, d='---') -%}
+{{ '%.0f' % (100*x) if not isnull(x) else d }}
+{%- endmacro -%}
+\begin{tabular}{rlrcrrrrcrrrrcrrrrcrrrrcr}
+\toprule
+
+&
+&
+&
+&
+\multicolumn{4}{c}{pos (\% cut)} &
+&
+\multicolumn{4}{c}{neg (\% cut)} &
+&
+\multicolumn{4}{c}{\ligrnaF{} (\% cut)} &
+&
+\multicolumn{4}{c}{\ligrnaB{} (\% cut)} &
+&
+\\
+\cmidrule(r){5-8}
+\cmidrule(r){10-13}
+\cmidrule(r){15-18}
+\cmidrule(r){20-23}
+
+\# &
+Spacer (with context) &
+Score &
+&
+\multicolumn{1}{r}{\textit{apo}} &
+\multicolumn{1}{r}{\textit{holo}} &
+\multicolumn{1}{r}{Δ} &
+\multicolumn{1}{r}{σ} &
+&
+\multicolumn{1}{r}{\textit{apo}} &
+\multicolumn{1}{r}{\textit{holo}} &
+\multicolumn{1}{r}{Δ} &
+\multicolumn{1}{r}{σ} &
+&
+\multicolumn{1}{r}{\textit{apo}} &
+\multicolumn{1}{r}{\textit{holo}} &
+\multicolumn{1}{r}{Δ} &
+\multicolumn{1}{r}{σ} &
+&
+\multicolumn{1}{r}{\textit{apo}} &
+\multicolumn{1}{r}{\textit{holo}} &
+\multicolumn{1}{r}{Δ} &
+\multicolumn{1}{r}{σ} &
+&
+N \\
+\midrule
+
+{% for i, group in df.groupby('spacer') -%}
+ {{ spacers[i].num }} &
+ \texttt{{ '{' }}{{ spacers[i].seq }}{{ '}' }} &
+ {{ '%.3f' % spacers[i].score }} &
+ &
+ {% for j, row in group.iterrows() -%}
+  {{ percent_or_null(row.mean_apo, '---') }} &
+  {{ percent_or_null(row.mean_holo, '---') }} &
+  {{ percent_or_null(row.mean_change, '--') }} &
+  {{ percent_or_null(row.std_change, '--') }} &
+  &
+ {% endfor -%}
+ {{ '%.0f' % group.iloc[1].num_replicates }} \\
+
+{% endfor -%}
+
+\bottomrule
+\end{tabular}

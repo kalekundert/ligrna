@@ -1,0 +1,23 @@
+[meta]
+alert = """
+This data isn't really interleaved, because I alternated the TMP every row 
+instead of every two rows.
+"""
+
+[row.'A,C,...,G']
+  tmp_ug_mL = 0
+[row.'B,D,...,H']
+  tmp_ug_mL = 32
+
+[irow.'A,C,...,G']
+  theo_mM = 0
+[irow.'B,D,...,H']
+  theo_mM = 1
+
+[col.'1,2,...,4']
+  sgrna = "on"
+[col.'5,6,...,8']
+  sgrna = "pa14"
+[col.'9,10,...,12']
+  sgrna = "mhf/30"
+

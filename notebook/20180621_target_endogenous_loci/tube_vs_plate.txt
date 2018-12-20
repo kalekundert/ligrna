@@ -1,0 +1,63 @@
+1. Make overnight cultures of lz/on and lz/off.
+
+2. Start the day cultures:
+
+   - Prepare 3 mL LB + Carb + Chlor + 10x ATc + 1 mM 
+     IPTG.  Divide between 3 15 mL culture tubes.
+
+   - Inoculate the lz/on and lz/off cultures with 
+     4 µL overnight culture.  Leave the last tube as 
+     a blank.
+
+3. Grow at 37°C until OD600 reaches 0.5−1.0 (~6h)
+
+4. Start the β-galactosidase assay:
+
+   - Prepare 1.5 mL of Working solution (WS):
+     - 750 µL Y-PER
+     - 750 µL 2x β-galactosidase assay buffer.
+
+   - Prepare 400 µL of 1x Y-PER
+     - 250 µL Y-PER
+     - 250 µL water
+
+   - Aliquot each culture for the following purposes:
+     - master mix:     400 µL in a tube
+     - debris control: 120 µL in a tube
+     - od measurement: 100 µL in a plate
+
+   - Measure OD600.
+
+   - Add the following to each reaction:
+     - master mix:     400 µL WS
+     - debris control: 120 µL 1x Y-PER
+
+   - Start a timer and mix all reactions well.
+   
+   - Transfer the non-stopped reactions to the plate:
+     - master mix:     200 µL (reverse-pipet)
+     - debris control: 200 µL (reverse-pipet)
+     - Use reverse-pipeting to avoid bubbles.
+
+   - Split the stopped reactions between 3 tubes:
+     - master mix: 163.3 µL/tube
+
+5. After 30, 60, and 90 min:
+
+   - Quench one of the stopped reactions for each 
+     culture:
+        - Add 70 µL stop solution.
+        - Note the time and mix well.
+
+   - Centrifuge the stopped reactions at max speed 
+     for 5 min.
+      
+   - Meanwhile, measure A420 for the non-stopped 
+     reactions and note the time.
+
+   - Transfer 200 µL (reverse-pipet) of the super-  
+     natant of each stopped reaction to the plate.  
+
+   - Measure A420 for the stopped reactions.
+
+vim: tw=53

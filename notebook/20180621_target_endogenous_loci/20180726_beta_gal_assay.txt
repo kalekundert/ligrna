@@ -1,0 +1,53 @@
+cmd: ./20180621_target_endogenous_loci/beta_gal_assay.py
+repo: /home/kale/research/projects/201511_sgrna_sensor_local/notebook
+commit: 5bdd8aeebdfedf6f1ebc9b5c8e8146090d458718
+date: July 26, 2018
+
+1. Make overnight cultures for all strains being 
+   tested.
+
+2. Start the day cultures:
+
+   - Prepare 28 mL each of apo and holo media:
+  
+     - 59.13 mL LB
+     - 62 µL 100 mg/mL carbenicillin (Carb)
+     - 62 µL 34 mg/mL chloramphenicol (Chlor)
+     - 620 µL 100 µg/mL anhydroteracycline (ATc)
+     - 62 µL 1M IPTG
+
+     - Split into 2 27.07 mL portions.
+     - Add 933.33 µL LB or 30 mM theophylline (in LB) 
+       to the apo and holo portions, respectively.
+
+   - For each reaction, inoculate 1 mL media with 4 
+     µL overnight culture.  Also prepare 1 mL media 
+     with no cells, as a blank.
+
+3. Grow at 37°C until OD600 reaches 0.5−1.0 (~6h30)
+
+4. Start the β-galactosidase assay:
+
+   - Prepare 7500 µL of Working solution (WS):
+     - 3750 µL Y-PER
+     - 3750 µL 2x β-galactosidase assay buffer.
+     - Aliquot 140 µL into PCR strip-tubes.
+
+   - Aliquot 100 µL of each culture into a clear 
+     plate.
+
+   - Measure OD600.
+
+   - Add 100 µL WS to each reaction and mix well.
+
+     WS is very soapy, so you need to take care to 
+     avoid getting bubbles in the wells.  Reverse 
+     pipet to add the WS in the first place, then mix 
+     very carefully.  Pop any bubbles with a hot 
+     needle.
+
+5. Measure A420 every 5 min for 2h.  
+
+   It's probably unnecessary, but I have the spectro- 
+   photometer shake the plate for 20s before each 
+   measurement to ensure good mixing.

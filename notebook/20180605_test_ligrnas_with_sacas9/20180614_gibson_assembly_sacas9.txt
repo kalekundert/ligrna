@@ -1,0 +1,19 @@
+cmd: ./gibson_assembly.py
+repo: git@github.com:kalekundert/wetlab_protocols.git
+commit: a6756da276008baa739bfd31031330c2b07d8471
+date: June 14, 2018
+
+1. Prepare the Gibson assembly reaction:
+
+   Reagent                 Conc  Each Rxn
+   ──────────────────────────────────────
+   pBLO1 (2598.0 bp)   50 ng/μL   0.97 μL
+   saCas9 (3264.0 bp)  15 ng/μL   4.03 μL
+   Gibson master mix             15.00 μL
+   ──────────────────────────────────────
+                                 20.00 μL
+
+2. Incubate at 50°C for 1h.
+
+3. Transform 5 μL of the crude reaction mixture with 
+   20 μL chemically competent Top10 cells.

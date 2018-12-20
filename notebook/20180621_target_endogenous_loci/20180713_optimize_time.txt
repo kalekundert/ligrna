@@ -1,0 +1,45 @@
+cmd: ./20180621_target_endogenous_loci/optimize_time.txt
+repo: /home/kale/research/projects/201511_sgrna_sensor_local/notebook
+commit: db6b8127146818d03eadf47edaf43759474579f6
+date: July 13, 2018
+
+1. Start overnight cultures of lz/on and lz/off.
+
+2. Thaw 2X β-Galactosidase Assay Buffer on ice.
+
+3. Prepare 3 mL media (EZ + Carb + Chlor + ATC + 1 mM 
+   IPTG):
+
+    - Thaw EZ + Carb + Chlor + ATC overnight at 4°C.
+    - Add 3 µL 1M IPTG to 3 mL EZ media.
+    - Divide between 3 culture tubes.
+
+3. Inoculate each well with 4 µL overnight culture:
+
+4. Measure β-galactosidase activity at 1h intervals, 
+   starting at 2h:
+
+    - Transfer 100 µL of each culture to a 
+      transparent 96-well assay plate.
+
+    - Determine the OD660 of all test cultures and 
+      record values. Include one well that contains 
+      growth media only (no cells) as a blank for the 
+      spectrophotometer.
+
+    - Mix 200 µL of this assay buffer with an equal 
+      volume of Y-PER Reagent to make the working 
+      solution (WS). Each well requires 100 µL of the 
+      WS, and I have 3 wells (2 controls + 1 blank), 
+      so I need 300 µL, plus enough extra for reverse 
+      pipeting.  The maximum culture volume allowed 
+      per well is 100 µL.
+
+    - Use a timer to monitor the reaction. Apply 100 
+      µL of the WS to each well and start timer.
+
+    - Measure the absorbance at 420 nm of each well 
+      every minute for 40 minutes.  Record how long 
+      it takes to start the start recording data.  
+      Use the well containing medium only (no cells) 
+      to zero the instrument.

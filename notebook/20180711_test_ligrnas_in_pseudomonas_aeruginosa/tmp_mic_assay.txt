@@ -1,0 +1,71 @@
+1. Grow 3 mL overnight cultures in LB at 37°C.
+
+2. Grow day cultures to log-phase.
+
+  - Subculture 40 µL into 2 mL Mueller-Hinton (MH) 
+    media [1].
+  - Incubate at 37°C for 2h.
+
+3. Prepare 4x 1 mM (i.e. 4 mM) theophylline (theo):
+  
+  - 600 µL 30 mM theo (in MH)
+  - 3900 µL MH media
+
+4. Prepare a 4x TMP titration:
+
+  - 2 mL 128 µg/mL TMP in first well.
+    - 2 mL MH
+    - 4 µL 64 mg/mL TMP
+  - 1 mL MH media in remaining wells.
+  - Transfer 1 mL on each step.
+
+5. Prepare 2x subcultures:
+
+  - Measure day culture OD.
+  - Dilute to OD600 = 2 × 0.0025 = 0.005 [2].
+    - Prepare (N+1) mL of diluted subculture for a 
+      construct that will be used in N columns.
+
+6. Setup cultures with varying concentrations of TMP 
+   and theo in a 96 well plate:
+
+  - Add 50 µL 4x theo or 50 µL apo MH to each well.
+  - Add 50 µL 4x TMP titration to each well.
+  - Add 100 µL 2x subculture to each well.
+  - Add 50 µL mineral oil to seal each well.
+
+7. Record growth curves:
+  
+  - Incubate at 37°C with continuous shaking for 24h.
+  - Measure OD600 every 5 minutes.
+
+Notes
+=====
+[1] It's important that little thymidine or thymine 
+    be present in the media, because the presence of 
+    these metabolites would reduce the need for DHFR 
+    and therefore the toxicity of TMP.  Therefore 
+    it's important to use a MH formulation that's 
+    guaranteed to be low these metabolites, which not 
+    all are.  I followed the recommendation of 
+    [Weigand2008] and used Difco 275730.
+
+[2] The canonical MIC protocol [Wiegand2008] calls 
+    for 5×10⁵ CFU/mL in the initial culture.  The 
+    proper thing to do would be to plate cells to 
+    determine the relationship between OD600 and 
+    CFU/mL.  Instead I found Kim2012, which claims 
+    that a culture of Pseudomonas aeruginosa at 
+    OD600=1.0 has 2×10⁸ CFU/mL.  If we accept this 
+    value, it implies that the our MIC cultures 
+    should start at an OD600 of 0.0025.
+
+The volumes in this protocol are enough to fill a 
+96-well plate.  As I only have one BSL2 plate reader 
+to use, this is as much as I can do at once.
+
+References
+==========
+Weigand2008: 10.1038/nprot.2007.521
+
+vim: tw=53

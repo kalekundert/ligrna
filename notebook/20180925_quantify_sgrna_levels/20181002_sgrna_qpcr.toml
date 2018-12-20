@@ -1,0 +1,138 @@
+[expt]
+  spacer = 'g1'
+  discard = false
+
+[row.A]
+  sgrna = 'on'
+  ligand = false
+[row.B]
+  sgrna = 'on'
+  ligand = true
+[row.C]
+  sgrna = 'off'
+  ligand = false
+[row.D]
+  sgrna = 'off'
+  ligand = true
+[row.E]
+  sgrna = 'rxb 11,1'
+  ligand = false
+[row.F]
+  sgrna = 'rxb 11,1'
+  ligand = true
+[row.G]
+  sgrna = 'mhf 30'
+  ligand = false
+[row.H]
+  sgrna = 'mhf 30'
+  ligand = true
+
+[col.1]
+  promoter = 'j23119'
+  primers = 'sgrna'
+  replicate = 1
+[col.2]
+  promoter = 'j23119'
+  primers = '16s'
+  replicate = 1
+[col.3]
+  promoter = 'j23150'
+  primers = 'sgrna'
+  replicate = 1
+[col.4]
+  promoter = 'j23150'
+  primers = '16s'
+  replicate = 1
+[col.5]
+  promoter = 'j23119'
+  primers = 'sgrna'
+  replicate = 2
+[col.6]
+  promoter = 'j23119'
+  primers = '16s'
+  replicate = 2
+[col.7]
+  promoter = 'j23150'
+  primers = 'sgrna'
+  replicate = 2
+[col.8]
+  promoter = 'j23150'
+  primers = '16s'
+  replicate = 2
+[col.9]
+  promoter = 'j23119'
+  primers = 'sgrna'
+  replicate = 3
+[col.10]
+  promoter = 'j23119'
+  primers = '16s'
+  replicate = 3
+[col.11]
+  promoter = 'j23150'
+  primers = 'sgrna'
+  replicate = 3
+[col.12]
+  promoter = 'j23150'
+  primers = '16s'
+  replicate = 3
+
+# Account for how I pipeted the first two columns upside down.  Not only is the 
+# data out-of-order, but I also lost data for the first and last rows, since 
+# they were using different (and incompatible) primers.  Ugh...
+[well.H1]
+  sgrna = 'on'
+  ligand = false
+  discard = true
+[well.G1]
+  sgrna = 'on'
+  ligand = true
+  discard = true
+[well.F1]
+  sgrna = 'off'
+  ligand = false
+[well.E1]
+  sgrna = 'off'
+  ligand = true
+[well.D1]
+  sgrna = 'rxb 11,1'
+  ligand = false
+[well.C1]
+  sgrna = 'rxb 11,1'
+  ligand = true
+[well.B1]
+  sgrna = 'mhf 30'
+  ligand = false
+  discard = true
+[well.A1]
+  sgrna = 'mhf 30'
+  ligand = true
+  discard = true
+  
+[well.H2]
+  sgrna = 'on'
+  ligand = false
+  discard = true
+[well.G2]
+  sgrna = 'on'
+  ligand = true
+  discard = true
+[well.F2]
+  sgrna = 'off'
+  ligand = false
+[well.E2]
+  sgrna = 'off'
+  ligand = true
+[well.D2]
+  sgrna = 'rxb 11,1'
+  ligand = false
+[well.C2]
+  sgrna = 'rxb 11,1'
+  ligand = true
+[well.B2]
+  sgrna = 'mhf 30'
+  ligand = false
+  discard = true
+[well.A2]
+  sgrna = 'mhf 30'
+  ligand = true
+  discard = true

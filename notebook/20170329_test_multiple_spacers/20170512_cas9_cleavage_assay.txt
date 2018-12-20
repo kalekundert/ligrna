@@ -1,0 +1,43 @@
+1. Thaw the water, theophylline, 10x Cas9 buffer, 
+   and target DNA on the 37°C heat block.  Thaw the 
+   sgRNAs at room temperature, then refold them by
+   incubating at 95°C for 3 min then 4°C for 1 min.
+
+2. Setup 40 Cas9 reactions:
+
+   Reagent     Conc  Each Rxn  Master Mix
+   ──────────────────────────────────────
+   water              5.05 μL   222.20 μL
+   buffer       10x   1.50 μL    66.00 μL
+   Cas9        1 μM   0.45 μL    19.80 μL
+   ligand     30 mM   5.00 μL            
+   sgRNA    1500 nM   1.50 μL            
+   DNA        30 nM   1.50 μL            
+   ──────────────────────────────────────
+                     15.00 μL     7.00 μL/rxn
+
+   - Add 5.00 μL water or ligand to each reaction.
+
+   - Add 1.50 μL sgRNA to each reaction.
+
+   - Add 7.00 μL Cas9 master mix to each reaction.
+
+   - Incubate at room temperature for 10 min.
+
+   - Add 1.50 μL DNA to each reaction.
+
+3. Incubate at 37°C for 1 hour (thermocycler).
+
+4. Add 3.0 μL 6x KAG master mix to each reaction:
+    
+   Reagent       Conc  Master Mix
+   ──────────────────────────────
+   Orange G        6x   135.36 μL
+   RNase A       200x     4.32 μL
+   Proteinase K  200x     4.32 μL/rxn
+
+5. Incubate the reactions at 37°C for 20 min, then at 
+   55°C for 20 min, then hold at 12°C (thermocycler).
+
+6. Load 18 μL on a 1% agarose/TAE/GelRed gel and run 
+   at 130V for 45 min.

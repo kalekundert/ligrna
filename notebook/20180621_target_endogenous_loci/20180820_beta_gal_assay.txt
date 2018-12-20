@@ -1,0 +1,98 @@
+cmd: ./20180621_target_endogenous_loci/beta_gal_assay.txt
+repo: /home/kale/research/projects/201511_sgrna_sensor_local/notebook
+commit: 80c2a779b39bf28e4bd27f4de8c5359781d7c795
+date: August 20, 2018
+
+1. Make 1 mL overnight cultures in LB + Carb + Chlor 
+   of all 4 sgRNAs (on, off, rxb/11/1, and mhf/30) 
+   with all 5 spacers (lz, li, la, lp, lo).
+
+2. Start the day cultures:
+
+   - Prepare 30 mM theophylline dissolved in LB.
+
+   - Prepare media +/− theophylline and +/− IPTG:
+
+     - 59.13 mL LB
+     - 62 µL 100 mg/mL carbenicillin (Carb)
+     - 62 µL 34 mg/mL chloramphenicol (Chlor)
+     - 620 µL 100 µg/mL anhydrotetracycline (aTc)
+
+     - Split into 4 portions: 2x 23.2 mL, 2x 5.8 mL
+     - Add to the 23.2 mL portions:
+       - 24 µL 1M IPTG
+       - 800 µL LB (apo) or 30 mM theophylline (holo)
+     - Add to the 5.8 mL portions:
+       - 200 µL LB (apo) or 30 mM theophylline (holo)
+
+   - For each construct, inoculate 1 mL apo and holo 
+     media with 4 µL overnight culture.
+
+3. Grow at 37°C for 6h (until OD600 reaches 0.5−1.0) 
+   [1].
+
+4. Start the β-galactosidase assay:
+
+   - Pellet the cells at 3500g for 10 min at 4°C, 
+   - Resuspend in 1 mL PBS [2].
+
+   - Transfer 100 µL of each culture to a black-wall, 
+     clear-bottom plate [3].
+
+   - Measure OD600 in the spectrophometer.  Dilute 
+     each well with PBS until all are as close to 
+     OD600=0.150 as reasonably possible [4].  Record 
+     the final OD600 values.
+
+   - Add 100 µL Y-PER (Thermo 75768) to each well and 
+     mix well.  Pop any bubbles that form.
+
+   - Incubate at room termperature for 1h [5].
+
+   - Add 100 µL β-galactosidase assay buffer (Thermo 
+     75768) to each well.  Pop any bubbles that form, 
+     and try to work quickly.
+
+5. Measure A420 every 1 min for 45 min.
+
+Notes
+=====
+[1] The reaction is not particularly sensitive to how 
+    long the cells grow.  In one experiment, I got 
+    reasonable data from a saturated overnight 
+    culture.  But others claim that the experiment is 
+    most robust if the cells are in log-phase.
+
+[2] I'm not sure why, but without transferring the 
+    cells to PBS, the A420 trace has a tendency to 
+    accelerate upwards slightly after an hour or so.
+
+[3] I don't think it's necessary to use a black-wall 
+    clear-bottom plate, but I just wanted to be sure 
+    that I wasn't getting any signal from neighboring 
+    wells.
+
+[4] If there are too many cells (e.g. OD600 > 0.150), 
+    the reaction will exit the linear regime in the 
+    ≈10 minutes it takes to setup all the reactions 
+    and get the plate in the spectrophotometer.  I 
+    haven't tested lower ODs (e.g. 0.100), but I 
+    suspect that they might give even cleaner data.
+
+    Furthermore, comparisons between wells with 
+    different ODs seem to be inaccurate.  I don't 
+    know why this is, because the Miller equation 
+    accounts for OD, but I would observe spurious 
+    signal in my controls when I didn't dilute them 
+    to roughly the same OD.
+    
+[5] The cell lysis reaction take about an hour to 
+    complete, so if the ONPG reagent is added before 
+    then, the reaction will accelerate until all the 
+    cells are lysed.  This makes it difficult to fit 
+    the linear regime, especially for fast reactions 
+    that become ONPG-limited and start decelerating 
+    shortly after (or even just before) all the cells 
+    are lysed.
+
+vim: tw=53

@@ -1,0 +1,14 @@
+cmd: design_mutagenesis_primers.py -T 58 T7_D1 atttcagataaaaaaaatccttagctttcgctaaggatgatttctggaattctaaagatcttATAGTAATAATACGACTCACTATAGcatctaattcaacaagaattgtttcagagctatgctggaaacagcatagcaagttgAAATAAGGCTAGTCCGTTATCAACTTGAAAAAGTGGCACCGAGTCGGTGC atttcagataaaaaaaatccttagctttcgctaaggatgatttctggAATTCTAAAGATCTtATAGTAATAATACGACTCACTATAGGGGAACTCAAGAGCGGAGGGGTTTcagagctatgctggaaacagcatagcaagttgAAATAAGGCTAGTCCGTTATCAACTTGAAAAAGTGGCACCGAGTCGGTGC
+repo: git@github.com:kalekundert/sgrna_sensor_scripts.git
+commit: a16e466352b13f0c422864d0e7d13abd79abd93f
+date: June 18, 2017
+
+Number of oligos: 2
+
+Primer names (ready to copy into Elim form):
+T7_D1_TM_56_REV
+T7_D1_TM_57_FOR
+
+Primer sequences (ready to copy into Elim form):
+AGTCGTATTATTACTATAAGATCTTTAGAATTccagaaatcatccttagc
+CACTATAGGGGAACTCAAGAGCGGAGGGGTTTcagagctatgctggaaac

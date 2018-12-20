@@ -1,0 +1,59 @@
+[meta.paths]
+  ligrna = '20181004_std_curve_ligrna.xlsx'
+  gfp = '20181007_std_curve_gfp.xlsx'
+
+[expt]
+  spacer = 'g1'
+  sgrna = 'off'
+  promoter = 'j23119'
+  ligand = false
+  discard = false
+
+[plate.ligrna]
+  date = 2018-10-04
+
+[plate.ligrna.row]
+  A.dilution = 1
+  B.dilution = 10
+  C.dilution = 100
+  D.dilution = 1000
+  E.dilution = 10000
+
+[plate.ligrna.col]
+  # Only use data from the second experiment.
+  #1.primers = '16s'
+  #2.primers = '16s'
+  #3.primers = '16s'
+
+  7.primers = '11'
+  8.primers = '11'
+  9.primers = '11'
+
+  10.primers = '30'
+  11.primers = '30'
+  12.primers = '30'
+
+[plate.gfp]
+  date = 2018-10-07
+
+[plate.gfp.row]
+  C.dilution = 100000
+  D.dilution = 10000
+  E.dilution = 1000
+  F.dilution = 100
+  G.dilution = 10
+  H.dilution = 1
+
+[plate.gfp.col]
+  4.primers = 'ihfB'
+  5.primers = 'ihfB'
+  6.primers = 'ihfB'
+
+  7.primers = 'gfp'
+  8.primers = 'gfp'
+  9.primers = 'gfp'
+
+  10.primers = '16s'
+  11.primers = '16s'
+  12.primers = '16s'
+

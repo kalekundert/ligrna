@@ -1,0 +1,76 @@
+cmd: ./reverse_transcribe.py -d /home/kale/sgrna/data/nanodrop/20181203_rxb_11_1_timecourse.tsv
+repo: git@github.com:kalekundert/wetlab_protocols.git
+commit: 99f0a7da1b00026c2e4b2b9c8964048c38039c48
+date: December 18, 2018
+
+1. Setup DNase reactions for each sample:
+
+   - 0.5 µL 10 ezDNase buffer
+   - 0.5 µL ezDNase enzyme (Invitrogen 11766051)
+   - 1 µg RNA
+   - Water to 5 µL
+
+   Consider preparing a 2x ezDNase master mix.
+
+2. Incubate at 37°C for 2 min.  Then briefly 
+   centrifuge and place on ice.
+
+3. Add 2 µL SuperScript IV VILO master mix 
+   (Invitrogen 11766050) and 3 µL water to each 
+   sample.
+
+   The master mix contains random hexamers, which 
+   will prime the reverse transcription of all RNAs 
+   in the sample.
+
+4. Incubate at the following temperatures:
+
+   - 25°C for 10 min
+   - 50°C for 10 min (15 min)
+   - 85°C for 5 min
+   - hold at 4°C
+
+───────────────────────────────────────────────────────
+                           RNA Conc  RNA Vol  Water Vol
+Construct                   (ng/uL)     (µL)       (µL)
+───────────────────────────────────────────────────────
+rxb/11/1 0:00 apo           1021.06     0.98      3.02
+rxb/11/1 0:00 holo           969.48     1.03      2.97
+no GFP                       460.63     2.17      1.83
+rxb/11/1 2:00 apo->apo       837.05     1.19      2.81
+rxb/11/1 2:00 apo->holo     1009.63     0.99      3.01
+rxb/11/1 2:00 holo->apo      760.97     1.31      2.69
+rxb/11/1 2:00 holo->holo     826.08     1.21      2.79
+rxb/11/1 4:20 apo->apo      1002.51     1.00      3.00
+rxb/11/1 4:20 apo->holo      966.69     1.03      2.97
+rxb/11/1 4:20 holo->apo      837.00     1.19      2.81
+rxb/11/1 4:20 holo->holo     743.55     1.34      2.66
+rxb/11/1 7:00 apo->apo      1009.54     0.99      3.01
+rxb/11/1 7:00 apo->holo      853.60     1.17      2.83
+rxb/11/1 7:00 holo->apo      734.64     1.36      2.64
+rxb/11/1 7:00 holo->holo     855.50     1.17      2.83
+rxb/11/1 10:00 apo->apo     1049.23     0.95      3.05
+rxb/11/1 10:00 apo->holo     999.19     1.00      3.00
+rxb/11/1 10:00 holo->apo     818.73     1.22      2.78
+rxb/11/1 10:00 holo->holo    831.15     1.20      2.80
+rxb/11/1 13:20 apo->apo      941.65     1.06      2.94
+rxb/11/1 13:20 apo->holo     992.42     1.01      2.99
+rxb/11/1 13:20 holo->apo     835.34     1.20      2.80
+rxb/11/1 13:20 holo->holo    773.73     1.29      2.71
+rxb/11/1 17:00 apo->apo      956.00     1.05      2.95
+rxb/11/1 17:00 apo->holo    1210.04     0.83      3.17
+rxb/11/1 17:00 holo->apo     831.69     1.20      2.80
+rxb/11/1 17:00 holo->holo    737.82     1.36      2.64
+rxb/11/1 21:00 apo->apo     1072.73     0.93      3.07
+rxb/11/1 21:00 apo->holo    1030.83     0.97      3.03
+rxb/11/1 21:00 holo->apo     932.08     1.07      2.93
+rxb/11/1 21:00 holo->holo    904.69     1.11      2.89
+rxb/11/1 25:20 apo->apo     1105.28     0.90      3.10
+rxb/11/1 25:20 apo->holo    1092.91     0.91      3.09
+rxb/11/1 25:20 holo->apo     970.82     1.03      2.97
+rxb/11/1 25:20 holo->holo    931.47     1.07      2.93
+rxb/11/1 30:00 apo->apo     1162.35     0.86      3.14
+rxb/11/1 30:00 apo->holo    1062.80     0.94      3.06
+rxb/11/1 30:00 holo->apo     974.51     1.03      2.97
+rxb/11/1 30:00 holo->holo    946.98     1.06      2.94
+───────────────────────────────────────────────────────

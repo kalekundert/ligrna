@@ -1,0 +1,43 @@
+expt = 'plate_reader/20180721_b_subtilis_theo_growth_curve.xlsx'
+format = 'PerkinElmer'
+
+t_lim = [100, 250]
+gfp_lim = [-6000, 21000]
+fit_min_t = 60
+fit_max_od = 0.04
+
+[layout.on]
+'blank' = ['A02', 'A03']
+'16 mM' = ['B02', 'B03']
+ '8 mM' = ['C02', 'C03']
+ '4 mM' = ['D02', 'D03']
+ '2 mM' = ['E02', 'E03']
+ '1 mM' = ['F02', 'F03']
+ '0 mM' = ['G02', 'G03']
+
+[layout.off]
+'blank' = ['A04', 'A05']
+'16 mM' = ['B04', 'B05']
+ '8 mM' = ['C04', 'C05']
+ '4 mM' = ['D04', 'D05']
+ '2 mM' = ['E04', 'E05']
+ '1 mM' = ['F04', 'F05']
+ '0 mM' = ['G04', 'G05']
+
+[layout.11]
+'blank' = ['A06', 'A07']
+'16 mM' = ['B06', 'B07']
+ '8 mM' = ['C06', 'C07']
+ '4 mM' = ['D06', 'D07']
+ '2 mM' = ['E06', 'E07']
+ '1 mM' = ['F06', 'F07']
+ '0 mM' = ['G06', 'G07']
+
+[layout.30]
+'blank' = ['A08', 'A09']
+'16 mM' = ['B08', 'B09']
+ '8 mM' = ['C08', 'C09']
+ '4 mM' = ['D08', 'D09']
+ '2 mM' = ['E08', 'E09']
+ '1 mM' = ['F08', 'F09']
+ '0 mM' = ['G08', 'G09']

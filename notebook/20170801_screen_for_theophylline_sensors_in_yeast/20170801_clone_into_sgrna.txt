@@ -1,0 +1,32 @@
+cmd: clone_into_sgrna.py ux/3/2/g ux/4/3/g ux/5/4/g rhi/4 rhi/5
+repo: git@github.com:kalekundert/sgrna_sensor_scripts.git
+commit: 0969adfb1e5c6af5357feacc4b61933fa9d36403
+date: August 1, 2017
+
+Number of oligos: 10
+
+Primer names (ready to copy into Elim form):
+RHI_4_TM_59_FOR
+RHI_4_TM_60_REV
+RHI_5_TM_59_FOR
+RHI_5_TM_60_REV
+UX_3_2_G_TM_59_REV
+UX_3_2_G_TM_61_FOR
+UX_4_3_G_TM_59_REV
+UX_4_3_G_TM_61_FOR
+UX_5_4_G_TM_59_REV
+UX_5_4_G_TM_61_FOR
+
+Primer sequences (ready to copy into Elim form):
+CGAAAGGCCCTTGGCAGNNNNggcaccgagtcgg
+GCTGGTATNNNNtgataacggactagccttattt
+CGAAAGGCCCTTGGCAGNNNNNggcaccgagtcgg
+GCTGGTATNNNNNtgataacggactagccttattt
+TTCGGCTGGTATNNNcttatttcaacttgctatgctg
+AGGCCCTTGGCAGNTNcgttatcaacttgaaaaagtgg
+TTCGGCTGGTATNNNNcttatttcaacttgctatgctg
+AGGCCCTTGGCAGNNTNcgttatcaacttgaaaaagtgg
+TTCGGCTGGTATNNNNNcttatttcaacttgctatgctg
+AGGCCCTTGGCAGNNNTNcgttatcaacttgaaaaagtgg
+
+₁₂₃₄₅₆₇₈₉1₁₂₃₄₅₆₇₈₉2₁₂₃₄₅₆₇₈₉3₁₂₃₄₅₆₇₈₉4₁₂₃₄₅₆₇₈₉5₁₂₃₄₅₆₇₈₉6₁₂₃₄₅₆₇₈₉7₁₂₃₄₅₆₇₈₉8

@@ -1,0 +1,9 @@
+\begin{tabular}{rlr}
+\toprule
+\# & Sequence & Score \\
+\midrule
+{% for id, row, col, seq, score in fields -%}
+    {{ row }},{{ col }} & \texttt{{ '{' }}{{ seq }}{{ '}' }} & {{ '%.3f' % score }} \\
+{% endfor %}
+\bottomrule
+\end{tabular}

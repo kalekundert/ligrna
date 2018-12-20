@@ -1,0 +1,35 @@
+cmd: ./transcribe_sgrna.py 3
+repo: git@github.com:kalekundert/sgrna_sensor_protocols.git
+commit: 18671839c9431c5df388f663aab06acb29d02d68
+date: September 22, 2017
+
+1. Wipe down your bench and anything you'll touch 
+   (pipets, racks, pens, etc.) with RNaseZap.
+
+2. Setup 3 in vitro transcription reactions by 
+   mixing the following reagents at room temperature 
+   in the order given.
+
+   Reagent                  Conc  Each Rxn  Master Mix
+   ───────────────────────────────────────────────────
+   nuclease-free water            10.00 μL    33.00 μL
+   reaction buffer         "10x"   1.50 μL     4.95 μL
+   rNTP mix               100 mM   6.00 μL    19.80 μL
+   HiScribe T7 (NEB)       "10x"   1.50 μL     4.95 μL
+   DNA template         10 ng/μL   1.00 μL            
+   ───────────────────────────────────────────────────
+                                  20.00 μL    19.00 μL/rxn
+
+3. Incubate at 37°C (thermocycler) for 4 hours.
+
+4. Remove unincorporated ribonucleotides using Zymo 
+   RNA Clean & Concentrator 25 spin columns.
+
+5. Nanodrop to determine the RNA concentration.
+
+6. Run the RNA on a denaturing gel to make sure it's 
+   homogeneous and of the right size.
+
+7. Dilute (if desired) enough sgRNA to make several 
+   15 μL aliquots.  Keep any left-over RNA undiluted.  
+   Flash-freeze in liquid N₂ and store at -80°C.

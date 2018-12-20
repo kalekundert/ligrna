@@ -1,0 +1,64 @@
+\documentclass{article}
+
+\usepackage{graphicx}
+
+\newcommand{\subcap}[1]{\textbf{#1:}}
+\newcommand{\rxb}[1]{rxb 11,1}
+
+\begin{document}
+
+\begin{figure}
+ \centering
+ \includegraphics[width=0.7\textwidth]{rxb_11_1_mechanism}
+ \caption{The proposed mechanism for \rxb{}.  We believe that the indicated 
+ uracil must be unpaired in order for the sgRNA to bind Cas9.  Our hypothesis 
+ concerning \rxb{} is that when no ligand is present, the base of the aptamer 
+ comes apart and allows the top of the stem to melt, which allows the indicated 
+ uracil to interact productively with Cas9.  When ligand is present, the base 
+ of the aptamer comes together, locks the stem in place, and sequesters the 
+ uracil in a base pair.}
+\end{figure}
+
+\begin{figure}
+ \centering
+ \includegraphics[width=0.7\textwidth]{20170315_test_w11_m11_figure}
+ \caption{Mutational analysis of \rxb{}. \subcap{Left panels} cell populations 
+ in the presence (solid lines) and absence (dashed lines) of theophylline.  We 
+ used flow cytometry to measure fluorescence values for individual cells, and 
+ we used Gaussian kernel density estimation (KDE) to calculate population 
+ distributions.  The x-axis shows GFP fluorescence divided by RFP fluorescence.  
+ The sgRNAs target GFP, and RFP is being expressed as an internal control for 
+ cell size.  The modes of the populations are indicated by the plus-signs below 
+ the plots.  \subcap{Right panels} ligand-induced fold changes in fluorescence.  
+ Specifically, fold change is the ratio of the modes of the apo and holo 
+ populations for the sensor in question.  \subcap{A} the positive control, the 
+ negative control (an sgRNA with the 5' side of the nexus stem mutated to CC), 
+ and \rxb{}.  \subcap{B} variants of \rxb{} where the highlighted base pairs 
+ have been strand swapped.  \subcap{C} variants of \rxb{} that attempt to 
+ modulate sensor activity by either weakening or strengthening the stem above 
+ the uracil that is believed to flip out to interact with Cas9.  The variants 
+ are sorted from weakest to strongest.  \subcap{Labels} the uracil believed to 
+ be important for Cas9 binding is colored red.  GC/CG mutations are highlighted 
+ in black, AU/UA mutations in dark grey, and GU/UG mutations in light grey.}
+\end{figure}
+
+We expected that all the strand-swapped variants of \rxb{} -- other than the 
+third one that moved the uracil -- would still react to the presence of 
+theophylline (Fig 2b).  Every position but the first met our expectations.  The 
+first position, however, was especially surprising because Briner et al.  
+(2014) didn't see a significant effect when they replaced it with an AU base 
+bair.  It may be that that position is relevant to the mechanism of \rxb{} in 
+a way we don't yet understand.
+
+The variants of \rxb{} that modulate the strength of the stem above the 
+uracil have the expected effect on sensor function (Fig 2c).  The constructs 
+towards the top have weaker stems, which means the uracil should spend more 
+time unpaired and the Cas9 complex should form more readily.  This should lead 
+to better CRISPRi repression, which is what we observe.  The constructs towards 
+the bottom have stronger stems, and the reverse logic applies.  Looking at the 
+data as a whole, the traces exhibit a striking diagonal pattern.  The third 
+construct in particular may be useful in it's own right.  Although it's fold 
+change is slightly worse than that of \rxb{}, it turns on more completely, and 
+that may be useful for some applications.
+
+\end{document}

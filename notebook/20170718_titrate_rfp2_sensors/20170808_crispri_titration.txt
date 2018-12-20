@@ -1,0 +1,37 @@
+cmd: crispri_titration.py -t 9h
+repo: git@github.com:kalekundert/sgrna_sensor_protocols.git
+commit: 35b31aaaa0ebad66f16ef7d08f80243c8e051093
+date: August 8, 2017
+
+1. Make 1 mL overnight cultures from recently  
+   transformed (within ≈2 weeks) colonies of the 
+   sensors you want to test and their corresponding 
+   controls.
+
+2. Prepare media with serially diluted ligand.
+
+   - Put 2 mL holo media in the first column of a 96 
+     well block.
+
+   - Put 1 mL apo media in the remaining columns of 
+     the block.
+
+   - Perform 11 serial dilutions, starting from the 
+     first column, transferring 1 mL of media each 
+     time.  Leave the last column with apo media.
+
+   - Do the serial dilution for both the sensors and 
+     the controls.
+
+3. Inoculate each well with 4 μL overnight culture.
+
+4. Transfer the cultures to a 24 well block.  The 
+   improved shaking and aeration is important for 
+   getting consistent results.
+
+5. Grow at 37°C with shaking at 225 rpm for 9h.
+
+6. Dilute 0.5 μL of each culture into 250 μL PBS.
+
+7. Measure the GFP and RFP fluorescence of each 
+   culture by flow cytometry.

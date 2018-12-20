@@ -1,0 +1,14 @@
+\begin{tabular}{lrrrr}
+\toprule
+Target & Slope & Intercept & R² & Efficiency \\
+\midrule
+{% for k in keys -%}
+  {{ latex_labels.get(k, labels[k]) }} &
+  {{ emph_if_bad(k, 'm') }} &
+  {{ emph_if_bad(k, 'b') }} &
+  {{ emph_if_bad(k, 'r2') }} &
+  {{ emph_if_bad(k, 'efficiency', '\\%') }} \\
+{% endfor -%}
+\bottomrule
+\end{tabular}
+

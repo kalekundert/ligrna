@@ -1,0 +1,40 @@
+cmd: ./reverse_transcribe.py /home/kale/sgrna/data/nanodrop/20181124_practice_timecourse_mhf_30.tsv
+repo: git@github.com:kalekundert/wetlab_protocols.git
+commit: 5011c4b604a538fcbd3af757e56675275211aa7b
+date: November 24, 2018
+
+1. Setup reverse transcription reactions for each 
+   sample:
+
+   - 1 µg RNA
+   - 2 µL SuperScript VILO master mix (Invitrogen 
+     11755050)
+   - water to 10 µL
+
+   The master mix contains random hexamers, which 
+   will prime the reverse transcription of all RNAs 
+   in the sample.
+
+   ───────────────────────────────────────────────────────
+                              RNA Conc  RNA Vol  Water Vol
+   Construct                   (ng/uL)     (µL)       (µL)
+   ───────────────────────────────────────────────────────
+   mhf/30 0min                  204.31     4.89      3.11
+   mhf/30 2min                  119.75     8.35     -0.35
+   mhf/30 6min                  310.47     3.22      4.78
+   mhf/30 9min                  349.51     2.86      5.14
+   mhf/30 12min                 332.38     3.01      4.99
+   mhf/30 15min                 263.52     3.79      4.21
+   mhf/30 18min                 178.37     5.61      2.39
+   mhf/30 21min                 222.45     4.50      3.50
+   mhf/30 24min                 469.05     2.13      5.87
+   mhf/30 27min                 467.82     2.14      5.86
+   mhf/30 30min                 492.95     2.03      5.97
+   ───────────────────────────────────────────────────────
+
+2. Incubate at the following temperatures:
+
+   - 25°C for 10 min
+   - 50°C for 10 min (15 min)
+   - 85°C for 5 min
+   - hold at 4°C

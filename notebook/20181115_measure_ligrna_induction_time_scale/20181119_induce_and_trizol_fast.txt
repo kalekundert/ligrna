@@ -1,0 +1,151 @@
+cmd: ./20181115_measure_ligrna_induction_time_scale/induce_and_trizol_fast.txt
+repo: /home/kale/research/projects/201511_sgrna_sensor_local/notebook
+commit: b039870b687b012cc1b04470455f3b0339d61476
+date: November 19, 2018
+
+1. Start overnight cultures in 1 mL LB + Carb + Chlor 
+   for each construct (on, off, rxb/11/1, mhf/30).
+
+2. Grow each culture with and without theophylline, 
+   while inducing Cas9 with aTC.
+
+   - Subculture 40 µL of each overnight into 10 mL 
+     apo media and 10 mL holo media.
+ 
+   - Also subculture 4 µL of wildtype MG1655 (no 
+     GFP/RFP) into 1 mL apo media.
+ 
+   - Grow at 37°C for 8h.
+
+3. Get ready to take timepoints:
+
+   - Label 57 tubes (one for each of the conditions 
+     listed in the table below).
+
+   - Detach the lid from each tube.  Leave enough of 
+     the stalk to allow the tube to rest on top of 
+     its neighbor when in the centrifuge.  This makes 
+     the tubes easier to remove. 
+
+   - Fill columns 1-12 in a 96-well block with 1.1 mL 
+     apo media in rows A+E, and 1.1 mL holo media in 
+     rows C+G.  Pre-warm the block to 37°C.
+
+   - Have a waste beaker ready.
+
+   - Have a 8-channel P1000 ready.
+
+   - Have ready two boxes of P1000 tips, with the 
+     tips only in every-other row.
+
+4. Pellet all the day cultures.
+  
+   - Pipet 1 mL of each culture into a properly 
+     labeled tube.
+
+   - Pellet at 16,000g for 30s.
+
+   - Discard supernatant.
+
+5. Process the next set of cultures according to the 
+   table below:
+
+   no GFP: wildtype MG1655 (no GFP/RFP)
+   controls: on & off, apo→holo & holo→apo
+   ligRNAs: rxb/11/1 & mhf/30, apo→holo & holo→apo
+
+   ───────────────────────────────────────────────
+                                   Add         Add
+   Samples   N  Timepoint     Apo/Holo      TRIzol
+   ───────────────────────────────────────────────
+   no GFP    1       0:00          N/A
+   controls  4       0:00          N/A
+   ligRNAs   4       0:00          N/A
+   controls  4       1:00
+   ligRNAs   4       1:00
+   controls  4       2:00
+   ligRNAs   4       2:00
+   controls  4       4:00
+   ligRNAs   4       4:00
+   controls  4       8:00
+   ligRNAs   4       8:00
+   controls  4      16:00
+   ligRNAs   4      16:00
+   controls  4      32:00
+   ligRNAs   4      32:00
+   ───────────────────────────────────────────────
+
+   - Place the 4 tubes containing the cell pellets 
+     diagonally in a tube rack.
+
+   - Place 4 empty 2 mL tubes diagonally in a tube 
+     rack.  Fill each of these tubes with 1.2 mL 
+     TRIzol.  Using 2 mL tubes allows for more 
+     aggressive and faster pipetting.
+
+   - Start a timer.
+
+   - Resuspend each pellet (using the mutlichannel 
+     P1000) in media opposite of the kind (e.g.  
+     apo/holo) it was grown up in.
+
+   - Move the 4 tubes to the centrifuge.
+
+   - If you have enough time, start the next set of 
+     cultures.
+
+   - 50s before the desired timepoint:
+
+     ───────────────────────────────────────
+     Timer  Delta  Task
+     ───────────────────────────────────────
+      0:27   0:27  Pellet at 16,000g for 15s
+      0:40   0:13  Decant supernatant
+      0:50   0:10  Add 1 mL TRIzol
+     ───────────────────────────────────────
+
+6. Finish the RNA extractions.
+
+   - Let each culture incubate in TRIzol for at least 
+     5 min.
+
+   - Add 200 µL chloroform.
+ 
+   - Vortex vigorously.
+ 
+   - Centrifuge for 15 min at 20,000g and 4°C.
+ 
+   - Transfer aqueous phase (top, not pink, ~500 µL) 
+     for each sample to a clean tube, taking care to 
+     avoid transferring any of the organic phase.
+
+7. Concentrate and purify the RNA by ethanol 
+   precipitation:
+
+   - Add 1 µL GlycoBlue (Invitrogen AM9516) to each 
+     sample.
+
+   - Add 500 µL isopropanol.
+
+   - Incubate at room temperature for 10 min.
+
+   - Pellet for 20 min at 12,000g and 4°C.
+
+   - Carefully pipet off all supernatant.
+
+   - Resuspend pellet in 70% EtOH.
+
+   - Vortex briefly
+
+   - Pellet for 5 min at 7,500g and 4°C.
+
+   - Carefully pipet off all supernatant.
+
+   - Air dry for 10 min.
+
+   - Resuspend RNA in 10 µL water.
+
+8. Measure the RNA concentration of each sample using 
+the Nanodrop.
+
+vim: tw=53

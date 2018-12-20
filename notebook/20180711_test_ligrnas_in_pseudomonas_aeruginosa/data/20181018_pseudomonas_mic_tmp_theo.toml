@@ -1,0 +1,35 @@
+# $ eps serial 1000 4 32 7 -v
+
+[row.A]
+  tmp_ug_mL = 32.0
+[row.B]
+  tmp_ug_mL = 22.6
+[row.C]
+  tmp_ug_mL = 16.0
+[row.D]
+  tmp_ug_mL = 11.3
+[row.E]
+  tmp_ug_mL = 8.0
+[row.F]
+  tmp_ug_mL = 5.7
+[row.G]
+  tmp_ug_mL = 4.0
+[row.H]
+  tmp_ug_mL = 0
+
+[col.'1,4,...,10']
+  theo_mM = 0.0
+[col.'2,5,...,11']
+  theo_mM = 0.5
+[col.'3,6,...,12']
+  theo_mM = 1.0
+
+[col.'1,2,3']
+  sgrna = "on"
+[col.'4,5,6']
+  sgrna = "off"
+[col.'7,8,9']
+  sgrna = "rxb/11/1"
+[col.'10,11,12']
+  sgrna = "mhf/30"
+

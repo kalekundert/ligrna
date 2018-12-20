@@ -1,0 +1,75 @@
+expt = 'plate_reader/20180802_sadcas9_atc_toxicity.xlsx'
+format = 'PerkinElmer'
+
+t_lim = [0, 1500]
+#gfp_lim = [15000, 40000]
+od_lim = [0.06, 0.40]
+fit_max_t = 0
+fit_max_od = 0.08
+
+[colors]
+    g1 = '#90bd31'
+    g2 = '#90bd31'
+    g3 = '#90bd31'
+    g4 = '#90bd31'
+    g5 = '#90bd31'
+
+[layout.g1]
+'1000 ng/mL' = ['C02']
+ '422 ng/mL' = ['C03']
+ '178 ng/mL' = ['C04']
+  '75 ng/mL' = ['C05']
+  '32 ng/mL' = ['C06']
+  '13 ng/mL' = ['C07']
+   '6 ng/mL' = ['C08']
+   '2 ng/mL' = ['C09']
+   '1 ng/mL' = ['C10']
+   '0 ng/mL' = ['C11']
+
+[layout.g2]
+'1000 ng/mL' = ['D02']
+ '422 ng/mL' = ['D03']
+ '178 ng/mL' = ['D04']
+  '75 ng/mL' = ['D05']
+  '32 ng/mL' = ['D06']
+  '13 ng/mL' = ['D07']
+   '6 ng/mL' = ['D08']
+   '2 ng/mL' = ['D09']
+   '1 ng/mL' = ['D10']
+   '0 ng/mL' = ['D11']
+
+[layout.g3]
+'1000 ng/mL' = ['E02']
+ '422 ng/mL' = ['E03']
+ '178 ng/mL' = ['E04']
+  '75 ng/mL' = ['E05']
+  '32 ng/mL' = ['E06']
+  '13 ng/mL' = ['E07']
+   '6 ng/mL' = ['E08']
+   '2 ng/mL' = ['E09']
+   '1 ng/mL' = ['E10']
+   '0 ng/mL' = ['E11']
+
+[layout.g4]
+'1000 ng/mL' = ['F02']
+ '422 ng/mL' = ['F03']
+ '178 ng/mL' = ['F04']
+  '75 ng/mL' = ['F05']
+  '32 ng/mL' = ['F06']
+  '13 ng/mL' = ['F07']
+   '6 ng/mL' = ['F08']
+   '2 ng/mL' = ['F09']
+   '1 ng/mL' = ['F10']
+   '0 ng/mL' = ['F11']
+
+[layout.g5]
+'1000 ng/mL' = ['G02']
+ '422 ng/mL' = ['G03']
+ '178 ng/mL' = ['G04']
+  '75 ng/mL' = ['G05']
+  '32 ng/mL' = ['G06']
+  '13 ng/mL' = ['G07']
+   '6 ng/mL' = ['G08']
+   '2 ng/mL' = ['G09']
+   '1 ng/mL' = ['G10']
+   '0 ng/mL' = ['G11']

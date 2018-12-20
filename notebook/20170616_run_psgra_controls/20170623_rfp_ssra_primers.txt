@@ -1,0 +1,28 @@
+cmd: design_mutagenesis_primers.py pSGRA_RFP_ssRA gaacgtgctgaaggtcgtcactccaccggtgcttaaggatccaaactcgagtaaggatctccagg gaacgtgctgaaggtcgtcactccaccggtgctGCGGCGAACGATGAAAAC/TATGCGCTGGCGGCGtaaggatccaaactcgagtaaggatctccagg
+repo: git@github.com:kalekundert/sgrna_sensor_scripts.git
+commit: 95d9cae15db5b6d9fa4ce87a5a46b50cc349d183
+date: June 23, 2017
+
+* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *
+* Forward primers were manually designed from the sequences produced by the *
+* above command.                                                            *
+* * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * 
+
+Number of oligos: 5
+
+Primer names (ready to copy into Elim form):
+pSGRA_RFP_ssRA_TM_60_REV
+pSGRA_RFP_ssRA_LAA_TM_60_FOR
+pSGRA_RFP_ssRA_AAV_TM_60_FOR
+pSGRA_RFP_ssRA_ASV_TM_60_FOR
+pSGRA_RFP_ssRA_DAS_TM_60_FOR
+
+Primer sequences (ready to copy into Elim form):
+GTTTTCATCGTTCGCCGCagcaccggtggagtg
+TATGCGCTGGCGGCGtaaggatccaaactcgagtaag
+TATGCGGCGGCGGTGtaaggatccaaactcgagtaag
+TATGCGGCGAGCGTGtaaggatccaaactcgagtaag
+TATGCGGATGCGAGCtaaggatccaaactcgagtaag
+
+1234567890123456789012345678901234567890123456789012345678901234567890123456789
+         1         2         3         4         5         6         7

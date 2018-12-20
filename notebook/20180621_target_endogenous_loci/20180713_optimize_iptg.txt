@@ -1,0 +1,52 @@
+cmd: ./20180621_target_endogenous_loci/optimize_iptg.txt
+repo: /home/kale/research/projects/201511_sgrna_sensor_local/notebook
+commit: ec01032e9b558914487957462a4c13ad52a046ff
+date: July 13, 2018
+
+1. Start overnight cultures of lz/on and lz/off.
+
+2. Prepare media (EZ + Carb + Chlor + ATC) with 
+   concentrations of IPTG from 4 mM to 125 µM:
+
+    - Put 2 mL media in wells A1, B1 of a 24-well 
+      block.
+    - Put 1 mL media in wells A2-A6, B2-B6, C6, D6
+    - Add 4 µL 1M IPTG to wells A1, B1
+    - Perform a serial dilution in rows A and B, 
+      transfering 1 mL on each step.
+
+3. Inoculate each well with 4 µL overnight culture:
+
+    - Row A,C: lz/on
+    - Row B,D: lz/off
+
+4. Grow at 37°C for 8h.
+
+5. Measure β-galactosidase activity:
+
+    - Thaw 2X β-Galactosidase Assay Buffer on ice.
+
+    - Mix 800 µL of this assay buffer with an equal 
+      volume of Y-PER Reagent to make the working 
+      solution (WS). Each well requires 100 µL of the 
+      WS, and I have 15 wells (2 guides × 7 IPTG 
+      concentrations + 1 blank), so I need 1500 µL, 
+      plus some extra.  The maximum culture volume 
+      allowed per well is 100 µL.
+
+    - Determine the OD660 of all test cultures and 
+      record values. Include one well that contains 
+      growth media only (no cells) as a blank for the 
+      spectrophotometer.
+
+    - Add 100 µL of each culture to the wells.
+
+    - Use a timer to monitor the reaction. Apply 100 
+      µL of the WS to each well and start timer.
+
+    - Incubate the plate at room temperature for 
+      approximately 30 minutes.
+
+    - Use the well containing medium only (no cells) 
+      to zero the instrument.  Measure the absorbance 
+      at 420nm of each well.

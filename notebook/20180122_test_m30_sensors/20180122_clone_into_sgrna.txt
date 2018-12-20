@@ -1,0 +1,24 @@
+cmd: ./clone_into_sgrna.py m30/gcc m30/ggc m30/cgc -b mhf/30
+repo: git@github.com:kalekundert/sgrna_sensor_scripts.git
+commit: 0969adfb1e5c6af5357feacc4b61933fa9d36403
+date: January 22, 2018
+
+Number of oligos: 6
+
+Primer names (ready to copy into Elim form):
+M30_CGC_TM59_REV
+M30_CGC_TM62_FOR
+M30_GCC_TM57_REV
+M30_GCC_TM62_FOR
+M30_GGC_TM59_REV
+M30_GGC_TM62_FOR
+
+Primer sequences (ready to copy into Elim form):
+CCGCGTATACGGGACACGcttatttcaacttgctatgctg
+ATACCAGCCGAAAGGCCCTTGGCAGCCacggcaccgagtcg
+Ggctgccaagggc
+acggcaccgagtcg
+TCGGCTGGTATCCgcgtatacgggacacc
+AAGGCCCTTGGCAGCCacggcaccgagtcg
+
+₁₂₃₄₅₆₇₈₉1₁₂₃₄₅₆₇₈₉2₁₂₃₄₅₆₇₈₉3₁₂₃₄₅₆₇₈₉4₁₂₃₄₅₆₇₈₉5₁₂₃₄₅₆₇₈₉6₁₂₃₄₅₆₇₈₉7₁₂₃₄₅₆₇₈₉8

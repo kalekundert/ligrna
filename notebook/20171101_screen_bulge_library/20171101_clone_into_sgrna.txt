@@ -1,0 +1,20 @@
+cmd: ./clone_into_sgrna.py -s tdh1 -c 16 rbi/4/8 rbi/4/7 rbi/4/6
+repo: git@github.com:kalekundert/sgrna_sensor_scripts.git
+commit: 0969adfb1e5c6af5357feacc4b61933fa9d36403
+date: November 1, 2017
+
+Number of oligos: 4
+
+Primer names (ready to copy into Elim form):
+TDH1_RBI_4_6_TM58_REV, TDH1_RBI_4_7_TM58_REV, TDH1_RBI_4_8_TM58_REV
+TDH1_RBI_4_6_TM60_FOR
+TDH1_RBI_4_7_TM60_FOR
+TDH1_RBI_4_8_TM60_FOR
+
+Primer sequences (ready to copy into Elim form):
+TTCGGCTGGTATCNNNtgaaacaccgtctttatatacttat
+AGGCCCTTGGCAGCNNNNNtgaaataaggctagtccgtta
+AGGCCCTTGGCAGCNNNNNNtgaaataaggctagtccgtta
+AGGCCCTTGGCAGCNNNNNNNtgaaataaggctagtccgtta
+
+₁₂₃₄₅₆₇₈₉1₁₂₃₄₅₆₇₈₉2₁₂₃₄₅₆₇₈₉3₁₂₃₄₅₆₇₈₉4₁₂₃₄₅₆₇₈₉5₁₂₃₄₅₆₇₈₉6₁₂₃₄₅₆₇₈₉7₁₂₃₄₅₆₇₈₉8

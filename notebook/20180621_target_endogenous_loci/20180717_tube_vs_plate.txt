@@ -1,0 +1,37 @@
+1. Make overnight cultures of lz/on, lz/off, 
+   lz/rxb/11/1, and lz/mhf/30.
+
+2. Start the day cultures:
+
+   - Prepare 5 mL each of EZ-theo (apo) and EZ+theo 
+     (holo) with 1 mM IPTG.
+
+   - Inoculate 1 mL apo and holo cultures for each 
+     strain (8 total).
+
+3. Grow at 37°C for 4h.
+
+4. Start the β-galactosidase assay:
+
+   - Prepare 3 mL of Working solution (WS):
+     - 1500 µL Y-PER
+     - 1500 µL 2x β-galactosidase assay buffer.
+
+   - Prepare a blank well on a plate by mixing:
+     - 100 µL apo lz/on culture
+     - 50 µL Y-PER
+     - 50 µL water
+
+   - For each culture:
+     - Measure OD660
+     - Mix 350 µL of the culture with 350 µL WS.
+     - Transfer 200 µL to the plate.
+
+5. After 30, 60, and 90 min, for each culture: 
+
+   - Take a 140 µL aliquot.
+   - Quench the reaction with 60 µL stop solution.
+   - Pellet at max speed for 5 min.
+   - Measure A420.
+
+

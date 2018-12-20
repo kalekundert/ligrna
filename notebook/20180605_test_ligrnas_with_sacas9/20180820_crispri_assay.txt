@@ -1,0 +1,20 @@
+cmd: ./crispri_assay.py
+repo: git@github.com:kalekundert/sgrna_sensor_protocols.git
+commit: 82f29bf1cc63b680594bf736fac00ec18fbbf923
+date: August 20, 2018
+
+1. Make 1 mL overnight cultures of the designs you 
+   want to test.
+
+2. Grow each culture with and without ligand, 
+   while inducing Cas9:
+
+   - Subculture 4 μL of each overnight into 1 mL 
+     apo media and 1 mL holo media.
+
+   - Grow at 37°C for 8h
+
+3. Dilute 0.5 μL of each culture into 250 μL PBS.
+
+4. Measure the GFP and RFP fluorescence of each 
+   culture by flow cytometry.

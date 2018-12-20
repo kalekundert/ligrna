@@ -1,0 +1,37 @@
+- Digest and dephosphorylate the backbone:
+
+   - 38.29 μL water
+   - 3.71 μL pJMP3 (1 µg)
+   - 5.00 μL 10x CutSmart Buffer
+   - 1.00 μL 20 U/µL HindIII-HF
+   - 2.00 μL QuickCIP (NEB M0508)
+   - Incubate at 37°C for 15 min.
+   - Heat-inactivate at 80°C for 20 min.
+
+- Digest the insert:
+
+   - 40.71 μL water
+   - 3.29 μL gBlocks (10 ng/μL, 1:1 insert:backbone)
+   - 5.00 μL 10x CutSmart buffer
+   - 1.00 μL 20 U/μL HindIII-HF
+   - Incubate at 37°C for 15 min.
+   - Heat-inactivate at 80°C for 20 min.
+
+- Gel purify
+
+  - Elute in 25 μL water
+
+- Setup the ligation reaction.
+
+   - 1.00 μL T4 DNA ligase
+   - 1 μL 10 T4 DNA ligase buffer
+   - 4 μL backbone (gel-purified)
+   - 4 μL insert (gel-purified)
+   - Incubate at room temperature for 1h.
+
+- Transform 
+
+  - Mix 2 μL ligation with 20 μL CaCl2 competent 
+    Top10 cells.
+
+vim: tw=53

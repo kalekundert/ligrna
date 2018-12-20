@@ -1,0 +1,30 @@
+cmd: golden_gate.py 3 1
+repo: git@github.com:kalekundert/wetlab_protocols.git
+commit: 249ea0a401fc899aecc42a144fdb83b0e6b1211d
+date: August 22, 2017
+
+1. Setup the Golden Gate reaction(s):
+
+   Reagent                 Conc  Each Rxn
+   ──────────────────────────────────────
+   Water                          5.00 μL
+   Backbone                       1.00 μL
+   Insert #1                      0.50 μL
+   Insert #2                      0.50 μL
+   Insert #3                      0.50 μL
+   T4 ligase buffer         10x   1.00 μL
+   T4 DNA ligase       400 U/μL   0.50 μL
+   DpnI                 20 U/μL   0.50 μL
+   Golden Gate enzyme   10 U/μL   0.50 μL
+   ──────────────────────────────────────
+                                 10.00 μL
+
+2. Run the following thermocycler protocol:
+
+   (a) 42°C for 5 min.
+   (b) 16°C for 5 min.
+   (c) Repeat steps (a) and (b) 30 times.
+   (d) 55°C for 10 min.
+
+3. Transform all 10 μL of the Golden Gate reaction 
+   into 100 μL CaCl₂ competent Top10 cells.

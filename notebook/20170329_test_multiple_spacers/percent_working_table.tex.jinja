@@ -1,0 +1,44 @@
+\documentclass{article}
+
+\usepackage{fontspec}
+\usepackage{tabularx}
+\usepackage{booktabs}
+\usepackage{multicol}
+\usepackage{multirow}
+\usepackage{graphicx}
+\usepackage{nopageno}
+\usepackage{array}
+\usepackage{geometry}
+\usepackage{units}
+
+\setmainfont{Liberation Sans}
+\geometry{top=1in, bottom=1in, left=1.8in, right=1.8in}
+
+\begin{document}
+
+\begin{table}
+\centering
+\begin{tabular}{lrr}
+\toprule
+\bfseries Sensor &
+\begin{tabular}{@{}r@{}}\bfseries Active \\ \bfseries Spacers\end{tabular} &
+\begin{tabular}{@{}r@{}}\bfseries Percent \\ \bfseries Active\end{tabular} \\
+\midrule
+{% for sensor in sensors %}
+ {{ aliases[sensor] }} &
+ {{ num_active[sensor] }}/{{ num_tried[sensor] }} &
+ {{ (100 * num_active[sensor]) // num_tried[sensor] }}\% \\
+{% endfor %}
+\bottomrule
+\end{tabular}
+\caption{
+Sensitivity of sgRNA sensors to different spacer sequences.  For each spacer, 
+ the indicated number of spacers were tested in triplicate in a \emph{in vitro} 
+ cleavage assay.  We quantified cleavage using gel densitometry (ImageJ), and 
+ defined activity as the difference between the cleavage with and without 10 mM 
+ theophylline.  We used an independent Student's T-test to compare the sensors 
+ to the controls and considered sensors with $p<{{ p_threshold }}$ to be 
+ active.}
+\end{table}
+
+\end{document}

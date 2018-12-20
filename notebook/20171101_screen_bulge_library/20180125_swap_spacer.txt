@@ -1,0 +1,95 @@
+cmd: ./s_cerevisiae/swap_spacer.py
+repo: git@github.com:kalekundert/sgrna_sensor_protocols.git
+commit: d27e967ac88ec6205a239f4e25a1ac51c8d54fe1
+date: January 25, 2018
+
+1. Setup a zymolase reaction:
+
+   - 46.1 μL water
+   - 3.3 μL OD=10 yeast culture
+   - 0.6 μL 5 U/μL zymolase
+
+2. Incubate at 37°C for 30 min, then 95°C for 10 min.
+
+3. Setup a 50 μL PCR reaction:
+
+   - 15 μL water
+   - 5 μL primer mix
+   - 5 μL zymolase reaction
+   - 25 μL 2x Q5 master mix
+
+4. Run the PCR reaction:
+
+   - 22 cycles
+   - 12s extension time
+   - 60°C annealing temperature
+
+5. Do a PCR cleanup and elute in 25 μL water.
+
+6. Setup the restriction digest of the destination
+   vector:
+
+   - 7 μL ≈800 ng/μL pKBK017
+   - 1 μL 10x CutSmart buffer
+   - 2 μL BsaI-HF
+
+7. Incubate at 37°C for 30 min, then 65°C for 20 min.
+
+8. Gel purify the entire reaction.
+
+9. Setup a Golden Gate reaction:
+
+   - 1.0 μL ≈160 ng/μL pKBK017 (linearized)
+   - 25.0 colony PCR product
+   - 3.1 μL 10x T4 ligase buffer
+   - 1.0 μL T4 ligase
+   - 1.0 μL BsaI-HF
+
+10. Run the following thermocycler protocol:
+
+    - 42°C for 5 min
+    - 16°C for 5 min
+    - 30 cycles
+
+11. Desalt and concentrate the DNA to transform using 
+    a Zymo spin column with the Qiagen buffers:
+
+    - Add 285 μL PB to the ligation reaction.
+
+    - Transfer to a Zymo spin column.
+
+    - Wash with 200 μL PE.
+
+    - Wash with 200 μL PE again.
+
+    - Elute in 10 μL water.
+
+12. Transform the DNA into Top10 cells by 
+    electroporation.  For each transformation:
+
+    - Pre-warm 1 mL SOC and a selective plate.
+
+    - Chill an electroporation cuvette and 2 μL (≈250 
+      ng) of DNA on ice.  
+
+    - Thaw an aliquot of competent cells on ice for 
+      ~10 min.
+
+    - Pipet once to mix the cells with the DNA, then 
+      load into the cuvette.  Tap to remove bubbles.
+
+    - Shock at 1.8 kV with a 5 ms decay time (for 
+      cuvettes with a 1 mm gap).
+
+    - Immediately add 1 mL pre-warmed SOC.  If you're 
+      transforming multiple aliquots of cells with 
+      the same DNA, combine them.
+
+    - Recover at 37°C for 1h.
+  
+    - Plate several 10x dilutions of cells (e.g.  
+      from 10⁻³ to 10⁻⁶) to count how many were 
+      transformed.
+
+    - Transfer cells to 50 mL selective media and 
+      grow overnight at 37°C.

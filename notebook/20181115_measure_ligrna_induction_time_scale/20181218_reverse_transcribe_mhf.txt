@@ -1,0 +1,76 @@
+cmd: ./reverse_transcribe.py -d /home/kale/sgrna/data/nanodrop/20181130_mhf_30_timecourse.tsv
+repo: git@github.com:kalekundert/wetlab_protocols.git
+commit: 99f0a7da1b00026c2e4b2b9c8964048c38039c48
+date: December 18, 2018
+
+1. Setup DNase reactions for each sample:
+
+   - 0.5 µL 10 ezDNase buffer
+   - 0.5 µL ezDNase enzyme (Invitrogen 11766051)
+   - 1 µg RNA
+   - Water to 5 µL
+
+   Consider preparing a 2x ezDNase master mix.
+
+2. Incubate at 37°C for 2 min.  Then briefly 
+   centrifuge and place on ice.
+
+3. Add 2 µL SuperScript IV VILO master mix 
+   (Invitrogen 11766050) and 3 µL water to each 
+   sample.
+
+   The master mix contains random hexamers, which 
+   will prime the reverse transcription of all RNAs 
+   in the sample.
+
+4. Incubate at the following temperatures:
+
+   - 25°C for 10 min
+   - 50°C for 10 min (15 min)
+   - 85°C for 5 min
+   - hold at 4°C
+
+───────────────────────────────────────────────────────
+                           RNA Conc  RNA Vol  Water Vol
+Construct                   (ng/uL)     (µL)       (µL)
+───────────────────────────────────────────────────────
+mhf/30 0:00 apo              366.12     2.73      1.27
+mhf/30 0:00 holo             401.80     2.49      1.51
+no GFP                       312.52     3.20      0.80
+mhf/30 2:09 apo->apo         285.64     3.50      0.50
+mhf/30 2:09 apo->holo        273.88     3.65      0.35
+mhf/30 2:09 holo->apo        327.20     3.06      0.94
+mhf/30 2:09 holo->holo       351.52     2.84      1.16
+mhf/30 4:25 apo->apo         303.56     3.29      0.71
+mhf/30 4:25 apo->holo        295.60     3.38      0.62
+mhf/30 4:25 holo->apo        403.38     2.48      1.52
+mhf/30 4:25 holo->holo       337.20     2.97      1.03
+mhf/30 7:07 apo->apo         309.00     3.24      0.76
+mhf/30 7:07 apo->holo        329.04     3.04      0.96
+mhf/30 7:07 holo->apo        367.56     2.72      1.28
+mhf/30 7:07 holo->holo       497.60     2.01      1.99
+mhf/30 10:00 apo->apo        327.88     3.05      0.95
+mhf/30 10:00 apo->holo       333.28     3.00      1.00
+mhf/30 10:00 holo->apo       532.76     1.88      2.12
+mhf/30 10:00 holo->holo      381.04     2.62      1.38
+mhf/30 13:20 apo->apo        350.92     2.85      1.15
+mhf/30 13:20 apo->holo       471.14     2.12      1.88
+mhf/30 13:20 holo->apo       561.90     1.78      2.22
+mhf/30 13:20 holo->holo      603.30     1.66      2.34
+mhf/30 17:01 apo->apo        552.36     1.81      2.19
+mhf/30 17:01 apo->holo       522.93     1.91      2.09
+mhf/30 17:01 holo->apo       580.34     1.72      2.28
+mhf/30 17:01 holo->holo      561.15     1.78      2.22
+mhf/30 21:00 apo->apo        522.71     1.91      2.09
+mhf/30 21:00 apo->holo       554.94     1.80      2.20
+mhf/30 21:00 holo->apo       550.04     1.82      2.18
+mhf/30 21:00 holo->holo      540.56     1.85      2.15
+mhf/30 25:20 apo->apo        544.48     1.84      2.16
+mhf/30 25:20 apo->holo       522.87     1.91      2.09
+mhf/30 25:20 holo->apo       623.91     1.60      2.40
+mhf/30 25:20 holo->holo      623.76     1.60      2.40
+mhf/30 30:00 apo->apo        487.28     2.05      1.95
+mhf/30 30:00 apo->holo       506.95     1.97      2.03
+mhf/30 30:00 holo->apo       568.95     1.76      2.24
+mhf/30 30:00 holo->holo      583.66     1.71      2.29
+───────────────────────────────────────────────────────

@@ -1,0 +1,109 @@
+cmd: competent_cells/s_cerevisiae/chemicompetent_dueber.py
+repo: git@github.com:kalekundert/sgrna_sensor_protocols.git
+commit: f02173c7e06e128f0bd510ba4d3876d60e0d2c24
+date: September 12, 2017
+
+Day 1
+=====
+1. Prepare 10 or more 81 cm² selective plates [1].
+
+2. Make sure your 50% PEG₃₅₀₀ solution is fewer than 
+   3 months old.
+
+3. Chill the following items and reagents overnight 
+   in the cold room:
+
+   - 2 50 mL pipets
+   - 1 box 1000 μL pipet tips
+   - 760 mL milliQ water
+   - 70 mL 100 mM LiOAc
+   - 5 mL 1M LiOAc
+   - 30 mL 50% PEG₃₅₀₀
+
+4. Start a 12 mL overnight culture in YPD from a 
+   fresh colony.  Use sterile-filtered YPD, not 
+   autoclaved YPD [2].
+
+Day 2
+=====
+1. Inoculate 600 mL YPD with all 12 mL of the 
+   overnight culture.  The OD should be near 0.2.
+
+2. Incubate the cells at 30°C with shaking at 225 rpm 
+   in a 1L baffled flask until they reach OD 1.0.  
+   This should take about 5h.
+
+3. Setup a NotI digestion to linearize 120 μg of your 
+   library:
+
+   Reagent             Conc       Vol
+   ──────────────────────────────────
+   Water                     to 85 μL
+   Plasmid DNA                 120 μg
+   CutSmart Buffer      10x   8.50 μL
+   NotI             20 U/μL   7.00 μL
+
+   - Incubate 1h at 37°C, then 20 min at 65°C, then 
+     hold at 12°C.
+
+4. Boil 1200 μL ssDNA:
+
+   - Thaw the ssDNA at room temperature.
+   - Boil for 5 min in a 100°C heat block.
+   - Cool on ice.
+
+5. Wash the cells:
+
+   - Pellet 3270g, 4°C, 5 min.
+   - Resuspend in 600 mL chilled water.
+
+   - Pellet 3270g, 4°C, 5 min.
+   - Resuspend in 60 mL 100 mM LiOAc.
+
+6. Setup the transformation:
+
+   - Pellet 3270g, 4°C, 5 min.
+   - Resuspend in chilled water to a final volume of 
+     6.0 mL (usually about 2.64 mL).
+
+   - Add 28.80 mL 50% PEG₃₅₀₀, vortex
+
+   - Add 4.32 mL 1M LiOAc, vortex
+
+   - Mix the library DNA with the reboiled ssDNA, 
+     then add to cells and vortex.
+
+7. Pre-incubate the cells at 30°C with shaking at 225 
+   rpm for 30 min.
+
+8. Heat shock the cells in a 42°C water bath for 45 
+   min.
+
+9. Wash and plate the cells:
+
+   - Pellet 3270g, 4°C, 5 min.
+   - Resuspend in 1 mL water.
+
+   - Prepare a series of 10x dilutions (e.g. 5 μL 
+     cells into 45 μL water) to assess the number of 
+     transformants.  Plate 20 μL of each dilution.
+
+   - Spread the remaining cells evenly between all 
+     the library plates.
+
+Footnotes
+=========
+[1] The specific number of plates you use isn't 
+    very important.  Usually people want to get 
+    individual colonies to minimize the bias due 
+    to growth competition, but that's not really 
+    practical for libraries bigger than 10⁵ (which 
+    require about 40 100 cm² plates to get 
+    individual colonies).  Since we're aiming for 
+    lawns, more plates means less bias but more 
+    effort.  I think 10 is a reasonable trade-off.
+
+[2] The original protocol stresses this point, but 
+    doesn't explain why.  Autoclaving YPD does cause 
+    the sugars in it to caramelize, but it's not 
+    clear why this would be a problem.

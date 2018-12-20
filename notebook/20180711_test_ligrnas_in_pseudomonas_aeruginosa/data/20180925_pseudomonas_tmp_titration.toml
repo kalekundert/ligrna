@@ -1,0 +1,49 @@
+ref_theo_mM = 0.5
+
+[row.A]
+  tmp_ug_mL = 32
+[row.B]
+  tmp_ug_mL = 16
+[row.C]
+  tmp_ug_mL = 8
+[row.D]
+  tmp_ug_mL = 4
+[row.E]
+  tmp_ug_mL = 2
+[row.F]
+  tmp_ug_mL = 1
+[row.G]
+  tmp_ug_mL = 0.5
+[row.H]
+  tmp_ug_mL = 0
+
+[col.2]
+  theo_mM = 0
+  sgrna = "on (bad)"
+[col.3]
+  theo_mM = 0.5
+  sgrna = "on (bad)"
+[col.4]
+  theo_mM = 0
+  sgrna = "on"
+[col.5]
+  theo_mM = 0.5
+  sgrna = "on"
+[col.6]
+  theo_mM = 0
+  sgrna = "off"
+[col.7]
+  theo_mM = 0.5
+  sgrna = "off"
+[col.8]
+  theo_mM = 0
+  sgrna = "rxb/11/1"
+[col.9]
+  theo_mM = 0.5
+  sgrna = "rxb/11/1"
+[col.10]
+  theo_mM = 0
+  sgrna = "mhf/30"
+[col.11]
+  theo_mM = 0.5
+  sgrna = "mhf/30"

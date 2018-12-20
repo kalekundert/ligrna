@@ -1,0 +1,62 @@
+cmd: ./pcr_cloning.py 3 60
+repo: git@github.com:kalekundert/wetlab_protocols.git
+commit: bfa794f7e14ce98a8af186910c17030ae2d81a7a
+date: January 25, 2018
+
+1. Prepare each 10x primer mix:
+
+   Reagent           Conc  Each Rxn
+   ────────────────────────────────
+   water                   38.00 μL
+   forward primer  200 μM   1.00 μL
+   reverse primer  200 μM   1.00 μL
+   ────────────────────────────────
+                           40.00 μL
+
+2. Setup 3 PCR reactions and 1 negative control:
+
+   Reagent             Conc  Each Rxn  Master Mix
+   ──────────────────────────────────────────────
+   water                      3.80 μL    15.20 μL
+   primer mix           10x   1.00 μL            
+   template DNA   100 pg/μL   0.20 μL     0.80 μL
+   Q5 master mix         2x   5.00 μL    20.00 μL
+   ──────────────────────────────────────────────
+                             10.00 μL     9.00 μL/rxn
+
+3. Run the following thermocycler protocol:
+
+   98°C → 98°C → 60°C → 72°C → 72°C → 12°C
+   0:30   0:10   0:20   2:00   2:00    ∞
+         └──────────────────┘
+                  25x
+
+4. Setup 3 ligation reactions:
+
+   Reagent                Conc  Each Rxn  Master Mix
+   ─────────────────────────────────────────────────
+   water                        13.50 μL    46.57 μL
+   T4 ligase buffer        10x   2.00 μL     6.90 μL
+   T4 PNK              10 U/μL   0.50 μL     1.72 μL
+   T4 DNA ligase      400 U/μL   0.50 μL     1.72 μL
+   DpnI                20 U/μL   0.50 μL     1.72 μL
+   PCR product       ≈50 ng/μL   3.00 μL            
+   ─────────────────────────────────────────────────
+                                20.00 μL    17.00 μL/rxn
+
+   - Incubate at room temperature for 1h.
+
+5. Transform 2 μL ligated DNA into 20 μL CaCl₂ 
+   competent Top10 cells.
+
+6. Pick 2-6 individual colonies for each reaction to 
+   send for sequencing.  (You can pick fewer colonies 
+   for reactions with shorter primers.)  Resuspend 
+   the colonies in 30 μL EB, then send 15 μL for 
+   sequencing and keep the rest at 4°C.
+
+7. Start 3.5 mL overnight cultures in selective media 
+   for each picked colony.  If the sequencing data 
+   isn't available by the next morning, pellet the 
+   cells and store the pellets at -20°C.  Miniprep 
+   the cultures with the right sequence.

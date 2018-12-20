@@ -1,0 +1,160 @@
+1. Start 1 mL overnight cultures for:
+
+   - One ligRNA (e.g. rxb/11/1 or mhf/30): LB + Carb 
+     + Chlor
+
+   - The "no GFP" control (e.g. wildtype MG1655 
+     without GFP/RFP/KanR in the genome): LB + Chlor
+
+2. Start day cultures:
+
+   - Thaw 50 mL each of apo and holo media.
+
+   - Subculture 88 µL of the ligRNA overnight into 
+     22 mL apo media and 22 mL holo media.
+
+   - Subculture 4 µL of the "no GFP" control into 1 
+     mL LB+Chlor.
+
+   - Grow at 37°C for 4h30.
+     - This is the earliest time (roughly) at which 
+       the cultures are thick enough to consistently 
+       extract 1 µg RNA.
+
+3. Get ready to take timepoints:
+
+   - Label 39 1.5 mL tubes (one for each of the 
+     conditions listed in the table below).
+
+   - Fill 9 columns of a 96-well block with 1.1 mL 
+     media in every other row, alternating between 
+     apo and holo (2 rows each).  Pre-warm the block 
+     to 37°C.
+
+   - Prepare a workspace in the fume hood:
+     - Wipe surface with ethanol and RNaseZap
+     - Benchtop centrifuge
+     - 37°C block with at least 38 slots.
+     - Timer
+     - Tube racks
+     - 8-channel P1000
+     - Three boxes of P1000 tips, two with tips only 
+       in every other row
+     - Repeater pipet
+     - 10 mL repeater tips
+     - Waste beaker (for media)
+     - Waste container (for TRIzol)
+     - Glass dish (for TRIzol)
+
+   - Just before starting the next step:
+     - Fill a glass dish with 50 mL TRIzol.
+     - Arrange the labeled tubes in the 37°C block.
+
+4. Resuspend the apo and holo day cultures (except 
+   the 0:00 timepoint, see table below) in both apo 
+   and holo media (4 combinations):
+
+   - Pipet 1 mL of each day culture into a properly 
+     labeled tube (in the 37°C block).
+
+   - Pellet at 16,000g for 30s.
+
+   - Discard supernatant.  One or two sharp downward 
+     shakes is usually enough to get the last bit of 
+     media out.
+
+   - Place the pellets in the 37°C block.
+
+   - Start a timer.
+
+   - For each timepoint, simultaneously resuspend all 
+     4 combinations of ligand conditions using a 
+     multichannel pipet.
+
+     - Do the lastest timepoints first and the 
+       earliest timepoints last.
+
+     - Aim for 0:30 between each timepoints.
+
+   ────────────────────────────────────────────────────────────
+                     Switch      Pellet              Add TRIzol
+   Timepoint  N       Media       Cells      target      actual
+   ────────────────────────────────────────────────────────────
+       30:00  4                          
+       25:20  4                          
+       21:00  4                          
+   ────────────────────────────────────────────────────────────
+       17:00  4                          
+       13:20  4                          
+       10:00  4                          
+   ────────────────────────────────────────────────────────────
+        7:00  4                          
+        4:20  4                          
+        2:00  4                          
+   ────────────────────────────────────────────────────────────
+        0:00  2         N/A         N/A   
+    "no GFP"  1         N/A         N/A   
+   ────────────────────────────────────────────────────────────
+
+5. Stop each timepoint as appropriate:
+
+   ───────────────────────────────────────
+   Countdown  Task   
+   ───────────────────────────────────────
+        1:05  Load centrifuge.
+        0:52  Pellet at 16,000g for 15s
+        0:25  Decant supernatant; arrange
+              diagonally in tube rack
+        0:00  Add 1 mL TRIzol
+   ───────────────────────────────────────
+
+6. Store the cell extracts at 4°C overnight, if you 
+   don't want to continue all the way to end.
+
+7. Finish the RNA extractions.
+
+   - Label 39 clean 1.5 mL tubes.
+
+   - Add 200 µL chloroform.
+
+   - Vortex vigorously.
+
+   - Centrifuge for 15 min at 20,000g and 4°C.
+
+   - Transfer 400 µL of the aqueous phase (top, not 
+     pink) to a clean tube, taking care to not 
+     transfer any of the organic phase.
+
+8. Concentrate and purify the RNA by ethanol 
+   precipitation:
+
+   - Add 1 µL GlycoBlue (Invitrogen AM9516) to each 
+     sample.
+
+   - Add 500 µL isopropanol.
+
+   - Incubate at room temperature for 10 min.
+
+   - Pellet for 20 min at 12,000g and 4°C.
+
+   - Carefully pipet off all supernatant.
+
+   - Resuspend pellet in 1 mL 70% EtOH.
+
+   - Vortex briefly
+
+   - Pellet for 5 min at 7,500g and 4°C.
+
+   - Carefully pipet off all supernatant.
+
+   - Air dry for 10 min.
+
+   - Resuspend RNA in 10 µL water.  
+     - Pipet to mix
+     - Incubate at 50°C with intermittent gentle 
+       vortexing.
+
+9. Measure the RNA concentration of each sample using 
+   the Nanodrop.  Expected yield: ~300±125 ng/µL.
+
+vim: tw=53

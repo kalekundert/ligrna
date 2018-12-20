@@ -1,0 +1,19 @@
+1. Setup 20 restriction digest reactions by mixing
+   the following reagents at room temperature in the 
+   order given.
+
+   Reagent               Conc  Each Rxn  Master Mix
+   ────────────────────────────────────────────────
+   water                        5.00 μL   110.00 μL
+   CutSmart Buffer        10x   0.80 μL    17.60 μL
+   EcoRI-HF           20 U/μL   0.10 μL     2.20 μL
+   HindIII-HF         20 U/μL   0.10 μL     2.20 μL
+   DNA              250 ng/μL   5.00 μL            
+   ────────────────────────────────────────────────
+                               11.00 μL     6.00 μL/rxn
+
+2. Incubate at 37°C for 1h, then at 80°C for 20 min 
+   (to heat-inactivate the enzyme).
+
+3. Setup the in vitro transcription reactions 
+   immediately, or store at -20°C.

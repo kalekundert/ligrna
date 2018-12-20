@@ -1,0 +1,1 @@
+../../../data/plate_reader/20180921_pseudomonas_growt_curve_mic.txt

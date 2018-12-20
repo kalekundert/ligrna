@@ -1,0 +1,29 @@
+\begin{tabular}{rllrrrrrcl}
+\toprule
+
+&
+&
+&
+\multicolumn{4}{c}{Cleavage (\%)} &
+&
+&
+\\
+\cmidrule(r){4-7}
+
+\# &
+Strategy &
+Domain &
+\multicolumn{1}{r}{\textit{apo}} &
+\multicolumn{1}{r}{\textit{holo}} &
+\multicolumn{1}{r}{Δ} &
+\multicolumn{1}{r}{σ} &
+N &
+Active? &
+Sequence \\
+\midrule
+{% for i, row in df.iterrows() %}
+ {{ row.id }} & {{ row.strategy }} & {{ row.domain }} & {{ '%.0f' % (100*row.mean_apo) }} & {{ '%.0f' % (100*row.mean_holo) }} & {{ '%.0f' % (100*row.mean_change) }} & {{ '%.0f' % (100*row.std_change) if row.num_replicates > 1 else '' }} & {{ row.num_replicates }} & {{ "✓" if row.active else "" }} &
+ {{ row.pretty_sequence }} \\
+{% endfor %}
+\bottomrule
+\end{tabular}
