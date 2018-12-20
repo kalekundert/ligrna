@@ -1,0 +1,10 @@
+sequence: guuucagagcuaugcuggaaacagcauagcaaguugaaauAAggCUAGUccGUUAUCAACUUccgacuggcgagagccagguaacgaaugAAGUggcaccgagucggugcuuuuuu
+macrostates:
+  active: (......................................)xx..xxxxx..xxxxxxx(..................................).(.............)......
+  misfold_nexus:
+          (......................................)..|||||||||.................................................................
+
+aptamer:
+  sequence: CCGACUGGCGAGAGCCAGGUAACGAAUG
+  fold:     (...(((((....))))).........)
+  affinity: 0.040 #uM
