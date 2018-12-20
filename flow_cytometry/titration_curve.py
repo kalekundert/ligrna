@@ -22,7 +22,7 @@ Options:
 
     -O --output-size <width,height>
         Specify what the width and height of the resulting figure should be, in 
-        inches.  The two numbers must be separated by a comma.
+        inches.  The two numbers must be separated by an 'x'.
 
     -c --channel <channel>
         The channel to plot.  By default, this is deduced from the YAML file.  
@@ -87,6 +87,10 @@ Options:
         is covering something up (and the colors of the lines are clear enough) 
         or if you're preparing a figure for a paper.
 
+    -M --no-margin
+        Don't include any margin around the edge of the figure.  This can make 
+        it easier to fit the plot as a panel in a larger figure.
+
     -I --inkscape
         Create an SVG output file that works well with inkscape by having 
         matplotlib create a PDF, then converting it to SVG in a second step.  
@@ -121,6 +125,7 @@ class TitrationCurve:
         self.legend = True
         self.output_size = None
         self.ylim = None
+        self.margin = True
 
         self.figure = None
         self.axes = None
@@ -145,6 +150,10 @@ class TitrationCurve:
 
         if self.legend:
             self.axes.legend(loc=self.legend_loc)
+
+        if not self.margin:
+            self.figure.tight_layout(pad=0)
+
             
     def _setup_figure(self):
         self.figure, self.axes = plt.subplots(1, 1, figsize=self.output_size)
@@ -237,21 +246,30 @@ class TitrationCurve:
 
             data = [(x, y) for x, ys in locs.items() for y in ys]
             x_data, y_data = map(np.array, zip(*data))
+            log_y_data = np.log10(y_data)
 
-            def logistic_ec50(x, ec50, y_min, y_max):
+            def logistic_ec50(x, ec50, y_min, y_max): #
+                # https://en.wikipedia.org/wiki/EC50
+                # https://en.wikipedia.org/wiki/Hill_equation_(biochemistry)
                 y = np.empty(x.shape)
                 y[x != 0] = y_min + (y_max - y_min) / (1 + (ec50 / x[x != 0]))
                 y[x == 0] = y_min
                 return y
 
-            initial_guess = 100, min(y_data), max(y_data)
-            bounds = (0, 0, 0), (np.inf, np.inf, np.inf)
+            def logistic_ec50_inv(y, ec50, y_min, y_max): #
+                return ec50 / (((y_max - y_min) / (y - y_min)) - 1)
+
+            initial_guess = 100, min(log_y_data), max(log_y_data)
+            bounds = (0, -np.inf, -np.inf), (np.inf, np.inf, np.inf)
 
             x_fit = np.geomspace(x_data[x_data > 0].min(), x_data.max())
             x_fit = np.concatenate((np.zeros(1), x_fit))
 
+            # Fit to the log of the fluorescence values, since that's really 
+            # the scale we're interested in (i.e. we want the EC50 to be the 
+            # middle of the curve in log-space, not linear space).
             fit_params, fit_cov = curve_fit(
-                    logistic_ec50, x_data, y_data,
+                    logistic_ec50, x_data, log_y_data,
                     p0=initial_guess, bounds=bounds)
 
             y_fit = logistic_ec50(x_fit, *fit_params)
@@ -261,8 +279,12 @@ class TitrationCurve:
             data_style['linestyle'] = 'none'
             #data_style['markersize'] = np.sqrt(4)
 
+            if label:
+                label += f' (EC50={fit_params[0]:.1f}±{np.sqrt(fit_cov[0,0]):.1f} µM)'
+
+
             self.axes.plot(x_data, y_data, label='_nolegend_', **data_style)
-            self.axes.plot(x_fit, y_fit, label=label, **style)
+            self.axes.plot(x_fit, 10**y_fit, label=label, **style)
 
             y_max = np.amax(y_data)
             y_min = np.amin(y_data)
@@ -376,9 +398,10 @@ if __name__ == '__main__':
     analysis.exclude_label_filter = args['--exclude-query']
     analysis.combine_curves = args['--combine-curves']
     analysis.legend = not args['--no-legend']
+    analysis.margin = not args['--no-margin']
 
     if args['--output-size']:
-        analysis.output_size = map(float, args['--output-size'].split('x'))
+        analysis.output_size = [float(x) for x in args['--output-size'].split('x')]
 
     with analysis_helpers.plot_or_savefig(
             args['--output'], args['<yml_path>'], args['--inkscape']):

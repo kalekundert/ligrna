@@ -95,6 +95,9 @@ Options:
         are thus PDFs.  By default, the area of each curve reflects the number 
         of cells that were counted from that well.
 
+    -S --show-signs
+        Allow the fold change bars to go below 1.
+
     -f --fold-change-xlim <xmax>
         Set the extent of the x-axis for the fold-change plot.  By default this 
         axis is automatically scaled to fit the data, but this option is useful 
@@ -158,12 +161,14 @@ class FoldChange:
         self.show_indices = None
         self.log_toggle = None
         self.pdf = None
+        self.show_signs = None
         self.loc_metric = None
         self.output_size = None
         self.title = None
         self.fold_change_xlim = None
         self.distribution_xlim = None
         self.trace_quality = None
+        self.verbose = False
 
         # Internally used plot attributes.
         self.figure = None
@@ -186,6 +191,8 @@ class FoldChange:
         self._filter_wells()
 
         for i, comparison in enumerate(reversed(self.comparisons)):
+            if self.verbose: print(comparison.label)
+
             self._plot_fold_change(i, comparison)
 
             for well in comparison.reference_wells:
@@ -195,6 +202,8 @@ class FoldChange:
             for well in comparison.condition_wells:
                 self._plot_distribution(i, comparison, well, False)
                 self._plot_location(i, comparison, well, False)
+
+            if self.verbose: print()
 
         self._pick_xlabels()
         self._pick_xticks()
@@ -262,8 +271,8 @@ class FoldChange:
             x_min = x_01 = np.inf
             x_max = x_99 = -np.inf
             for _, _, well in self._yield_wells():
-                x_min = min(x_min, np.min(well.linear_measurements))
-                x_max = max(x_max, np.max(well.linear_measurements))
+                x_min = min(x_min, np.percentile(well.linear_measurements,  1))
+                x_max = max(x_max, np.percentile(well.linear_measurements, 99))
 
         self.axes[0].set_xlim(x_min, x_max)
 
@@ -364,31 +373,16 @@ class FoldChange:
 
         return label.replace('//', '\n')
 
-    def _get_fold_change(self, comparison):
-
-        def get_fold_change(apo, holo):
-            # We don't care which direction the fold change is in, so invert
-            # the fold change if it's less than 1 (e.g. for a backward design).
-            x = holo.linear_loc / apo.linear_loc
-            return x if x > 1 else 1 / x
-
-        fold_changes = np.array([
-            get_fold_change(apo, holo) for apo, holo in zip(
-                comparison.condition_wells, comparison.reference_wells)
-        ])
-        
-        if len(fold_changes) > 0:
-            return fold_changes.mean(), fold_changes
-        else:
-            return 0, fold_changes
-
     def _plot_fold_change(self, i, comparison):
         # I really don't think this function is comparing distributions or
         # calculating error bars in the right way.  I think it might be best to
         # do some sort of resampling technique.  That would allow me to
         # incorporate knowledge of the underlying distributions into the
         # standard deviation.
-        fold_change, fold_changes = self._get_fold_change(comparison)
+        if self.show_signs:
+            fold_change, fold_changes = comparison.calc_fold_change_with_sign()
+        else:
+            fold_change, fold_changes = comparison.calc_fold_change()
 
         # If there isn't enough data to calculate a fold change, bail out here.
         if fold_changes.size == 0:
@@ -413,6 +407,10 @@ class FoldChange:
                 capsize=self.fold_change_bar_width / 2,
         )
 
+        if self.verbose:
+            print("  Fold change:", fold_change)
+            print("  Error bar:", fold_changes.std())
+
     def _plot_distribution(self, i, comparison, well, is_reference):
         """
         Plot the given distributions of cells on the same axis, for comparison.
@@ -427,7 +425,7 @@ class FoldChange:
         """
         if is_reference:
             style = {
-                'marker': '+',
+                'marker': '+', # 2
                 'markeredgecolor': 'black',
                 'markerfacecolor': 'none',
                 'markeredgewidth': 1,
@@ -444,7 +442,11 @@ class FoldChange:
                 'zorder': 2,
             }
 
-        self.axes[0].plot(10**well.loc, i - self.location_depth, **style)
+        self.axes[0].plot(well.linear_loc, i - self.location_depth, **style)
+
+        if self.verbose:
+            label = comparison.reference if is_reference else comparison.condition
+            print("  {}:".format(label.title()), well.linear_loc)
 
     def _pick_xlabels(self):
         label = analysis_helpers.get_channel_label(self.experiments)
@@ -453,27 +455,11 @@ class FoldChange:
         self.axes[1].set_xlim(0, self.axes[1].get_xlim()[1])
 
     def _pick_xticks(self):
-        from matplotlib.ticker import MaxNLocator
-        max_fold_change_ticks = self.max_fold_change_ticks
-
-        class FoldChangeLocator(MaxNLocator):
-            def __init__(self):
-                super().__init__(
-                    nbins=max_fold_change_ticks - 1,
-                    #steps=[0.5, 1, 2, 5, 10, 50, 100],
-                    steps=[1, 2, 5, 10],
-                )
-
-            def tick_values(self, vmin, vmax):
-                ticks = set(super().tick_values(vmin, vmax))
-                ticks.add(1);
-                ticks.discard(0)
-                return sorted(ticks)
-
         if self.fold_change_xlim is not None:
             self.axes[1].set_xlim(0, self.fold_change_xlim)
 
-        self.axes[1].xaxis.set_major_locator(FoldChangeLocator())
+        self.axes[1].xaxis.set_major_locator(
+                analysis_helpers.FoldChangeLocator(self.max_fold_change_ticks))
 
     def _pick_ylim(self):
         margin = 0.3
@@ -543,8 +529,6 @@ class FoldChange:
 
         df.to_csv("Fold_Change_df-LATEST.csv")
 
-
-
 if __name__ == '__main__':
     import docopt
 
@@ -565,14 +549,16 @@ if __name__ == '__main__':
     analysis.quality_filter = args['--quality-filter']
     analysis.log_toggle = args['--log-toggle']
     analysis.pdf = args['--pdf']
+    analysis.show_signs = args['--show-signs']
     analysis.loc_metric = args['--loc-metric']
     analysis.title = args['--title']
     analysis.trace_quality = int(args['--trace-quality'])
+    analysis.verbose = args['--verbose']
 
     if args['--indices']:
         analysis.show_indices = nonstdlib.indices_from_str(args['--indices'], start=1)
     if args['--output-size']:
-        analysis.output_size = map(float, args['--output-size'].split('x'))
+        analysis.output_size = [float(x) for x in args['--output-size'].split('x')]
     if args['--fold-change-xlim']:
         analysis.fold_change_xlim = float(args['--fold-change-xlim'])
     if args['--distribution-xlim']:

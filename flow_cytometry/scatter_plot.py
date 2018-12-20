@@ -206,8 +206,8 @@ class ScatterPlot(analysis_helpers.ExperimentPlot):
                     # interpolation to fill in the extra "pixels".
                     import scipy.ndimage
                     z = scipy.ndimage.zoom(z, self.zoom_level)
-                    x = np.linspace(x.min(), x.max(), len(x) * self.zoom_level)
-                    y = np.linspace(y.min(), y.max(), len(y) * self.zoom_level)
+                    x = np.linspace(x.min(), x.max(), int(len(x) * self.zoom_level))
+                    y = np.linspace(y.min(), y.max(), int(len(y) * self.zoom_level))
 
                 histogram = self.Histogram(x, y, z.T)
                 self.histograms[condition].append(histogram)

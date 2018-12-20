@@ -23,8 +23,12 @@ Options
         Also print out the FCS metadata for each well.
 """
 
-import fcmcmp, docopt
+import fcmcmp, docopt, shutil
+import pandas as pd
 from pprint import pprint
+
+pd.set_option('display.width', shutil.get_terminal_size().columns)
+pd.set_option('display.max_columns', 500)  # Print everything!
 
 args = docopt.docopt(__doc__)
 experiments = fcmcmp.load_experiments(args['<yml_path>'])

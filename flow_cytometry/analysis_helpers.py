@@ -3,7 +3,8 @@
 import re, contextlib, fcmcmp
 import numpy as np, matplotlib.pyplot as plt
 import warnings; warnings.simplefilter("error", FutureWarning)
-from pprint import pprint
+from matplotlib.ticker import MaxNLocator
+from color_me import ucsf
 
 plt.rcParams['font.family'] = 'Liberation Sans'
 
@@ -11,7 +12,7 @@ class AnalyzedWell(fcmcmp.Well):
 
     def __init__(self, experiments, experiment_idx, condition, condition_idx, 
             channel=None, control_channel=None, log_scale=None, log_toggle=False,
-            pdf=False, loc_metric='median', num_samples=None):
+            pdf=False, loc_metric=None, num_samples=None):
 
         well = experiments[experiment_idx]['wells'][condition][condition_idx]
         super().__init__(well.label, well.meta, well.data)
@@ -168,8 +169,6 @@ class AnalyzedWell(fcmcmp.Well):
         self.y /= np.trapz(self.y, self.x)
         if not self.calc_pdf:
             self.y *= len(self.measurements)
-
-
 def analyze_wells(experiments, **kwargs):
     control_expt_kwarg = kwargs.pop('control_expt', None)
 
@@ -193,10 +192,14 @@ def analyze_wells(experiments, **kwargs):
             continue
 
         control_expt = expt_map[control_label]
-        control_loc = np.mean([
-            control_expt['wells'][conc][well.index].linear_loc
-            for conc in control_expt['wells']
-        ])
+        try:
+            control_loc = np.mean([
+                control_expt['wells'][conc][well.index].linear_loc
+                for conc in control_expt['wells']
+            ])
+        except IndexError:
+            raise IndexError("Make sure you have the same number of replicates for each experiment.")
+
         control_locs.append(control_loc)
         control_labels.append(control_label)
 
@@ -216,6 +219,30 @@ class RelatedWells:
         self.solo = len(experiment['wells']) == 2
         self.i = i
 
+    def zip_wells(self):
+        return zip(self.reference_wells, self.condition_wells)
+
+    def calc_fold_change(self):
+        fold_change, fold_changes = self.calc_fold_change_with_sign()
+
+        if fold_change < 1:
+            fold_change = 1 / fold_change
+
+        ii = fold_changes < 1
+        fold_changes[ii] = 1 / fold_changes[ii]
+
+        return fold_change, fold_changes
+        
+    def calc_fold_change_with_sign(self):
+        fold_changes = np.array([
+            expt.linear_loc / ref.linear_loc
+            for expt, ref in self.zip_wells()
+        ])
+        
+        if len(fold_changes) > 0:
+            return fold_changes.mean(), fold_changes
+        else:
+            return 0, fold_changes
 
 def yield_related_wells(experiments, default_reference='apo'):
     i = 0
@@ -225,7 +252,7 @@ def yield_related_wells(experiments, default_reference='apo'):
             if condition == reference: continue
             yield RelatedWells(experiment, condition, reference, i)
             i += 1
-    
+
 class CachedGaussianKde:
 
     def __init__(self, measurements):
@@ -273,16 +300,28 @@ class RenameFluorescentChannels(fcmcmp.ProcessingStep):
 
     def process_well(self, experiment, well):
         new_channel_names = {}
+        rfp_defaults = 'DsRed-A', 'PE-Texas Red-A', 'mCherry-A'
+        gfp_defaults = 'FITC-A',
 
-        if 'DsRed-A' in well.data.columns:
-            new_channel_names['DsRed-A'] = 'RFP-A'
-        elif 'PE-Texas Red-A' in well.data.columns:
-            new_channel_names['PE-Texas Red-A'] = 'RFP-A'
-        elif 'mCherry-A' in well.data.columns:
-            new_channel_names['mCherry-A'] = 'RFP-A'
+        # If the user asked for a particular channel, use it.
+        if 'channel' in experiment:
+            channel = experiment['channel']
+            if channel in well.data.columns:
+                new_channel_names[channel] = get_channel_alias(channel)
 
-        if 'FITC-A' in well.data.columns:
-            new_channel_names['FITC-A'] = 'GFP-A'
+        # Make an effort to pick a reasonable default red channel.
+        if 'RFP-A' not in new_channel_names.values():
+            for channel in rfp_defaults:
+                if channel in well.data.columns:
+                    new_channel_names[channel] = 'RFP-A'
+                    break; # The defaults are ordered, so stop once we find something.
+
+        # Make an effort to pick a reasonable default green channel.
+        if 'GFP-A' not in new_channel_names.values():
+            for channel in gfp_defaults:
+                if channel in well.data.columns:
+                    new_channel_names[channel] = 'GFP-A'
+                    break;
 
         well.data.rename(columns=new_channel_names, inplace=True)
 
@@ -359,7 +398,7 @@ class ExperimentPlot:
         self.figure, self.axes = plt.subplots(
                 self.num_rows, self.num_cols,
                 sharex=True, sharey=True, squeeze=False,
-                figsize=self.output_size,
+                figsize=tuple(self.output_size),
         )
         
         # Don't show that ugly dark grey border around the plot.
@@ -406,6 +445,20 @@ class ExperimentPlot:
         return self.experiment['wells'][self._get_condition(row)][col]
 
 
+class FoldChangeLocator(MaxNLocator):
+
+    def __init__(self, max_ticks=6):
+        super().__init__(
+            nbins=max_ticks - 1,
+            #steps=[0.5, 1, 2, 5, 10, 50, 100],
+            steps=[1, 2, 5, 10],
+        )
+
+    def tick_values(self, vmin, vmax):
+        ticks = set(super().tick_values(vmin, vmax))
+        ticks.add(1);
+        ticks.discard(0)
+        return sorted(ticks)
 
 def pick_color(experiment, lightness=0):
     """
@@ -413,21 +466,43 @@ def pick_color(experiment, lightness=0):
 
     The return value is a hex string suitable for use with matplotlib.
     """
+    family = pick_color_family(experiment)
+    return pick_ucsf_color(family, lightness)
+
+def pick_color_family(experiment):
+    p = r'(%s)(\b|[(])'
+    control = re.compile(p % r'[w]?(on|off|wt|dead|null|pos|neg)')
+    upper_stem = re.compile(p % r'us|.u.?|#3|#24|#25')
+    lower_stem = re.compile(p % r'ls|.l.?')
+    bulge = re.compile(p % r'.b.?')
+    nexus = re.compile(p % r'nx|.x.?|[wm]11|#61')
+    hairpin = re.compile(p % r'.h.?|[wm]30|#80|#85')
+
     if 'color' in experiment:
-        return experiment['color'] if lightness == 0 else '#dddddd'
+        return experiment['color']
+    
+    label = experiment.get('family', experiment['label']).lower()
+
+    if control.search(label):
+        return 'control'
+    elif lower_stem.search(label):
+        return 'lower stem'
+    elif nexus.search(label):
+        return 'nexus'
+    elif hairpin.search(label):
+        return 'hairpin'
+    elif upper_stem.search(label):
+        return 'upper stem'
+    elif bulge.search(label):
+        return 'bulge'
+    elif 'rfp' in label:
+        return 'rfp'
+    elif 'gfp' in label:
+        return 'gfp'
     else:
-        return pick_ucsf_color(experiment, lightness)
+        return 'default'
 
-
-p = r'\b(%s)(\b|[(])'
-control = re.compile(p % '[w]?(on|off|wt|dead)')
-upper_stem = re.compile(p % 'us|.u.?')
-lower_stem = re.compile(p % 'ls|.l.?')
-bulge = re.compile(p % '.b.?')
-nexus = re.compile(p % 'nx|.x.?|[wm]11')
-hairpin = re.compile(p % '.h.?')
-
-def pick_tango_color(experiment, lightness=0):
+def pick_tango_color(family, lightness=0):
     """
     Pick a color from the Tango color scheme for the given experiment.
 
@@ -436,79 +511,70 @@ def pick_tango_color(experiment, lightness=0):
     scheme includes a few tints of each color.
     """
 
-    white, black = '#ffffff', '#000000'
-    grey = '#eeeeec', '#d3d7cf', '#babdb6', '#888a85', '#555753', '#2e3436'
-    red =    '#ef2929', '#cc0000', '#a40000'
+    white  = '#ffffff'
+    black  = '#000000'
+    grey   = '#eeeeec', '#d3d7cf', '#babdb6', '#888a85', '#555753', '#2e3436'
+    red    = '#ef2929', '#cc0000', '#a40000'
     orange = '#fcaf3e', '#f57900', '#ce5c00'
     yellow = '#fce94f', '#edd400', '#c4a000'
-    green =  '#8ae234', '#73d216', '#4e9a06'
-    blue =   '#729fcf', '#3465a4', '#204a87'
+    green  = '#8ae234', '#73d216', '#4e9a06'
+    blue   = '#729fcf', '#3465a4', '#204a87'
     purple = '#ad7fa8', '#75507b', '#5c3566'
-    brown =  '#e9b96e', '#c17d11', '#8f5902'
+    brown  = '#e9b96e', '#c17d11', '#8f5902'
 
     i = lambda x: max(x - lightness, 0)
 
-    if 'rfp' in experiment['label'].lower():
-        return red[i(1)]
-    elif 'gfp' in experiment['label'].lower():
-        return green[i(2)]
-    elif control.search(experiment['label']):
+    if family == 'control':
         return grey[i(4)]
-    elif lower_stem.search(experiment['label']):
+    elif family == 'lower stem':
         return purple[i(1)]
-    elif upper_stem.search(experiment['label']):
-        return blue[i(1)]
-    elif bulge.search(experiment['label']):
-        return green[i(1)]
-    elif nexus.search(experiment['label']):
+    elif family == 'nexus':
         return red[i(1)]
-    elif hairpin.search(experiment['label']):
+    elif family == 'hairpin':
         return orange[i(1)]
-    else:
+    elif family == 'upper stem':
+        return blue[i(1)]
+    elif family == 'bulge':
+        return green[i(1)]
+    elif family == 'rfp':
+        return red[i(1)]
+    elif family == 'gfp':
+        return green[i(2)]
+    elif family == 'default':
         return brown[i(2)]
+    else:
+        return family if lightness == 0 else '#dddddd'
 
-def pick_ucsf_color(experiment, lightness=0):
+def pick_ucsf_color(family, lightness=0):
     """
     Pick a color from the official UCSF color scheme for the given experiment.
 
-    The UCSF color scheme is based on primary teal and dark blue colors and is 
+    The UCSF color scheme is based on primary teal and navy colors and is 
     accented by a variety of bright -- but still somewhat subdued -- colors.  
     The scheme includes tints of every color, but not shades.
     """
-
-    navy = ['#002049', '#506380', '#9ba6b6', '#e6e9ed']
-    teal = ['#18a3ac', '#5dbfc5', '#a3dade', '#e8f6f7'] 
-    olive = ['#90bd31', '#b1d16f', '#d3e4ad', '#f4f8ea'] 
-    blue = ['#178ccb', '#5dafdb', '#a2d1ea', '#e8f4fa'] 
-    orange = ['#f48024', '#f7a665', '#fbcca7', '#fef2e9'] 
-    purple = ['#716fb2', '#9c9ac9', '#c6c5e0', '#f1f1f7'] 
-    red = ['#ec1848', '#f25d7f', '#f7a3b6', '#fde8ed'] 
-    yellow = ['#ffdd00', '#ffe74d', '#fff199', '#fffce6'] 
-    black = ['#000000', '#4d4d4d', '#999999', '#ffffff'] 
-    dark_grey = ['#b4b9bf', '#cbced2', '#e1e3e6', '#f8f8f9']
-    light_grey = ['#d1d3d3', '#dfe0e0', '#ededee', '#fafbfb'] 
-
     i = lambda x: min(x + lightness, 3)
-    label = experiment.get('family', experiment['label']).lower()
 
-    if control.search(label):
-        return light_grey[i(0)]
-    elif lower_stem.search(label):
-        return olive[i(0)]
-    elif upper_stem.search(label):
-        return blue[i(0)]
-    elif bulge.search(label):
-        return blue[i(0)]
-    elif nexus.search(label):
-        return navy[i(0)]
-    elif hairpin.search(label):
-        return teal[i(0)]
-    elif 'rfp' in label:
-        return red[i(0)]
-    elif 'gfp' in label:
-        return olive[i(0)]
+    if family == 'control':
+        return ucsf.light_grey[i(0)]
+    elif family == 'lower stem':
+        return ucsf.olive[i(0)]
+    elif family == 'nexus':
+        return ucsf.navy[i(0)]
+    elif family == 'hairpin':
+        return ucsf.teal[i(0)]
+    elif family == 'upper stem':
+        return ucsf.blue[i(0)]
+    elif family == 'bulge':
+        return ucsf.blue[i(0)]
+    elif family == 'rfp':
+        return ucsf.red[i(0)]
+    elif family == 'gfp':
+        return ucsf.olive[i(0)]
+    elif family == 'default':
+        return ucsf.dark_grey[i(0)]
     else:
-        return black[i(0)]
+        return family if lightness == 0 else '#dddddd'
 
 def pick_style(experiment, is_reference=False):
     if is_reference:
@@ -552,7 +618,15 @@ def pick_channel(experiment, users_choice=None):
     # If a channel can be inferred from the name of the experiment, use it. 
     if 'gfp' in experiment['label'].lower():
         return 'GFP-A'
+    if experiment['label'].lower().startswith('g1'):
+        return 'GFP-A'
+    if experiment['label'].lower().startswith('g2'):
+        return 'GFP-A'
     if 'rfp' in experiment['label'].lower():
+        return 'RFP-A'
+    if experiment['label'].lower().startswith('r1'):
+        return 'RFP-A'
+    if experiment['label'].lower().startswith('r2'):
         return 'RFP-A'
 
     # Default to the red channel, if nothing else is specified.
