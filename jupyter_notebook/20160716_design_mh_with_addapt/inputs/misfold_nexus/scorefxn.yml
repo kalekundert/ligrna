@@ -1,0 +1,8 @@
+objective:
+  apo: inactive
+  holo: active
+
+aptamer:
+  sequence: GAUACCAGCCGAAAGGCCCUUGGCAGC
+  fold:     (...((.(((....)))....))...)
+  affinity: 0.32 #uM

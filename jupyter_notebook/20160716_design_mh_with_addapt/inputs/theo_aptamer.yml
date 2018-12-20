@@ -1,0 +1,4 @@
+aptamer:
+  sequence: GAUACCAGCCGAAAGGCCCUUGGCAGC
+  fold:     (...((.(((....)))....))...)
+  affinity: 0.32 #uM
