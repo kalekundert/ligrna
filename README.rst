@@ -1,5 +1,5 @@
-sgRNA sensor project files
-==========================
+ligRNA Project Files
+====================
 This directory contains all the files for the sgRNA sensor project.  Below is a 
 brief description of each directory:
 
