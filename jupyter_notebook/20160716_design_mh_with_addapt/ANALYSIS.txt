@@ -1,0 +1,43 @@
+July 17, 2016
+=============
+I decided to use the ``50% to 0% in 500 steps`` "auto-annealing" thermostat for 
+my design simulations.  From the summaries of the highest scoring sequences in 
+``figures/param_opt/pick_seqs.txt``, I made three observations:
+
+1. Both "auto" thermostats do a reasonable job of adjusting the temperature to 
+   keep the acceptance rate in a reasonable range, even as the magnitude of the 
+   score function changes dramatically with the number of spacers being 
+   considered.  This is really the most important thing, because it means that 
+   I won't have to manually parameterize the temperature, which is a very 
+   tedious and error-prone process.
+
+2. The auto-annealing thermostat seems to find higher scoring sequences that 
+   the auto-scaling thermostat.  This wasn't really a fair comparison, but I'm 
+   going to carry forward with the auto-annealing algorithm anyway.
+
+   First, the auto-annealing algorithm reset itself every 500 steps while the 
+   auto-scaling algorithm reset itself every 100 steps.  This was just an 
+   oversight on my part, if I did this again I'd set both periods to 500 steps.
+
+   Second, the two algorithms are actually implemented differently.  The auto-
+   annealing algorithm maintains a running average of all the score differences 
+   for the entire simulation, so it eventually settles on a single temperature.  
+   The auto-scaling algorithm only considers the median score difference from 
+   the last period, so it jumps around a lot more.
+
+3. The target acceptance rate parameter doesn't seem to be important.  Granted, 
+   part of this is because the "auto" algorithms don't do a very good job 
+   hitting their targets.  They do move the acceptance rates in the expected 
+   directions, but not as far from 50% as they should.  This probably has 
+   something to do with how the algorithms count accepted and neutral moves.  
+   In any case, I decided to use the 50% target to split the difference between 
+   worrying about getting lower scores and worrying about not sampling broadly 
+   enough.
+
+Regarding library design, unless the final simulations look very different than 
+I expect them to, I'm probably going to randomize the nexus and most of the 
+ruler and use the hairpin from rhf/6.  A concern I just thought of is that AU 
+bases are predicted to be better for most of these randomized positions, but GC 
+bases seem to be favored by the library assembly PCR.  Even a slight GC bias 
+could make sequences that are predominantly AU very rare.  Maybe adding DMSO or 
+betaine to the PCR reaction would help reduce the bias.
