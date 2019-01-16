@@ -30,11 +30,11 @@ import docopt
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
+import scipy.optimize
 
 from pathlib import Path
 from inspect import getfullargspec
 from numpy import inf
-from scipy.optimize import curve_fit
 from sgrna_sensor import qpcr
 from sgrna_sensor.style import pick_style, pick_data_style
 
@@ -50,7 +50,47 @@ def load_data(toml_path, drop_outliers):
 
     return df
 
-def plot_timecourses(df, *args, **kwargs):
+def estimate_midpoints(df):
+    sgrnas = 'mhf/30', 'rxb/11/1'
+    controls = 'apo→apo', 'holo→holo'
+    ligands = 'apo→holo', 'holo→apo'
+    results = {}
+
+    print(f"{'ligRNA':10s}  {'Ligand':9s}  {'Midpoint':>8s}  {'Error':>8s}")
+
+    for sgrna in sgrnas:
+        ref1 = df.loc[sgrna, controls[0]]
+        ref2 = df.loc[sgrna, controls[1]]
+
+        for ligand in ligands:
+            expt = df.loc[sgrna, ligand]
+
+            xa = ref1['minutes']
+            xb = expt['minutes']
+            xc = ref2['minutes']
+
+            ya = np.log10(ref1['fold_change'])
+            yb = np.log10(expt['fold_change'])
+            yc = np.log10(ref2['fold_change'])
+
+            def find_midpoint(x):
+                a = np.interp(x, xa, ya)
+                b = np.interp(x, xb, yb)
+                c = np.interp(x, xc, yc)
+
+                # How close is 'b' to half-way between 'a' and 'c'?
+                return abs((b-c) - (a-c)/2)
+
+            domain = [slice(0, 30, 0.1)]
+            x = scipy.optimize.brute(find_midpoint, domain)[0]
+            err = find_midpoint(x)
+            results[sgrna, ligand] = x
+
+            print(f"{sgrna:10s}  {ligand:9s}  {x:8.2f}  {err:8.2e}")
+
+    return results
+
+def plot_timecourses(df, mid, *args, **kwargs):
     sgrnas = 'mhf/30', 'rxb/11/1'
     ligands = 'apo→apo', 'apo→holo', 'holo→apo', 'holo→holo'
 
@@ -58,11 +98,11 @@ def plot_timecourses(df, *args, **kwargs):
 
     for ax, sgrna in zip(axes, sgrnas):
         for ligand in ligands:
-            plot_timecourse(ax, df, sgrna, ligand)
+            plot_timecourse(ax, df, mid, sgrna, ligand)
 
     return fig
 
-def plot_timecourse(ax, df, sgrna, ligand):
+def plot_timecourse(ax, df, mid, sgrna, ligand):
     lig0 = ligand.split('→')[0]
 
     try:
@@ -89,6 +129,18 @@ def plot_timecourse(ax, df, sgrna, ligand):
 
     ax.semilogy(x, y, **style)
     ax.semilogy(x_err, y_err, marker='_', **style)
+
+    if (sgrna, ligand) in mid:
+        x_mid = mid[sgrna, ligand]
+        y_mid = np.interp(x_mid, x, y)
+        y_0 = 1e-3
+
+        ax.axvline(
+                x_mid,
+                linestyle=':',
+                color=style['color'],
+                zorder=-10,
+        )
 
 def create_axes(output_size, horz=False):
     vert = not horz
@@ -123,7 +175,8 @@ if __name__ == '__main__':
             if args['--output-size'] else None
 
     df = load_data(toml_path, args['--drop-outliers'])
-    fig = plot_timecourses(df, output_size, args['--horizontal'])
+    mid = estimate_midpoints(df)
+    fig = plot_timecourses(df, mid, output_size, args['--horizontal'])
 
     if args['--output']:
         path = args['--output'].replace('$', toml_path.stem)
