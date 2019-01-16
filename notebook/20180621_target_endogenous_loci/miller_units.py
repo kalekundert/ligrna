@@ -397,7 +397,8 @@ def iter_reactions(rxns):
 
 def miller_units(t_min, a420, od600, vol_mL):
     m, b = np.polyfit(t_min, a420, 1)
-    return 1000 * m / (od600 * vol_mL), (m, b)
+    path_cm = 0.25
+    return 1000 * m * path_cm / (od600 * vol_mL), (m, b)
 
 def plot_fits(rxns, stem, subtract_intercept=False, figure_mode=False):
     rows, cols = load_keys(rxns)
@@ -588,13 +589,15 @@ def plot_miller_units(rxns, stem, figure_mode=False):
     ax.yaxis.grid()
 
     fig.tight_layout()
-    finalize_plot(fig, stem, 'fold')
+    finalize_plot(fig, stem, 'miller')
 
 def plot_fold_changes(rxns, stem, figure_mode=False):
     primary_keys, secondary_keys = load_keys(rxns)
     n1, n2 = len(primary_keys), len(secondary_keys)
 
-    fig, ax = plt.subplots(figsize=(1 + 1 * len(primary_keys), 3))
+    # 1.739: To get same axes height at TMP MIC panel.
+    wh = (3.325, 1.739) if figure_mode else (1 + 1* len(primary_keys), 3)
+    fig, ax = plt.subplots(figsize=wh)
     style = dict(linewidth=5)
     xticks = []
 
