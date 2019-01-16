@@ -61,7 +61,10 @@ def plot_mic_curve(ax, df, time_hr=12):
         sgrna, theo_mM = key
         style = pick_style(sgrna, theo_mM, color_controls=True)
 
-        reps = group.groupby('tmp_ug_mL')
+        # Drop points with only one measurement.
+        q = group.groupby('tmp_ug_mL').filter(lambda x: len(x) > 1)
+
+        reps = q.groupby('tmp_ug_mL')
         concs = reps.apply(lambda x: x.name)
         means = reps.mean()['read']
         stdevs = reps.std()['read']
@@ -101,7 +104,7 @@ def plot_mic_curve(ax, df, time_hr=12):
     #ax.xaxis.set_minor_locator(MultipleLocator(4))
 
     ax.set_ylabel('OD600')
-    ax.set_ylim(0.053, 1.00)
+    ax.set_ylim(0.053, 1.2)
     ax.yaxis.set_major_formatter(StrMethodFormatter("{x:.1f}"))
 
 def plot_growth_curve(ax, df, tmp_ug_mL=32.0):
@@ -187,8 +190,8 @@ if __name__ == '__main__':
 
     fig, axes = plt.subplots(
             2, n,
-            figsize=(3.34*n, 3.81474-0.039),
-            sharey=True,
+            #figsize=(3.34*n, 3.81474-0.039),
+            figsize=(3.34*n, 3.81474-0.039+0.532+0.068),
             squeeze=False,
     )
 

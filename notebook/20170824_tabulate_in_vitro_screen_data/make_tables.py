@@ -42,9 +42,8 @@ class Algorithm(Enum):
     CIRCLE = 3
     SERPENTINE = 4
     ZIPPER = 5
-    
 
-def tabulate_rational_designs():
+def load_rational_designs():
     df = densiometry.load_cleavage_data_from_xlsx_dir('densiometry')
     df = densiometry.calc_mean_change(df)
 
@@ -411,7 +410,8 @@ def make_full_table(df):
 
 if __name__ == '__main__':
     args = docopt.docopt(__doc__)
-    df = tabulate_rational_designs()
+    df = load_rational_designs()
+
 
     #make_summary_table(df)
     make_full_table(df)
