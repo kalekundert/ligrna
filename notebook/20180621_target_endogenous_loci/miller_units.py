@@ -141,7 +141,8 @@ import sgrna_sensor
 from pathlib import Path
 from color_me import ucsf
 from sgrna_sensor.plate_reader import BiotekExperiment
-from sgrna_sensor.style import pick_color, pick_style, FoldChangeLocator
+from sgrna_sensor.style import pick_color, pick_style, pick_dot_colors
+from sgrna_sensor.style import FoldChangeLocator
 from nonstdlib import inf, nan
 
 pd.set_option('display.max_rows', 500)
@@ -537,7 +538,8 @@ def plot_miller_units(rxns, stem, figure_mode=False):
     n1, n2 = len(primary_keys), len(secondary_keys)
 
     fig, ax = plt.subplots(figsize=(1 + 1 * len(primary_keys), 3))
-    style = dict(linewidth=5)
+    bar_style = dict(zorder=1, linewidth=5)
+    dot_style = dict(zorder=2, marker='+')
     xticks = []
 
     apos = {}
@@ -545,11 +547,11 @@ def plot_miller_units(rxns, stem, figure_mode=False):
     miller_units = {False: [], True: []}
     fold_changes = {}
 
+    sgrnas = {}
     replicates = {}
-    colors = {}
     
     for i, rxn in iter_reactions(rxns):
-        colors[rxn.key] = pick_color(rxn.sgrna)
+        sgrnas[rxn.key] = rxn.sgrna
         replicates.setdefault(rxn.key, {})\
                   .setdefault(rxn.ligand, [])\
                   .append(rxn)
@@ -564,6 +566,8 @@ def plot_miller_units(rxns, stem, figure_mode=False):
         x = i * (len(primary_keys) + 1) + j
         x_apo = 2 * x
         x_holo = 2 * x + 1
+        xs_apo = np.full(apos.shape, x_apo)
+        xs_holo = np.full(apos.shape, x_holo)
 
         xticks.append((x_apo, ' '.join(key + ('apo',))))
         xticks.append((x_holo, ' '.join(key + ('holo',))))
@@ -573,11 +577,17 @@ def plot_miller_units(rxns, stem, figure_mode=False):
         y_holo = np.mean(holos)
         y_holo_err = np.std(holos)
 
-        ax.plot([x_apo,x_apo], [0,y_apo], color=colors[key], **style)
-        ax.plot([x_holo,x_holo], [0,y_holo], color=colors[key], **style)
+        bar_color = pick_color(sgrnas[key])
+        apo_dot_colors = pick_dot_colors(sgrnas[key], apos)
+        holo_dot_colors = pick_dot_colors(sgrnas[key], holos)
 
-        ax.errorbar([x_apo], [y_apo], y_apo_err, color=colors[key])
-        ax.errorbar([x_holo], [y_holo], y_holo_err, color=colors[key])
+        ax.plot([x_apo,x_apo], [0,y_apo], color=bar_color, **bar_style)
+        ax.plot([x_holo,x_holo], [0,y_holo], color=bar_color, **bar_style)
+
+        ax.scatter(xs_apo, apos, c=apo_dot_colors, **dot_style)
+        ax.scatter(xs_holo, holos, c=holo_dot_colors, **dot_style)
+        #ax.errorbar([x_apo], [y_apo], y_apo_err, color=colors[key])
+        #ax.errorbar([x_holo], [y_holo], y_holo_err, color=colors[key])
 
     xticks, xticklabels = zip(*xticks)
     ax.set_xlim(xticks[0] - 0.5, xticks[-1] + 0.5)
@@ -598,7 +608,8 @@ def plot_fold_changes(rxns, stem, figure_mode=False):
     # 1.739: To get same axes height at TMP MIC panel.
     wh = (3.325, 1.739) if figure_mode else (1 + 1* len(primary_keys), 3)
     fig, ax = plt.subplots(figsize=wh)
-    style = dict(linewidth=5)
+    bar_style = dict(zorder=1, linewidth=5)
+    dot_style = dict(zorder=2, marker='+')
     xticks = []
 
     apos = {}
@@ -606,16 +617,17 @@ def plot_fold_changes(rxns, stem, figure_mode=False):
     miller_units = {False: [], True: []}
     fold_changes = {}
 
+    sgrnas = {}
     replicates = {}
-    colors = {}
     
     for i, rxn in iter_reactions(rxns):
-        colors[rxn.key] = pick_color(rxn.sgrna)
+        sgrnas[rxn.key] = rxn.sgrna
         replicates.setdefault(rxn.key, {})\
                   .setdefault(rxn.ligand, [])\
                   .append(rxn)
 
     for key in replicates:
+        sgrna = sgrnas[key]
         apos = np.array([x.miller for x in replicates[key][False]])
         holos = np.array([x.miller for x in replicates[key][True]])
         fold_changes = holos / apos
@@ -642,11 +654,14 @@ def plot_fold_changes(rxns, stem, figure_mode=False):
         if np.mean(fold_changes) < 1:
             fold_changes = 1 / fold_changes
 
-        y = np.mean(fold_changes)
-        yerr = np.std(fold_changes)
+        ys = fold_changes
+        xs = np.full(ys.shape, x)
+        y = np.mean(ys)
+        yerr = np.std(ys)
 
-        ax.plot([x,x], [0,y], color=colors[key], **style)
-        ax.errorbar([x], [y], yerr, color=colors[key])
+        ax.plot([x,x], [0,y], color=pick_color(sgrna), **bar_style)
+        ax.scatter(xs, ys, color=pick_dot_colors(sgrna, ys), **dot_style)
+        #ax.errorbar([x], [y], yerr, color=colors[key])
 
     xticks, xticklabels = zip(*xticks)
     ax.set_xlim(xticks[0] - 0.5, xticks[-1] + 0.5)

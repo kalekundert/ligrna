@@ -42,8 +42,8 @@ To get publication-quality results, I used a 140 mL 1% TAE/agarose/GelRed gel.
 I let the molten agarose cool for 5 min on a rocker before adding the GelRed 
 and pouring the mixture into the cast (the purpose of this step is explained in 
 the `Troubleshooting`_ section).  I cast the gel in the Owl Easycast B2 tray 
-with the 1 mm thick 20-tooth comb.  I loaded 2 μL of ladder and ran the gel at 
-85V for 90 min.
+with the 1 mm thick 20-tooth comb.  I loaded 2 μL of ladder (GeneRuler 1kb, 
+Thermo SM0312) and ran the gel at 85V for 90 min.
 
 .. literalinclude:: 20171004_cas9_cleavage_assay.txt
 

@@ -109,11 +109,14 @@ class LigandMatrix:
 
     def _plot_sgrna(self, row, i, spacer, sgrna):
         ligands = 'CAFF', 'THEO', '3MX'
-        colors = {
+        bar_colors = {
                 'CAFF': '#d1d3d3',  # UCSF light grey
                 'THEO': '#716fb2',  # UCSF purple
                 '3MX':  '#ae437d',  # UCSF purple/red hybrid
         }
+        dot_colors = {
+                'CAFF': 
+
         titles = {
                 'ON':    'pos',
                 'OFF':   'neg',
@@ -128,8 +131,9 @@ class LigandMatrix:
                 print(f"Skipping {key}")
                 continue
 
-            x = 3*i + j
             y, ys = self.comparisons[key].calc_fold_change()
+            x = 3*i + j
+            xs = np.full(ys.shape, x)
             err = np.std(ys)
             color = colors[key.ligand]
 
@@ -138,12 +142,20 @@ class LigandMatrix:
                     color=color,
                     linewidth=self.bar_width,
                     solid_capstyle='butt',
+                    zorder=1,
             )
-            self.axes[row].errorbar(
-                    x, y, yerr=err,
-                    ecolor=color,
-                    capsize=self.bar_width / 2,
+            from color_me import ucsf
+            self.axes[row].scatter(
+                    xs, ys,
+                    color=ucsf.dark_grey[0],
+                    marker='+',
+                    zorder=2,
             )
+            #self.axes[row].errorbar(
+            #        x, y, yerr=err,
+            #        ecolor=color,
+            #        capsize=self.bar_width / 2,
+            #)
 
             self.xticks.append(x)
             self.xticklabels.append(ligand.lower())
@@ -231,7 +243,7 @@ if __name__ == "__main__":
     analysis = LigandMatrix(experiments)
 
     if args['--output-size']:
-        analysis.output_size = map(float, args['--output-size'].split('x'))
+        analysis.output_size = tuple(map(float, args['--output-size'].split('x')))
 
     with analysis_helpers.plot_or_savefig(args['--output'], '20170214_ligand_matrix'):
         analysis.plot()

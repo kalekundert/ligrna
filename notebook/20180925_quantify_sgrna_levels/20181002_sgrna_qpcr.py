@@ -9,7 +9,7 @@ import matplotlib.lines
 from sgrna_sensor.style import pick_color, pick_style, FoldChangeLocator
 
 def parse_labels():
-    df, opt = bio96.load('20181002_sgrna_qpcr.toml')
+    df = bio96.load('20181002_sgrna_qpcr.toml')
     df = df.set_index('well')
     return df
 
@@ -212,7 +212,7 @@ def plot_Δct_data(df):
     #ax.yaxis.set_major_locator(FoldChangeLocator())
 
     fig.tight_layout(pad=0)
-    fig.savefig('20181002_sgrna_qpcr_Δct.svg')
+    #fig.savefig('20181002_sgrna_qpcr_Δct.svg')
 
     return fig
 

@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import re
+import numpy as np
 from color_me import ucsf, tango
 from matplotlib.ticker import MaxNLocator
 
@@ -57,6 +58,16 @@ def pick_color_family(label):
         return 'gfp'
     else:
         return 'default'
+
+def pick_dot_colors(label, ys):
+    # Hack specific for the UCSF color scheme... :-(
+    if pick_color_family(label) == 'control':
+        light_bg = ucsf.dark_grey[2]
+        dark_bg  = ucsf.light_grey[2]
+    else:
+        light_bg = pick_color(label, 2)
+        dark_bg  = pick_color(label, 1)
+    return [light_bg if y >= np.mean(ys) else dark_bg for y in ys]
 
 def pick_tango_color(family, lightness=0):
     """
@@ -180,4 +191,6 @@ def pick_data_style(label, theo_mM, standard_mM=1, color_controls=False):
             'marker': '+',
             'zorder': zorder,
     }
+
+
 

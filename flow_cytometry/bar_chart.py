@@ -97,7 +97,9 @@ import fcmcmp
 import analysis_helpers
 import numpy as np
 import matplotlib.pyplot as plt
+
 from pprint import pprint
+from sgrna_sensor.style import pick_color, pick_dot_colors
 
 class BarChart:
 
@@ -139,6 +141,7 @@ class BarChart:
             self.figure = figure
             self.axes = axes
         else:
+            print(self.output_size)
             self.figure, self.axes = plt.subplots(
                     1, 1,
                     figsize=self.output_size,
@@ -235,22 +238,34 @@ class BarChart:
     def _plot_condition(self, x, experiment, condition, wells):
         # Plot the fluorescence data.
 
-        data = np.array([x.linear_loc for x in wells])
-        y = np.mean(data)
-        err = np.std(data)
-        color = analysis_helpers.pick_color(experiment)
+        ys = np.array([x.linear_loc for x in wells])
+        xs = np.full(ys.shape, x)
+        y = np.mean(ys)
+        err = np.std(ys)
+
+        label = experiment.get('family', experiment['label']).lower()
+        bar_color = pick_color(label)
+        dot_colors = pick_dot_colors(label, ys)
 
         self.axes.plot(
                 [x,x], [0,y],
-                color=color,
+                color=bar_color,
                 linewidth=self.bar_width,
                 solid_capstyle='butt',
+                zorder=1,
         )
-        self.axes.errorbar(
-                x, y, yerr=err,
-                ecolor=color,
-                capsize=self.bar_width / 2,
+        self.axes.scatter(
+                xs, ys,
+                c=dot_colors,
+                marker='+',
+                zorder=2,
         )
+
+        #self.axes.errorbar(
+        #        x, y, yerr=err,
+        #        ecolor=color,
+        #        capsize=self.bar_width / 2,
+        #)
 
         # Label the axis.
 
@@ -280,7 +295,7 @@ if __name__ == '__main__':
     analysis.verbose = args['--verbose']
 
     if args['--output-size']:
-        analysis.output_size = map(float, args['--output-size'].split('x'))
+        analysis.output_size = tuple(map(float, args['--output-size'].split('x')))
     if args['--ylim']:
         analysis.ylim = float(args['--ylim'])
 

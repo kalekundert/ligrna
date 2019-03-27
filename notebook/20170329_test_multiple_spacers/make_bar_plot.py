@@ -37,6 +37,12 @@ class BarPlot:
 
     bar_style = {
             'linewidth': 4,
+            'zorder': 1,
+    }
+    dot_style = {
+            'marker': '+',
+            'zorder': 2,
+            #'linestyle': 'none',
     }
     err_line_style = {
             'linewidth': 1,
@@ -52,6 +58,10 @@ class BarPlot:
     colors = {
             'mhf 30': ucsf.teal[0],
             'rxb 11,1': ucsf.navy[0],
+    }
+    dot_colors = {
+            'mhf 30': (ucsf.teal[2], ucsf.teal[1]),
+            'rxb 11,1': (ucsf.navy[2], ucsf.navy[1]),
     }
 
     def __init__(self, df):
@@ -78,32 +88,49 @@ class BarPlot:
         
         for i, control in enumerate(self.controls, 1):
             controls = df.xs(control, level='design')
-            mean = controls.percent_change.mean()
-            stdev = controls.percent_change.std()
+            ys = controls.percent_change.values
+            mean = np.mean(ys)
+            stdev = np.std(ys)
 
             for axes in self.axes:
                 self._plot_bar(axes, i - 3, mean, stdev, ucsf.light_grey[0])
+                self._plot_dots(axes, i - 3, ys[ys > mean + stdev], ucsf.light_grey[0])
 
             print(f"{control}: {len(controls)} measurements")
 
     def _plot_data(self):
-        df = densiometry.calc_mean_change(self.df)
-        df = densiometry.sort_by_activity(df, self.designs)
+        # For dot plots:
+        dots = densiometry.calc_percent_change(self.df)
+
+        # For bar plots:
+        bars = densiometry.calc_mean_change(self.df)
+        bars = densiometry.sort_by_activity(bars, self.designs)
 
         for i, design in enumerate(self.designs):
+            x_from_spacer = {}
             success_count = 0
 
-            for j, row in df[df.design == design].reset_index().iterrows():
+            for x, row in bars[bars.design == design].reset_index().iterrows():
+                x_from_spacer[row.spacer] = x
                 success_count += self._plot_bar(
-                        self.axes[i], j,
+                        self.axes[i], x,
                         row.mean_change,
-                        row.std_change,
+                        None, # Don't plot error bars, since we're plotting every point.
                         self.colors[design],
+                )
+
+            dots_i = dots.xs(design, level='design')
+            for spacer, group in dots_i.groupby(['spacer']):
+                self._plot_dots(
+                        self.axes[i],
+                        x_from_spacer[spacer],
+                        group.percent_change.values,
+                        self.dot_colors[design],
                 )
 
             # If a figure size was given, also try to take some steps to ensure 
             # a more regular/representative size.  In particular, use shorter 
-            # labels and don't redundant axes.
+            # labels and don't label redundant axes.
 
             y_max = self.y_max[design]
             self.axes[i].set_ylabel('Δ cleavage (%)' if not self.fig_size else 'Δ (%)')
@@ -112,10 +139,10 @@ class BarPlot:
 
 
             self.axes[i].set_xlabel('spacer' if i == 1 else '')
-            self.axes[i].set_xlim((-3, j+1))
-            self.axes[i].set_xticks(range(-2, j+1))
+            self.axes[i].set_xlim((-3, x+1))
+            self.axes[i].set_xticks(range(-2, x+1))
             self.axes[i].set_xticklabels(
-                    ['on', 'off'] + [str(x) for x in range(1, j+2)],
+                    ['on', 'off'] + [str(x) for x in range(1, x+2)],
                     rotation='vertical'
             )
             self.axes[i].axhline(
@@ -124,18 +151,27 @@ class BarPlot:
                         linestyle='--',
             )
         
-            print(f'{design}: {success_count}/{j+1}')
+            print(f'{design}: {success_count}/{x+1}')
 
     def _plot_bar(self, axes, i, mean, err, color):
         x = i, i
         y = 0, 100 * abs(mean)
-        y_err = y[1] - 100 * err, y[1] + 100 * err
 
         axes.plot(x, y, color=color, **self.bar_style)[0]
-        axes.plot(x, y_err, color=color, **self.err_line_style)
-        axes.plot(x[1], y_err[1], color=color, **self.err_marker_style)
+
+        if err is not None:
+            y_err = y[1] - 100 * err, y[1] + 100 * err
+            axes.plot(x, y_err, color=color, **self.err_line_style)
+            axes.plot(x[1], y_err[1], color=color, **self.err_marker_style)
 
         return y[1] > self.success_cutoff
+
+    def _plot_dots(self, axes, x, ys, cmap):
+        xs = np.full(ys.shape, x)
+        ys = 100 * abs(ys)
+        colors = [cmap[0 if y >= np.mean(ys) else 1] for y in ys] \
+                if isinstance(cmap, tuple) else cmap
+        axes.scatter(xs, ys, color=colors, **self.dot_style)
 
 if __name__ == '__main__':
     args = docopt.docopt(__doc__)
